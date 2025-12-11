@@ -85,6 +85,13 @@
       "when": 1765174356981,
       "tag": "0011_magical_jack_power",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1765494852227,
+      "tag": "0012_blushing_alex_wilder",
+      "breakpoints": true
     }
   ]
 }

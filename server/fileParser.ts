@@ -37,6 +37,11 @@ interface ParsedVesselData {
   headType?: string;
   insulationType?: string;
   executiveSummary?: string;
+  allowableStress?: string;
+  jointEfficiency?: string;
+  specificGravity?: string;
+  crownRadius?: string; // L parameter for torispherical heads
+  knuckleRadius?: string; // r parameter for torispherical heads
   
   tmlReadings?: Array<{
     cmlNumber?: string;

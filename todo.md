@@ -1034,3 +1034,18 @@
 - [ ] Integrate Cognee into PDF import workflow
 - [ ] Test memory retrieval across sessions
 - [ ] Add memory search for similar vessels/inspections
+
+## P0 - CRITICAL: Torispherical Head Calculation Bug (Vessel 54-11-005) ✅ FIXED
+- [x] App was calculating t min = 0.2231" using ellipsoidal formula for torispherical heads
+- [x] Original report shows t min = 0.508" using correct torispherical formula
+- [x] Added headType, crownRadius, knuckleRadius fields to inspections table
+- [x] Added headType, headFactor, crownRadius, knuckleRadius to componentCalculations table
+- [x] Enhanced LLM extraction to extract head type, crown radius (L), knuckle radius (r)
+- [x] Implemented torispherical formula: t = PLM / (2SE - 0.2P) where M = 0.25 × (3 + √(L/r))
+- [x] Added default values: L = D (inside diameter), r = 0.06D (6% of diameter)
+- [x] Updated professionalReportDb.ts to detect head type and use correct formula
+- [x] Updated PDF generation to display correct head type and formula
+- [x] Added M factor display in PDF for torispherical heads
+- [x] Created comprehensive test suite (7 passing tests)
+- [x] Verified torispherical calculation: t_min = 0.5812" (vs ellipsoidal 0.3283")
+- [ ] User testing: Re-import vessel 54-11-005 PDF to verify headType extraction and correct t_min

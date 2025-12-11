@@ -447,11 +447,40 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
     
     // Calculate Min Thickness using total pressure (design + static head)
     let tMin = 0;
+    let headTypeUsed = 'ellipsoidal'; // Default
+    let headFactor = null;
+    
     if (type === 'shell') {
       tMin = (totalP * R) / (S * E - 0.6 * totalP);
     } else {
-      // Ellipsoidal Head (2:1)
-      tMin = (totalP * D) / (2 * S * E - 0.2 * totalP);
+      // Head calculation - detect head type
+      const headTypeStr = (inspection.headType || '').toLowerCase();
+      
+      if (headTypeStr.includes('torispherical')) {
+        // Torispherical Head: t = PLM / (2SE - 0.2P)
+        headTypeUsed = 'torispherical';
+        
+        // Get crown radius (L) and knuckle radius (r) from inspection
+        // Common defaults: L = D (inside diameter), r = 0.06D (6% of diameter)
+        const L = parseFloat(inspection.crownRadius as any) || D;
+        const r = parseFloat(inspection.knuckleRadius as any) || (0.06 * D);
+        
+        // Calculate M factor: M = 0.25 * (3 + sqrt(L/r))
+        const M = 0.25 * (3 + Math.sqrt(L / r));
+        headFactor = M;
+        
+        tMin = (totalP * L * M) / (2 * S * E - 0.2 * totalP);
+        
+        console.log(`[Calc] Torispherical head: L=${L.toFixed(2)}, r=${r.toFixed(2)}, M=${M.toFixed(4)}, t_min=${tMin.toFixed(4)}`);
+      } else if (headTypeStr.includes('hemispherical')) {
+        // Hemispherical Head: t = PR / (2SE - 0.2P)
+        headTypeUsed = 'hemispherical';
+        tMin = (totalP * R) / (2 * S * E - 0.2 * totalP);
+      } else {
+        // Default: 2:1 Ellipsoidal Head: t = PD / (2SE - 0.2P)
+        headTypeUsed = 'ellipsoidal';
+        tMin = (totalP * D) / (2 * S * E - 0.2 * totalP);
+      }
     }
     
     const tMinStr = tMin.toFixed(4);
@@ -479,6 +508,10 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       allowableStress: inspection.allowableStress || '20000',
       jointEfficiency: inspection.jointEfficiency || '0.85',
       staticHead: staticHead.toFixed(2),
+      headType: type === 'head' ? headTypeUsed : null,
+      headFactor: headFactor ? headFactor.toFixed(4) : null,
+      crownRadius: type === 'head' && inspection.crownRadius ? parseFloat(inspection.crownRadius as any).toFixed(3) : null,
+      knuckleRadius: type === 'head' && inspection.knuckleRadius ? parseFloat(inspection.knuckleRadius as any).toFixed(3) : null,
       nominalThickness: avgPrev.toFixed(3),
       previousThickness: avgPrev.toFixed(3),
       actualThickness: avgCurrent.toFixed(3),

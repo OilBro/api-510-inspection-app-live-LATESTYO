@@ -57,6 +57,8 @@ export const inspections = mysqlTable("inspections", {
   // Geometry
   insideDiameter: decimal("insideDiameter", { precision: 10, scale: 2 }),
   overallLength: decimal("overallLength", { precision: 10, scale: 2 }),
+  crownRadius: decimal("crownRadius", { precision: 10, scale: 3 }), // L parameter for torispherical heads
+  knuckleRadius: decimal("knuckleRadius", { precision: 10, scale: 3 }), // r parameter for torispherical heads
   
   // Status
   status: mysqlEnum("status", ["draft", "in_progress", "completed", "archived"]).default("draft").notNull(),

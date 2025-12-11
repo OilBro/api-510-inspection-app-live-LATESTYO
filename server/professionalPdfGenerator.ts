@@ -1150,9 +1150,23 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   
   doc.font('Helvetica').fontSize(9);
   doc.text('Internal; Hemispherical Head: PL/(2SE-0.2P) = t min', MARGIN, doc.y);
-  doc.text('2:1 Ellipsoidal Head: PD/(2SE-0.2P) = t min (knl)', MARGIN, doc.y);
-  doc.text(`East Head: Ellipsoidal t min = ${eastHead?.minimumThickness || eastHead?.minimumRequired || '0.526'} (inch)`, MARGIN, doc.y);
-  doc.text(`West Head: Ellipsoidal t min = ${westHead?.minimumThickness || westHead?.minimumRequired || '0.526'} (inch)`, MARGIN, doc.y);
+  doc.text('2:1 Ellipsoidal Head: PD/(2SE-0.2P) = t min', MARGIN, doc.y);
+  doc.text('Torispherical Head: PLM/(2SE-0.2P) = t min, where M = 0.25(3+√(L/r))', MARGIN, doc.y);
+  
+  // Display head type and calculation for each head
+  const eastHeadType = eastHead?.headType || 'Ellipsoidal';
+  const westHeadType = westHead?.headType || 'Ellipsoidal';
+  const eastHeadTypeDisplay = eastHeadType.charAt(0).toUpperCase() + eastHeadType.slice(1);
+  const westHeadTypeDisplay = westHeadType.charAt(0).toUpperCase() + westHeadType.slice(1);
+  
+  doc.text(`East Head: ${eastHeadTypeDisplay} t min = ${eastHead?.minimumThickness || eastHead?.minimumRequired || '0.526'} (inch)`, MARGIN, doc.y);
+  if (eastHead?.headFactor) {
+    doc.text(`  (M factor = ${eastHead.headFactor})`, MARGIN + 20, doc.y);
+  }
+  doc.text(`West Head: ${westHeadTypeDisplay} t min = ${westHead?.minimumThickness || westHead?.minimumRequired || '0.526'} (inch)`, MARGIN, doc.y);
+  if (westHead?.headFactor) {
+    doc.text(`  (M factor = ${westHead.headFactor})`, MARGIN + 20, doc.y);
+  }
   doc.moveDown(1);
   
   // Remaining Life Calculations for heads

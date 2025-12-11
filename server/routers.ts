@@ -739,6 +739,37 @@ export const appRouter = router({
             }
           }
           
+          // Additional vessel parameters for calculations
+          if (parsedData.headType && (isNewInspection || !inspection.headType)) {
+            inspection.headType = String(parsedData.headType).substring(0, 255);
+            trackMapping('headType', 'headType', parsedData.headType);
+          }
+          if (parsedData.vesselConfiguration && (isNewInspection || !inspection.vesselConfiguration)) {
+            inspection.vesselConfiguration = String(parsedData.vesselConfiguration).substring(0, 255);
+            trackMapping('vesselConfiguration', 'vesselConfiguration', parsedData.vesselConfiguration);
+          }
+          if (parsedData.allowableStress && (isNewInspection || !inspection.allowableStress)) {
+            const val = parseNumeric(parsedData.allowableStress);
+            if (val) {
+              inspection.allowableStress = val;
+              trackMapping('allowableStress', 'allowableStress', parsedData.allowableStress);
+            }
+          }
+          if (parsedData.jointEfficiency && (isNewInspection || !inspection.jointEfficiency)) {
+            const val = parseNumeric(parsedData.jointEfficiency);
+            if (val) {
+              inspection.jointEfficiency = val;
+              trackMapping('jointEfficiency', 'jointEfficiency', parsedData.jointEfficiency);
+            }
+          }
+          if (parsedData.specificGravity && (isNewInspection || !inspection.specificGravity)) {
+            const val = parseNumeric(parsedData.specificGravity);
+            if (val) {
+              inspection.specificGravity = val;
+              trackMapping('specificGravity', 'specificGravity', parsedData.specificGravity);
+            }
+          }
+          
           // Save inspection date if available
           if (parsedData.inspectionDate) {
             try {

@@ -141,7 +141,9 @@ Extract all available information and return it as structured JSON matching this
     "allowableStress": "string",
     "jointEfficiency": "string",
     "radiographyType": "string (RT-1, RT-2, RT-3, or RT-4)",
-    "specificGravity": "string"
+    "specificGravity": "string",
+    "crownRadius": "string (L parameter for torispherical heads, in inches)",
+    "knuckleRadius": "string (r parameter for torispherical heads, in inches)"
   },
   "executiveSummary": "string",
   "tmlReadings": [
@@ -231,6 +233,8 @@ Extract all available information and return it as structured JSON matching this
                 jointEfficiency: { type: "string" },
                 radiographyType: { type: "string" },
                 specificGravity: { type: "string" },
+                crownRadius: { type: "string" },
+                knuckleRadius: { type: "string" },
               },
               required: [],
               additionalProperties: false,
