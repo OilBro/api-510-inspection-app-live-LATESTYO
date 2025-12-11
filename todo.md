@@ -996,3 +996,41 @@
 3. Better validation - Checks materialSpec and designTemperature exist before calculating
 4. Test coverage - New hardcodedValues.test.ts validates interface and date calculations
 5. Optional parameters - corrosionAllowance and jointEfficiency now optional with sensible defaults
+
+
+## P0 - PDF GENERATION INCORRECT VALUES (Dec 11, 2025) 🚨 CRITICAL
+**Issue:** Generated PDFs show SH=6.0, S=20000 instead of correct SH=1.0, S=17500 from imported data
+**Evidence:** Vessel 54-11-005 Shell Evaluation shows wrong allowable stress and joint efficiency
+**Impact:** Professional reports contain incorrect engineering calculations
+
+- [ ] Query componentCalculations table for vessel 54-11-005
+- [ ] Check if allowableStress and jointEfficiency are stored correctly
+- [ ] Verify PDF generation reads from database (not fallback values)
+- [ ] Identify why fallback values (6.0, 20000) are used instead of actual (1.0, 17500)
+- [ ] Fix PDF generation to use actual database values
+- [ ] Test with vessel 54-11-005 to confirm correct values in generated PDF
+- [ ] Verify other vessels also show correct values
+
+## P0 - CRITICAL: PDF Column Mapping Bug (Shell & Head Evaluation)
+- [x] Fix Shell Evaluation section line 1004: Replace hardcoded SH with shellComp.staticHead
+- [x] Fix Shell Evaluation section line 1025: Replace hardcoded S=20000 with shellComp.allowableStress
+- [x] Fix Shell Evaluation section line 1026: Verify E column uses inspection.jointEfficiency
+- [x] Fix Shell Evaluation section line 1046: Replace hardcoded y=12.0 with shellComp.timeSpan
+- [x] Fix Head Evaluation section line 1129: Replace hardcoded SH with eastHead.staticHead
+- [x] Fix Head Evaluation section line 1138: Replace hardcoded SH with westHead.staticHead
+- [x] Static head retrieved from componentCalculations.staticHead field (calculated in professionalReportDb.ts)
+- [x] Created comprehensive test suite (pdfGenerationFixes.test.ts) with 8 passing tests
+- [x] Verified vessels use different static head, allowable stress, and time span values
+- [x] Verified E (joint efficiency) and SH (static head) are properly distinguished
+- [x] Verified Shell and Head Evaluation tables use vessel-specific data
+- [x] All 56 tests passing, no regressions introduced
+- [ ] User testing: Generate PDF for vessel 54-11-005 to verify correct values in production
+
+## Cognee Memory Integration
+- [ ] Install Cognee npm package (@cognee/cognee)
+- [ ] Set up Cognee client with API key from environment (cognee_key)
+- [ ] Create memory storage helper for inspection context
+- [ ] Store vessel data, calculations, and PDF metadata in Cognee
+- [ ] Integrate Cognee into PDF import workflow
+- [ ] Test memory retrieval across sessions
+- [ ] Add memory search for similar vessels/inspections

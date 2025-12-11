@@ -992,14 +992,17 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   doc.text('Vessel Shell', MARGIN, doc.y);
   doc.moveDown(0.5);
   
+  // Find shell component data (needed for staticHead)
+  const shellComp = components.find(c => c.componentType === 'shell' || c.componentName?.includes('Shell'));
+  
   const shellMaterialData = [
     ['Material', 'Temp.', 'MAWP', 'SH', 'SG', 'D', 't nom'],
     [
       inspection?.materialSpec || 'SSA-304',
       inspection?.designTemperature || '200',
       inspection?.designPressure || '250',
-      '6.0',
-      '0.92',
+      shellComp?.staticHead || '0',
+      inspection?.specificGravity || '0.92',
       inspection?.insideDiameter || '70.750',
       inspection?.nominalThickness || '0.625'
     ]
@@ -1019,9 +1022,9 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
     [
       inspection?.designPressure || '252.4',
       (parseFloat(inspection?.insideDiameter || '70.750') / 2).toFixed(3),
-      '20000',
-      '0.85',
-      '0.530'
+      shellComp?.allowableStress || inspection?.allowableStress || '20000',
+      inspection?.jointEfficiency || '0.85',
+      shellComp?.minimumThickness || shellComp?.minimumRequired || '0.530'
     ]
   ];
   
@@ -1033,17 +1036,14 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   doc.text('Remaining Life Calculations', MARGIN, doc.y);
   doc.moveDown(0.5);
   
-  // Find shell component data
-  const shellComp = components.find(c => c.componentType === 'shell' || c.componentName?.includes('Shell'));
-  
   const rlData = [
     ['Vessel Shell', 't prev', 't act', 't min', 'y'],
     [
       'Values',
-      shellComp?.tPrevious || '0.625',
-      shellComp?.tActual || '0.652',
-      shellComp?.tMin || '0.530',
-      '12.0'
+      shellComp?.previousThickness || shellComp?.tPrevious || '0.625',
+      shellComp?.actualThickness || shellComp?.tActual || '0.652',
+      shellComp?.minimumThickness || shellComp?.minimumRequired || shellComp?.tMin || '0.530',
+      shellComp?.timeSpan || '12.0'
     ]
   ];
   
@@ -1126,7 +1126,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       eastHead?.nominalThickness || '0.500',
       inspection?.materialSpec || 'SSA-304',
       eastHead?.allowableStress || inspection?.allowableStress || '20000',
-      '6.0',
+      eastHead?.staticHead || '0',
       eastHead?.designMAWP || inspection?.designPressure || '252.4'
     ],
     [
@@ -1135,7 +1135,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       westHead?.nominalThickness || '0.500',
       inspection?.materialSpec || 'SSA-304',
       westHead?.allowableStress || inspection?.allowableStress || '20000',
-      '6.0',
+      westHead?.staticHead || '0',
       westHead?.designMAWP || inspection?.designPressure || '252.4'
     ]
   ];

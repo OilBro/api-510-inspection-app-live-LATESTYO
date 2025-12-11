@@ -1,0 +1,8 @@
+{
+  "query": "SELECT cc.componentName, cc.componentType, cc.allowableStress, cc.jointEfficiency, cc.actualThickness, cc.minimumThickness, cc.timeSpan, i.vesselTag \nFROM componentCalculations cc \nJOIN professionalReports pr ON cc.reportId = pr.id \nJOIN inspections i ON pr.inspectionId = i.id \nWHERE i.vesselTag = '54-11-005' \nORDER BY cc.componentName",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT cc.componentName, cc.componentType, cc.allowableStress, cc.jointEfficiency, cc.actualThickness, cc.minimumThickness, cc.timeSpan, i.vesselTag \nFROM componentCalculations cc \nJOIN professionalReports pr ON cc.reportId = pr.id \nJOIN inspections i ON pr.inspectionId = i.id \nWHERE i.vesselTag = '54-11-005' \nORDER BY cc.componentName",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'i.vesseltag' in 'where clause'"
+  ]
+}

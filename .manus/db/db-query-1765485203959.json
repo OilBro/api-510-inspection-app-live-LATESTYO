@@ -1,0 +1,30 @@
+{
+  "query": "SELECT cc.componentName, cc.componentType, cc.allowableStress, cc.jointEfficiency, cc.actualThickness, cc.minimumThickness, cc.timeSpan, i.vesselTagNumber \nFROM componentCalculations cc \nJOIN professionalReports pr ON cc.reportId = pr.id \nJOIN inspections i ON pr.inspectionId = i.id \nWHERE i.vesselTagNumber LIKE '%54-11-005%' \nORDER BY cc.componentName LIMIT 10",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT cc.componentName, cc.componentType, cc.allowableStress, cc.jointEfficiency, cc.actualThickness, cc.minimumThickness, cc.timeSpan, i.vesselTagNumber \nFROM componentCalculations cc \nJOIN professionalReports pr ON cc.reportId = pr.id \nJOIN inspections i ON pr.inspectionId = i.id \nWHERE i.vesselTagNumber LIKE '%54-11-005%' \nORDER BY cc.componentName LIMIT 10",
+  "rows": [
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "allowableStress": "18800.00",
+      "jointEfficiency": "0.85",
+      "actualThickness": "0.5592",
+      "minimumThickness": "0.2231",
+      "timeSpan": "10.00",
+      "vesselTagNumber": "54-11-005"
+    },
+    {
+      "componentName": "Shell",
+      "componentType": "shell",
+      "allowableStress": "18800.00",
+      "jointEfficiency": "0.85",
+      "actualThickness": "0.4652",
+      "minimumThickness": "0.4484",
+      "timeSpan": "10.00",
+      "vesselTagNumber": "54-11-005"
+    }
+  ],
+  "messages": [],
+  "stdout": "componentName\tcomponentType\tallowableStress\tjointEfficiency\tactualThickness\tminimumThickness\ttimeSpan\tvesselTagNumber\nEast Head\thead\t18800.00\t0.85\t0.5592\t0.2231\t10.00\t54-11-005\nShell\tshell\t18800.00\t0.85\t0.4652\t0.4484\t10.00\t54-11-005\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}
