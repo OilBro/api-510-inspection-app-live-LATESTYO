@@ -975,3 +975,24 @@
 2. Added empty sorted group check to prevent accessing first element of empty array
 3. Added LLM response validation - checks if choices array exists before accessing [0]
 4. Added detailed error logging for LLM response failures
+
+
+## P1 - GITHUB PR #22 INTEGRATION (Dec 11, 2025) ✅ COMPLETE
+**PR:** copilot/remove-hardcoded-values merged to main (commit f2ad7c27)
+**Changes:** Address code review feedback + Add tests for hardcoded values fixes
+
+- [x] Review changes to CalculationsTab.tsx (UI display updates)
+- [x] Review changes to ThicknessAnalysisTab.tsx (UI display updates)
+- [x] Review new hardcodedValues.test.ts test file (5 tests validating fixes)
+- [x] Review changes to routers.ts (date-based corrosion rate, jointEfficiency parameter)
+- [x] Review changes to tmlStatusCalculator.ts (accept optional parameters)
+- [x] Run all tests to verify compatibility (48 passing, 14 skipped, 1 pre-existing failure)
+- [x] Check for any conflicts with recent fixes (no conflicts)
+- [x] Create checkpoint documenting integration
+
+**Key Improvements:**
+1. Date-based corrosion rate calculation - Uses actual inspection dates instead of hardcoded 1 year
+2. Joint efficiency parameter - Passes inspection.jointEfficiency to status calculator
+3. Better validation - Checks materialSpec and designTemperature exist before calculating
+4. Test coverage - New hardcodedValues.test.ts validates interface and date calculations
+5. Optional parameters - corrosionAllowance and jointEfficiency now optional with sensible defaults
