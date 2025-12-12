@@ -531,6 +531,13 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
     }
     const calculatedMAWPStr = calculatedMAWP.toFixed(2);
     
+    // Check if component is below minimum thickness
+    const isBelowMinimum = avgCurrent < parseFloat(tMinStr);
+    const dataQualityStatus = isBelowMinimum ? 'below_minimum' : 'good';
+    const dataQualityNotes = isBelowMinimum 
+      ? `Component thickness (${avgCurrent.toFixed(4)}") is below minimum required (${tMinStr}"). Immediate attention required.`
+      : null;
+    
     // API 510 requirement: Next inspection at lesser of 10 years OR 1/2 remaining life
     let nextInspectionYears = '10.00';
     if (RL !== '>20') {
@@ -564,6 +571,8 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       remainingLife: RL,
       calculatedMAWP: calculatedMAWPStr,
       nextInspectionYears: nextInspectionYears,
+      dataQualityStatus: dataQualityStatus as any,
+      dataQualityNotes: dataQualityNotes,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
