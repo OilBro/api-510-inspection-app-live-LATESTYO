@@ -166,12 +166,25 @@ Extract all available information and return it as structured JSON matching this
       "itemText": "string",
       "status": "string"
     }
+  ],
+  "nozzles": [
+    {
+      "nozzleNumber": "string (e.g. N1, N2, Manway)",
+      "service": "string (e.g. Manway, Relief, Vapor Out)",
+      "size": "string (e.g. 18\" NPS, 2\" NPS)",
+      "schedule": "string (e.g. STD, 40, 80)",
+      "actualThickness": "number",
+      "nominalThickness": "number",
+      "minimumRequired": "number",
+      "acceptable": "boolean",
+      "notes": "string"
+    }
   ]
 }`,
       },
       {
         role: "user",
-        content: `Extract vessel inspection data from this API 510 report:\n\n${fullText.substring(0, 15000)}`,
+        content: `Extract vessel inspection data from this API 510 report:\n\n${fullText.substring(0, 50000)}`,
       },
     ],
     response_format: {
@@ -273,8 +286,28 @@ Extract all available information and return it as structured JSON matching this
                 additionalProperties: false,
               },
             },
+            nozzles: {
+              type: "array",
+              description: "Nozzle evaluation data from PDF",
+              items: {
+                type: "object",
+                properties: {
+                  nozzleNumber: { type: "string", description: "Nozzle identifier (e.g., N1, N2, Manway)" },
+                  service: { type: "string", description: "Nozzle service (e.g., Manway, Relief, Vapor Out)" },
+                  size: { type: "string", description: "Nozzle size (e.g., 18\" NPS, 2\" NPS)" },
+                  schedule: { type: "string", description: "Pipe schedule (e.g., STD, 40, 80)" },
+                  actualThickness: { type: "number", description: "Measured thickness in inches" },
+                  nominalThickness: { type: "number", description: "Nominal thickness in inches" },
+                  minimumRequired: { type: "number", description: "Minimum required thickness in inches" },
+                  acceptable: { type: "boolean", description: "Whether nozzle passes evaluation" },
+                  notes: { type: "string", description: "Additional notes or observations" },
+                },
+                required: [],
+                additionalProperties: false,
+              },
+            },
           },
-          required: ["reportInfo", "clientInfo", "vesselData", "executiveSummary", "tmlReadings", "inspectionChecklist"],
+          required: ["reportInfo", "clientInfo", "vesselData", "executiveSummary", "tmlReadings", "inspectionChecklist", "nozzles"],
           additionalProperties: false,
         },
       },
