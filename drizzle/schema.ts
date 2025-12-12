@@ -392,6 +392,7 @@ export const componentCalculations = mysqlTable("componentCalculations", {
   governingRateReason: text("governingRateReason"), // Explanation of why this rate was selected
   
   remainingLife: decimal("remainingLife", { precision: 10, scale: 2 }), // RL (years)
+  calculatedMAWP: decimal("calculatedMAWP", { precision: 10, scale: 2 }), // Calculated MAWP at current thickness
   
   // Data quality flags (Industry Leader Feature)
   dataQualityStatus: mysqlEnum("dataQualityStatus", ["good", "anomaly", "growth_error", "below_minimum", "confirmed"]).default("good"),

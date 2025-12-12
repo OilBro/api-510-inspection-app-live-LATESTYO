@@ -688,7 +688,7 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
     return {
       tNom: formatValue(calc.nominalThickness),
       tActual: formatValue(calc.actualThickness),
-      tMin: formatValue(calc.minimumRequired),
+      tMin: formatValue(calc.minimumThickness),
       mawp: formatValue(calc.calculatedMAWP, 1),
       rl: calc.remainingLife || '>20',
     };

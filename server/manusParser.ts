@@ -139,7 +139,7 @@ Extract all available information and return it as structured JSON matching this
     "headType": "string (e.g. 2:1 Ellipsoidal, Hemispherical, Torispherical)",
     "insulationType": "string",
     "allowableStress": "string",
-    "jointEfficiency": "string",
+    "jointEfficiency": "string (E value - look in vessel metadata AND in minimum thickness calculation tables, typically 0.85, 1.0, or other values)",
     "radiographyType": "string (RT-1, RT-2, RT-3, or RT-4)",
     "specificGravity": "string",
     "crownRadius": "string (L parameter for torispherical heads, in inches)",

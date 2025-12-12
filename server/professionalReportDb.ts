@@ -414,12 +414,13 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       t.component?.toLowerCase().includes(keyword)
     );
     
-    // Determine thicknesses (average of relevant TMLs or default)
+    // Determine thicknesses (MINIMUM of relevant TMLs for conservative API 510 calculations)
     const validCurrent = relevantTMLs.map(t => parseFloat(t.tActual || t.currentThickness || '0')).filter(v => v > 0);
     const validPrev = relevantTMLs.map(t => parseFloat(t.previousThickness || '0')).filter(v => v > 0);
     
-    const avgCurrent = validCurrent.length ? (validCurrent.reduce((a, b) => a + b, 0) / validCurrent.length) : (type === 'shell' ? 0.652 : 0.555);
-    const avgPrev = validPrev.length ? (validPrev.reduce((a, b) => a + b, 0) / validPrev.length) : (type === 'shell' ? 0.625 : 0.500);
+    // Use MINIMUM thickness (most conservative for safety calculations)
+    const avgCurrent = validCurrent.length ? Math.min(...validCurrent) : (type === 'shell' ? 0.652 : 0.555);
+    const avgPrev = validPrev.length ? Math.min(...validPrev) : (type === 'shell' ? 0.625 : 0.500);
     
     // Default design params
     const P = parseFloat(inspection.designPressure || '250');
@@ -485,8 +486,50 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
     
     const tMinStr = tMin.toFixed(4);
     const CA = (avgCurrent - tMin).toFixed(3);
-    const CR = validPrev.length ? ((avgPrev - avgCurrent) / 10).toFixed(6) : '0.00000'; // Assume 10 years if no dates
-    const RL = parseFloat(CR) > 0 ? (parseFloat(CA) / parseFloat(CR)).toFixed(2) : '>20';
+    
+    // Calculate time between inspections from dates (if available)
+    let yearsBetween = 10; // Default assumption
+    if (inspection.inspectionDate && inspection.previousInspectionId) {
+      try {
+        const prevInspectionResult = await db.select().from(inspections)
+          .where(eq(inspections.id, inspection.previousInspectionId)).limit(1);
+        if (prevInspectionResult[0]?.inspectionDate) {
+          const current = new Date(inspection.inspectionDate);
+          const previous = new Date(prevInspectionResult[0].inspectionDate);
+          const diffMs = current.getTime() - previous.getTime();
+          yearsBetween = diffMs / (1000 * 60 * 60 * 24 * 365.25);
+          console.log(`[Calc] Time between inspections: ${yearsBetween.toFixed(2)} years`);
+        }
+      } catch (e) {
+        console.error('[Calc] Error fetching previous inspection date:', e);
+      }
+    }
+    
+    const CR = validPrev.length ? ((avgPrev - avgCurrent) / yearsBetween).toFixed(6) : '0.00000';
+    let RL: string;
+    if (parseFloat(CR) > 0) {
+      const calculatedRL = parseFloat(CA) / parseFloat(CR);
+      RL = calculatedRL > 20 ? '20.00' : calculatedRL.toFixed(2);
+    } else {
+      RL = '20.00'; // Use 20.00 instead of >20 for database compatibility
+    }
+    
+    // Calculate MAWP at current thickness
+    let calculatedMAWP = 0;
+    if (type === 'shell') {
+      // Shell: MAWP = (S × E × t) / (R + 0.6t) - static head
+      calculatedMAWP = (S * E * avgCurrent) / (R + 0.6 * avgCurrent) - staticHead;
+    } else {
+      // Head: MAWP = (2 × S × E × t) / (R + 0.2t) - static head for ellipsoidal
+      // For torispherical: MAWP = (2 × S × E × t) / (L × M + 0.2t) - static head
+      if (headTypeUsed === 'torispherical' && headFactor) {
+        const L = parseFloat(inspection.crownRadius as any) || D;
+        calculatedMAWP = (2 * S * E * avgCurrent) / (L * headFactor + 0.2 * avgCurrent) - staticHead;
+      } else {
+        calculatedMAWP = (2 * S * E * avgCurrent) / (R + 0.2 * avgCurrent) - staticHead;
+      }
+    }
+    const calculatedMAWPStr = calculatedMAWP.toFixed(2);
     
     // API 510 requirement: Next inspection at lesser of 10 years OR 1/2 remaining life
     let nextInspectionYears = '10.00';
@@ -519,6 +562,7 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       corrosionAllowance: CA,
       corrosionRate: CR,
       remainingLife: RL,
+      calculatedMAWP: calculatedMAWPStr,
       nextInspectionYears: nextInspectionYears,
       createdAt: new Date(),
       updatedAt: new Date(),
