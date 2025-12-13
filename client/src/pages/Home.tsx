@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
-import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare } from "lucide-react";
+import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare, AlertTriangle } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { AnomalyStats } from "@/components/AnomalyStats";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -165,7 +167,10 @@ export default function Home() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Anomaly Statistics */}
+          <AnomalyStats />
+
           <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>

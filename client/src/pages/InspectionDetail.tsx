@@ -10,6 +10,7 @@ import { APP_TITLE } from "@/const";
 import VesselDataTab from "@/components/inspection/VesselDataTab";
 import ProfessionalReportTab from "@/components/inspection/ProfessionalReportTab";
 import { ValidationWarnings } from "@/components/ValidationWarnings";
+import { AnomalyPanel } from "@/components/inspection/AnomalyPanel";
 
 export default function InspectionDetail() {
   const params = useParams();
@@ -90,6 +91,11 @@ export default function InspectionDetail() {
         {/* Validation Warnings */}
         <div className="mb-6">
           <ValidationWarnings inspectionId={id} />
+        </div>
+
+        {/* Anomaly Detection */}
+        <div className="mb-6">
+          <AnomalyPanel inspectionId={id} />
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>

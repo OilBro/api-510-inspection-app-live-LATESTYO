@@ -15,6 +15,7 @@ import { pdfImportRouter } from "./routers/pdfImportRouter";
 import { validationRouter } from "./validationRouter";
 import { materialStressRouter } from "./materialStressRouter";
 import { validationWarningsRouter } from "./validationWarningsRouter";
+import { anomalyRouter } from "./anomalyRouter";
 import { convertToJpeg } from "./_core/freeconvert";
 import * as fieldMappingDb from "./fieldMappingDb";
 import * as professionalReportDb from "./professionalReportDb";
@@ -50,6 +51,7 @@ export const appRouter = router({
   pdfImport: pdfImportRouter,
   materialStress: materialStressRouter,
   validationWarnings: validationWarningsRouter,
+  anomalies: anomalyRouter,
 
   images: router({
     convertToJpeg: protectedProcedure

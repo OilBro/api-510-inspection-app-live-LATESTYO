@@ -1079,3 +1079,32 @@
   - [x] Store inspectionResults and recommendations during PDF import
   - [ ] TODO: Create UI tabs to display inspection results and recommendations
   - [ ] USER ACTION: Re-import vessel 54-11-005 PDF to test extraction
+
+
+## Anomaly Detection Feature (Dec 12, 2025) ✅ COMPLETE
+
+### Database Schema
+- [x] Create reportAnomalies table to store detected issues
+- [x] Add reviewStatus field to inspections table (pending_review, reviewed, approved)
+- [x] Add anomalyCount field to inspections for quick filtering
+
+### Backend Detection Rules
+- [x] Thickness anomaly detection (readings below minimum required)
+- [x] Corrosion rate anomaly detection (unusually high rates)
+- [x] Missing critical data detection (E value, material spec, pressure)
+- [x] Calculation inconsistency detection (MAWP vs design pressure)
+- [x] Negative remaining life detection
+- [x] Excessive thickness variation detection (within same component)
+
+### UI Components
+- [x] Add anomaly statistics widget to dashboard
+- [x] Create anomaly badge/indicator components
+- [x] Build anomaly detail panel showing all detected issues
+- [x] Add "Mark as Reviewed" action for inspectors
+- [x] Create anomaly summary statistics widget
+
+### Integration
+- [x] Run anomaly detection automatically after PDF import
+- [ ] Add manual "Re-scan for Anomalies" button (future enhancement)
+- [ ] Send notification to owner when critical anomalies detected (future enhancement)
+- [ ] Add anomaly export to CSV for reporting (future enhancement)

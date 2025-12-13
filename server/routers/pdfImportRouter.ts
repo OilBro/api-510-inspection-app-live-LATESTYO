@@ -617,6 +617,17 @@ Do NOT leave fields empty if the information exists anywhere in the document. Se
         // Don't fail the entire import if calculation generation fails
       }
 
+      // Run anomaly detection
+      try {
+        const { detectAnomalies, saveAnomalies } = await import('../anomalyDetection');
+        const anomalies = await detectAnomalies(inspectionId);
+        await saveAnomalies(inspectionId, anomalies);
+        console.log(`[PDF Import] Detected ${anomalies.length} anomalies for inspection ${inspectionId}`);
+      } catch (anomalyError) {
+        console.error('[PDF Import] Anomaly detection failed:', anomalyError);
+        // Don't fail the entire import if anomaly detection fails
+      }
+
       return {
         success: true,
         inspectionId: inspectionId,
