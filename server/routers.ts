@@ -14,6 +14,7 @@ import { reportComparisonRouter } from "./routers/reportComparisonRouter";
 import { pdfImportRouter } from "./routers/pdfImportRouter";
 import { validationRouter } from "./validationRouter";
 import { materialStressRouter } from "./materialStressRouter";
+import { validationWarningsRouter } from "./validationWarningsRouter";
 import { convertToJpeg } from "./_core/freeconvert";
 import * as fieldMappingDb from "./fieldMappingDb";
 import * as professionalReportDb from "./professionalReportDb";
@@ -48,6 +49,7 @@ export const appRouter = router({
   system: systemRouter,
   pdfImport: pdfImportRouter,
   materialStress: materialStressRouter,
+  validationWarnings: validationWarningsRouter,
 
   images: router({
     convertToJpeg: protectedProcedure
@@ -783,6 +785,16 @@ export const appRouter = router({
             } catch (e) {
               console.warn('[PDF Import] Failed to parse inspection date:', parsedData.inspectionDate);
             }
+          }
+
+          // Extract inspection results and recommendations
+          if (parsedData.inspectionResults && (isNewInspection || !inspection.inspectionResults)) {
+            inspection.inspectionResults = String(parsedData.inspectionResults);
+            trackMapping('inspectionResults', 'inspectionResults', parsedData.inspectionResults);
+          }
+          if (parsedData.recommendations && (isNewInspection || !inspection.recommendations)) {
+            inspection.recommendations = String(parsedData.recommendations);
+            trackMapping('recommendations', 'recommendations', parsedData.recommendations);
           }
 
           // Create or update inspection

@@ -42,6 +42,8 @@ interface ParsedVesselData {
   specificGravity?: string;
   crownRadius?: string; // L parameter for torispherical heads
   knuckleRadius?: string; // r parameter for torispherical heads
+  inspectionResults?: string; // Section 3.0 Inspection Results from PDF
+  recommendations?: string; // Section 4.0 Recommendations from PDF
   
   tmlReadings?: Array<{
     cmlNumber?: string;

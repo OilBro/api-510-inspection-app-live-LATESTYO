@@ -9,6 +9,7 @@ import { Settings, ArrowLeft, FileText, Calculator, BarChart3, Eye, Upload, Aler
 import { APP_TITLE } from "@/const";
 import VesselDataTab from "@/components/inspection/VesselDataTab";
 import ProfessionalReportTab from "@/components/inspection/ProfessionalReportTab";
+import { ValidationWarnings } from "@/components/ValidationWarnings";
 
 export default function InspectionDetail() {
   const params = useParams();
@@ -86,6 +87,11 @@ export default function InspectionDetail() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Validation Warnings */}
+        <div className="mb-6">
+          <ValidationWarnings inspectionId={id} />
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="vessel-data">

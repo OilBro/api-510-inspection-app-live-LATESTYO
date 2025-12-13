@@ -253,6 +253,8 @@ Extract all available information and return it as structured JSON matching this
               additionalProperties: false,
             },
             executiveSummary: { type: "string" },
+            inspectionResults: { type: "string", description: "Section 3.0 Inspection Results - all findings, observations, and condition assessments" },
+            recommendations: { type: "string", description: "Section 4.0 Recommendations - all recommendations for repairs, replacements, next inspection date, or continued service" },
             tmlReadings: {
               type: "array",
               items: {
@@ -307,7 +309,7 @@ Extract all available information and return it as structured JSON matching this
               },
             },
           },
-          required: ["reportInfo", "clientInfo", "vesselData", "executiveSummary", "tmlReadings", "inspectionChecklist", "nozzles"],
+          required: ["reportInfo", "clientInfo", "vesselData", "executiveSummary", "inspectionResults", "recommendations", "tmlReadings", "inspectionChecklist", "nozzles"],
           additionalProperties: false,
         },
       },

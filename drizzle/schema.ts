@@ -66,6 +66,10 @@ export const inspections = mysqlTable("inspections", {
   // Inspection date - when the physical inspection occurred
   inspectionDate: timestamp("inspectionDate"),
   
+  // Inspection findings and recommendations
+  inspectionResults: text("inspectionResults"), // Section 3.0 from PDF
+  recommendations: text("recommendations"), // Section 4.0 from PDF
+  
   // Metadata
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
