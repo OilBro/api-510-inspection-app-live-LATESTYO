@@ -96,10 +96,10 @@
 - [x] Add missing userId column to professionalReports table in database schema
 
 ## Sentry Integration
-- [ ] Install Sentry SDK packages
+- [x] Install Sentry SDK packages
 - [ ] Configure Sentry DSN in environment
-- [ ] Add Sentry initialization to server
-- [ ] Add Sentry initialization to client
+- [x] Add Sentry initialization to server
+- [x] Add Sentry initialization to client
 - [ ] Test error capture
 - [ ] Use Sentry to debug Professional Report error
 
@@ -163,8 +163,8 @@
 
 ## Auto-populate Calculations and Nozzles from Import
 - [x] Update PDF import to populate calculations record with vessel data (pressure, temperature, material spec, corrosion allowance, etc.)
-- [ ] Extract nozzle data from PDFs if present
-- [ ] Create nozzle evaluation records during import
+- [x] Extract nozzle data from PDFs if present
+- [x] Create nozzle evaluation records during import
 - [ ] Test that all three pages (Report Data, Calculations, Nozzles) populate after import
 
 ## Debug Calculations Not Populating
@@ -201,32 +201,32 @@
 
 ## Fix Calculation Accuracy to Professional Standards
 - [x] Fix shell minimum thickness formula: t_min = PR/(SE - 0.6P)
-- [ ] Fix torispherical head minimum thickness formula: t_min = PLM/(2SE - 0.2P)
+- [x] Fix torispherical head minimum thickness formula: t_min = PLM/(2SE - 0.2P)
 - [x] Save inspection date from PDF import
-- [ ] Calculate actual time between inspections from dates (currently using 10-year default)
+- [x] Calculate actual time between inspections from dates (currently using 10-year default)
 - [x] Fix corrosion rate calculation: Cr = (t_prev - t_act) / Years
 - [x] Fix remaining life calculation: RL = Ca / Cr where Ca = t_act - t_min
 - [ ] Fix MAWP at next inspection projection
 - [ ] Add support for importing updated UT readings to existing inspections
 - [ ] Calculate separate component calculations for shell, east head, west head
-- [ ] Flag components below minimum thickness as critical findings
+- [x] Flag components below minimum thickness as critical findings
 
 ## Vessel Matching for Updated UT Readings
 - [x] Check if vessel tag matching logic exists in import flow
 - [x] When importing, look for existing inspection with same vessel tag number
 - [x] If found, update existing inspection instead of creating new one
 - [x] Add new TML readings to existing inspection (don't replace old ones)
-- [ ] Calculate time between inspections using inspection dates
+- [x] Calculate time between inspections using inspection dates
 - [ ] Test with 2017 baseline report and 2025 UT readings
 
 ## Match Professional Report Calculations
 - [x] Formula correct: t_min = PR/(SE - 0.6P)
 - [x] Fixed S=20000 psi, E=0.85
-- [ ] Fix pressure to include static head (262.4 psi not 250 psi)
+- [x] Fix pressure to include static head (262.4 psi not 250 psi)
 - [ ] Fix radius (should be 36.375 inches not 35.5 inches)
-- [ ] Create separate calculations for Shell, East Head, West Head
-- [ ] Use actual years between inspections (8.26 years for 2017→2025)
-- [ ] Extract head type (ellipsoidal) and use correct formula
+- [x] Create separate calculations for Shell, East Head, West Head
+- [x] Use actual years between inspections (8.26 years for 2017→2025)
+- [x] Extract head type .* and use correct formula
 - [ ] Test with 2017 baseline + 2025 UT readings
 
 ## Debug 2025 UT Readings Upload Error
@@ -241,9 +241,9 @@
 - [x] Backend procedure to accept UT data and target report ID
 - [x] Parse uploaded UT data (PDF/Excel) and extract thickness readings
 - [x] Add new TML readings to selected report (append, don't replace)
-- [ ] Recalculate component calculations with new UT data
-- [ ] Update corrosion rates using time between inspections
-- [ ] Update remaining life calculations based on new readings
+- [x] Recalculate component calculations with new UT data
+- [x] Update corrosion rates using time between inspections
+- [x] Update remaining life calculations based on new readings
 - [ ] Show before/after comparison of thickness readings
 - [ ] Test with 2017 baseline report + 2025 UT readings scenario
 
