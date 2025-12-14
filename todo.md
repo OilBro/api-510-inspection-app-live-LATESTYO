@@ -1108,3 +1108,13 @@
 - [ ] Add manual "Re-scan for Anomalies" button (future enhancement)
 - [ ] Send notification to owner when critical anomalies detected (future enhancement)
 - [ ] Add anomaly export to CSV for reporting (future enhancement)
+
+
+## Manual Re-scan Anomalies Feature (Dec 12, 2025) ✅ COMPLETE
+
+- [x] Add "Re-scan Anomalies" button to inspection detail page toolbar
+- [x] Show loading state during re-scan (spinning icon)
+- [x] Display success/failure toast notification
+- [x] Refresh anomaly panel after re-scan completes
+- [x] Add icon to make button visually distinct (RefreshCw icon)
+- [x] Write comprehensive tests for anomaly detection (7 test cases)

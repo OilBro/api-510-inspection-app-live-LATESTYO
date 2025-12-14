@@ -95,7 +95,9 @@ function detectThicknessAnomalies(tmlData: any[], inspection: any): DetectedAnom
     const t_min_shell = (P * R) / (S * E - 0.6 * P);
 
     for (const reading of tmlData) {
-      const thickness = parseFloat(reading.newThickness || reading.actualThickness || "0");
+      // Check all possible thickness fields
+      const thicknessStr = reading.currentThickness || reading.newThickness || reading.actualThickness || reading.tml1 || "0";
+      const thickness = parseFloat(thicknessStr);
       const location = reading.location || reading.cmlNumber || "Unknown";
 
       // Check if thickness is below minimum
@@ -112,7 +114,7 @@ function detectThicknessAnomalies(tmlData: any[], inspection: any): DetectedAnom
       }
 
       // Check for incomplete TML data
-      if (!reading.newThickness && !reading.actualThickness) {
+      if (!reading.currentThickness && !reading.newThickness && !reading.actualThickness && !reading.tml1) {
         anomalies.push({
           category: "incomplete_tml_data",
           severity: "warning",
@@ -198,7 +200,9 @@ function detectThicknessVariation(tmlData: any[]): DetectedAnomaly[] {
   const componentGroups: { [key: string]: number[] } = {};
   
   for (const reading of tmlData) {
-    const thickness = parseFloat(reading.newThickness || reading.actualThickness || "0");
+    // Check all possible thickness fields
+    const thicknessStr = reading.currentThickness || reading.newThickness || reading.actualThickness || reading.tml1 || "0";
+    const thickness = parseFloat(thicknessStr);
     if (thickness <= 0) continue;
 
     const component = reading.component || "Unknown";
