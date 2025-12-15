@@ -21,6 +21,7 @@ import { convertToJpeg } from "./_core/freeconvert";
 import * as fieldMappingDb from "./fieldMappingDb";
 import * as professionalReportDb from "./professionalReportDb";
 import { consolidateTMLReadings } from "./cmlDeduplication";
+import { organizeReadingsByComponent, getFullComponentName } from "./componentOrganizer";
 
 /**
  * Calculate time span in years between two dates
@@ -264,6 +265,14 @@ export const appRouter = router({
       .input(z.object({ inspectionId: z.string() }))
       .query(async ({ input }) => {
         return await db.getTmlReadings(input.inspectionId);
+      }),
+
+    // Get TML readings organized by component
+    listOrganized: protectedProcedure
+      .input(z.object({ inspectionId: z.string() }))
+      .query(async ({ input }) => {
+        const readings = await db.getTmlReadings(input.inspectionId);
+        return organizeReadingsByComponent(readings);
       }),
 
     // Create a new TML reading
