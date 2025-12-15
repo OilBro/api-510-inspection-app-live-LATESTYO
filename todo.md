@@ -1256,3 +1256,24 @@
 - [ ] Implement swipe gestures for navigation - future enhancement
 - [ ] Add dark mode for outdoor visibility - future enhancement
 - [ ] Support landscape orientation for tablets - future enhancement
+
+
+## Import Data Bug Fix (Dec 14, 2025)
+
+- [ ] Investigate import data page ID generation issues
+- [ ] Fix data parsing logic for Excel/CSV import
+- [ ] Verify inspection ID creation
+- [ ] Test end-to-end import workflow
+- [ ] Add error handling for malformed data
+
+
+## Import Data Testing (Dec 14, 2025) ✅ COMPLETE
+
+- [x] Create comprehensive import data flow tests
+- [x] Verify nanoid() ID generation works correctly
+- [x] Test inspection creation with generated IDs
+- [x] Test finding existing inspections by vessel tag number
+- [x] Test updating existing inspections without duplicates
+- [x] Test numeric parsing (handles "250 psig" → "250")
+- [x] Test integer parsing (handles "2020.7" → 2020)
+- [x] All 6 import data tests passing
