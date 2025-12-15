@@ -782,6 +782,7 @@ export const professionalReportRouter = router({
         const CA = 0.125; // Corrosion allowance
         
         let minThickness;
+        let calculatedMAWP;
         if (P && R && S && E) {
           if (componentType === 'shell') {
             // Shell: t_min = PR/(SE - 0.6P)
@@ -789,11 +790,26 @@ export const professionalReportRouter = router({
             if (denominator > 0) {
               minThickness = ((P * R) / denominator).toFixed(4);
             }
+            // Shell MAWP: MAWP = SEt/(R + 0.6t)
+            if (avgCurrent) {
+              const t = parseFloat(avgCurrent) - CA;
+              if (t > 0) {
+                calculatedMAWP = ((S * E * t) / (R + 0.6 * t)).toFixed(1);
+              }
+            }
           } else {
-            // Head (2:1 ellipsoidal): t_min = PR/(2SE - 0.2P)
+            // Head (2:1 ellipsoidal): t_min = PD/(2SE - 0.2P)
+            const D = R * 2;
             const denominator = 2 * S * E - 0.2 * P;
             if (denominator > 0) {
-              minThickness = ((P * R) / denominator).toFixed(4);
+              minThickness = ((P * D) / denominator).toFixed(4);
+            }
+            // Head MAWP: MAWP = 2SEt/(D + 0.2t)
+            if (avgCurrent) {
+              const t = parseFloat(avgCurrent) - CA;
+              if (t > 0) {
+                calculatedMAWP = ((2 * S * E * t) / (D + 0.2 * t)).toFixed(1);
+              }
             }
           }
         }
@@ -850,6 +866,7 @@ export const professionalReportRouter = router({
           materialName: inspection.materialSpec,
           designTemp: inspection.designTemperature ? inspection.designTemperature.toString() : undefined,
           designMAWP: inspection.designPressure ? inspection.designPressure.toString() : undefined,
+          calculatedMAWP,
           insideDiameter: inspection.insideDiameter ? inspection.insideDiameter.toString() : undefined,
           nominalThickness: avgNominal,
           previousThickness: avgPrevious,

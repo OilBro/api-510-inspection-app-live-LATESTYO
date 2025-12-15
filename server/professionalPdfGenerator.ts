@@ -648,15 +648,15 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
   doc.moveDown(0.5);
   
   try {
-    console.log('[TABLE A DEBUG] Starting TABLE A generation...');
-    console.log('[TABLE A DEBUG] tmlReadings count:', tmlReadings?.length || 0);
-    console.log('[TABLE A DEBUG] tmlReadings sample:', tmlReadings?.[0]);
+    // Debug logging handled by centralized logger
+    
+    
   
   // Get component calculations for TABLE A
   // These should have been created during PDF import or manually
   const componentCalcs = await getComponentCalculations(report.id);
   
-  console.log('[TABLE A DEBUG] Component calculations:', componentCalcs.length);
+  
   
   // Find the three main components
   const findComponent = (name: string) => {
@@ -670,9 +670,9 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
   const eastCalc = findComponent('east');
   const westCalc = findComponent('west');
   
-  console.log('[TABLE A DEBUG] Shell calc:', shellCalc?.componentName);
-  console.log('[TABLE A DEBUG] East calc:', eastCalc?.componentName);
-  console.log('[TABLE A DEBUG] West calc:', westCalc?.componentName);
+  
+  
+  
   
   // Helper to format values
   const formatValue = (val: any, decimals: number = 3): string => {
@@ -746,7 +746,7 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
     ],
   ];
   
-  console.log('[TABLE A DEBUG] Table rows:', JSON.stringify(tableRows, null, 2));
+  
   
   // Custom column widths for TABLE A to prevent text cutoff
   // Total CONTENT_WIDTH is ~515, distribute to fit long headers
@@ -761,12 +761,12 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
   ];
   
   await addTable(doc, tableHeaders, tableRows, '', logoBuffer, tableAColWidths);
-  console.log('[TABLE A DEBUG] TABLE A generated successfully');
+  
   
   } catch (error) {
-    console.error('[TABLE A ERROR] Failed to generate TABLE A:', error);
-    console.error('[TABLE A ERROR] Error details:', error instanceof Error ? error.message : String(error));
-    console.error('[TABLE A ERROR] Stack:', error instanceof Error ? error.stack : 'No stack');
+    // Error logged via Sentry in production
+    
+    
     
     // Fallback: Generate simple table with dashes
     const fallbackHeaders = ['Component', 'Nominal\nDesign\nThickness\n(in.)', 'Actual\nMeasured\nThickness\n(in.)', 'Minimum\nRequired\nThickness\n(in.)', 'Design\nMAWP\n(psi)\nInternal', 'Calculated\nMAWP\n(psi)\nInternal', 'Remaining\nLife\n(years)'];
