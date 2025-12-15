@@ -1149,3 +1149,65 @@
 - [x] Handle notification failures gracefully (don't fail import)
 - [ ] Add configurable threshold settings (future enhancement)
 - [ ] Add notification history tracking (future enhancement)
+
+
+## Anomaly Resolution Workflow (Dec 12, 2025)
+
+### Database Schema
+- [ ] Create anomalyActionPlans table with assignments and due dates
+- [ ] Add actionPlanId foreign key to reportAnomalies table
+- [ ] Create actionPlanAttachments table for photos/documents
+- [ ] Add actionPlanStatus field (pending, in_progress, completed, overdue)
+
+### Backend API
+- [ ] Create action plan CRUD endpoints
+- [ ] Add file upload for attachments
+- [ ] Implement progress tracking and status updates
+- [ ] Add due date reminder system
+- [ ] Create action plan assignment notifications
+
+### UI Components
+- [ ] Add "Create Action Plan" button to anomaly review dialog
+- [ ] Create ActionPlanForm component with assignment and due date
+- [ ] Add file attachment upload interface
+- [ ] Create ActionPlanTracker component showing progress
+- [ ] Add action plan list view with filtering (my tasks, overdue, etc.)
+- [ ] Show action plan status in anomaly cards
+
+### Notifications & Automation
+- [ ] Send notification when action plan assigned
+- [ ] Send reminder notifications for approaching due dates
+- [ ] Auto-update anomaly status when action plan completed
+- [ ] Send completion notification to assignee and reviewer
+
+
+## Anomaly Resolution Workflow (Dec 14, 2025) ✅ COMPLETE
+
+### Database Schema
+- [x] Create anomalyActionPlans table
+- [x] Create actionPlanAttachments table
+- [x] Add fields for assignment, due dates, priority
+- [x] Add status tracking (pending, in_progress, completed, cancelled)
+
+### Backend API
+- [x] Create action plan CRUD operations
+- [x] Add file upload for attachments
+- [x] Implement status update endpoint
+- [x] Add "get my tasks" endpoint for assigned user
+- [x] Auto-update anomaly status when action plan completed
+- [x] Add statistics endpoint for dashboard
+
+### UI Components
+- [x] Create ActionPlanForm component with priority and due date
+- [x] Create ActionPlanList component with status management
+- [x] Integrate into AnomalyPanel dialog
+- [x] Add priority badges (low/medium/high/urgent) and status indicators
+- [x] Show overdue warnings with red border
+- [x] Add completion dialog with notes field
+- [x] Add delete action plan functionality
+
+### Notifications
+- [x] Send notification when action plan assigned
+- [x] Send notification when action plan completed
+- [ ] Add scheduled reminder for overdue tasks (future enhancement)
+- [ ] Add email/SMS delivery options (future enhancement)

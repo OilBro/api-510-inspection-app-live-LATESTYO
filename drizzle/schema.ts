@@ -127,6 +127,46 @@ export type ReportAnomaly = typeof reportAnomalies.$inferSelect;
 export type InsertReportAnomaly = typeof reportAnomalies.$inferInsert;
 
 /**
+ * Anomaly action plans table - tracks corrective actions for anomalies
+ */
+export const anomalyActionPlans = mysqlTable("anomalyActionPlans", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  anomalyId: varchar("anomalyId", { length: 64 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  assignedTo: int("assignedTo"), // userId
+  assignedBy: int("assignedBy").notNull(), // userId who created the plan
+  dueDate: timestamp("dueDate"),
+  priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"]).default("medium").notNull(),
+  status: mysqlEnum("status", ["pending", "in_progress", "completed", "cancelled"]).default("pending").notNull(),
+  completedAt: timestamp("completedAt"),
+  completedBy: int("completedBy"),
+  completionNotes: text("completionNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AnomalyActionPlan = typeof anomalyActionPlans.$inferSelect;
+export type InsertAnomalyActionPlan = typeof anomalyActionPlans.$inferInsert;
+
+/**
+ * Action plan attachments table - stores photos/documents for action plans
+ */
+export const actionPlanAttachments = mysqlTable("actionPlanAttachments", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  actionPlanId: varchar("actionPlanId", { length: 64 }).notNull(),
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileUrl: text("fileUrl").notNull(),
+  fileType: varchar("fileType", { length: 100 }),
+  fileSize: int("fileSize"), // bytes
+  uploadedBy: int("uploadedBy").notNull(),
+  uploadedAt: timestamp("uploadedAt").defaultNow().notNull(),
+});
+
+export type ActionPlanAttachment = typeof actionPlanAttachments.$inferSelect;
+export type InsertActionPlanAttachment = typeof actionPlanAttachments.$inferInsert;
+
+/**
  * Calculations table - stores calculation results
  */
 export const calculations = mysqlTable("calculations", {

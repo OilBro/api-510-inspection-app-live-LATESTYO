@@ -3,7 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { AlertTriangle, AlertCircle, Info, CheckCircle, X, Download } from "lucide-react";
+import { AlertTriangle, AlertCircle, Info, CheckCircle, X, Download, ListTodo } from "lucide-react";
+import { ActionPlanForm } from "./ActionPlanForm";
+import { ActionPlanList } from "./ActionPlanList";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import {
@@ -22,6 +24,7 @@ interface AnomalyPanelProps {
 export function AnomalyPanel({ inspectionId }: AnomalyPanelProps) {
   const [selectedAnomaly, setSelectedAnomaly] = useState<any>(null);
   const [reviewNotes, setReviewNotes] = useState("");
+  const [showActionPlanForm, setShowActionPlanForm] = useState(false);
 
   const { data: anomalies, isLoading, refetch } = trpc.anomalies.getForInspection.useQuery({
     inspectionId,
@@ -235,7 +238,40 @@ export function AnomalyPanel({ inspectionId }: AnomalyPanelProps) {
                 </p>
               )}
             </div>
-            <div className="space-y-2">
+
+            {/* Action Plans Section */}
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-medium flex items-center gap-2">
+                  <ListTodo className="h-4 w-4" />
+                  Action Plans
+                </h4>
+                {!showActionPlanForm && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowActionPlanForm(true)}
+                  >
+                    Create Action Plan
+                  </Button>
+                )}
+              </div>
+
+              {showActionPlanForm ? (
+                <ActionPlanForm
+                  anomalyId={selectedAnomaly?.id}
+                  onSuccess={() => {
+                    setShowActionPlanForm(false);
+                    refetch();
+                  }}
+                  onCancel={() => setShowActionPlanForm(false)}
+                />
+              ) : (
+                <ActionPlanList anomalyId={selectedAnomaly?.id} />
+              )}
+            </div>
+
+            <div className="space-y-2 border-t pt-4">
               <label className="text-sm font-medium">Review Notes (Optional)</label>
               <Textarea
                 value={reviewNotes}
