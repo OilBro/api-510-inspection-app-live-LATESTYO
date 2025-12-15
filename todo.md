@@ -1300,3 +1300,28 @@
 ### Phase 4: Missing Features (P3)
 - [x] 4.1 Static head pressure already implemented in componentCalculations.ts
 - [x] 4.2 Added MAWP calculations to recalculate procedure (shell and head formulas)
+
+
+## Code Review Findings (Dec 15, 2025)
+
+### Issues Found and Fixed
+- [x] **CRITICAL**: Min thickness formula in recalculate missing corrosion allowance (+CA)
+  - Shell: t_min = PR/(SE - 0.6P) + CA (was missing +CA)
+  - Head: t_min = PD/(2SE - 0.2P) + CA (was missing +CA)
+
+### Issues Found - Low Priority (Not Fixed)
+- [ ] 158 console.log statements should migrate to centralized logger
+- [ ] Many `any` types in anomaly detection and analytics code
+- [ ] xlsx library has known vulnerability (no fix available)
+
+### Verified Working
+- [x] TypeScript compiles with no errors
+- [x] ASME shell formula: t = PR/(SE - 0.6P) + CA ✓
+- [x] ASME head formula: t = PD/(2SE - 0.2P) + CA ✓
+- [x] Torispherical M factor: M = 0.25 × (3 + √(L/r)) ✓
+- [x] Shell MAWP: MAWP = SEt/(R + 0.6t) ✓
+- [x] Head MAWP: MAWP = 2SEt/(D + 0.2t) ✓
+- [x] PDF import has proper error handling with try-catch
+- [x] Anomaly detection runs after import
+- [x] CML deduplication logic is correct
+- [x] Static head pressure implemented

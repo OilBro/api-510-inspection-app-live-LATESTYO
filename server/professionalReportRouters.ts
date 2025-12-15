@@ -785,10 +785,10 @@ export const professionalReportRouter = router({
         let calculatedMAWP;
         if (P && R && S && E) {
           if (componentType === 'shell') {
-            // Shell: t_min = PR/(SE - 0.6P)
+            // Shell: t_min = PR/(SE - 0.6P) + CA
             const denominator = S * E - 0.6 * P;
             if (denominator > 0) {
-              minThickness = ((P * R) / denominator).toFixed(4);
+              minThickness = ((P * R) / denominator + CA).toFixed(4);
             }
             // Shell MAWP: MAWP = SEt/(R + 0.6t)
             if (avgCurrent) {
@@ -798,11 +798,11 @@ export const professionalReportRouter = router({
               }
             }
           } else {
-            // Head (2:1 ellipsoidal): t_min = PD/(2SE - 0.2P)
+            // Head (2:1 ellipsoidal): t_min = PD/(2SE - 0.2P) + CA
             const D = R * 2;
             const denominator = 2 * S * E - 0.2 * P;
             if (denominator > 0) {
-              minThickness = ((P * D) / denominator).toFixed(4);
+              minThickness = ((P * D) / denominator + CA).toFixed(4);
             }
             // Head MAWP: MAWP = 2SEt/(D + 0.2t)
             if (avgCurrent) {
