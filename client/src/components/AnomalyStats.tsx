@@ -1,10 +1,35 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, AlertCircle, Info } from "lucide-react";
+import { AlertTriangle, AlertCircle, Info, TrendingUp, Download } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 
 export function AnomalyStats() {
   const { data: stats, isLoading } = trpc.anomalies.getStatistics.useQuery();
+  const exportMutation = trpc.anomalies.exportToCSV.useQuery(
+    {},
+    { enabled: false }
+  );
+
+  const handleExportAll = async () => {
+    try {
+      const result = await exportMutation.refetch();
+      if (result.data?.csv) {
+        const blob = new Blob([result.data.csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `all-anomalies-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -24,8 +49,17 @@ export function AnomalyStats() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Anomaly Detection</CardTitle>
-        <CardDescription>Data quality monitoring</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Anomaly Detection</CardTitle>
+            <CardDescription>Data quality monitoring</CardDescription>
+          </div>
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/anomalies/trends">
+              <TrendingUp className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {stats.pendingReview > 0 && (
@@ -79,6 +113,19 @@ export function AnomalyStats() {
           <div className="text-center py-4 text-sm text-gray-500">
             No anomalies detected
           </div>
+        )}
+
+        {stats.totalAnomalies > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-2"
+            onClick={handleExportAll}
+            disabled={exportMutation.isFetching}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export All to CSV
+          </Button>
         )}
       </CardContent>
     </Card>

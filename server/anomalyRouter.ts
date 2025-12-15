@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { detectAnomalies, saveAnomalies, getAnomalies, reviewAnomaly } from "./anomalyDetection";
+import { getAnomalyTrends, getCategoryBreakdown, getVesselTypeBreakdown, getRecurringProblems } from "./anomalyAnalytics";
+import { exportAnomaliesToCSV } from "./anomalyExport";
 import { getDb } from "./db";
 import { inspections, reportAnomalies } from "../drizzle/schema";
 import { eq, and, inArray } from "drizzle-orm";
@@ -99,6 +101,53 @@ export const anomalyRouter = router({
         );
 
       return { success: true };
+    }),
+
+  /**
+   * Get anomaly trends over time
+   */
+  getTrends: protectedProcedure
+    .input(z.object({
+      daysBack: z.number().default(90),
+    }))
+    .query(async ({ input, ctx }) => {
+      return await getAnomalyTrends(ctx.user.id, input.daysBack);
+    }),
+
+  /**
+   * Get category breakdown
+   */
+  getCategoryBreakdown: protectedProcedure
+    .query(async ({ ctx }) => {
+      return await getCategoryBreakdown(ctx.user.id);
+    }),
+
+  /**
+   * Get vessel type breakdown
+   */
+  getVesselTypeBreakdown: protectedProcedure
+    .query(async ({ ctx }) => {
+      return await getVesselTypeBreakdown(ctx.user.id);
+    }),
+
+  /**
+   * Get recurring problems
+   */
+  getRecurringProblems: protectedProcedure
+    .query(async ({ ctx }) => {
+      return await getRecurringProblems(ctx.user.id);
+    }),
+
+  /**
+   * Export anomalies to CSV
+   */
+  exportToCSV: protectedProcedure
+    .input(z.object({
+      inspectionId: z.string().optional(),
+    }))
+    .query(async ({ input, ctx }) => {
+      const csv = await exportAnomaliesToCSV(ctx.user.id, input.inspectionId);
+      return { csv };
     }),
 
   /**

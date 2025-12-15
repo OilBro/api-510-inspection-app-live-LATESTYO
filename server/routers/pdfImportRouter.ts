@@ -620,9 +620,25 @@ Do NOT leave fields empty if the information exists anywhere in the document. Se
       // Run anomaly detection
       try {
         const { detectAnomalies, saveAnomalies } = await import('../anomalyDetection');
+        const { notifyOwner } = await import('../_core/notification');
         const anomalies = await detectAnomalies(inspectionId);
         await saveAnomalies(inspectionId, anomalies);
         console.log(`[PDF Import] Detected ${anomalies.length} anomalies for inspection ${inspectionId}`);
+
+        // Send notification if critical anomalies detected
+        const criticalAnomalies = anomalies.filter(a => a.severity === 'critical');
+        if (criticalAnomalies.length > 0) {
+          try {
+            await notifyOwner({
+              title: `Critical Anomalies Detected: ${input.vesselData.vesselTagNumber}`,
+              content: `${criticalAnomalies.length} critical ${criticalAnomalies.length === 1 ? 'anomaly' : 'anomalies'} detected during PDF import for vessel ${input.vesselData.vesselTagNumber}.\n\nIssues:\n${criticalAnomalies.slice(0, 5).map(a => `• ${a.title}`).join('\n')}${criticalAnomalies.length > 5 ? `\n• ...and ${criticalAnomalies.length - 5} more` : ''}\n\nPlease review the inspection report.`,
+            });
+            console.log(`[PDF Import] Sent notification for ${criticalAnomalies.length} critical anomalies`);
+          } catch (notifyError) {
+            console.error('[PDF Import] Failed to send anomaly notification:', notifyError);
+            // Don't fail the import if notification fails
+          }
+        }
       } catch (anomalyError) {
         console.error('[PDF Import] Anomaly detection failed:', anomalyError);
         // Don't fail the entire import if anomaly detection fails

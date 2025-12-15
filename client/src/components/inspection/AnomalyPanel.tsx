@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { AlertTriangle, AlertCircle, Info, CheckCircle, X } from "lucide-react";
+import { AlertTriangle, AlertCircle, Info, CheckCircle, X, Download } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import {
@@ -26,6 +26,31 @@ export function AnomalyPanel({ inspectionId }: AnomalyPanelProps) {
   const { data: anomalies, isLoading, refetch } = trpc.anomalies.getForInspection.useQuery({
     inspectionId,
   });
+
+  const exportMutation = trpc.anomalies.exportToCSV.useQuery(
+    { inspectionId },
+    { enabled: false }
+  );
+
+  const handleExport = async () => {
+    try {
+      const result = await exportMutation.refetch();
+      if (result.data?.csv) {
+        const blob = new Blob([result.data.csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `anomalies-${inspectionId}-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        toast.success('Anomalies exported to CSV');
+      }
+    } catch (error) {
+      toast.error('Failed to export anomalies');
+    }
+  };
 
   const reviewMutation = trpc.anomalies.reviewAnomaly.useMutation({
     onSuccess: () => {
@@ -133,14 +158,27 @@ export function AnomalyPanel({ inspectionId }: AnomalyPanelProps) {
                 {criticalCount > 0 && ` (${criticalCount} critical)`}
               </CardDescription>
             </div>
-            {pendingCount > 0 && (
-              <Button
-                onClick={() => approveMutation.mutate({ inspectionId })}
-                disabled={approveMutation.isPending}
-              >
-                Approve All
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {anomalies.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExport}
+                  disabled={exportMutation.isFetching}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Export CSV
+                </Button>
+              )}
+              {pendingCount > 0 && (
+                <Button
+                  onClick={() => approveMutation.mutate({ inspectionId })}
+                  disabled={approveMutation.isPending}
+                >
+                  Approve All
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>

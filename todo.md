@@ -1118,3 +1118,34 @@
 - [x] Refresh anomaly panel after re-scan completes
 - [x] Add icon to make button visually distinct (RefreshCw icon)
 - [x] Write comprehensive tests for anomaly detection (7 test cases)
+
+
+## Anomaly Analytics Features (Dec 12, 2025) ✅ COMPLETE
+
+### Trend Dashboard
+- [x] Create /anomalies/trends route and page component
+- [x] Add backend API for trend data aggregation
+- [x] Implement time-series chart for detection rates over time
+- [x] Add chart showing most common anomaly categories (pie chart)
+- [x] Create breakdown by vessel type (bar chart)
+- [x] Show recurring problems across inspections
+- [x] Add date range filter for analytics (30/60/90/180/365 days)
+- [x] Add link from AnomalyStats widget to trends page
+
+### Bulk CSV Export
+- [x] Add "Export to CSV" button in AnomalyPanel
+- [x] Add "Export All to CSV" button in dashboard AnomalyStats widget
+- [x] Create backend endpoint for CSV generation
+- [x] Include inspection context (vessel, date, status)
+- [x] Include anomaly details (category, severity, description)
+- [x] Include review status and notes
+- [x] Generate downloadable CSV file with proper escaping
+- [x] Support both single-inspection and all-inspections export
+
+### Notification System
+- [x] Integrate with owner notification API
+- [x] Send notification when critical anomalies detected during PDF import
+- [x] Include anomaly summary in notification (up to 5 issues)
+- [x] Handle notification failures gracefully (don't fail import)
+- [ ] Add configurable threshold settings (future enhancement)
+- [ ] Add notification history tracking (future enhancement)
