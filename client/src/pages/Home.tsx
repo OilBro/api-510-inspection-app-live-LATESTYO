@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
-import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare, AlertTriangle } from "lucide-react";
+import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare, AlertTriangle, Smartphone } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { AnomalyStats } from "@/components/AnomalyStats";
 
@@ -152,6 +152,16 @@ export default function Home() {
               <CardTitle>Calculation Worksheet</CardTitle>
               <CardDescription>
                 Interactive worksheet with live calculations for shell and head evaluations
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation("/field-inspector")}>
+            <CardHeader>
+              <Smartphone className="h-12 w-12 text-teal-600 mb-4" />
+              <CardTitle>Field Inspector</CardTitle>
+              <CardDescription>
+                Mobile app for capturing thickness readings on-site with offline support
               </CardDescription>
             </CardHeader>
           </Card>

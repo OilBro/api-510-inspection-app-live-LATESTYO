@@ -1211,3 +1211,48 @@
 - [x] Send notification when action plan completed
 - [ ] Add scheduled reminder for overdue tasks (future enhancement)
 - [ ] Add email/SMS delivery options (future enhancement)
+
+
+## Mobile Field Inspector App (Dec 14, 2025) ✅ COMPLETE
+
+### UI Components
+- [x] Create mobile-optimized layout with sticky header
+- [x] Build vessel selection interface with dropdown
+- [x] Create TML reading capture form (large touch targets, h-12 inputs)
+- [x] Add camera integration for photo capture
+- [x] Build reading list view with offline indicator
+- [x] Create sync status dashboard with pending count
+
+### Data Capture
+- [x] Implement quick TML entry form (CML, location, thickness)
+- [x] Add photo capture with getUserMedia API
+- [x] Enable geolocation tagging for readings (GPS coordinates)
+- [x] Add timestamp tracking for all captures
+- [ ] Support multiple readings per CML (0°, 90°, 180°, 270°) - future enhancement
+- [ ] Add voice-to-text for notes - future enhancement
+
+### Offline Support
+- [x] Implement localStorage for local storage (simpler than IndexedDB)
+- [x] Store pending readings offline
+- [x] Queue photos for upload when online
+- [x] Add offline/online status indicator (Wifi/WifiOff icons)
+- [x] Implement automatic sync when connection restored
+- [ ] Handle conflict resolution for duplicate readings - future enhancement
+
+### Sync Mechanism
+- [x] Build background sync service worker (sw.js)
+- [x] Create batch upload via existing TML endpoint
+- [x] Add progress indicator for sync operations (toast notifications)
+- [x] Implement retry logic in service worker
+- [x] Show sync history (recent readings list)
+- [x] Add manual sync trigger button
+
+### Mobile UX
+- [x] Optimize for one-handed operation (bottom-aligned buttons)
+- [x] Add field validation with instant feedback (required fields)
+- [x] PWA manifest for mobile installation
+- [x] Theme color for mobile browsers
+- [ ] Add haptic feedback for actions - future enhancement
+- [ ] Implement swipe gestures for navigation - future enhancement
+- [ ] Add dark mode for outdoor visibility - future enhancement
+- [ ] Support landscape orientation for tablets - future enhancement

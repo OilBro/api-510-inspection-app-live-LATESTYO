@@ -16,6 +16,7 @@ import ConvertImages from "./pages/ConvertImages";
 import UploadUTResults from "./pages/UploadUTResults";
 import ValidationDashboard from "./pages/ValidationDashboard";
 import AnomalyTrends from "./pages/AnomalyTrends";
+import FieldInspector from "./pages/FieldInspector";
 
 function Router() {
   return (
@@ -32,6 +33,7 @@ function Router() {
       <Route path={"upload-ut-results"} component={UploadUTResults} />
       <Route path={"/validation/:inspectionId"} component={ValidationDashboard} />
       <Route path={"/anomalies/trends"} component={AnomalyTrends} />
+      <Route path={"/field-inspector"} component={FieldInspector} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
