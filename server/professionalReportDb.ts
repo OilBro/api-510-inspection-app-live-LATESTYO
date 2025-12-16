@@ -554,18 +554,30 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
     }
     
     // Calculate MAWP at current thickness
+    // Per ASME VIII-1 UG-27(c), evaluate BOTH stress cases and use minimum
     let calculatedMAWP = 0;
     if (type === 'shell') {
-      // Shell: MAWP = (S × E × t) / (R + 0.6t) - static head
-      calculatedMAWP = (S * E * avgCurrent) / (R + 0.6 * avgCurrent) - staticHead;
+      // UG-27(c)(1): Circumferential (hoop) stress: P = S*E*t / (R + 0.6*t)
+      const P_hoop = (S * E * avgCurrent) / (R + 0.6 * avgCurrent);
+      
+      // UG-27(c)(2): Longitudinal stress: P = 2*S*E*t / (R - 0.4*t)
+      const denom_long = R - 0.4 * avgCurrent;
+      const P_long = denom_long > 0 ? (2 * S * E * avgCurrent) / denom_long : P_hoop;
+      
+      // Use minimum (governing) MAWP, then subtract static head
+      calculatedMAWP = Math.min(P_hoop, P_long) - staticHead;
     } else {
-      // Head: MAWP = (2 × S × E × t) / (R + 0.2t) - static head for ellipsoidal
-      // For torispherical: MAWP = (2 × S × E × t) / (L × M + 0.2t) - static head
+      // Head MAWP calculations per ASME UG-32
       if (headTypeUsed === 'torispherical' && headFactor) {
+        // Torispherical: MAWP = (2 × S × E × t) / (L × M + 0.2t) - static head
         const L = parseFloat(inspection.crownRadius as any) || D;
         calculatedMAWP = (2 * S * E * avgCurrent) / (L * headFactor + 0.2 * avgCurrent) - staticHead;
-      } else {
+      } else if (headTypeUsed === 'hemispherical') {
+        // Hemispherical: MAWP = (2 × S × E × t) / (R + 0.2t) - static head
         calculatedMAWP = (2 * S * E * avgCurrent) / (R + 0.2 * avgCurrent) - staticHead;
+      } else {
+        // Ellipsoidal (2:1): MAWP = (2 × S × E × t) / (D + 0.2t) - static head
+        calculatedMAWP = (2 * S * E * avgCurrent) / (D + 0.2 * avgCurrent) - staticHead;
       }
     }
     const calculatedMAWPStr = calculatedMAWP.toFixed(2);

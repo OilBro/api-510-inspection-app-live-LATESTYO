@@ -172,6 +172,17 @@ function calculateShellMinThickness(
 /**
  * Calculate minimum required thickness for head
  * Per ASME Section VIII Div 1, UG-32
+ * 
+ * Geometry definitions:
+ * - Hemispherical: L = inside crown radius (sphere radius)
+ * - 2:1 Ellipsoidal: D = inside diameter (K=1 for 2:1)
+ * - Torispherical/F&D: L = inside crown radius, r = inside knuckle radius
+ *   Standard F&D: L = D (inside diameter), r = 0.06D
+ * 
+ * @param crownRadius - Inside crown radius L (inches) for torispherical heads
+ *                      If not provided, defaults to inside diameter (D)
+ * @param knuckleRadius - Inside knuckle radius r (inches) for torispherical heads
+ *                        If not provided, defaults to 0.06 * D (6% of diameter)
  */
 export function calculateHeadMinThickness(
   pressure: number,
@@ -180,73 +191,113 @@ export function calculateHeadMinThickness(
   jointEfficiency: number,
   corrosionAllowance: number,
   headType: string = "ellipsoidal",
-  knuckleRadius?: number // Required for torispherical heads
+  knuckleRadius?: number,
+  crownRadius?: number
 ): number {
-  let L: number; // Crown radius or characteristic dimension
-  let factor: number;
+  const D = radius * 2; // Inside diameter
   
-  switch (headType) {
+  // Safety checks
+  if (pressure <= 0 || radius <= 0 || allowableStress <= 0) return 0;
+  
+  let t: number;
+  
+  switch (headType.toLowerCase()) {
     case "hemispherical":
-      // ASME UG-32(d): t = (P × L) / (2 × S × E - 0.2 × P)
-      // For hemispherical, L = R (inside crown radius)
-      L = radius;
-      factor = 1.0;
+      // UG-32(d): t = PL / (2SE - 0.2P) where L = R (inside crown radius)
+      const R_hemi = radius;
+      const denom_hemi = 2 * allowableStress * jointEfficiency - 0.2 * pressure;
+      if (denom_hemi <= 0) return 0;
+      t = (pressure * R_hemi) / denom_hemi;
       break;
       
     case "ellipsoidal":
-      // ASME UG-32(e): t = (P × D) / (2 × S × E - 0.2 × P)
-      // For 2:1 ellipsoidal, L = D (inside diameter)
-      L = radius * 2;
-      factor = 1.0;
+      // UG-32(e) for 2:1 ellipsoidal: t = PD / (2SE - 0.2P)
+      const denom_ellip = 2 * allowableStress * jointEfficiency - 0.2 * pressure;
+      if (denom_ellip <= 0) return 0;
+      t = (pressure * D) / denom_ellip;
       break;
       
     case "torispherical":
-      // ASME UG-32(f): t = (P × L × M) / (2 × S × E - 0.2 × P)
-      // where M = (1/4) × [3 + √(L/r)]
-      // L = inside crown radius (typically same as shell radius)
-      // r = inside knuckle radius
-      L = radius;
+      // Appendix 1-4(d) M-factor formula:
+      // t = PLM / (2SE - 0.2P)
+      // L = inside crown radius (typically = D for standard F&D heads)
+      // r = inside knuckle radius (typically = 0.06D for standard F&D heads)
+      // M = 0.25 * (3 + sqrt(L/r))
+      const L = crownRadius && crownRadius > 0 ? crownRadius : D;
+      const r = knuckleRadius && knuckleRadius > 0 ? knuckleRadius : 0.06 * D;
       
-      if (!knuckleRadius || knuckleRadius <= 0) {
-        // Default to ASME flanged and dished head proportions
-        // For standard F&D: r = 0.06D, L = D
-        // This gives M ≈ 1.77 for typical proportions
-        knuckleRadius = radius * 2 * 0.06; // 6% of diameter
-      }
-      
-      // Calculate M factor per ASME UG-32(f)
-      const M = 0.25 * (3 + Math.sqrt(L / knuckleRadius));
-      factor = M;
+      const M = 0.25 * (3 + Math.sqrt(L / r));
+      const denom_tori = 2 * allowableStress * jointEfficiency - 0.2 * pressure;
+      if (denom_tori <= 0) return 0;
+      t = (pressure * L * M) / denom_tori;
       break;
       
     default:
-      // Default to ellipsoidal
-      L = radius * 2;
-      factor = 1.0;
+      // Default to 2:1 ellipsoidal
+      const denom_def = 2 * allowableStress * jointEfficiency - 0.2 * pressure;
+      if (denom_def <= 0) return 0;
+      t = (pressure * D) / denom_def;
   }
   
-  // ASME formula: t = (P × L × factor) / (2 × S × E - 0.2 × P) + CA
-  const t = (pressure * L * factor) / (2 * allowableStress * jointEfficiency - 0.2 * pressure);
   return t + corrosionAllowance;
 }
 
 /**
  * Calculate MAWP for cylindrical shell
+ * Per ASME Section VIII Div 1, UG-27(c)
+ * 
+ * Evaluates BOTH stress cases and returns the MINIMUM (governing) MAWP:
+ * - UG-27(c)(1): Circumferential (hoop) stress: P = S*E*t / (R + 0.6*t)
+ * - UG-27(c)(2): Longitudinal stress: P = 2*S*E*t / (R - 0.4*t)
+ * 
+ * @param El - Longitudinal joint efficiency (for hoop stress case)
+ * @param Ec - Circumferential joint efficiency (for longitudinal stress case)
+ *             If not provided, defaults to El (same efficiency for both)
  */
 function calculateShellMAWP(
   thickness: number,
   radius: number,
   allowableStress: number,
   jointEfficiency: number,
-  corrosionAllowance: number
+  corrosionAllowance: number,
+  Ec?: number // Circumferential joint efficiency (optional, defaults to jointEfficiency)
 ): number {
   const t = thickness - corrosionAllowance;
-  // MAWP = (S × E × t) / (R + 0.6 × t)
-  return (allowableStress * jointEfficiency * t) / (radius + 0.6 * t);
+  const El = jointEfficiency; // Longitudinal joint efficiency
+  const Ec_eff = Ec ?? jointEfficiency; // Default to same efficiency if not specified
+  
+  // Safety check: net thickness must be positive
+  if (t <= 0 || radius <= 0) return 0;
+  
+  // UG-27(c)(1): Circumferential (hoop) stress case
+  // P_hoop = (S × El × t) / (R + 0.6 × t)
+  const P_hoop = (allowableStress * El * t) / (radius + 0.6 * t);
+  
+  // UG-27(c)(2): Longitudinal stress case
+  // P_long = (2 × S × Ec × t) / (R - 0.4 × t)
+  const denom_long = radius - 0.4 * t;
+  const P_long = denom_long > 0 ? (2 * allowableStress * Ec_eff * t) / denom_long : 0;
+  
+  // Return the MINIMUM (governing) MAWP
+  return Math.min(P_hoop, P_long > 0 ? P_long : P_hoop);
 }
 
 /**
  * Calculate MAWP for head
+ * Per ASME Section VIII Div 1, UG-32
+ * 
+ * Supports three head types:
+ * - Hemispherical: UG-32(d) - P = 2SEt / (R + 0.2t)
+ * - Ellipsoidal (2:1): UG-32(e) - P = 2SEt / (D + 0.2t)  
+ * - Torispherical: UG-32(e) standard form - P = SEt / (0.885L + 0.1t)
+ *   OR Appendix 1-4(d) M-factor form - P = 2SEt / (LM + 0.2t)
+ * 
+ * @param crownRadius - Inside crown radius L (inches) for torispherical heads
+ *                      If not provided, defaults to inside diameter (D)
+ * @param knuckleRadius - Inside knuckle radius r (inches) for torispherical heads
+ *                        If not provided, defaults to 0.06 * D (6% of diameter)
+ * @param useUG32eStandard - If true, use UG-32(e) standard formula (0.885/0.1)
+ *                          If false (default), use Appendix 1-4(d) M-factor formula
  */
 function calculateHeadMAWP(
   thickness: number,
@@ -255,47 +306,52 @@ function calculateHeadMAWP(
   jointEfficiency: number,
   corrosionAllowance: number,
   headType: string = "ellipsoidal",
-  knuckleRadius?: number // Required for torispherical heads
+  knuckleRadius?: number,
+  crownRadius?: number,
+  useUG32eStandard: boolean = false
 ): number {
   const t = thickness - corrosionAllowance;
-  let L: number; // Crown radius or characteristic dimension
-  let factor: number;
+  const D = radius * 2; // Inside diameter
   
-  switch (headType) {
+  // Safety check: net thickness must be positive
+  if (t <= 0 || radius <= 0) return 0;
+  
+  switch (headType.toLowerCase()) {
     case "hemispherical":
-      // For hemispherical, L = R (inside crown radius)
-      L = radius;
-      factor = 1.0;
-      break;
+      // UG-32(d): P = 2SEt / (R + 0.2t)
+      // R = inside spherical radius
+      return (2 * allowableStress * jointEfficiency * t) / (radius + 0.2 * t);
       
     case "ellipsoidal":
-      // For 2:1 ellipsoidal, L = D (inside diameter)
-      L = radius * 2;
-      factor = 1.0;
-      break;
+      // UG-32(e) for 2:1 ellipsoidal: P = 2SEt / (D + 0.2t)
+      // D = inside diameter
+      return (2 * allowableStress * jointEfficiency * t) / (D + 0.2 * t);
       
     case "torispherical":
-      // L = inside crown radius
-      L = radius;
+      // L = inside crown radius (typically = D for standard F&D heads)
+      const L = crownRadius && crownRadius > 0 ? crownRadius : D;
       
-      if (!knuckleRadius || knuckleRadius <= 0) {
-        // Default to ASME flanged and dished head proportions
-        knuckleRadius = radius * 2 * 0.06; // 6% of diameter
+      // r = inside knuckle radius (typically = 0.06D for standard F&D heads)
+      const r = knuckleRadius && knuckleRadius > 0 ? knuckleRadius : 0.06 * D;
+      
+      if (useUG32eStandard) {
+        // UG-32(e) standard torispherical formula:
+        // P = SEt / (0.885L + 0.1t)
+        const denom = 0.885 * L + 0.1 * t;
+        return denom > 0 ? (allowableStress * jointEfficiency * t) / denom : 0;
+      } else {
+        // Appendix 1-4(d) M-factor formula:
+        // M = 0.25 * (3 + sqrt(L/r))
+        // P = 2SEt / (LM + 0.2t)
+        const M = 0.25 * (3 + Math.sqrt(L / r));
+        const denom = L * M + 0.2 * t;
+        return denom > 0 ? (2 * allowableStress * jointEfficiency * t) / denom : 0;
       }
       
-      // Calculate M factor per ASME UG-32(f)
-      const M = 0.25 * (3 + Math.sqrt(L / knuckleRadius));
-      factor = M;
-      break;
-      
     default:
-      // Default to ellipsoidal
-      L = radius * 2;
-      factor = 1.0;
+      // Default to 2:1 ellipsoidal
+      return (2 * allowableStress * jointEfficiency * t) / (D + 0.2 * t);
   }
-  
-  // MAWP = (2 × S × E × t) / (L × factor + 0.2 × t)
-  return (2 * allowableStress * jointEfficiency * t) / (L * factor + 0.2 * t);
 }
 
 /**

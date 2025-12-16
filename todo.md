@@ -1385,3 +1385,13 @@
 - [x] Add support for North/South head naming convention (in addition to East/West) - Fixed by checking location field
 - [x] Investigate TML data patterns for alternative head naming - Found: West Head detected via location field
 - [x] Verified: All 3 components (Shell, East Head, West Head) now have calculations
+
+
+## ASME MAWP Calculation Fixes (Dec 16, 2025)
+
+Per expert review:
+- [x] Fix cylinder MAWP: Add UG-27(c)(2) longitudinal stress case, return min of hoop and longitudinal
+- [x] Fix torispherical head: Using Appendix 1-4(d) M-factor formula, L defaults to D (inside diameter)
+- [x] Add safety guardrails: net thickness check, denominator sanity checks
+- [x] Fix ellipsoidal head MAWP to use D (diameter) instead of R (radius)
+- [x] Hemispherical and 2:1 ellipsoidal formulas verified correct
