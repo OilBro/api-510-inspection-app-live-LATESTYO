@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Download, Plus, Trash2, Upload, FileText, Mail, Calculator, CheckSquare, FileSpreadsheet, TrendingUp, AlertTriangle } from "lucide-react";
+import { Loader2, Download, Plus, Trash2, Upload, FileText, Mail, Calculator, CheckSquare, FileSpreadsheet, TrendingUp, AlertTriangle, BarChart3 } from "lucide-react";
+import { useLocation } from "wouter";
 import { DataQualityIndicator, CorrosionRateDisplay } from "@/components/DataQualityIndicator";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -713,7 +714,11 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
   const [dialogOpen, setDialogOpen] = useState(false);
   const [componentType, setComponentType] = useState<"shell" | "head">("shell");
   const [recalculating, setRecalculating] = useState(false);
+  const [, setLocation] = useLocation();
   const utils = trpc.useUtils();
+  
+  // Get vessel tag number for trend analysis link
+  const { data: inspection } = trpc.inspections.get.useQuery({ id: inspectionId });
 
   const { data: calculations, isLoading } = trpc.professionalReport.componentCalculations.list.useQuery({
     reportId,
@@ -890,6 +895,16 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
             )}
             Recalculate
           </Button>
+          {inspection?.vesselTagNumber && (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => setLocation(`/trends/${encodeURIComponent(inspection.vesselTagNumber)}`)}
+            >
+              <BarChart3 className="h-4 w-4" />
+              View Trends
+            </Button>
+          )}
           <input
             id="component-import-input"
             type="file"

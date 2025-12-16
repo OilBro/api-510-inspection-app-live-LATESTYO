@@ -1,0 +1,386 @@
+{
+  "query": "DESCRIBE componentCalculations;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute DESCRIBE componentCalculations;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "varchar(64)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "reportId",
+      "Type": "varchar(64)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "componentName",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "componentType",
+      "Type": "enum('shell','head')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "materialCode",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "materialName",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "designTemp",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "designMAWP",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "staticHead",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "specificGravity",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "insideDiameter",
+      "Type": "decimal(10,3)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nominalThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "allowableStress",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "jointEfficiency",
+      "Type": "decimal(4,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "headType",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "crownRadius",
+      "Type": "decimal(10,3)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "knuckleRadius",
+      "Type": "decimal(10,3)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "headFactor",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "previousThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "actualThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "minimumThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "timeSpan",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nextInspectionYears",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "corrosionAllowance",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "corrosionRate",
+      "Type": "decimal(10,6)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "remainingLife",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "calculatedMAWP",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "thicknessAtNextInspection",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pressureAtNextInspection",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "mawpAtNextInspection",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "pdfOriginalActualThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pdfOriginalMinimumThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pdfOriginalCalculatedMAWP",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pdfOriginalCorrosionRate",
+      "Type": "decimal(10,6)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pdfOriginalRemainingLife",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "corrosionRateLongTerm",
+      "Type": "decimal(10,6)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "corrosionRateShortTerm",
+      "Type": "decimal(10,6)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "governingRateType",
+      "Type": "enum('long_term','short_term','nominal')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "governingRateReason",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dataQualityStatus",
+      "Type": "enum('good','anomaly','growth_error','below_minimum','confirmed')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "good",
+      "Extra": ""
+    },
+    {
+      "Field": "dataQualityNotes",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "excludeFromCalculation",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "parentComponentId",
+      "Type": "varchar(64)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "componentPath",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "hierarchyLevel",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tvarchar(64)\tNO\tPRI\tNULL\t\nreportId\tvarchar(64)\tNO\t\tNULL\t\ncomponentName\tvarchar(255)\tNO\t\tNULL\t\ncomponentType\tenum('shell','head')\tNO\t\tNULL\t\nmaterialCode\tvarchar(255)\tYES\t\tNULL\t\nmaterialName\ttext\tYES\t\tNULL\t\ndesignTemp\tdecimal(10,2)\tYES\t\tNULL\t\ndesignMAWP\tdecimal(10,2)\tYES\t\tNULL\t\nstaticHead\tdecimal(10,2)\tYES\t\tNULL\t\nspecificGravity\tdecimal(10,4)\tYES\t\tNULL\t\ninsideDiameter\tdecimal(10,3)\tYES\t\tNULL\t\nnominalThickness\tdecimal(10,4)\tYES\t\tNULL\t\nallowableStress\tdecimal(10,2)\tYES\t\tNULL\t\njointEfficiency\tdecimal(4,2)\tYES\t\tNULL\t\nheadType\tvarchar(50)\tYES\t\tNULL\t\ncrownRadius\tdecimal(10,3)\tYES\t\tNULL\t\nknuckleRadius\tdecimal(10,3)\tYES\t\tNULL\t\nheadFactor\tdecimal(10,4)\tYES\t\tNULL\t\npreviousThickness\tdecimal(10,4)\tYES\t\tNULL\t\nactualThickness\tdecimal(10,4)\tYES\t\tNULL\t\nminimumThickness\tdecimal(10,4)\tYES\t\tNULL\t\ntimeSpan\tdecimal(10,2)\tYES\t\tNULL\t\nnextInspectionYears\tdecimal(10,2)\tYES\t\tNULL\t\ncorrosionAllowance\tdecimal(10,4)\tYES\t\tNULL\t\ncorrosionRate\tdecimal(10,6)\tYES\t\tNULL\t\nremainingLife\tdecimal(10,2)\tYES\t\tNULL\t\ncalculatedMAWP\tdecimal(10,2)\tYES\t\tNULL\t\nthicknessAtNextInspection\tdecimal(10,4)\tYES\t\tNULL\t\npressureAtNextInspection\tdecimal(10,2)\tYES\t\tNULL\t\nmawpAtNextInspection\tdecimal(10,2)\tYES\t\tNULL\t\ncreatedAt\ttimestamp\tYES\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tYES\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\npdfOriginalActualThickness\tdecimal(10,4)\tYES\t\tNULL\t\npdfOriginalMinimumThickness\tdecimal(10,4)\tYES\t\tNULL\t\npdfOriginalCalculatedMAWP\tdecimal(10,2)\tYES\t\tNULL\t\npdfOriginalCorrosionRate\tdecimal(10,6)\tYES\t\tNULL\t\npdfOriginalRemainingLife\tdecimal(10,2)\tYES\t\tNULL\t\ncorrosionRateLongTerm\tdecimal(10,6)\tYES\t\tNULL\t\ncorrosionRateShortTerm\tdecimal(10,6)\tYES\t\tNULL\t\ngoverningRateType\tenum('long_term','short_term','nominal')\tYES\t\tNULL\t\ngoverningRateReason\ttext\tYES\t\tNULL\t\ndataQualityStatus\tenum('good','anomaly','growth_error','below_minimum','confirmed')\tYES\t\tgood\t\ndataQualityNotes\ttext\tYES\t\tNULL\t\nexcludeFromCalculation\ttinyint(1)\tYES\t\t0\t\nparentComponentId\tvarchar(64)\tYES\t\tNULL\t\ncomponentPath\tvarchar(500)\tYES\t\tNULL\t\nhierarchyLevel\tint(11)\tYES\t\t0\t\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}
