@@ -1,0 +1,26 @@
+{
+  "query": "SELECT cc.componentName, cc.nominalThickness, cc.previousThickness, cc.actualThickness, cc.minimumThickness, i.vesselTagNumber \nFROM componentCalculations cc \nJOIN professionalReports pr ON cc.reportId = pr.id \nJOIN inspections i ON pr.inspectionId = i.id \nWHERE i.vesselTagNumber = '54-11-067' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT cc.componentName, cc.nominalThickness, cc.previousThickness, cc.actualThickness, cc.minimumThickness, i.vesselTagNumber \nFROM componentCalculations cc \nJOIN professionalReports pr ON cc.reportId = pr.id \nJOIN inspections i ON pr.inspectionId = i.id \nWHERE i.vesselTagNumber = '54-11-067' LIMIT 10;",
+  "rows": [
+    {
+      "componentName": "East Head",
+      "nominalThickness": "0.5000",
+      "previousThickness": "0.5535",
+      "actualThickness": "0.6298",
+      "minimumThickness": "0.6460",
+      "vesselTagNumber": "54-11-067"
+    },
+    {
+      "componentName": "Shell",
+      "nominalThickness": "0.6250",
+      "previousThickness": "0.6520",
+      "actualThickness": "0.6619",
+      "minimumThickness": "0.6499",
+      "vesselTagNumber": "54-11-067"
+    }
+  ],
+  "messages": [],
+  "stdout": "componentName\tnominalThickness\tpreviousThickness\tactualThickness\tminimumThickness\tvesselTagNumber\nEast Head\t0.5000\t0.5535\t0.6298\t0.6460\t54-11-067\nShell\t0.6250\t0.6520\t0.6619\t0.6499\t54-11-067\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

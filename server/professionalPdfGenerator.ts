@@ -1005,7 +1005,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       shellComp?.staticHead || '0',
       inspection?.specificGravity || '0.92',
       inspection?.insideDiameter || '70.750',
-      inspection?.nominalThickness || '0.625'
+      shellComp?.nominalThickness || inspection?.nominalThickness || '0.625'
     ]
   ];
   
@@ -1041,7 +1041,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
     ['Vessel Shell', 't prev', 't act', 't min', 'y'],
     [
       'Values',
-      shellComp?.previousThickness || shellComp?.tPrevious || '0.625',
+      shellComp?.previousThickness || shellComp?.tPrevious || shellComp?.nominalThickness || '0.625',
       shellComp?.actualThickness || shellComp?.tActual || '0.652',
       shellComp?.minimumThickness || shellComp?.minimumRequired || shellComp?.tMin || '0.530',
       shellComp?.timeSpan || '12.0'

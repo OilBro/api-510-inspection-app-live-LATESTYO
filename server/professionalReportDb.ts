@@ -444,10 +444,14 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
     // Determine thicknesses (MINIMUM of relevant TMLs for conservative API 510 calculations)
     const validCurrent = relevantTMLs.map(t => parseFloat(t.tActual || t.currentThickness || '0')).filter(v => v > 0);
     const validPrev = relevantTMLs.map(t => parseFloat(t.previousThickness || '0')).filter(v => v > 0);
+    const validNominal = relevantTMLs.map(t => parseFloat(t.nominalThickness || '0')).filter(v => v > 0);
     
     // Use MINIMUM thickness (most conservative for safety calculations)
     const avgCurrent = validCurrent.length ? Math.min(...validCurrent) : (type === 'shell' ? 0.652 : 0.555);
-    const avgPrev = validPrev.length ? Math.min(...validPrev) : (type === 'shell' ? 0.625 : 0.500);
+    // For previous/nominal: prefer actual previous readings, then nominal, then defaults
+    const avgPrev = validPrev.length ? Math.min(...validPrev) : 
+                    (validNominal.length ? Math.min(...validNominal) : (type === 'shell' ? 0.625 : 0.500));
+    const avgNominal = validNominal.length ? Math.min(...validNominal) : avgPrev;
     
     // Default design params
     const P = parseFloat(inspection.designPressure || '250');
@@ -589,7 +593,7 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       headFactor: headFactor ? headFactor.toFixed(4) : null,
       crownRadius: type === 'head' && inspection.crownRadius ? parseFloat(inspection.crownRadius as any).toFixed(3) : null,
       knuckleRadius: type === 'head' && inspection.knuckleRadius ? parseFloat(inspection.knuckleRadius as any).toFixed(3) : null,
-      nominalThickness: avgPrev.toFixed(3),
+      nominalThickness: avgNominal.toFixed(3),
       previousThickness: avgPrev.toFixed(3),
       actualThickness: avgCurrent.toFixed(3),
       minimumThickness: tMinStr,

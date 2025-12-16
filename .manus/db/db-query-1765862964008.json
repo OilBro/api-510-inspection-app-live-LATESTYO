@@ -1,0 +1,150 @@
+{
+  "query": "SELECT t.component, t.componentType, t.currentThickness, t.previousThickness, t.nominalThickness\nFROM tmlReadings t\nJOIN inspections i ON t.inspectionId = i.id\nWHERE i.vesselTagNumber = '54-11-067'\nLIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT t.component, t.componentType, t.currentThickness, t.previousThickness, t.nominalThickness\nFROM tmlReadings t\nJOIN inspections i ON t.inspectionId = i.id\nWHERE i.vesselTagNumber = '54-11-067'\nLIMIT 20;",
+  "rows": [
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "currentThickness": "0.6710",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "currentThickness": "0.6620",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.6250"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "currentThickness": "0.6580",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.6250"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "currentThickness": "0.6620",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.6250"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "currentThickness": "0.6670",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "currentThickness": "0.6620",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.6250"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "currentThickness": "0.6630",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "currentThickness": "0.6800",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.6250"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "currentThickness": "0.6610",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "currentThickness": "0.6610",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.6250"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "currentThickness": "0.6590",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "currentThickness": "0.6620",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "currentThickness": "0.6720",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "currentThickness": "0.6000",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "currentThickness": "0.6680",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "currentThickness": "0.5750",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "currentThickness": "0.6580",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "currentThickness": "0.6620",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.6250"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "currentThickness": "0.5750",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "currentThickness": "0.6700",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.5000"
+    }
+  ],
+  "messages": [],
+  "stdout": "component\tcomponentType\tcurrentThickness\tpreviousThickness\tnominalThickness\nVESSEL SHELL\tVESSEL SHELL\t0.6710\tNULL\tNULL\nVessel Shell\tVessel Shell\t0.6620\tNULL\t0.6250\nVessel Shell\tVessel Shell\t0.6580\tNULL\t0.6250\nVessel Shell\tVessel Shell\t0.6620\tNULL\t0.6250\nEAST HEAD\tEAST HEAD\t0.6670\tNULL\tNULL\nVessel Shell\tVessel Shell\t0.6620\tNULL\t0.6250\nVESSEL SHELL\tVESSEL SHELL\t0.6630\tNULL\tNULL\nVessel Shell\tVessel Shell\t0.6800\tNULL\t0.6250\nVESSEL SHELL\tVESSEL SHELL\t0.6610\tNULL\tNULL\nVessel Shell\tVessel Shell\t0.6610\tNULL\t0.6250\nVESSEL SHELL\tVESSEL SHELL\t0.6590\tNULL\tNULL\nVESSEL SHELL\tVESSEL SHELL\t0.6620\tNULL\tNULL\nEAST HEAD\tEAST HEAD\t0.6720\tNULL\tNULL\nEAST HEAD\tEAST HEAD\t0.6000\tNULL\tNULL\nVESSEL SHELL\tVESSEL SHELL\t0.6680\tNULL\tNULL\nEAST HEAD\tEAST HEAD\t0.5750\tNULL\tNULL\nVESSEL SHELL\tVESSEL SHELL\t0.6580\tNULL\tNULL\nVessel Shell\tVessel Shell\t0.6620\tNULL\t0.6250\nEAST HEAD\tEAST HEAD\t0.5750\tNULL\tNULL\nEast Head\tEast Head\t0.6700\tNULL\t0.5000\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}
