@@ -907,18 +907,51 @@ export const professionalReportRouter = router({
         (tml: any) => tml.component && tml.component.toLowerCase().includes('shell')
       );
       
-      // Create East Head calculation
+      // Create East Head calculation with improved detection
+      // Matches: 'east head', 'e head', 'head 1', 'head-1', 'left head', or any head without west/right keywords
       await createComponentCalc(
         'head',
         'East Head',
-        (tml: any) => tml.component && tml.component.toLowerCase().includes('east') && tml.component.toLowerCase().includes('head')
+        (tml: any) => {
+          const comp = (tml.component || '').toLowerCase();
+          const compType = (tml.componentType || '').toLowerCase();
+          const combined = `${comp} ${compType}`;
+          
+          // Explicit east head matches
+          if (combined.includes('east') && combined.includes('head')) return true;
+          if (combined.includes('e head')) return true;
+          if (combined.includes('head 1') || combined.includes('head-1')) return true;
+          if (combined.includes('left head')) return true;
+          
+          // If it's a head but not explicitly west/right, treat as east (first head)
+          if ((combined.includes('head') && !combined.includes('shell')) &&
+              !combined.includes('west') && !combined.includes('w head') &&
+              !combined.includes('head 2') && !combined.includes('head-2') &&
+              !combined.includes('right')) {
+            return true;
+          }
+          return false;
+        }
       );
       
-      // Create West Head calculation
+      // Create West Head calculation with improved detection
+      // Matches: 'west head', 'w head', 'head 2', 'head-2', 'right head'
       await createComponentCalc(
         'head',
         'West Head',
-        (tml: any) => tml.component && tml.component.toLowerCase().includes('west') && tml.component.toLowerCase().includes('head')
+        (tml: any) => {
+          const comp = (tml.component || '').toLowerCase();
+          const compType = (tml.componentType || '').toLowerCase();
+          const combined = `${comp} ${compType}`;
+          
+          // Explicit west head matches
+          if (combined.includes('west') && combined.includes('head')) return true;
+          if (combined.includes('w head')) return true;
+          if (combined.includes('head 2') || combined.includes('head-2')) return true;
+          if (combined.includes('right head')) return true;
+          
+          return false;
+        }
       );
       
       return { success: true, message: 'Component calculations regenerated successfully' };

@@ -1354,3 +1354,15 @@
   - West Head: 'west head', 'w head', 'head 2', 'head-2', 'right head'
 - [x] Fixed shell detection to exclude heads
 - [x] Both East Head and West Head now appear in TABLE A
+
+
+## Head Detection Fix (Dec 15, 2025) ✅ COMPLETE
+
+- [x] Improved head detection in routers.ts PDF import
+- [x] Improved head detection in professionalReportRouters.ts recalculate
+- [x] Added support for alternate head naming conventions:
+  - East Head: 'east head', 'e head', 'head 1', 'head-1', 'left head'
+  - West Head: 'west head', 'w head', 'head 2', 'head-2', 'right head'
+- [x] Default unspecified heads to East Head (first head)
+- [x] Both East Head and West Head now appear in TABLE A
+- [x] All 90 tests passing

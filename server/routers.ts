@@ -1138,10 +1138,28 @@ export const appRouter = router({
               });
               logger.info(`[PDF Import] Auto-created shell component calculation for report ${report.id}`);
               
-              // Create East Head component calculation
-              const eastHeadTMLs = createdTMLs.filter((tml: any) => 
-                tml.component && (tml.component.toLowerCase().includes('east') && tml.component.toLowerCase().includes('head'))
-              );
+              // Create East Head component calculation with improved detection
+              // Matches: 'east head', 'e head', 'head 1', 'head-1', 'left head', or any head without west/right keywords
+              const eastHeadTMLs = createdTMLs.filter((tml: any) => {
+                const comp = (tml.component || '').toLowerCase();
+                const compType = (tml.componentType || '').toLowerCase();
+                const combined = `${comp} ${compType}`;
+                
+                // Explicit east head matches
+                if (combined.includes('east') && combined.includes('head')) return true;
+                if (combined.includes('e head')) return true;
+                if (combined.includes('head 1') || combined.includes('head-1')) return true;
+                if (combined.includes('left head')) return true;
+                
+                // If it's a head but not explicitly west/right, treat as east (first head)
+                if ((combined.includes('head') && !combined.includes('shell')) &&
+                    !combined.includes('west') && !combined.includes('w head') &&
+                    !combined.includes('head 2') && !combined.includes('head-2') &&
+                    !combined.includes('right')) {
+                  return true;
+                }
+                return false;
+              });
               
               if (eastHeadTMLs.length > 0) {
                 const eastCurrentThicknesses = eastHeadTMLs
@@ -1219,10 +1237,21 @@ export const appRouter = router({
                 logger.info(`[PDF Import] Auto-created East Head component calculation for report ${report.id}`);
               }
               
-              // Create West Head component calculation
-              const westHeadTMLs = createdTMLs.filter((tml: any) => 
-                tml.component && (tml.component.toLowerCase().includes('west') && tml.component.toLowerCase().includes('head'))
-              );
+              // Create West Head component calculation with improved detection
+              // Matches: 'west head', 'w head', 'head 2', 'head-2', 'right head'
+              const westHeadTMLs = createdTMLs.filter((tml: any) => {
+                const comp = (tml.component || '').toLowerCase();
+                const compType = (tml.componentType || '').toLowerCase();
+                const combined = `${comp} ${compType}`;
+                
+                // Explicit west head matches
+                if (combined.includes('west') && combined.includes('head')) return true;
+                if (combined.includes('w head')) return true;
+                if (combined.includes('head 2') || combined.includes('head-2')) return true;
+                if (combined.includes('right head')) return true;
+                
+                return false;
+              });
               
               if (westHeadTMLs.length > 0) {
                 const westCurrentThicknesses = westHeadTMLs
