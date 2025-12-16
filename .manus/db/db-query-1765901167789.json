@@ -1,0 +1,24 @@
+{
+  "query": "SELECT id, vesselTagNumber, inspectionDate, allowableStress, jointEfficiency FROM inspections WHERE vesselTagNumber = '54-11-067' ORDER BY inspectionDate DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, vesselTagNumber, inspectionDate, allowableStress, jointEfficiency FROM inspections WHERE vesselTagNumber = '54-11-067' ORDER BY inspectionDate DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "test-audit-1765525276487",
+      "vesselTagNumber": "54-11-067",
+      "inspectionDate": "2017-06-20 00:00:00",
+      "allowableStress": "20000.00",
+      "jointEfficiency": "0.85"
+    },
+    {
+      "id": "jU9JWZx36AM0T2oDkjsex",
+      "vesselTagNumber": "54-11-067",
+      "inspectionDate": "NULL",
+      "allowableStress": "20000.00",
+      "jointEfficiency": "0.85"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tvesselTagNumber\tinspectionDate\tallowableStress\tjointEfficiency\ntest-audit-1765525276487\t54-11-067\t2017-06-20 00:00:00\t20000.00\t0.85\njU9JWZx36AM0T2oDkjsex\t54-11-067\tNULL\t20000.00\t0.85\n",
+  "stderr": "",
+  "execution_time_ms": 170
+}

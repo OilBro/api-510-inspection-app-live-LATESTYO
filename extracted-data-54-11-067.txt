@@ -1,0 +1,157 @@
+# Extracted Data from 54-11-067 2017 In-Lieu-Of Report
+
+## Report Info
+- Report No.: 54-11-067
+- Inspector: Christopher Welch
+- Employer: OILPRO
+- Inspection Date: 06/20/2017
+- Report Date: 09/28/17
+- API Certification No.: 33958
+- Inspection Type: In-Service (In-Lieu-Of)
+
+## Client Info
+- Client: SACHEM INC
+- Location: CLEBURNE TX
+- Area: TANK STORAGE AREA
+
+## Vessel Data
+- Vessel Tag Number: 54-11-067
+- Vessel Type: Process Vessel
+- MAWP (psi): 250
+- Design Temp (degF): 200
+- MDMT (degF): -20
+- Oper. Press (psi): 250
+- Oper. Temp (degF): 80
+- Material Type: Stainless Steel
+- Inside Dia. (inch): 70.750
+- Length (inch): 216
+- Product: METHYLCHLORIDE CLEAN
+- Year Built: 2005
+- NB No.: 5653
+- Const Code: ASME S8 D1
+- Vessel Config: Horizontal
+- Head Type: 2:1 Ellipsoidal
+- Insul. Type: None
+- Insul. Thk (inch): N/A
+
+## TABLE A - Executive Summary
+| Component    | Nominal | Actual | Min Required | Design MAWP | Calc MAWP | Remaining Life |
+|--------------|---------|--------|--------------|-------------|-----------|----------------|
+| Vessel Shell | 0.625   | 0.652  | 0.530        | 250         | 307.5     | >20            |
+| East Head    | 0.500   | 0.555  | 0.526        | 250         | 263.9     | >20            |
+| West Head    | 0.500   | 0.552  | 0.526        | 250         | 262.5     | >20            |
+
+## Next Inspection Dates
+- Next external inspection: 6/20/2022
+- Next internal inspection: 6/20/2027
+- Next UT inspection: 6/20/2027
+
+
+## Appendix B - Mechanical Integrity Calculations
+
+### Shell Evaluation (Page 14)
+- Material: SS A-304
+- Temp: 200°F
+- MAWP: 250 psi
+- SH (Static Head): 6.0 ft
+- SG (Specific Gravity): 0.92
+- D (Inside Diameter): 70.750 in
+- t nom (Nominal Thickness): 0.625 in
+
+#### Minimum Thickness Calculations (Shell)
+- P: 252.4 psi (includes static head)
+- R: 35.375 in
+- S: 20000 psi
+- E: 0.85
+- t (min required): 0.530 in
+
+#### Remaining Life Calculations (Shell)
+- t prev: 0.625 in
+- t act: 0.652 in
+- t min: 0.530 in
+- y (years): 12.0
+- Ca = t act - t min = 0.122 in
+- Cr = (t prev - t act) / Y = 0.00000 in/year
+- RL = Ca / Cr = >20 years
+
+#### MAWP Calculations (Shell)
+- Where t = t act - 2YnCr = 0.652 in
+- SEt/R+0.6t = P = 309.9 psi
+- P-(SH*.433*SG) = MAWP = 307.5 psi
+
+### Head Evaluation (Pages 16-17)
+
+#### East Head and West Head Common Data
+- MAWP: 250 psi
+- D: 70.750 in
+- T: 200°F
+- E: 0.85
+- SG1: 0.92
+- SG2: 0.92
+
+#### East Head
+- Head Type: Ellipsoidal (2:1)
+- t nom: 0.500 in
+- Material: SS A-304
+- S: 20000 psi
+- SH: 6.0 ft
+- P: 252.4 psi
+- t min: 0.526 in
+
+Remaining Life:
+- t prev: 0.500 in
+- t act: 0.555 in
+- t min: 0.526 in
+- y: 12.0 years
+- Ca = 0.029 in
+- Cr = 0 in/year
+- RL = >20 years
+
+MAWP Calculation:
+- t = 0.555 in
+- P = 266.3 psi
+- MAWP = 263.9 psi
+
+#### West Head
+- Head Type: Ellipsoidal (2:1)
+- t nom: 0.500 in
+- Material: SS A-304
+- S: 20000 psi
+- SH: 6.0 ft
+- P: 252.4 psi
+- t min: 0.526 in
+
+Remaining Life:
+- t prev: 0.500 in
+- t act: 0.552 in
+- t min: 0.526 in
+- y: 12.0 years
+- Ca = 0.026 in
+- Cr = 0 in/year
+- RL = >20 years
+
+MAWP Calculation:
+- t = 0.552 in
+- P = 264.9 psi
+- MAWP = 262.5 psi
+
+### Nozzle Evaluation (Page 20)
+
+| Noz. | Desc.        | Size (in) | tmin*  | 0°/Single | 90°   | 180°  | 270°  |
+|------|--------------|-----------|--------|-----------|-------|-------|-------|
+| N1   | Manway       | 24        | 0.375  | 0.574     | 0.576 | 0.578 | 0.578 |
+| N2   | Relief       | 3         | 0.216  | 0.3       | 0.301 | 0.298 | 0.3   |
+| N3   | Vapor Out    | 2         | 0.154  | 0.164     | 0.164 | 0.163 | 0.162 |
+| N4   | Sight Gauge  | 1         | 0.133  | 0.137     | 0.131 | 0.13  | 0.131 |
+| N5   | Sight Gauge  | 1         | 0.133  | 0.131     | 0.132 | 0.128 | 0.13  |
+| N6   | Reactor Feed | 2         | 0.154  | 0.163     | 0.163 | 0.164 | 0.166 |
+| N7   | Gauge        | 1         | 0.133  | 0.162     | 0.161 | 0.128 | 0.163 |
+| N8   | Vapor In     | 1         | 0.133  | 0.13      | 0.131 | 0.13  | 0.134 |
+| N9   | Out          | 1         | 0.133  | 0.128     | 0.134 | 0.133 | 0.132 |
+| N10  | Out          | 1         | 0.133  | 0.132     | 0.13  | 0.13  | 0.133 |
+| N11  | Gauge        | 1         | 0.133  | 0.133     | 0.132 | 0.132 | 0.131 |
+| N12  | Gauge        | 1         | 0.133  | 0.133     | 0.132 | 0.132 | 0.13  |
+
+Nozzle Materials:
+- N1: SS A-304
+- N2-N12: SS A-312
