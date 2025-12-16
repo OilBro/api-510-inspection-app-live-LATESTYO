@@ -8,7 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Download, Plus, Trash2, Upload, FileText, Mail, Calculator, CheckSquare, FileSpreadsheet } from "lucide-react";
+import { Loader2, Download, Plus, Trash2, Upload, FileText, Mail, Calculator, CheckSquare, FileSpreadsheet, TrendingUp, AlertTriangle } from "lucide-react";
+import { DataQualityIndicator, CorrosionRateDisplay } from "@/components/DataQualityIndicator";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import FindingsSection from "../professionalReport/FindingsSection";
 import RecommendationsSection from "../professionalReport/RecommendationsSection";
 import PhotosSection from "../professionalReport/PhotosSection";
@@ -921,63 +924,127 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
 
       {calculations && calculations.length > 0 ? (
         <div className="grid gap-4">
-          {calculations.map((calc) => (
-            <Card key={calc.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>{calc.componentName}</CardTitle>
-                    <CardDescription>
-                      {calc.componentType === "shell" ? "Shell Evaluation" : "Head Evaluation"}
-                    </CardDescription>
+          {calculations.map((calc) => {
+            const ltRate = parseFloat(calc.corrosionRateLongTerm || '0');
+            const stRate = parseFloat(calc.corrosionRateShortTerm || '0');
+            const govRate = parseFloat(calc.corrosionRate || '0');
+            const govType = (calc.governingRateType || 'nominal') as 'long_term' | 'short_term' | 'nominal';
+            const dataStatus = (calc.dataQualityStatus || 'good') as 'good' | 'anomaly' | 'growth_error' | 'below_minimum' | 'confirmed';
+            
+            return (
+              <Card key={calc.id} className={dataStatus === 'below_minimum' ? 'border-red-500 border-2' : ''}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          {calc.componentName}
+                          {govType !== 'nominal' && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Badge variant={govType === 'short_term' ? 'destructive' : 'secondary'} className="text-xs">
+                                    <TrendingUp className="h-3 w-3 mr-1" />
+                                    {govType === 'long_term' ? 'LT' : 'ST'}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="max-w-xs">
+                                    {govType === 'long_term' ? 'Long-term rate is governing' : 'Short-term rate is governing (accelerated corrosion)'}
+                                    {calc.governingRateReason && <><br/><br/>{calc.governingRateReason}</>}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {dataStatus === 'below_minimum' && (
+                            <Badge variant="destructive" className="text-xs">
+                              <AlertTriangle className="h-3 w-3 mr-1" />
+                              UNSAFE
+                            </Badge>
+                          )}
+                        </CardTitle>
+                        <CardDescription>
+                          {calc.componentType === "shell" ? "Shell Evaluation" : "Head Evaluation"}
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteCalculation.mutate({ calcId: calc.id })}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteCalculation.mutate({ calcId: calc.id })}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Material</p>
-                    <p className="font-medium">{calc.materialCode || "N/A"}</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Data Quality Alert */}
+                  {dataStatus !== 'good' && (
+                    <DataQualityIndicator 
+                      status={dataStatus} 
+                      notes={calc.dataQualityNotes || undefined}
+                    />
+                  )}
+                  
+                  {/* Dual Corrosion Rates */}
+                  {(ltRate > 0 || stRate > 0) && (
+                    <div className="bg-muted/30 rounded-lg p-4">
+                      <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4" />
+                        Corrosion Rate Analysis
+                      </h4>
+                      <CorrosionRateDisplay
+                        longTermRate={ltRate}
+                        shortTermRate={stRate}
+                        governingRate={govRate}
+                        governingType={govType}
+                        governingReason={calc.governingRateReason || undefined}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Main Calculation Results */}
+                  <div className="grid grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Material</p>
+                      <p className="font-medium">{calc.materialCode || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Design MAWP</p>
+                      <p className="font-medium">{calc.designMAWP} psi</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Min Thickness</p>
+                      <p className="font-medium">{calc.minimumThickness} in</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Remaining Life</p>
+                      <p className={`font-medium ${parseFloat(calc.remainingLife || '999') < 5 ? 'text-red-600 font-bold' : parseFloat(calc.remainingLife || '999') < 10 ? 'text-yellow-600' : 'text-green-600'}`}>
+                        {calc.remainingLife} years
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Governing Rate</p>
+                      <p className="font-medium">{(govRate * 1000).toFixed(1)} mpy</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">MAWP @ Next Insp</p>
+                      <p className="font-medium">{calc.mawpAtNextInspection} psi</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Actual Thickness</p>
+                      <p className="font-medium">{calc.actualThickness} in</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Next Inspection</p>
+                      <p className="font-medium">{calc.nextInspectionYears} years</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Design MAWP</p>
-                    <p className="font-medium">{calc.designMAWP} psi</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Min Thickness</p>
-                    <p className="font-medium">{calc.minimumThickness} in</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Remaining Life</p>
-                    <p className="font-medium">{calc.remainingLife} years</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Corrosion Rate</p>
-                    <p className="font-medium">{calc.corrosionRate} in/yr</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">MAWP @ Next Insp</p>
-                    <p className="font-medium">{calc.mawpAtNextInspection} psi</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Actual Thickness</p>
-                    <p className="font-medium">{calc.actualThickness} in</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Next Inspection</p>
-                    <p className="font-medium">{calc.nextInspectionYears} years</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       ) : (
         <Card>

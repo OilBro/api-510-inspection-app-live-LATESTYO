@@ -18,6 +18,8 @@ import { materialStressRouter } from "./materialStressRouter";
 import { validationWarningsRouter } from "./validationWarningsRouter";
 import { anomalyRouter } from "./anomalyRouter";
 import { actionPlanRouter } from "./actionPlanRouter";
+import { trendAnalysisRouter } from "./trendAnalysisRouter";
+import { hierarchyRouter } from "./hierarchyRouter";
 import { convertToJpeg } from "./_core/freeconvert";
 import * as fieldMappingDb from "./fieldMappingDb";
 import * as professionalReportDb from "./professionalReportDb";
@@ -56,6 +58,8 @@ export const appRouter = router({
   validationWarnings: validationWarningsRouter,
   anomalies: anomalyRouter,
   actionPlans: actionPlanRouter,
+  trendAnalysis: trendAnalysisRouter,
+  hierarchy: hierarchyRouter,
 
   images: router({
     convertToJpeg: protectedProcedure

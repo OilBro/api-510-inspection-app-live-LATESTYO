@@ -17,6 +17,7 @@ import UploadUTResults from "./pages/UploadUTResults";
 import ValidationDashboard from "./pages/ValidationDashboard";
 import AnomalyTrends from "./pages/AnomalyTrends";
 import FieldInspector from "./pages/FieldInspector";
+import TrendAnalysis from "./pages/TrendAnalysis";
 
 function Router() {
   return (
@@ -34,6 +35,7 @@ function Router() {
       <Route path={"/validation/:inspectionId"} component={ValidationDashboard} />
       <Route path={"/anomalies/trends"} component={AnomalyTrends} />
       <Route path={"/field-inspector"} component={FieldInspector} />
+      <Route path={"/trends/:vesselTagNumber"} component={TrendAnalysis} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

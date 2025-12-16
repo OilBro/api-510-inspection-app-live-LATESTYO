@@ -69,11 +69,13 @@ export function calculateShellRemainingLife(inputs: ShellCalculationInputs): {
   // Corrosion allowance
   const Ca = t_act - t_min;
   
-  // Corrosion rate
-  const Cr = (t_prev - t_act) / Y;
+  // Corrosion rate with division-by-zero guard
+  // If Y (years between inspections) is 0 or negative, assume no corrosion
+  const Cr = Y > 0 ? (t_prev - t_act) / Y : 0;
   
-  // Remaining life
-  const RL = Ca / Cr;
+  // Remaining life with division-by-zero guard
+  // If Cr is 0 or negative (no corrosion or gaining thickness), return >20 years
+  const RL = Cr > 0 ? Ca / Cr : 999;
   
   return { Ca, Cr, RL };
 }
@@ -187,24 +189,33 @@ export function calculateTorisphericalFactor(L: number, r: number): number {
 export function calculateHeadMinimumThickness(inputs: HeadCalculationInputs): number {
   const { headType, P, S, E, D, L, r } = inputs;
   
+  // Common denominator check for all head types
+  const denom = 2 * S * E - 0.2 * P;
+  if (denom <= 0) {
+    throw new Error(`Invalid calculation: denominator (2SE - 0.2P) = ${denom.toFixed(4)} <= 0. Check S=${S}, E=${E}, P=${P}`);
+  }
+  
   switch (headType) {
     case 'hemispherical':
       // Formula: t = PL / (2SE - 0.2P)
       // For hemispherical, L = R = D/2
       const R_hemi = D / 2;
-      return (P * R_hemi) / (2 * S * E - 0.2 * P);
+      return (P * R_hemi) / denom;
     
     case 'ellipsoidal':
       // Formula: t = PD / (2SE - 0.2P)  [for 2:1 ellipsoidal]
-      return (P * D) / (2 * S * E - 0.2 * P);
+      return (P * D) / denom;
     
     case 'torispherical':
       // Formula: t = PLM / (2SE - 0.2P)
       if (!L || !r) {
         throw new Error('L and r are required for torispherical heads');
       }
+      if (r <= 0) {
+        throw new Error(`Invalid knuckle radius r=${r}. Must be positive.`);
+      }
       const M = calculateTorisphericalFactor(L, r);
-      return (P * L * M) / (2 * S * E - 0.2 * P);
+      return (P * L * M) / denom;
     
     default:
       throw new Error(`Unknown head type: ${headType}`);
@@ -225,11 +236,13 @@ export function calculateHeadRemainingLife(inputs: HeadCalculationInputs): {
   // Corrosion allowance
   const Ca = t_act - t_min;
   
-  // Corrosion rate
-  const Cr = (t_prev - t_act) / Y;
+  // Corrosion rate with division-by-zero guard
+  // If Y (years between inspections) is 0 or negative, assume no corrosion
+  const Cr = Y > 0 ? (t_prev - t_act) / Y : 0;
   
-  // Remaining life
-  const RL = Ca / Cr;
+  // Remaining life with division-by-zero guard
+  // If Cr is 0 or negative (no corrosion or gaining thickness), return >20 years
+  const RL = Cr > 0 ? Ca / Cr : 999;
   
   return { Ca, Cr, RL };
 }
