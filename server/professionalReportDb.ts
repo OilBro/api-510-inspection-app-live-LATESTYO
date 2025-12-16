@@ -1,4 +1,5 @@
 import { eq, or, and } from "drizzle-orm";
+import { logger } from "./_core/logger";
 import { getDb } from "./db";
 import {
   professionalReports,
@@ -408,11 +409,37 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
 
   // Helper: Create Calculation
   const createCalc = async (type: 'shell' | 'head', name: string, keyword: string) => {
-    // Filter TMLs for this component
-    const relevantTMLs = tmlResults.filter(t => 
-      t.componentType?.toLowerCase().includes(keyword) || 
-      t.component?.toLowerCase().includes(keyword)
-    );
+    // Filter TMLs for this component with improved head detection
+    const relevantTMLs = tmlResults.filter(t => {
+      const compType = (t.componentType || '').toLowerCase();
+      const comp = (t.component || '').toLowerCase();
+      
+      if (keyword === 'shell') {
+        // Shell: match 'shell' but exclude heads
+        return (compType.includes('shell') || comp.includes('shell')) && 
+               !compType.includes('head') && !comp.includes('head');
+      } else if (keyword === 'east') {
+        // East Head: match 'east head', 'e head', 'head 1', 'head-1', 'left head'
+        return compType.includes('east') || comp.includes('east') ||
+               compType.includes('e head') || comp.includes('e head') ||
+               compType.includes('head 1') || comp.includes('head 1') ||
+               compType.includes('head-1') || comp.includes('head-1') ||
+               compType.includes('left head') || comp.includes('left head') ||
+               // If only one head mentioned and it's the first occurrence
+               ((compType.includes('head') || comp.includes('head')) && 
+                !compType.includes('west') && !comp.includes('west') &&
+                !compType.includes('w head') && !comp.includes('w head') &&
+                !compType.includes('right') && !comp.includes('right'));
+      } else if (keyword === 'west') {
+        // West Head: match 'west head', 'w head', 'head 2', 'head-2', 'right head'
+        return compType.includes('west') || comp.includes('west') ||
+               compType.includes('w head') || comp.includes('w head') ||
+               compType.includes('head 2') || comp.includes('head 2') ||
+               compType.includes('head-2') || comp.includes('head-2') ||
+               compType.includes('right head') || comp.includes('right head');
+      }
+      return compType.includes(keyword) || comp.includes(keyword);
+    });
     
     // Determine thicknesses (MINIMUM of relevant TMLs for conservative API 510 calculations)
     const validCurrent = relevantTMLs.map(t => parseFloat(t.tActual || t.currentThickness || '0')).filter(v => v > 0);
@@ -472,7 +499,7 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
         
         tMin = (totalP * L * M) / (2 * S * E - 0.2 * totalP);
         
-        console.log(`[Calc] Torispherical head: L=${L.toFixed(2)}, r=${r.toFixed(2)}, M=${M.toFixed(4)}, t_min=${tMin.toFixed(4)}`);
+        logger.info(`[Calc] Torispherical head: L=${L.toFixed(2)}, r=${r.toFixed(2)}, M=${M.toFixed(4)}, t_min=${tMin.toFixed(4)}`);
       } else if (headTypeStr.includes('hemispherical')) {
         // Hemispherical Head: t = PR / (2SE - 0.2P)
         headTypeUsed = 'hemispherical';
@@ -498,10 +525,10 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
           const previous = new Date(prevInspectionResult[0].inspectionDate);
           const diffMs = current.getTime() - previous.getTime();
           yearsBetween = diffMs / (1000 * 60 * 60 * 24 * 365.25);
-          console.log(`[Calc] Time between inspections: ${yearsBetween.toFixed(2)} years`);
+          logger.info(`[Calc] Time between inspections: ${yearsBetween.toFixed(2)} years`);
         }
       } catch (e) {
-        console.error('[Calc] Error fetching previous inspection date:', e);
+        logger.error('[Calc] Error fetching previous inspection date:', e);
       }
     }
     
@@ -583,7 +610,7 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
   await createCalc('head', 'East Head', 'east');
   await createCalc('head', 'West Head', 'west');
   
-  console.log('[Calculations] Generated default calculations for report', reportId);
+  logger.info('[Calculations] Generated default calculations for report', reportId);
 }
 
 // ============================================================================

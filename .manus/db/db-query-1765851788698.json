@@ -1,0 +1,190 @@
+{
+  "query": "SELECT componentName, componentType, actualThickness, minimumThickness, calculatedMAWP, corrosionRate, remainingLife FROM componentCalculations WHERE componentName LIKE '%Head%' LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT componentName, componentType, actualThickness, minimumThickness, calculatedMAWP, corrosionRate, remainingLife FROM componentCalculations WHERE componentName LIKE '%Head%' LIMIT 20;",
+  "rows": [
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.4755",
+      "calculatedMAWP": "585.71",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5080",
+      "calculatedMAWP": "164.08",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5080",
+      "calculatedMAWP": "164.08",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.4755",
+      "calculatedMAWP": "585.71",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "529.41",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "529.41",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "West Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "529.41",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "NULL",
+      "minimumThickness": "NULL",
+      "calculatedMAWP": "120.00",
+      "corrosionRate": "0.020000",
+      "remainingLife": "-2.50"
+    },
+    {
+      "componentName": "West Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.4755",
+      "calculatedMAWP": "585.71",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "529.41",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "529.41",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "NULL",
+      "minimumThickness": "NULL",
+      "calculatedMAWP": "120.00",
+      "corrosionRate": "0.020000",
+      "remainingLife": "-2.50"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "529.41",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "529.41",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "West Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5080",
+      "calculatedMAWP": "164.08",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "529.41",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "West Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "529.41",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.4755",
+      "calculatedMAWP": "585.71",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "529.41",
+      "corrosionRate": "0.000000",
+      "remainingLife": "20.00"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "NULL",
+      "minimumThickness": "NULL",
+      "calculatedMAWP": "120.00",
+      "corrosionRate": "0.020000",
+      "remainingLife": "-2.50"
+    }
+  ],
+  "messages": [],
+  "stdout": "componentName\tcomponentType\tactualThickness\tminimumThickness\tcalculatedMAWP\tcorrosionRate\tremainingLife\nEast Head\thead\t0.5550\t0.4755\t585.71\t0.000000\t20.00\nEast Head\thead\t0.5550\t0.5080\t164.08\t0.000000\t20.00\nEast Head\thead\t0.5550\t0.5080\t164.08\t0.000000\t20.00\nEast Head\thead\t0.5550\t0.4755\t585.71\t0.000000\t20.00\nEast Head\thead\t0.5550\t0.5259\t529.41\t0.000000\t20.00\nEast Head\thead\t0.5550\t0.5259\t529.41\t0.000000\t20.00\nWest Head\thead\t0.5550\t0.5259\t529.41\t0.000000\t20.00\nEast Head\thead\tNULL\tNULL\t120.00\t0.020000\t-2.50\nWest Head\thead\t0.5550\t0.4755\t585.71\t0.000000\t20.00\nEast Head\thead\t0.5550\t0.5259\t529.41\t0.000000\t20.00\nEast Head\thead\t0.5550\t0.5259\t529.41\t0.000000\t20.00\nEast Head\thead\tNULL\tNULL\t120.00\t0.020000\t-2.50\nEast Head\thead\t0.5550\t0.5259\t529.41\t0.000000\t20.00\nEast Head\thead\t0.5550\t0.5259\t529.41\t0.000000\t20.00\nWest Head\thead\t0.5550\t0.5080\t164.08\t0.000000\t20.00\nEast Head\thead\t0.5550\t0.5259\t529.41\t0.000000\t20.00\nWest Head\thead\t0.5550\t0.5259\t529.41\t0.000000\t20.00\nEast Head\thead\t0.5550\t0.4755\t585.71\t0.000000\t20.00\nEast Head\thead\t0.5550\t0.5259\t529.41\t0.000000\t20.00\nEast Head\thead\tNULL\tNULL\t120.00\t0.020000\t-2.50\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

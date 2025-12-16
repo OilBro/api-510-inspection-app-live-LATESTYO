@@ -1,0 +1,85 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "actionPlanAttachments"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "anomalyActionPlans"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "appendixDocuments"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "calculations"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "checklistItems"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "componentCalculations"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "externalInspections"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "ffsAssessments"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "fieldMappings"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "importedFiles"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "inLieuOfAssessments"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "inspectionFindings"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "inspectionPhotos"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "inspections"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "internalInspections"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "materialStressValues"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "nozzleEvaluations"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "pipeSchedules"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "professionalReports"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "recommendations"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "reportAnomalies"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "tmlReadings"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "unmatchedData"
+    },
+    {
+      "Tables_in_A4XPjAmiHcgmrps2ZTa96H": "users"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_A4XPjAmiHcgmrps2ZTa96H\n__drizzle_migrations\nactionPlanAttachments\nanomalyActionPlans\nappendixDocuments\ncalculations\nchecklistItems\ncomponentCalculations\nexternalInspections\nffsAssessments\nfieldMappings\nimportedFiles\ninLieuOfAssessments\ninspectionFindings\ninspectionPhotos\ninspections\ninternalInspections\nmaterialStressValues\nnozzleEvaluations\npipeSchedules\nprofessionalReports\nrecommendations\nreportAnomalies\ntmlReadings\nunmatchedData\nusers\n",
+  "stderr": "",
+  "execution_time_ms": 47
+}

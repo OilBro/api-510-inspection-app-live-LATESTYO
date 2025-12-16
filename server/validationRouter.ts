@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { logger } from "./_core/logger";
 import { protectedProcedure, router } from "./_core/trpc";
 import { getInspection, getTmlReadings } from "./db";
 import { getComponentCalculations, getProfessionalReportByInspection } from "./professionalReportDb";
@@ -12,7 +13,7 @@ export const validationRouter = router({
   getValidationData: protectedProcedure
     .input(z.object({ inspectionId: z.string() }))
     .query(async ({ input }) => {
-      console.log('[Validation] Getting validation data for inspection:', input.inspectionId);
+      logger.info('[Validation] Getting validation data for inspection:', input.inspectionId);
       
       // Get inspection data
       const inspection = await getInspection(input.inspectionId);

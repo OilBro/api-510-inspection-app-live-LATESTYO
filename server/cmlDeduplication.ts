@@ -1,3 +1,4 @@
+import { logger } from "./_core/logger";
 /**
  * CML Deduplication Logic
  * 
@@ -44,14 +45,14 @@ interface ConsolidatedTMLReading {
 export function consolidateTMLReadings(readings: ParsedTMLReading[]): ConsolidatedTMLReading[] {
   // Validate input
   if (!readings || !Array.isArray(readings)) {
-    console.warn('[CML Dedup] Invalid readings input:', readings);
+    logger.warn('[CML Dedup] Invalid readings input:', readings);
     return [];
   }
   
   // Filter out null/undefined readings
   const validReadings = readings.filter(r => r !== null && r !== undefined);
   if (validReadings.length === 0) {
-    console.warn('[CML Dedup] No valid readings to process');
+    logger.warn('[CML Dedup] No valid readings to process');
     return [];
   }
   
@@ -99,7 +100,7 @@ export function consolidateTMLReadings(readings: ParsedTMLReading[]): Consolidat
     
     // Use first reading for metadata
     if (sortedGroup.length === 0) {
-      console.warn('[CML Dedup] Empty sorted group for:', groupKey);
+      logger.warn('[CML Dedup] Empty sorted group for:', groupKey);
       continue;
     }
     const firstReading = sortedGroup[0];

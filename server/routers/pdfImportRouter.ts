@@ -1,3 +1,4 @@
+import { logger } from "../_core/logger";
 import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { invokeLLM } from "../_core/llm";
@@ -262,7 +263,7 @@ Do NOT leave fields empty if the information exists anywhere in the document. Se
           data: extractedData,
         };
       } catch (error) {
-        console.error("PDF extraction failed:", error);
+        logger.error("PDF extraction failed:", error);
         throw new Error(`Failed to extract data from PDF: ${error instanceof Error ? error.message : "Unknown error"}`);
       }
     }),
@@ -366,7 +367,7 @@ Do NOT leave fields empty if the information exists anywhere in the document. Se
           );
 
         for (const existing of existingInspections) {
-          console.log('[PDF Import] Found existing inspection', existing.id, 'for vessel', input.vesselData.vesselTagNumber, '- deleting to prevent duplicates');
+          logger.info('[PDF Import] Found existing inspection', existing.id, 'for vessel', input.vesselData.vesselTagNumber, '- deleting to prevent duplicates');
           
           // Delete related data
           await db.delete(tmlReadings).where(eq(tmlReadings.inspectionId, existing.id));
@@ -451,11 +452,11 @@ Do NOT leave fields empty if the information exists anywhere in the document. Se
             component: measurement.component || null,
             currentThickness: measurement.minThickness?.toString() || null,
           };
-          console.log('[PDF Import] TML record to insert:', JSON.stringify(record, null, 2));
+          logger.info('[PDF Import] TML record to insert:', JSON.stringify(record, null, 2));
           return record;
         });
 
-        console.log('[PDF Import] About to insert', tmlRecords.length, 'TML records');
+        logger.info('[PDF Import] About to insert', tmlRecords.length, 'TML records');
         
         // Identify nozzle TMLs and create nozzle evaluation records
         const nozzleKeywords = ['manway', 'relief', 'vapor', 'sight', 'gauge', 'reactor', 'feed', 'inlet', 'outlet', 'drain', 'vent'];
@@ -464,7 +465,7 @@ Do NOT leave fields empty if the information exists anywhere in the document. Se
           return nozzleKeywords.some(keyword => comp.includes(keyword));
         });
         
-        console.log('[PDF Import] Identified', nozzleTMLs.length, 'nozzle TMLs');
+        logger.info('[PDF Import] Identified', nozzleTMLs.length, 'nozzle TMLs');
         
         // Use raw SQL to bypass Drizzle ORM issue with defaults
         for (const record of tmlRecords) {
@@ -485,7 +486,7 @@ Do NOT leave fields empty if the information exists anywhere in the document. Se
         
         // Create nozzle evaluation records for identified nozzles
         if (nozzleTMLs.length > 0) {
-          console.log('[PDF Import] Creating nozzle evaluation records...');
+          logger.info('[PDF Import] Creating nozzle evaluation records...');
           const { nozzleEvaluations } = await import('../../drizzle/schema.js');
           
           for (const nozzleTML of nozzleTMLs) {
@@ -532,7 +533,7 @@ Do NOT leave fields empty if the information exists anywhere in the document. Se
             await db.insert(nozzleEvaluations).values(nozzleRecord);
           }
           
-          console.log('[PDF Import] Created', nozzleTMLs.length, 'nozzle evaluation records');
+          logger.info('[PDF Import] Created', nozzleTMLs.length, 'nozzle evaluation records');
         }
       }
 
@@ -578,11 +579,11 @@ Do NOT leave fields empty if the information exists anywhere in the document. Se
         }
         
         await generateDefaultCalculationsForInspection(inspectionId, reportId);
-        console.log('[PDF Import] Auto-generated component calculations for inspection', inspectionId);
+        logger.info('[PDF Import] Auto-generated component calculations for inspection', inspectionId);
         
         // If TABLE A data was extracted from PDF, store as PDF original values
         if (input.tableA && input.tableA.components && input.tableA.components.length > 0) {
-          console.log('[PDF Import] Storing TABLE A original values for validation');
+          logger.info('[PDF Import] Storing TABLE A original values for validation');
           
           for (const tableAComponent of input.tableA.components) {
             // Find matching component calculation by name
@@ -608,12 +609,12 @@ Do NOT leave fields empty if the information exists anywhere in the document. Se
                 })
                 .where(eq(componentCalculations.id, existingCalc.id));
               
-              console.log(`[PDF Import] Stored TABLE A values for ${tableAComponent.componentName}`);
+              logger.info(`[PDF Import] Stored TABLE A values for ${tableAComponent.componentName}`);
             }
           }
         }
       } catch (calcError) {
-        console.error('[PDF Import] Failed to auto-generate calculations:', calcError);
+        logger.error('[PDF Import] Failed to auto-generate calculations:', calcError);
         // Don't fail the entire import if calculation generation fails
       }
 
@@ -623,7 +624,7 @@ Do NOT leave fields empty if the information exists anywhere in the document. Se
         const { notifyOwner } = await import('../_core/notification');
         const anomalies = await detectAnomalies(inspectionId);
         await saveAnomalies(inspectionId, anomalies);
-        console.log(`[PDF Import] Detected ${anomalies.length} anomalies for inspection ${inspectionId}`);
+        logger.info(`[PDF Import] Detected ${anomalies.length} anomalies for inspection ${inspectionId}`);
 
         // Send notification if critical anomalies detected
         const criticalAnomalies = anomalies.filter(a => a.severity === 'critical');
@@ -633,14 +634,14 @@ Do NOT leave fields empty if the information exists anywhere in the document. Se
               title: `Critical Anomalies Detected: ${input.vesselData.vesselTagNumber}`,
               content: `${criticalAnomalies.length} critical ${criticalAnomalies.length === 1 ? 'anomaly' : 'anomalies'} detected during PDF import for vessel ${input.vesselData.vesselTagNumber}.\n\nIssues:\n${criticalAnomalies.slice(0, 5).map(a => `• ${a.title}`).join('\n')}${criticalAnomalies.length > 5 ? `\n• ...and ${criticalAnomalies.length - 5} more` : ''}\n\nPlease review the inspection report.`,
             });
-            console.log(`[PDF Import] Sent notification for ${criticalAnomalies.length} critical anomalies`);
+            logger.info(`[PDF Import] Sent notification for ${criticalAnomalies.length} critical anomalies`);
           } catch (notifyError) {
-            console.error('[PDF Import] Failed to send anomaly notification:', notifyError);
+            logger.error('[PDF Import] Failed to send anomaly notification:', notifyError);
             // Don't fail the import if notification fails
           }
         }
       } catch (anomalyError) {
-        console.error('[PDF Import] Anomaly detection failed:', anomalyError);
+        logger.error('[PDF Import] Anomaly detection failed:', anomalyError);
         // Don't fail the entire import if anomaly detection fails
       }
 
@@ -891,7 +892,7 @@ Extract ALL thickness measurements from tables. Be thorough and accurate. Match 
           message: `Successfully processed ${addedCount + updatedCount} thickness measurements (${updatedCount} updated, ${addedCount} new)`,
         };
       } catch (error) {
-        console.error("UT upload failed:", error);
+        logger.error("UT upload failed:", error);
         throw new Error(`Failed to upload UT results: ${error instanceof Error ? error.message : "Unknown error"}`);
       }
     }),

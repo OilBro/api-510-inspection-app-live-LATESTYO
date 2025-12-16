@@ -1,3 +1,4 @@
+import { logger } from "./_core/logger";
 /**
  * Enhanced API 510 Calculation Engine
  * Industry Leader Features: Dual Corrosion Rates, Anomaly Detection, Safety Validations
@@ -253,12 +254,12 @@ export function validateCaseStudy() {
   const remainingLife = calculateRemainingLife(data.actualThickness, data.minimumThickness, rates.governingRate);
   const interval = calculateInspectionInterval(remainingLife);
   
-  console.log('=== Case Study Validation ===');
-  console.log(`Short-Term Rate: ${(rates.corrosionRateShortTerm * 1000).toFixed(1)} mpy (Expected: 100 mpy)`);
-  console.log(`Remaining Life: ${remainingLife.toFixed(1)} years (Expected: 1.0 years)`);
-  console.log(`Inspection Interval: ${interval.toFixed(1)} years (Expected: 0.5 years)`);
-  console.log(`Status: ${rates.dataQualityStatus}`);
-  console.log(`Reason: ${rates.governingRateReason}`);
+  logger.info('=== Case Study Validation ===');
+  logger.info(`Short-Term Rate: ${(rates.corrosionRateShortTerm * 1000).toFixed(1)} mpy (Expected: 100 mpy)`);
+  logger.info(`Remaining Life: ${remainingLife.toFixed(1)} years (Expected: 1.0 years)`);
+  logger.info(`Inspection Interval: ${interval.toFixed(1)} years (Expected: 0.5 years)`);
+  logger.info(`Status: ${rates.dataQualityStatus}`);
+  logger.info(`Reason: ${rates.governingRateReason}`);
   
   return {
     rates,

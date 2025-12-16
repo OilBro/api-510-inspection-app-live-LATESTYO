@@ -1,4 +1,5 @@
 import { ENV } from './_core/env';
+import { logger } from "./_core/logger";
 import { invokeLLM } from './_core/llm';
 import { storagePut } from './storage';
 
@@ -11,9 +12,9 @@ const MANUS_API_KEY = ENV.forgeApiKey;
 
 // Log API key status on module load
 if (MANUS_API_KEY) {
-  console.log("[Manus Parser] API key loaded successfully:", MANUS_API_KEY.substring(0, 10) + "...");
+  logger.info("[Manus Parser] API key loaded successfully:", MANUS_API_KEY.substring(0, 10) + "...");
 } else {
-  console.warn("[Manus Parser] WARNING: API key not found in environment variables");
+  logger.warn("[Manus Parser] WARNING: API key not found in environment variables");
 }
 
 interface ManusParseResponse {
@@ -37,7 +38,7 @@ export async function parseWithManusAPI(
   fileBuffer: Buffer,
   filename: string
 ): Promise<ManusParseResponse> {
-  console.log("[Manus Parser] Starting independent PDF text extraction...");
+  logger.info("[Manus Parser] Starting independent PDF text extraction...");
   
   try {
     // Use pdfjs-dist directly for PDF parsing
@@ -61,7 +62,7 @@ export async function parseWithManusAPI(
       fullText += pageText + '\n';
     }
     
-    console.log("[Manus Parser] Text extraction successful, pages:", numPages, "length:", fullText.length);
+    logger.info("[Manus Parser] Text extraction successful, pages:", numPages, "length:", fullText.length);
 
     return {
       text: fullText,
@@ -71,7 +72,7 @@ export async function parseWithManusAPI(
       },
     };
   } catch (error) {
-    console.error("[Manus Parser] Failed to parse PDF:", error);
+    logger.error("[Manus Parser] Failed to parse PDF:", error);
     throw error;
   }
 }
@@ -84,16 +85,16 @@ export async function parseAndStandardizeWithManus(
   fileBuffer: Buffer,
   filename: string
 ): Promise<any> {
-  console.log("[Manus Parser] Starting parse and standardization workflow...");
+  logger.info("[Manus Parser] Starting parse and standardization workflow...");
 
   // Step 1: Parse PDF with Manus API
   const parseResult = await parseWithManusAPI(fileBuffer, filename);
   const fullText = parseResult.text;
 
-  console.log("[Manus Parser] Text extracted, length:", fullText.length);
+  logger.info("[Manus Parser] Text extracted, length:", fullText.length);
 
   // Step 2: Use LLM to extract structured data
-  console.log("[Manus Parser] Extracting structured data with LLM...");
+  logger.info("[Manus Parser] Extracting structured data with LLM...");
 
   const llmResponse = await invokeLLM({
     messages: [
@@ -319,7 +320,7 @@ Extract all available information and return it as structured JSON matching this
   const messageContent = llmResponse.choices[0].message.content;
   const contentText = typeof messageContent === 'string' ? messageContent : JSON.stringify(messageContent);
   const extractedData = JSON.parse(contentText || "{}");
-  console.log("[Manus Parser] Structured data extracted successfully");
+  logger.info("[Manus Parser] Structured data extracted successfully");
 
   return extractedData;
 }
@@ -332,7 +333,7 @@ export async function parseDocumentWithManus(
   fileBuffer: Buffer,
   filename: string
 ): Promise<{ result: { text: string; pages: any[] } }> {
-  console.log("[Manus Parser] Simple text extraction...");
+  logger.info("[Manus Parser] Simple text extraction...");
   
   const parseResult = await parseWithManusAPI(fileBuffer, filename);
   

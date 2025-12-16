@@ -1,3 +1,4 @@
+import { logger } from "./_core/logger";
 /**
  * Nozzle Minimum Thickness Calculations per ASME Section VIII Division 1, UG-45
  * 
@@ -149,7 +150,7 @@ export function calculateNozzleWithSchedule(
   input: NozzleWithScheduleLookup
 ): NozzleCalculationResult | null {
   if (!input.pipeScheduleData) {
-    console.error(`Pipe schedule data not found for ${input.nominalSize}" ${input.schedule}`);
+    logger.error(`Pipe schedule data not found for ${input.nominalSize}" ${input.schedule}`);
     return null;
   }
   

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { logger } from "./_core/logger";
 import { router, protectedProcedure } from "./_core/trpc";
 import { getDb } from "./db";
 import { anomalyActionPlans, actionPlanAttachments, reportAnomalies } from "../drizzle/schema";
@@ -51,7 +52,7 @@ export const actionPlanRouter = router({
             });
           }
         } catch (notifyError) {
-          console.error('[Action Plan] Failed to send notification:', notifyError);
+          logger.error('[Action Plan] Failed to send notification:', notifyError);
         }
       }
 
@@ -173,7 +174,7 @@ export const actionPlanRouter = router({
               content: `The action plan has been marked as completed.\n${input.completionNotes || 'No completion notes provided.'}`,
             });
           } catch (notifyError) {
-            console.error('[Action Plan] Failed to send completion notification:', notifyError);
+            logger.error('[Action Plan] Failed to send completion notification:', notifyError);
           }
         }
       }

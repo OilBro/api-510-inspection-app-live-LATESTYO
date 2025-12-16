@@ -1,4 +1,5 @@
 import { ENV } from "./_core/env";
+import { logger } from "./_core/logger";
 
 const DOCUPIPE_API_URL = "https://app.docupipe.ai";
 const DOCUPIPE_API_KEY = process.env.DOCUPIPE_API_KEY || '';
@@ -6,15 +7,15 @@ const DOCUPIPE_SCHEMA_ID = process.env.DOCUPIPE_SCHEMA_ID || ''; // Schema ID fo
 
 // Log API key status on module load
 if (DOCUPIPE_API_KEY) {
-  console.log("[Docupipe] API key loaded successfully:", DOCUPIPE_API_KEY.substring(0, 10) + "...");
+  logger.info("[Docupipe] API key loaded successfully:", DOCUPIPE_API_KEY.substring(0, 10) + "...");
 } else {
-  console.warn("[Docupipe] WARNING: API key not found in environment variables");
+  logger.warn("[Docupipe] WARNING: API key not found in environment variables");
 }
 
 if (DOCUPIPE_SCHEMA_ID) {
-  console.log("[Docupipe] Schema ID loaded:", DOCUPIPE_SCHEMA_ID);
+  logger.info("[Docupipe] Schema ID loaded:", DOCUPIPE_SCHEMA_ID);
 } else {
-  console.warn("[Docupipe] WARNING: Schema ID not found - standardization will not be available");
+  logger.warn("[Docupipe] WARNING: Schema ID not found - standardization will not be available");
 }
 
 interface DocupipeUploadResponse {
@@ -65,11 +66,11 @@ export async function uploadDocument(
   fileBuffer: Buffer,
   filename: string
 ): Promise<DocupipeUploadResponse> {
-  console.log("[Docupipe uploadDocument] API key check:", DOCUPIPE_API_KEY ? "PRESENT (" + DOCUPIPE_API_KEY.substring(0, 10) + "...)" : "MISSING");
+  logger.info("[Docupipe uploadDocument] API key check:", DOCUPIPE_API_KEY ? "PRESENT (" + DOCUPIPE_API_KEY.substring(0, 10) + "...)" : "MISSING");
   
-  console.log("[Docupipe] API key check - value:", DOCUPIPE_API_KEY ? "PRESENT (" + DOCUPIPE_API_KEY.substring(0, 10) + "...)" : "MISSING/EMPTY", "| length:", DOCUPIPE_API_KEY ? DOCUPIPE_API_KEY.length : 0);
+  logger.info("[Docupipe] API key check - value:", DOCUPIPE_API_KEY ? "PRESENT (" + DOCUPIPE_API_KEY.substring(0, 10) + "...)" : "MISSING/EMPTY", "| length:", DOCUPIPE_API_KEY ? DOCUPIPE_API_KEY.length : 0);
   if (!DOCUPIPE_API_KEY) {
-    console.error("[Docupipe] ERROR: API key check failed!");
+    logger.error("[Docupipe] ERROR: API key check failed!");
     throw new Error("DOCUPIPE_API_KEY is not configured");
   }
 
@@ -104,9 +105,9 @@ export async function uploadDocument(
  * Check the status of a Docupipe job
  */
 export async function checkJobStatus(jobId: string): Promise<DocupipeJobStatus> {
-  console.log("[Docupipe] API key check - value:", DOCUPIPE_API_KEY ? "PRESENT (" + DOCUPIPE_API_KEY.substring(0, 10) + "...)" : "MISSING/EMPTY", "| length:", DOCUPIPE_API_KEY ? DOCUPIPE_API_KEY.length : 0);
+  logger.info("[Docupipe] API key check - value:", DOCUPIPE_API_KEY ? "PRESENT (" + DOCUPIPE_API_KEY.substring(0, 10) + "...)" : "MISSING/EMPTY", "| length:", DOCUPIPE_API_KEY ? DOCUPIPE_API_KEY.length : 0);
   if (!DOCUPIPE_API_KEY) {
-    console.error("[Docupipe] ERROR: API key check failed!");
+    logger.error("[Docupipe] ERROR: API key check failed!");
     throw new Error("DOCUPIPE_API_KEY is not configured");
   }
 
@@ -167,9 +168,9 @@ export async function waitForJobCompletion(
 export async function getDocumentResult(
   documentId: string
 ): Promise<DocupipeDocumentResult> {
-  console.log("[Docupipe] API key check - value:", DOCUPIPE_API_KEY ? "PRESENT (" + DOCUPIPE_API_KEY.substring(0, 10) + "...)" : "MISSING/EMPTY", "| length:", DOCUPIPE_API_KEY ? DOCUPIPE_API_KEY.length : 0);
+  logger.info("[Docupipe] API key check - value:", DOCUPIPE_API_KEY ? "PRESENT (" + DOCUPIPE_API_KEY.substring(0, 10) + "...)" : "MISSING/EMPTY", "| length:", DOCUPIPE_API_KEY ? DOCUPIPE_API_KEY.length : 0);
   if (!DOCUPIPE_API_KEY) {
-    console.error("[Docupipe] ERROR: API key check failed!");
+    logger.error("[Docupipe] ERROR: API key check failed!");
     throw new Error("DOCUPIPE_API_KEY is not configured");
   }
 
@@ -196,9 +197,9 @@ export async function standardizeDocument(
   documentId: string,
   schemaId?: string
 ): Promise<DocupipeStandardizeResponse> {
-  console.log("[Docupipe] API key check - value:", DOCUPIPE_API_KEY ? "PRESENT (" + DOCUPIPE_API_KEY.substring(0, 10) + "...)" : "MISSING/EMPTY", "| length:", DOCUPIPE_API_KEY ? DOCUPIPE_API_KEY.length : 0);
+  logger.info("[Docupipe] API key check - value:", DOCUPIPE_API_KEY ? "PRESENT (" + DOCUPIPE_API_KEY.substring(0, 10) + "...)" : "MISSING/EMPTY", "| length:", DOCUPIPE_API_KEY ? DOCUPIPE_API_KEY.length : 0);
   if (!DOCUPIPE_API_KEY) {
-    console.error("[Docupipe] ERROR: API key check failed!");
+    logger.error("[Docupipe] ERROR: API key check failed!");
     throw new Error("DOCUPIPE_API_KEY is not configured");
   }
 
@@ -226,7 +227,7 @@ export async function standardizeDocument(
   }
 
   const result = await response.json();
-  console.log("[Docupipe] Standardization response:", JSON.stringify(result));
+  logger.info("[Docupipe] Standardization response:", JSON.stringify(result));
   return result;
 }
 
@@ -236,9 +237,9 @@ export async function standardizeDocument(
 export async function getStandardizationResult(
   standardizationId: string
 ): Promise<DocupipeStandardizationResult> {
-  console.log("[Docupipe] API key check - value:", DOCUPIPE_API_KEY ? "PRESENT (" + DOCUPIPE_API_KEY.substring(0, 10) + "...)" : "MISSING/EMPTY", "| length:", DOCUPIPE_API_KEY ? DOCUPIPE_API_KEY.length : 0);
+  logger.info("[Docupipe] API key check - value:", DOCUPIPE_API_KEY ? "PRESENT (" + DOCUPIPE_API_KEY.substring(0, 10) + "...)" : "MISSING/EMPTY", "| length:", DOCUPIPE_API_KEY ? DOCUPIPE_API_KEY.length : 0);
   if (!DOCUPIPE_API_KEY) {
-    console.error("[Docupipe] ERROR: API key check failed!");
+    logger.error("[Docupipe] ERROR: API key check failed!");
     throw new Error("DOCUPIPE_API_KEY is not configured");
   }
 
@@ -272,7 +273,7 @@ export async function waitForStandardizationCompletion(
   let result: DocupipeStandardizationResult;
 
   // Initial wait before first check
-  console.log("[Docupipe] Waiting 3 seconds before first status check...");
+  logger.info("[Docupipe] Waiting 3 seconds before first status check...");
   await new Promise((resolve) => setTimeout(resolve, 3000));
   totalWaited += 3;
 
@@ -309,33 +310,33 @@ export async function parseAndStandardizeDocument(
   filename: string,
   schemaId?: string
 ): Promise<any> {
-  console.log("[Docupipe] Starting upload and standardization workflow...");
+  logger.info("[Docupipe] Starting upload and standardization workflow...");
   
   // Step 1: Upload document
   const { documentId, jobId } = await uploadDocument(fileBuffer, filename);
-  console.log("[Docupipe] Document uploaded:", documentId);
+  logger.info("[Docupipe] Document uploaded:", documentId);
 
   // Step 2: Wait for document processing
   await waitForJobCompletion(jobId);
-  console.log("[Docupipe] Document processing completed");
+  logger.info("[Docupipe] Document processing completed");
 
   // Step 3: Start standardization
   const standardizationResponse = await standardizeDocument(documentId, schemaId);
-  console.log("[Docupipe] Standardization response:", JSON.stringify(standardizationResponse));
+  logger.info("[Docupipe] Standardization response:", JSON.stringify(standardizationResponse));
   
   // Extract standardization ID from response (could be standardizationId or id)
   const standardizationId = standardizationResponse.standardizationId || (standardizationResponse as any).id || (standardizationResponse as any).standardizationIds?.[0];
   
   if (!standardizationId) {
-    console.error("[Docupipe] No standardization ID found in response:", standardizationResponse);
+    logger.error("[Docupipe] No standardization ID found in response:", standardizationResponse);
     throw new Error("Failed to get standardization ID from Docupipe response");
   }
   
-  console.log("[Docupipe] Standardization started:", standardizationId);
+  logger.info("[Docupipe] Standardization started:", standardizationId);
 
   // Step 4: Wait for standardization
   const standardizationResult = await waitForStandardizationCompletion(standardizationId);
-  console.log("[Docupipe] Standardization completed");
+  logger.info("[Docupipe] Standardization completed");
 
   return standardizationResult.result;
 }

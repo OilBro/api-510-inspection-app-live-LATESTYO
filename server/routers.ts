@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+import { logger } from "./_core/logger";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
@@ -433,7 +434,7 @@ export const appRouter = router({
                 jointEfficiency: inspection.jointEfficiency ? parseFloat(String(inspection.jointEfficiency)) : undefined
               });
             } catch (error) {
-              console.error('[TML Update] Status calculation failed:', error);
+              logger.error('[TML Update] Status calculation failed:', error);
             }
           }
         }
@@ -652,7 +653,7 @@ export const appRouter = router({
             if (inspection.userId !== ctx.user.id) {
               throw new Error("Unauthorized: Cannot modify another user's inspection");
             }
-            console.log(`[Multi-Source Import] Appending to existing inspection: ${input.inspectionId}`);
+            logger.info(`[Multi-Source Import] Appending to existing inspection: ${input.inspectionId}`);
           } else {
             // Try to find existing inspection by vessel tag number
             let existingInspection = null;
@@ -667,7 +668,7 @@ export const appRouter = router({
               // Update existing inspection with same vessel tag
               isNewInspection = false;
               inspection = existingInspection;
-              console.log(`[Multi-Source Import] Found existing vessel ${parsedData.vesselTagNumber}, updating inspection: ${inspection.id}`);
+              logger.info(`[Multi-Source Import] Found existing vessel ${parsedData.vesselTagNumber}, updating inspection: ${inspection.id}`);
             } else {
               // Create new inspection
               isNewInspection = true;
@@ -677,7 +678,7 @@ export const appRouter = router({
                 vesselTagNumber: parsedData.vesselTagNumber || `IMPORT-${Date.now()}`,
                 status: "draft" as const,
               };
-              console.log(`[Multi-Source Import] Creating new inspection: ${inspection.id}`);
+              logger.info(`[Multi-Source Import] Creating new inspection: ${inspection.id}`);
             }
           }
 
@@ -796,7 +797,7 @@ export const appRouter = router({
                 trackMapping('inspectionDate', 'inspectionDate', parsedData.inspectionDate);
               }
             } catch (e) {
-              console.warn('[PDF Import] Failed to parse inspection date:', parsedData.inspectionDate);
+              logger.warn('[PDF Import] Failed to parse inspection date:', parsedData.inspectionDate);
             }
           }
 
@@ -842,11 +843,11 @@ export const appRouter = router({
           // Create TML readings if available - with deduplication
           const createdTMLs: any[] = [];
           if (parsedData.tmlReadings && parsedData.tmlReadings.length > 0) {
-            console.log(`[PDF Import] Processing ${parsedData.tmlReadings.length} TML readings with deduplication`);
+            logger.info(`[PDF Import] Processing ${parsedData.tmlReadings.length} TML readings with deduplication`);
             
             // Consolidate duplicate readings into single records
             const consolidatedReadings = consolidateTMLReadings(parsedData.tmlReadings);
-            console.log(`[PDF Import] Consolidated to ${consolidatedReadings.length} unique CML records`);
+            logger.info(`[PDF Import] Consolidated to ${consolidatedReadings.length} unique CML records`);
             
             for (const consolidated of consolidatedReadings) {
               const tmlRecord: any = {
@@ -895,7 +896,7 @@ export const appRouter = router({
               createdTMLs.push(tmlRecord);
             }
             
-            console.log(`[PDF Import] Created ${createdTMLs.length} TML records (eliminated ${parsedData.tmlReadings.length - createdTMLs.length} duplicates)`);
+            logger.info(`[PDF Import] Created ${createdTMLs.length} TML records (eliminated ${parsedData.tmlReadings.length - createdTMLs.length} duplicates)`);
           }
 
           // Prepare checklist items for review (don't create yet)
@@ -1010,7 +1011,7 @@ export const appRouter = router({
             calculationRecord.mawpJointEfficiency = 1.0;
             
             await db.saveCalculations(calculationRecord);
-            console.log(`[PDF Import] Auto-created calculations record for inspection ${inspection.id}`);
+            logger.info(`[PDF Import] Auto-created calculations record for inspection ${inspection.id}`);
             
             // Also create component calculation for Professional Report
             let report = await professionalReportDb.getProfessionalReportByInspection(inspection.id);
@@ -1028,7 +1029,7 @@ export const appRouter = router({
                 clientName: parsedData.clientName || inspection.clientName || "",
               });
               report = await professionalReportDb.getProfessionalReportByInspection(inspection.id);
-              console.log(`[PDF Import] Auto-created professional report ${reportId}`);
+              logger.info(`[PDF Import] Auto-created professional report ${reportId}`);
             }
             
             // Create shell component calculation with imported data if report exists
@@ -1135,7 +1136,7 @@ export const appRouter = router({
                 jointEfficiency: inspection.jointEfficiency || '0.85',
                 corrosionAllowance: CA.toString(),
               });
-              console.log(`[PDF Import] Auto-created shell component calculation for report ${report.id}`);
+              logger.info(`[PDF Import] Auto-created shell component calculation for report ${report.id}`);
               
               // Create East Head component calculation
               const eastHeadTMLs = createdTMLs.filter((tml: any) => 
@@ -1215,7 +1216,7 @@ export const appRouter = router({
                   jointEfficiency: inspection.jointEfficiency || '0.85',
                   corrosionAllowance: CA.toString(),
                 });
-                console.log(`[PDF Import] Auto-created East Head component calculation for report ${report.id}`);
+                logger.info(`[PDF Import] Auto-created East Head component calculation for report ${report.id}`);
               }
               
               // Create West Head component calculation
@@ -1296,14 +1297,14 @@ export const appRouter = router({
                   jointEfficiency: inspection.jointEfficiency || '0.85',
                   corrosionAllowance: CA.toString(),
                 });
-                console.log(`[PDF Import] Auto-created West Head component calculation for report ${report.id}`);
+                logger.info(`[PDF Import] Auto-created West Head component calculation for report ${report.id}`);
               }
             }
           }
           
           // Create nozzle evaluations if available
           if (parsedData.nozzles && parsedData.nozzles.length > 0) {
-            console.log(`[PDF Import] Creating ${parsedData.nozzles.length} nozzle evaluations...`);
+            logger.info(`[PDF Import] Creating ${parsedData.nozzles.length} nozzle evaluations...`);
             for (const nozzle of parsedData.nozzles) {
               const nozzleRecord: any = {
                 id: nanoid(),
@@ -1335,7 +1336,7 @@ export const appRouter = router({
               
               await db.createNozzleEvaluation(nozzleRecord);
             }
-            console.log(`[PDF Import] Created ${parsedData.nozzles.length} nozzle evaluations`);
+            logger.info(`[PDF Import] Created ${parsedData.nozzles.length} nozzle evaluations`);
           }
 
           return {
@@ -1351,9 +1352,9 @@ export const appRouter = router({
               : `Added data to existing inspection ${inspection.id}`,
           };
         } catch (error) {
-          console.error("Error parsing file:", error);
+          logger.error("Error parsing file:", error);
           const errorMessage = error instanceof Error ? error.message : "Unknown error";
-          console.error("Full error details:", {
+          logger.error("Full error details:", {
             message: errorMessage,
             stack: error instanceof Error ? error.stack : undefined,
             fileName: input.fileName,
@@ -1413,7 +1414,7 @@ export const appRouter = router({
             itemsCreated: input.checklistItems.length,
           };
         } catch (error) {
-          console.error("Error finalizing checklist import:", error);
+          logger.error("Error finalizing checklist import:", error);
           throw new Error("Failed to finalize checklist import");
         }
       }),

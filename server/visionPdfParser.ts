@@ -1,4 +1,5 @@
 import { invokeLLM } from './_core/llm';
+import { logger } from "./_core/logger";
 import { storagePut } from './storage';
 import { pdfToPng } from 'pdf-to-png-converter';
 import { writeFileSync, mkdirSync } from 'fs';
@@ -63,14 +64,14 @@ export async function parseWithVision(pdfBuffer: Buffer): Promise<VisionParsedDa
   writeFileSync(pdfPath, pdfBuffer);
   
   try {
-    console.log('[Vision Parser] Starting PDF to image conversion');
+    logger.info('[Vision Parser] Starting PDF to image conversion');
     
     // Convert PDF to PNG images
     const pngPages = await pdfToPng(pdfPath, {
       outputFolder: tempDir,
     });
     
-    console.log(`[Vision Parser] Converted ${pngPages.length} pages to images`);
+    logger.info(`[Vision Parser] Converted ${pngPages.length} pages to images`);
     
     if (pngPages.length === 0) {
       throw new Error('Failed to convert PDF pages to images');
@@ -83,7 +84,7 @@ export async function parseWithVision(pdfBuffer: Buffer): Promise<VisionParsedDa
     for (let i = 0; i < maxPages; i++) {
       const page = pngPages[i];
       if (!page.content) {
-        console.warn(`[Vision Parser] Page ${i + 1} has no content, skipping`);
+        logger.warn(`[Vision Parser] Page ${i + 1} has no content, skipping`);
         continue;
       }
       const { url } = await storagePut(
@@ -92,10 +93,10 @@ export async function parseWithVision(pdfBuffer: Buffer): Promise<VisionParsedDa
         'image/png'
       );
       imageUrls.push(url);
-      console.log(`[Vision Parser] Uploaded page ${i + 1} to S3`);
+      logger.info(`[Vision Parser] Uploaded page ${i + 1} to S3`);
     }
     
-    console.log(`[Vision Parser] Successfully uploaded ${imageUrls.length} images`);
+    logger.info(`[Vision Parser] Successfully uploaded ${imageUrls.length} images`);
     
     // Prepare vision LLM prompt
     const extractionPrompt = `You are an expert at extracting data from API 510 pressure vessel inspection reports.
@@ -165,7 +166,7 @@ CRITICAL INSTRUCTIONS:
       });
     }
     
-    console.log('[Vision Parser] Sending images to LLM for analysis...');
+    logger.info('[Vision Parser] Sending images to LLM for analysis...');
     
     // Call vision LLM with images
     const response = await invokeLLM({
@@ -247,27 +248,27 @@ CRITICAL INSTRUCTIONS:
     
     // Check if response is valid
     if (!response || !response.choices || response.choices.length === 0) {
-      console.error('[Vision Parser] Invalid LLM response:', response);
+      logger.error('[Vision Parser] Invalid LLM response:', response);
       throw new Error('LLM returned empty or invalid response');
     }
     
     const content = response.choices[0].message.content;
     if (typeof content !== 'string') {
-      console.error('[Vision Parser] Content is not a string:', content);
+      logger.error('[Vision Parser] Content is not a string:', content);
       throw new Error('Unexpected response format from LLM');
     }
     
     const parsedData: VisionParsedData = JSON.parse(content);
     
-    console.log('[Vision Parser] Successfully extracted data from PDF');
-    console.log('[Vision Parser] Vessel info:', parsedData.vesselInfo);
-    console.log('[Vision Parser] TML readings:', parsedData.thicknessMeasurements?.length || 0);
-    console.log('[Vision Parser] Checklist items:', parsedData.checklistItems?.length || 0);
+    logger.info('[Vision Parser] Successfully extracted data from PDF');
+    logger.info('[Vision Parser] Vessel info:', parsedData.vesselInfo);
+    logger.info('[Vision Parser] TML readings:', parsedData.thicknessMeasurements?.length || 0);
+    logger.info('[Vision Parser] Checklist items:', parsedData.checklistItems?.length || 0);
     
     return parsedData;
     
   } catch (error: any) {
-    console.error('[Vision Parser] Error:', error);
+    logger.error('[Vision Parser] Error:', error);
     throw new Error(`Failed to parse PDF file: ${error.message}`);
   } finally {
     // Cleanup temp directory
@@ -275,7 +276,7 @@ CRITICAL INSTRUCTIONS:
       const fs = await import('fs/promises');
       await fs.rm(tempDir, { recursive: true, force: true });
     } catch (cleanupError) {
-      console.error('[Vision Parser] Cleanup error:', cleanupError);
+      logger.error('[Vision Parser] Cleanup error:', cleanupError);
     }
   }
 }

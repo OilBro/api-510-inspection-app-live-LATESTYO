@@ -1,3 +1,4 @@
+import { logger } from "./_core/logger";
 /**
  * TML Status Calculator
  * Determines status based on actual thickness vs minimum required
@@ -46,7 +47,7 @@ export function calculateTMLStatus(input: StatusInput): "good" | "monitor" | "cr
       return "good";
     }
   } catch (error) {
-    console.error('[TML Status] Calculation error:', error);
+    logger.error('[TML Status] Calculation error:', error);
     // Fallback: simple comparison to nominal
     if (input.currentThickness < input.nominalThickness * 0.8) {
       return "critical";

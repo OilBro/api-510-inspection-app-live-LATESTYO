@@ -1,0 +1,18 @@
+{
+  "query": "SELECT componentName, COUNT(*) as cnt FROM componentCalculations WHERE componentType = 'head' GROUP BY componentName;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT componentName, COUNT(*) as cnt FROM componentCalculations WHERE componentType = 'head' GROUP BY componentName;",
+  "rows": [
+    {
+      "componentName": "East Head",
+      "cnt": "142"
+    },
+    {
+      "componentName": "West Head",
+      "cnt": "126"
+    }
+  ],
+  "messages": [],
+  "stdout": "componentName\tcnt\nEast Head\t142\nWest Head\t126\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

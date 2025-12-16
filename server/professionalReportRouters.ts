@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { logger } from "./_core/logger";
 import { nanoid } from "nanoid";
 import { protectedProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
@@ -77,10 +78,10 @@ export const professionalReportRouter = router({
   getOrCreate: protectedProcedure
     .input(z.object({ inspectionId: z.string() }))
     .query(async ({ input, ctx }) => {
-      console.log('[Professional Report] getOrCreate called for inspection:', input.inspectionId);
+      logger.info('[Professional Report] getOrCreate called for inspection:', input.inspectionId);
       try {
         let report = await getProfessionalReportByInspection(input.inspectionId);
-        console.log('[Professional Report] Existing report found:', !!report);
+        logger.info('[Professional Report] Existing report found:', !!report);
       
         if (!report) {
         const reportId = nanoid();
@@ -107,7 +108,7 @@ export const professionalReportRouter = router({
       
         return report;
       } catch (error) {
-        console.error('[Professional Report] Error in getOrCreate:', error);
+        logger.error('[Professional Report] Error in getOrCreate:', error);
         throw error;
       }
     }),
@@ -423,7 +424,7 @@ export const professionalReportRouter = router({
         if (ext === 'heic' || ext === 'heif' || contentType.includes('heic') || contentType.includes('heif')) {
           try {
             const convert = require('heic-convert');
-            console.log('[Photo Upload] Starting HEIC conversion...');
+            logger.info('[Photo Upload] Starting HEIC conversion...');
             const jpegBuffer = await convert({
               buffer,
               format: 'JPEG',
@@ -432,10 +433,10 @@ export const professionalReportRouter = router({
             buffer = Buffer.from(jpegBuffer);
             contentType = 'image/jpeg';
             ext = 'jpg';
-            console.log('[Photo Upload] Successfully converted HEIC to JPEG');
+            logger.info('[Photo Upload] Successfully converted HEIC to JPEG');
           } catch (error) {
-            console.error('[Photo Upload] HEIC conversion failed:', error);
-            console.log('[Photo Upload] Uploading original HEIC file as fallback (may not display in PDF)');
+            logger.error('[Photo Upload] HEIC conversion failed:', error);
+            logger.info('[Photo Upload] Uploading original HEIC file as fallback (may not display in PDF)');
             // Fallback: upload original file anyway, but warn user
             // Don't throw error - let upload continue
           }
@@ -545,7 +546,7 @@ export const professionalReportRouter = router({
     }))
     .mutation(async ({ input }) => {
       try {
-        console.log('[PDF Generation] Starting for inspection:', input.inspectionId);
+        logger.info('[PDF Generation] Starting for inspection:', input.inspectionId);
         
         const pdfBuffer = await generateProfessionalPDF({
           reportId: input.reportId,
@@ -553,20 +554,20 @@ export const professionalReportRouter = router({
           sectionConfig: input.sectionConfig,
         });
         
-        console.log('[PDF Generation] PDF generated successfully, size:', pdfBuffer.length, 'bytes');
+        logger.info('[PDF Generation] PDF generated successfully, size:', pdfBuffer.length, 'bytes');
         
         // Convert buffer to base64 for transmission
         const base64 = pdfBuffer.toString('base64');
         
-        console.log('[PDF Generation] Base64 encoded, size:', base64.length, 'characters');
+        logger.info('[PDF Generation] Base64 encoded, size:', base64.length, 'characters');
         
         return {
           success: true,
           pdf: base64,
         };
       } catch (error: any) {
-        console.error('[PDF Generation] Error:', error);
-        console.error('[PDF Generation] Stack:', error.stack);
+        logger.error('[PDF Generation] Error:', error);
+        logger.error('[PDF Generation] Stack:', error.stack);
         throw new Error(`Failed to generate PDF: ${error.message}`);
       }
     }),
@@ -753,7 +754,7 @@ export const professionalReportRouter = router({
         const componentTMLs = tmlReadings.filter(filter);
         
         if (componentTMLs.length === 0) {
-          console.log(`[Recalculate] No TMLs found for ${componentName}`);
+          logger.info(`[Recalculate] No TMLs found for ${componentName}`);
           return;
         }
         
@@ -896,7 +897,7 @@ export const professionalReportRouter = router({
           corrosionAllowance: CA.toString(),
         });
         
-        console.log(`[Recalculate] Created ${componentName} calculation`);
+        logger.info(`[Recalculate] Created ${componentName} calculation`);
       };
       
       // Create Shell calculation

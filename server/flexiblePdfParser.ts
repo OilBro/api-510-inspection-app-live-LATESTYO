@@ -1,4 +1,5 @@
 import { invokeLLM } from "./_core/llm";
+import { logger } from "./_core/logger";
 
 /**
  * Flexible PDF Parser
@@ -211,15 +212,15 @@ Return the mapped data as JSON.`;
  * Complete flexible parsing pipeline
  */
 export async function parseInspectionPDF(pdfUrl: string): Promise<MappedInspectionData> {
-  console.log("[Flexible Parser] Stage 1: Extracting raw data from PDF...");
+  logger.info("[Flexible Parser] Stage 1: Extracting raw data from PDF...");
   const extracted = await extractRawDataFromPDF(pdfUrl);
   
-  console.log("[Flexible Parser] Stage 2: Mapping data to schema...");
+  logger.info("[Flexible Parser] Stage 2: Mapping data to schema...");
   const mapped = await mapDataToSchema(extracted);
   
-  console.log(`[Flexible Parser] Complete! Overall confidence: ${mapped.overallConfidence}%`);
-  console.log(`[Flexible Parser] Mapped ${mapped.thicknessMeasurements?.length || 0} thickness measurements`);
-  console.log(`[Flexible Parser] Unmatched data keys: ${Object.keys(mapped.unmatchedData || {}).length}`);
+  logger.info(`[Flexible Parser] Complete! Overall confidence: ${mapped.overallConfidence}%`);
+  logger.info(`[Flexible Parser] Mapped ${mapped.thicknessMeasurements?.length || 0} thickness measurements`);
+  logger.info(`[Flexible Parser] Unmatched data keys: ${Object.keys(mapped.unmatchedData || {}).length}`);
   
   return mapped;
 }

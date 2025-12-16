@@ -1,6 +1,7 @@
 import * as XLSX from "xlsx";
 import * as pdf from "pdf-parse";
 import { invokeLLM } from "./_core/llm";
+import { logger } from "./_core/logger";
 import { parseDocument, parseAndStandardizeDocument } from "./docupipe";
 import { parseDocupipeStandard, type DocupipeStandardFormat } from "./docupipeStandardParser";
 import { parseAndStandardizeWithManus, parseDocumentWithManus } from "./manusParser";
@@ -169,7 +170,7 @@ export async function parseExcelFile(buffer: Buffer): Promise<ParsedVesselData> 
 
     return result;
   } catch (error) {
-    console.error("[Excel Parser] Error:", error);
+    logger.error("[Excel Parser] Error:", error);
     throw new Error(`Failed to parse Excel file: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
 }
@@ -180,12 +181,12 @@ export async function parseExcelFile(buffer: Buffer): Promise<ParsedVesselData> 
 export async function parsePDFFile(buffer: Buffer, parserType?: "docupipe" | "manus" | "vision"): Promise<ParsedVesselData> {
   // Use provided parser type or fall back to default
   const selectedParser = parserType || "manus";
-  console.log(`[PDF Parser] Using parser: ${selectedParser}`);
+  logger.info(`[PDF Parser] Using parser: ${selectedParser}`);
   
   try {
     // If vision parser is requested, use vision-based extraction
     if (selectedParser === "vision") {
-      console.log("[PDF Parser] Using vision LLM parser for scanned documents...");
+      logger.info("[PDF Parser] Using vision LLM parser for scanned documents...");
       const { parseWithVision } = await import('./visionPdfParser');
       const visionData = await parseWithVision(buffer);
       
@@ -204,14 +205,14 @@ export async function parsePDFFile(buffer: Buffer, parserType?: "docupipe" | "ma
     }
     
     // Use basic parsing + LLM extraction (standardization APIs are unreliable)
-    console.log("[PDF Parser] Using basic parsing + LLM extraction...");
+    logger.info("[PDF Parser] Using basic parsing + LLM extraction...");
     
     const docResult = selectedParser === "manus" 
       ? await parseDocumentWithManus(buffer, "inspection-report.pdf")
       : await parseDocument(buffer, "inspection-report.pdf");
     
     const fullText = docResult.result.text;
-    console.log(`[PDF Parser] Text extracted (${fullText.length} chars), using LLM for structured extraction...`);
+    logger.info(`[PDF Parser] Text extracted (${fullText.length} chars), using LLM for structured extraction...`);
 
     // Use LLM to extract structured data from text
     const llmResponse = await invokeLLM({
@@ -300,23 +301,23 @@ export async function parsePDFFile(buffer: Buffer, parserType?: "docupipe" | "ma
 
     // Validate LLM response
     if (!llmResponse || !llmResponse.choices || llmResponse.choices.length === 0) {
-      console.error("[PDF Parser] Invalid LLM response:", JSON.stringify(llmResponse, null, 2));
+      logger.error("[PDF Parser] Invalid LLM response:", JSON.stringify(llmResponse, null, 2));
       throw new Error("LLM returned empty or invalid response");
     }
     
     const messageContent = llmResponse.choices[0].message.content;
     if (!messageContent) {
-      console.error("[PDF Parser] Empty message content in LLM response");
+      logger.error("[PDF Parser] Empty message content in LLM response");
       throw new Error("LLM returned empty message content");
     }
     
     const contentStr = typeof messageContent === 'string' ? messageContent : JSON.stringify(messageContent);
     const extracted = JSON.parse(contentStr || "{}");
-    console.log("[PDF Parser] LLM extraction completed");
+    logger.info("[PDF Parser] LLM extraction completed");
     
     return extracted;
   } catch (error) {
-    console.error("[PDF Parser] Error:", error);
+    logger.error("[PDF Parser] Error:", error);
     throw new Error(`Failed to parse PDF file: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
 }
