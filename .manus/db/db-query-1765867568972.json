@@ -1,0 +1,260 @@
+{
+  "query": "SELECT DISTINCT component, componentType, location\nFROM tmlReadings\nWHERE LOWER(component) LIKE '%head%' \n   OR LOWER(componentType) LIKE '%head%'\n   OR LOWER(location) LIKE '%head%'\n   OR LOWER(component) LIKE '%north%'\n   OR LOWER(component) LIKE '%south%'\n   OR LOWER(location) LIKE '%north%'\n   OR LOWER(location) LIKE '%south%'\nLIMIT 50;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT DISTINCT component, componentType, location\nFROM tmlReadings\nWHERE LOWER(component) LIKE '%head%' \n   OR LOWER(componentType) LIKE '%head%'\n   OR LOWER(location) LIKE '%head%'\n   OR LOWER(component) LIKE '%north%'\n   OR LOWER(component) LIKE '%south%'\n   OR LOWER(location) LIKE '%north%'\n   OR LOWER(location) LIKE '%south%'\nLIMIT 50;",
+  "rows": [
+    {
+      "component": "North Head",
+      "componentType": "North Head",
+      "location": "North Head"
+    },
+    {
+      "component": "East Head 9 O'Clock",
+      "componentType": "East Head 9 O'Clock",
+      "location": "East Head"
+    },
+    {
+      "component": "2\" East Head Seam",
+      "componentType": "2\" East Head Seam",
+      "location": "Head Side, 315&deg;"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "N/A",
+      "location": "6-225"
+    },
+    {
+      "component": "East Head",
+      "componentType": "Head",
+      "location": "4 - T"
+    },
+    {
+      "component": "2\" West Head Seam",
+      "componentType": "2\" West Head Seam",
+      "location": "Shell Side, 315°"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "2\" from Seam w/East Head, 0°"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "N/A",
+      "location": "2-B"
+    },
+    {
+      "component": "2\" East Head Seam - Head Side",
+      "componentType": "2\" East Head Seam - Head Side",
+      "location": "45°"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "N/A",
+      "location": "3-L"
+    },
+    {
+      "component": "West Head",
+      "componentType": "West Head",
+      "location": "3 O'Clock"
+    },
+    {
+      "component": "West Head",
+      "componentType": "West Head",
+      "location": "2"
+    },
+    {
+      "component": "East Head",
+      "componentType": "Head",
+      "location": "5 - R"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "6 O'Clock"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "2 - B"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "6-270"
+    },
+    {
+      "component": "Head (Ellipsoidal)",
+      "componentType": "Head (Ellipsoidal)",
+      "location": "Head"
+    },
+    {
+      "component": "2\" East Head Seam - Shell Side",
+      "componentType": "2\" East Head Seam - Shell Side",
+      "location": "45°"
+    },
+    {
+      "component": "2\" West Head Seam - Head Side",
+      "componentType": "2\" West Head Seam - Head Side",
+      "location": "90°"
+    },
+    {
+      "component": "East Head",
+      "componentType": "Head",
+      "location": "6 - 45"
+    },
+    {
+      "component": "2\" East Head Seam",
+      "componentType": "2\" East Head Seam",
+      "location": "Head Side, 45&deg;"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "2\" from Seam w/East Head, 224°"
+    },
+    {
+      "component": "East Head Center",
+      "componentType": "East Head Center",
+      "location": "East Head"
+    },
+    {
+      "component": "2\" East Head Seam - Shell Side",
+      "componentType": "2\" East Head Seam - Shell Side",
+      "location": "180°"
+    },
+    {
+      "component": "Head",
+      "componentType": "East Head",
+      "location": "East Head"
+    },
+    {
+      "component": "2\" West Head Seam",
+      "componentType": "2\" West Head Seam",
+      "location": "Head Side, 224°"
+    },
+    {
+      "component": "West Head",
+      "componentType": "West Head",
+      "location": "121 - T"
+    },
+    {
+      "component": "2\" West Head Seam",
+      "componentType": "2\" West Head Seam",
+      "location": "Head Side, 90°"
+    },
+    {
+      "component": "2\" East Head Seam - Head Side",
+      "componentType": "2\" East Head Seam - Head Side",
+      "location": "135°"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "4 - T"
+    },
+    {
+      "component": "West Head",
+      "componentType": "West Head",
+      "location": "5"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "N/A",
+      "location": "6-270"
+    },
+    {
+      "component": "2\" East Head Seam",
+      "componentType": "2\" East Head Seam",
+      "location": "Shell Side, 315°"
+    },
+    {
+      "component": "South Head",
+      "componentType": "South Head",
+      "location": "3"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "2\" from Seam w/East Head, 90°"
+    },
+    {
+      "component": "Head",
+      "componentType": "Head",
+      "location": "West Head"
+    },
+    {
+      "component": "2\" West Head Seam - Shell Side",
+      "componentType": "2\" West Head Seam - Shell Side",
+      "location": "224°"
+    },
+    {
+      "component": "2\" West Head Seam - Head Side",
+      "componentType": "2\" West Head Seam - Head Side",
+      "location": "180°"
+    },
+    {
+      "component": "East Head",
+      "componentType": "Head",
+      "location": "2 - B"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "Center"
+    },
+    {
+      "component": "West Head",
+      "componentType": "West Head",
+      "location": "118-C"
+    },
+    {
+      "component": "West Head",
+      "componentType": "West Head",
+      "location": "3"
+    },
+    {
+      "component": "2\" West Head Seam",
+      "componentType": "2\" West Head Seam",
+      "location": "Head Side, 270°"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "N/A",
+      "location": "6-180"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "2\" from Seam w/East Head, 270°"
+    },
+    {
+      "component": "2\" West Head Seam - Head Side",
+      "componentType": "2\" West Head Seam - Head Side",
+      "location": "135°"
+    },
+    {
+      "component": "East Head",
+      "componentType": "N/A",
+      "location": "N/A"
+    },
+    {
+      "component": "West Head",
+      "componentType": "West Head",
+      "location": "6"
+    },
+    {
+      "component": "West Head",
+      "componentType": "West Head",
+      "location": "120-L"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "2\" from Seam w/East Head, 315°"
+    }
+  ],
+  "messages": [],
+  "stdout": "component\tcomponentType\tlocation\nNorth Head\tNorth Head\tNorth Head\nEast Head 9 O'Clock\tEast Head 9 O'Clock\tEast Head\n2\" East Head Seam\t2\" East Head Seam\tHead Side, 315&deg;\nEAST HEAD\tN/A\t6-225\nEast Head\tHead\t4 - T\n2\" West Head Seam\t2\" West Head Seam\tShell Side, 315°\nVessel Shell\tVessel Shell\t2\" from Seam w/East Head, 0°\nEAST HEAD\tN/A\t2-B\n2\" East Head Seam - Head Side\t2\" East Head Seam - Head Side\t45°\nEAST HEAD\tN/A\t3-L\nWest Head\tWest Head\t3 O'Clock\nWest Head\tWest Head\t2\nEast Head\tHead\t5 - R\nEast Head\tEast Head\t6 O'Clock\nEast Head\tEast Head\t2 - B\nEAST HEAD\tEAST HEAD\t6-270\nHead (Ellipsoidal)\tHead (Ellipsoidal)\tHead\n2\" East Head Seam - Shell Side\t2\" East Head Seam - Shell Side\t45°\n2\" West Head Seam - Head Side\t2\" West Head Seam - Head Side\t90°\nEast Head\tHead\t6 - 45\n2\" East Head Seam\t2\" East Head Seam\tHead Side, 45&deg;\nVessel Shell\tVessel Shell\t2\" from Seam w/East Head, 224°\nEast Head Center\tEast Head Center\tEast Head\n2\" East Head Seam - Shell Side\t2\" East Head Seam - Shell Side\t180°\nHead\tEast Head\tEast Head\n2\" West Head Seam\t2\" West Head Seam\tHead Side, 224°\nWest Head\tWest Head\t121 - T\n2\" West Head Seam\t2\" West Head Seam\tHead Side, 90°\n2\" East Head Seam - Head Side\t2\" East Head Seam - Head Side\t135°\nEast Head\tEast Head\t4 - T\nWest Head\tWest Head\t5\nEAST HEAD\tN/A\t6-270\n2\" East Head Seam\t2\" East Head Seam\tShell Side, 315°\nSouth Head\tSouth Head\t3\nVessel Shell\tVessel Shell\t2\" from Seam w/East Head, 90°\nHead\tHead\tWest Head\n2\" West Head Seam - Shell Side\t2\" West Head Seam - Shell Side\t224°\n2\" West Head Seam - Head Side\t2\" West Head Seam - Head Side\t180°\nEast Head\tHead\t2 - B\nEast Head\tEast Head\tCenter\nWest Head\tWest Head\t118-C\nWest Head\tWest Head\t3\n2\" West Head Seam\t2\" West Head Seam\tHead Side, 270°\nEAST HEAD\tN/A\t6-180\nVessel Shell\tVessel Shell\t2\" from Seam w/East Head, 270°\n2\" West Head Seam - Head Side\t2\" West Head Seam - Head Side\t135°\nEast Head\tN/A\tN/A\nWest Head\tWest Head\t6\nWest Head\tWest Head\t120-L\nVessel Shell\tVessel Shell\t2\" from Seam w/East Head, 315°\n",
+  "stderr": "",
+  "execution_time_ms": 1163
+}

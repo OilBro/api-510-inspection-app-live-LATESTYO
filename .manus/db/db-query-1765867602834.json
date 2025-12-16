@@ -1,0 +1,24 @@
+{
+  "query": "SELECT i.vesselTagNumber, \n       COUNT(CASE WHEN LOWER(t.location) LIKE '%north%' OR LOWER(t.component) LIKE '%north%' THEN 1 END) as north_count,\n       COUNT(CASE WHEN LOWER(t.location) LIKE '%south%' OR LOWER(t.component) LIKE '%south%' THEN 1 END) as south_count,\n       COUNT(CASE WHEN LOWER(t.location) LIKE '%east%' OR LOWER(t.component) LIKE '%east%' THEN 1 END) as east_count,\n       COUNT(CASE WHEN LOWER(t.location) LIKE '%west%' OR LOWER(t.component) LIKE '%west%' THEN 1 END) as west_count\nFROM inspections i\nLEFT JOIN tmlReadings t ON i.id = t.inspectionId\nGROUP BY i.vesselTagNumber\nHAVING north_count > 0 OR south_count > 0 OR west_count > 0\nLIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT i.vesselTagNumber, \n       COUNT(CASE WHEN LOWER(t.location) LIKE '%north%' OR LOWER(t.component) LIKE '%north%' THEN 1 END) as north_count,\n       COUNT(CASE WHEN LOWER(t.location) LIKE '%south%' OR LOWER(t.component) LIKE '%south%' THEN 1 END) as south_count,\n       COUNT(CASE WHEN LOWER(t.location) LIKE '%east%' OR LOWER(t.component) LIKE '%east%' THEN 1 END) as east_count,\n       COUNT(CASE WHEN LOWER(t.location) LIKE '%west%' OR LOWER(t.component) LIKE '%west%' THEN 1 END) as west_count\nFROM inspections i\nLEFT JOIN tmlReadings t ON i.id = t.inspectionId\nGROUP BY i.vesselTagNumber\nHAVING north_count > 0 OR south_count > 0 OR west_count > 0\nLIMIT 20;",
+  "rows": [
+    {
+      "vesselTagNumber": "54-11-001",
+      "north_count": "2",
+      "south_count": "2",
+      "east_count": "0",
+      "west_count": "0"
+    },
+    {
+      "vesselTagNumber": "54-11-067",
+      "north_count": "0",
+      "south_count": "0",
+      "east_count": "53",
+      "west_count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "vesselTagNumber\tnorth_count\tsouth_count\teast_count\twest_count\n54-11-001\t2\t2\t0\t0\n54-11-067\t0\t0\t53\t1\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}

@@ -1378,3 +1378,10 @@
 
 - [x] West Head not appearing in calculations despite East Head showing - Fixed by checking location field
 - [x] Investigate TML data component naming for second head - Found: component="Head", location="West Head"
+
+
+## North/South Head Naming Support (Dec 15, 2025)
+
+- [x] Add support for North/South head naming convention (in addition to East/West) - Fixed by checking location field
+- [x] Investigate TML data patterns for alternative head naming - Found: West Head detected via location field
+- [x] Verified: All 3 components (Shell, East Head, West Head) now have calculations
