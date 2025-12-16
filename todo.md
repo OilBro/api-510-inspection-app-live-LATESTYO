@@ -1373,3 +1373,8 @@
 - [x] Fix PDF to show Head Evaluation sections (currently only shows Shell) - PDF already has Head Evaluation section
 - [x] Fix t_nom to use actual database values instead of hardcoded 0.625 - Updated professionalReportDb.ts and professionalPdfGenerator.ts
 - [x] Fix calculations page to show both East Head and West Head - Recalculate procedure already creates both heads
+
+## West Head Missing Bug (Dec 15, 2025)
+
+- [x] West Head not appearing in calculations despite East Head showing - Fixed by checking location field
+- [x] Investigate TML data component naming for second head - Found: component="Head", location="West Head"

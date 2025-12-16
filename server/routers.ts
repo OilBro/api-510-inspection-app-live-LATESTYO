@@ -1140,22 +1140,25 @@ export const appRouter = router({
               
               // Create East Head component calculation with improved detection
               // Matches: 'east head', 'e head', 'head 1', 'head-1', 'left head', or any head without west/right keywords
+              // IMPORTANT: Also check location field for head identification
               const eastHeadTMLs = createdTMLs.filter((tml: any) => {
                 const comp = (tml.component || '').toLowerCase();
                 const compType = (tml.componentType || '').toLowerCase();
+                const loc = (tml.location || '').toLowerCase();
                 const combined = `${comp} ${compType}`;
                 
-                // Explicit east head matches
-                if (combined.includes('east') && combined.includes('head')) return true;
+                // Explicit east head matches (check location too)
+                if (combined.includes('east') || loc.includes('east head')) return true;
                 if (combined.includes('e head')) return true;
                 if (combined.includes('head 1') || combined.includes('head-1')) return true;
                 if (combined.includes('left head')) return true;
                 
                 // If it's a head but not explicitly west/right, treat as east (first head)
+                // Exclude if location indicates west head
                 if ((combined.includes('head') && !combined.includes('shell')) &&
                     !combined.includes('west') && !combined.includes('w head') &&
                     !combined.includes('head 2') && !combined.includes('head-2') &&
-                    !combined.includes('right')) {
+                    !combined.includes('right') && !loc.includes('west')) {
                   return true;
                 }
                 return false;
@@ -1239,13 +1242,15 @@ export const appRouter = router({
               
               // Create West Head component calculation with improved detection
               // Matches: 'west head', 'w head', 'head 2', 'head-2', 'right head'
+              // IMPORTANT: Also check location field for head identification
               const westHeadTMLs = createdTMLs.filter((tml: any) => {
                 const comp = (tml.component || '').toLowerCase();
                 const compType = (tml.componentType || '').toLowerCase();
+                const loc = (tml.location || '').toLowerCase();
                 const combined = `${comp} ${compType}`;
                 
-                // Explicit west head matches
-                if (combined.includes('west') && combined.includes('head')) return true;
+                // Explicit west head matches (check location too)
+                if (combined.includes('west') || loc.includes('west head')) return true;
                 if (combined.includes('w head')) return true;
                 if (combined.includes('head 2') || combined.includes('head-2')) return true;
                 if (combined.includes('right head')) return true;

@@ -1,0 +1,16 @@
+TML Analysis for 54-11-067:
+
+KEY FINDING: West Head TMLs have location="West Head" but component="Head" (not "West Head")
+
+Example West Head TML:
+  component="Head", componentType="Head", location="West Head"
+
+The current detection logic looks at component and componentType fields, but West Head is only identified by the location field.
+
+SOLUTION: Update head detection to also check the location field for "West Head" pattern.
+
+Current detection (fails for West Head):
+  compType.includes('west') || comp.includes('west')
+
+Should also check:
+  location.includes('west')

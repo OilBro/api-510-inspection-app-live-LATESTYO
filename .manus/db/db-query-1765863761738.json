@@ -1,0 +1,26 @@
+{
+  "query": "SELECT DISTINCT t.component, t.componentType\nFROM tmlReadings t\nJOIN inspections i ON t.inspectionId = i.id\nWHERE i.vesselTagNumber = '54-11-067';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT DISTINCT t.component, t.componentType\nFROM tmlReadings t\nJOIN inspections i ON t.inspectionId = i.id\nWHERE i.vesselTagNumber = '54-11-067';",
+  "rows": [
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL"
+    },
+    {
+      "component": "Head",
+      "componentType": "Head"
+    },
+    {
+      "component": "Shell",
+      "componentType": "Shell"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD"
+    }
+  ],
+  "messages": [],
+  "stdout": "component\tcomponentType\nVESSEL SHELL\tVESSEL SHELL\nHead\tHead\nShell\tShell\nEAST HEAD\tEAST HEAD\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

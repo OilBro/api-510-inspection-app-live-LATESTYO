@@ -1,0 +1,352 @@
+{
+  "query": "SELECT DISTINCT t.component, t.componentType, t.cmlNumber, COUNT(*) as count\nFROM tmlReadings t\nJOIN inspections i ON t.inspectionId = i.id\nWHERE i.vesselTagNumber = '54-11-067'\nGROUP BY t.component, t.componentType, t.cmlNumber\nORDER BY t.cmlNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT DISTINCT t.component, t.componentType, t.cmlNumber, COUNT(*) as count\nFROM tmlReadings t\nJOIN inspections i ON t.inspectionId = i.id\nWHERE i.vesselTagNumber = '54-11-067'\nGROUP BY t.component, t.componentType, t.cmlNumber\nORDER BY t.cmlNumber;",
+  "rows": [
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "cmlNumber": "001",
+      "count": "4"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "cmlNumber": "002",
+      "count": "4"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "cmlNumber": "003",
+      "count": "4"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "cmlNumber": "004",
+      "count": "4"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "cmlNumber": "005",
+      "count": "4"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "cmlNumber": "006",
+      "count": "4"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "cmlNumber": "007",
+      "count": "4"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "cmlNumber": "008",
+      "count": "4"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "cmlNumber": "009",
+      "count": "4"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "cmlNumber": "010",
+      "count": "4"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "cmlNumber": "011",
+      "count": "4"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "cmlNumber": "012",
+      "count": "4"
+    },
+    {
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "cmlNumber": "013",
+      "count": "4"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "cmlNumber": "014",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "015",
+      "count": "4"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "cmlNumber": "016",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "017",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "018",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "019",
+      "count": "4"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "cmlNumber": "020",
+      "count": "4"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "cmlNumber": "021",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "022",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "023",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "024",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "025",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "026",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "027",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "028",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "029",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "030",
+      "count": "4"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "cmlNumber": "031",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "032",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "033",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "034",
+      "count": "4"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "cmlNumber": "035",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "036",
+      "count": "4"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "cmlNumber": "037",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "038",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "039",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "040",
+      "count": "4"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "cmlNumber": "041",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "042",
+      "count": "4"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "cmlNumber": "043",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "044",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "045",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "046",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "047",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "048",
+      "count": "4"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "cmlNumber": "049",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "050",
+      "count": "4"
+    },
+    {
+      "component": "VESSEL SHELL",
+      "componentType": "VESSEL SHELL",
+      "cmlNumber": "051",
+      "count": "4"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "cmlNumber": "052",
+      "count": "1"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "cmlNumber": "053",
+      "count": "1"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "cmlNumber": "054",
+      "count": "1"
+    },
+    {
+      "component": "Shell",
+      "componentType": "Shell",
+      "cmlNumber": "1",
+      "count": "1"
+    },
+    {
+      "component": "Head",
+      "componentType": "Head",
+      "cmlNumber": "2",
+      "count": "1"
+    },
+    {
+      "component": "Head",
+      "componentType": "Head",
+      "cmlNumber": "3",
+      "count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "component\tcomponentType\tcmlNumber\tcount\nEAST HEAD\tEAST HEAD\t001\t4\nEAST HEAD\tEAST HEAD\t002\t4\nEast Head\tEast Head\t003\t4\nEAST HEAD\tEAST HEAD\t004\t4\nEAST HEAD\tEAST HEAD\t005\t4\nEast Head\tEast Head\t006\t4\nEAST HEAD\tEAST HEAD\t007\t4\nEAST HEAD\tEAST HEAD\t008\t4\nEAST HEAD\tEAST HEAD\t009\t4\nEAST HEAD\tEAST HEAD\t010\t4\nEAST HEAD\tEAST HEAD\t011\t4\nEAST HEAD\tEAST HEAD\t012\t4\nEAST HEAD\tEAST HEAD\t013\t4\nVessel Shell\tVessel Shell\t014\t4\nVESSEL SHELL\tVESSEL SHELL\t015\t4\nVessel Shell\tVessel Shell\t016\t4\nVESSEL SHELL\tVESSEL SHELL\t017\t4\nVESSEL SHELL\tVESSEL SHELL\t018\t4\nVESSEL SHELL\tVESSEL SHELL\t019\t4\nVessel Shell\tVessel Shell\t020\t4\nVessel Shell\tVessel Shell\t021\t4\nVESSEL SHELL\tVESSEL SHELL\t022\t4\nVESSEL SHELL\tVESSEL SHELL\t023\t4\nVESSEL SHELL\tVESSEL SHELL\t024\t4\nVESSEL SHELL\tVESSEL SHELL\t025\t4\nVESSEL SHELL\tVESSEL SHELL\t026\t4\nVESSEL SHELL\tVESSEL SHELL\t027\t4\nVESSEL SHELL\tVESSEL SHELL\t028\t4\nVESSEL SHELL\tVESSEL SHELL\t029\t4\nVESSEL SHELL\tVESSEL SHELL\t030\t4\nVessel Shell\tVessel Shell\t031\t4\nVESSEL SHELL\tVESSEL SHELL\t032\t4\nVESSEL SHELL\tVESSEL SHELL\t033\t4\nVESSEL SHELL\tVESSEL SHELL\t034\t4\nVessel Shell\tVessel Shell\t035\t4\nVESSEL SHELL\tVESSEL SHELL\t036\t4\nVessel Shell\tVessel Shell\t037\t4\nVESSEL SHELL\tVESSEL SHELL\t038\t4\nVESSEL SHELL\tVESSEL SHELL\t039\t4\nVESSEL SHELL\tVESSEL SHELL\t040\t4\nVessel Shell\tVessel Shell\t041\t4\nVESSEL SHELL\tVESSEL SHELL\t042\t4\nVessel Shell\tVessel Shell\t043\t4\nVESSEL SHELL\tVESSEL SHELL\t044\t4\nVESSEL SHELL\tVESSEL SHELL\t045\t4\nVESSEL SHELL\tVESSEL SHELL\t046\t4\nVESSEL SHELL\tVESSEL SHELL\t047\t4\nVESSEL SHELL\tVESSEL SHELL\t048\t4\nVessel Shell\tVessel Shell\t049\t4\nVESSEL SHELL\tVESSEL SHELL\t050\t4\nVESSEL SHELL\tVESSEL SHELL\t051\t4\nVessel Shell\tVessel Shell\t052\t1\nVessel Shell\tVessel Shell\t053\t1\nVessel Shell\tVessel Shell\t054\t1\nShell\tShell\t1\t1\nHead\tHead\t2\t1\nHead\tHead\t3\t1\n",
+  "stderr": "",
+  "execution_time_ms": 67
+}

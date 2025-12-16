@@ -1,0 +1,11 @@
+PDF Analysis for 54-11-067 Report:
+
+TABLE A shows:
+- Vessel Shell: Nominal 0.625, Actual 0.662, Min Required 0.650, Design MAWP 250.00, Calculated MAWP 255.7, Remaining Life 12.00
+- East Head: Nominal 0.500, Actual 0.630, Min Required 0.646, Design MAWP 250.00, Calculated MAWP 242.2, Remaining Life 0.00
+- West Head: All values are "-" (dashes) except Design MAWP 250.00 and Remaining Life >20
+
+This indicates:
+1. West Head component calculation exists in database but has no TML data
+2. The recalculate function is creating West Head but with no thickness values
+3. Need to check if TML readings have West Head data or if PDF import is not extracting it

@@ -1,0 +1,190 @@
+{
+  "query": "SELECT t.cmlNumber, t.component, t.componentType, t.location\nFROM tmlReadings t\nJOIN inspections i ON t.inspectionId = i.id\nWHERE i.vesselTagNumber = '54-11-067'\nORDER BY t.cmlNumber\nLIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT t.cmlNumber, t.component, t.componentType, t.location\nFROM tmlReadings t\nJOIN inspections i ON t.inspectionId = i.id\nWHERE i.vesselTagNumber = '54-11-067'\nORDER BY t.cmlNumber\nLIMIT 30;",
+  "rows": [
+    {
+      "cmlNumber": "001",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "1-C"
+    },
+    {
+      "cmlNumber": "001",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "1-C"
+    },
+    {
+      "cmlNumber": "001",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "1 - C"
+    },
+    {
+      "cmlNumber": "001",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "1 - C"
+    },
+    {
+      "cmlNumber": "002",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "2 - B"
+    },
+    {
+      "cmlNumber": "002",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "2 - B"
+    },
+    {
+      "cmlNumber": "002",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "2-B"
+    },
+    {
+      "cmlNumber": "002",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "2-B"
+    },
+    {
+      "cmlNumber": "003",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "3 - L"
+    },
+    {
+      "cmlNumber": "003",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "3 - L"
+    },
+    {
+      "cmlNumber": "003",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "3-L"
+    },
+    {
+      "cmlNumber": "003",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "3-L"
+    },
+    {
+      "cmlNumber": "004",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "4 - T"
+    },
+    {
+      "cmlNumber": "004",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "4-T"
+    },
+    {
+      "cmlNumber": "004",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "4 - T"
+    },
+    {
+      "cmlNumber": "004",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "4-T"
+    },
+    {
+      "cmlNumber": "005",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "5-R"
+    },
+    {
+      "cmlNumber": "005",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "5 - R"
+    },
+    {
+      "cmlNumber": "005",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "5-R"
+    },
+    {
+      "cmlNumber": "005",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "5 - R"
+    },
+    {
+      "cmlNumber": "006",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "6-0"
+    },
+    {
+      "cmlNumber": "006",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "6-0"
+    },
+    {
+      "cmlNumber": "006",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "6 - 0"
+    },
+    {
+      "cmlNumber": "006",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "6 - 0"
+    },
+    {
+      "cmlNumber": "007",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "6 - 45"
+    },
+    {
+      "cmlNumber": "007",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "6 - 45"
+    },
+    {
+      "cmlNumber": "007",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "6-45"
+    },
+    {
+      "cmlNumber": "007",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "6-45"
+    },
+    {
+      "cmlNumber": "008",
+      "component": "EAST HEAD",
+      "componentType": "EAST HEAD",
+      "location": "6-90"
+    },
+    {
+      "cmlNumber": "008",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "6 - 90"
+    }
+  ],
+  "messages": [],
+  "stdout": "cmlNumber\tcomponent\tcomponentType\tlocation\n001\tEAST HEAD\tEAST HEAD\t1-C\n001\tEAST HEAD\tEAST HEAD\t1-C\n001\tEast Head\tEast Head\t1 - C\n001\tEAST HEAD\tEAST HEAD\t1 - C\n002\tEast Head\tEast Head\t2 - B\n002\tEAST HEAD\tEAST HEAD\t2 - B\n002\tEAST HEAD\tEAST HEAD\t2-B\n002\tEAST HEAD\tEAST HEAD\t2-B\n003\tEast Head\tEast Head\t3 - L\n003\tEAST HEAD\tEAST HEAD\t3 - L\n003\tEAST HEAD\tEAST HEAD\t3-L\n003\tEAST HEAD\tEAST HEAD\t3-L\n004\tEast Head\tEast Head\t4 - T\n004\tEAST HEAD\tEAST HEAD\t4-T\n004\tEAST HEAD\tEAST HEAD\t4 - T\n004\tEAST HEAD\tEAST HEAD\t4-T\n005\tEAST HEAD\tEAST HEAD\t5-R\n005\tEast Head\tEast Head\t5 - R\n005\tEAST HEAD\tEAST HEAD\t5-R\n005\tEAST HEAD\tEAST HEAD\t5 - R\n006\tEAST HEAD\tEAST HEAD\t6-0\n006\tEAST HEAD\tEAST HEAD\t6-0\n006\tEAST HEAD\tEAST HEAD\t6 - 0\n006\tEast Head\tEast Head\t6 - 0\n007\tEAST HEAD\tEAST HEAD\t6 - 45\n007\tEast Head\tEast Head\t6 - 45\n007\tEAST HEAD\tEAST HEAD\t6-45\n007\tEAST HEAD\tEAST HEAD\t6-45\n008\tEAST HEAD\tEAST HEAD\t6-90\n008\tEast Head\tEast Head\t6 - 90\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

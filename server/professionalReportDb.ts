@@ -410,33 +410,41 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
   // Helper: Create Calculation
   const createCalc = async (type: 'shell' | 'head', name: string, keyword: string) => {
     // Filter TMLs for this component with improved head detection
+    // IMPORTANT: Check component, componentType, AND location fields
     const relevantTMLs = tmlResults.filter(t => {
       const compType = (t.componentType || '').toLowerCase();
       const comp = (t.component || '').toLowerCase();
+      const loc = (t.location || '').toLowerCase();
       
       if (keyword === 'shell') {
         // Shell: match 'shell' but exclude heads
         return (compType.includes('shell') || comp.includes('shell')) && 
-               !compType.includes('head') && !comp.includes('head');
+               !compType.includes('head') && !comp.includes('head') &&
+               !loc.includes('head');
       } else if (keyword === 'east') {
         // East Head: match 'east head', 'e head', 'head 1', 'head-1', 'left head'
-        return compType.includes('east') || comp.includes('east') ||
-               compType.includes('e head') || comp.includes('e head') ||
-               compType.includes('head 1') || comp.includes('head 1') ||
-               compType.includes('head-1') || comp.includes('head-1') ||
-               compType.includes('left head') || comp.includes('left head') ||
-               // If only one head mentioned and it's the first occurrence
-               ((compType.includes('head') || comp.includes('head')) && 
-                !compType.includes('west') && !comp.includes('west') &&
-                !compType.includes('w head') && !comp.includes('w head') &&
-                !compType.includes('right') && !comp.includes('right'));
+        // Also check location field for 'east head'
+        if (compType.includes('east') || comp.includes('east') || loc.includes('east head')) return true;
+        if (compType.includes('e head') || comp.includes('e head')) return true;
+        if (compType.includes('head 1') || comp.includes('head 1')) return true;
+        if (compType.includes('head-1') || comp.includes('head-1')) return true;
+        if (compType.includes('left head') || comp.includes('left head')) return true;
+        // If only one head mentioned and it's the first occurrence (exclude west)
+        if ((compType.includes('head') || comp.includes('head')) && 
+            !compType.includes('west') && !comp.includes('west') &&
+            !compType.includes('w head') && !comp.includes('w head') &&
+            !compType.includes('right') && !comp.includes('right') &&
+            !loc.includes('west')) return true;
+        return false;
       } else if (keyword === 'west') {
         // West Head: match 'west head', 'w head', 'head 2', 'head-2', 'right head'
-        return compType.includes('west') || comp.includes('west') ||
-               compType.includes('w head') || comp.includes('w head') ||
-               compType.includes('head 2') || comp.includes('head 2') ||
-               compType.includes('head-2') || comp.includes('head-2') ||
-               compType.includes('right head') || comp.includes('right head');
+        // Also check location field for 'west head'
+        if (compType.includes('west') || comp.includes('west') || loc.includes('west head')) return true;
+        if (compType.includes('w head') || comp.includes('w head')) return true;
+        if (compType.includes('head 2') || comp.includes('head 2')) return true;
+        if (compType.includes('head-2') || comp.includes('head-2')) return true;
+        if (compType.includes('right head') || comp.includes('right head')) return true;
+        return false;
       }
       return compType.includes(keyword) || comp.includes(keyword);
     });

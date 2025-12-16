@@ -2,40 +2,44 @@
  * Head Detection Logic Tests
  * 
  * Tests the improved head detection logic that matches various naming conventions
- * for East Head and West Head components.
+ * for East Head and West Head components, including location field detection.
  */
 
 import { describe, it, expect } from 'vitest';
 
 // Replicate the head detection logic from routers.ts and professionalReportRouters.ts
-function isEastHead(component: string, componentType: string): boolean {
+// Updated to include location field checking
+function isEastHead(component: string, componentType: string, location?: string): boolean {
   const comp = (component || '').toLowerCase();
   const compType = (componentType || '').toLowerCase();
+  const loc = (location || '').toLowerCase();
   const combined = `${comp} ${compType}`;
   
-  // Explicit east head matches
-  if (combined.includes('east') && combined.includes('head')) return true;
+  // Explicit east head matches (check location too)
+  if (combined.includes('east') || loc.includes('east head')) return true;
   if (combined.includes('e head')) return true;
   if (combined.includes('head 1') || combined.includes('head-1')) return true;
   if (combined.includes('left head')) return true;
   
   // If it's a head but not explicitly west/right, treat as east (first head)
+  // Exclude if location indicates west head
   if ((combined.includes('head') && !combined.includes('shell')) &&
       !combined.includes('west') && !combined.includes('w head') &&
       !combined.includes('head 2') && !combined.includes('head-2') &&
-      !combined.includes('right')) {
+      !combined.includes('right') && !loc.includes('west')) {
     return true;
   }
   return false;
 }
 
-function isWestHead(component: string, componentType: string): boolean {
+function isWestHead(component: string, componentType: string, location?: string): boolean {
   const comp = (component || '').toLowerCase();
   const compType = (componentType || '').toLowerCase();
+  const loc = (location || '').toLowerCase();
   const combined = `${comp} ${compType}`;
   
-  // Explicit west head matches
-  if (combined.includes('west') && combined.includes('head')) return true;
+  // Explicit west head matches (check location too)
+  if (combined.includes('west') || loc.includes('west head')) return true;
   if (combined.includes('w head')) return true;
   if (combined.includes('head 2') || combined.includes('head-2')) return true;
   if (combined.includes('right head')) return true;
@@ -44,6 +48,26 @@ function isWestHead(component: string, componentType: string): boolean {
 }
 
 describe('Head Detection Logic', () => {
+  describe('Location Field Detection (Critical Fix)', () => {
+    it('should detect West Head from location field when component is generic "Head"', () => {
+      // This is the key case: component="Head", componentType="Head", location="West Head"
+      expect(isWestHead('Head', 'Head', 'West Head')).toBe(true);
+    });
+
+    it('should detect East Head from location field when component is generic "Head"', () => {
+      expect(isEastHead('Head', 'Head', 'East Head')).toBe(true);
+    });
+
+    it('should NOT detect generic "Head" as East Head when location says "West Head"', () => {
+      expect(isEastHead('Head', 'Head', 'West Head')).toBe(false);
+    });
+
+    it('should handle location with additional info like "West Head 6-0"', () => {
+      expect(isWestHead('Head', 'Head', 'West Head 6-0')).toBe(true);
+      expect(isEastHead('Head', 'Head', 'East Head 6-0')).toBe(true);
+    });
+  });
+
   describe('East Head Detection', () => {
     it('should detect "East Head" explicitly', () => {
       expect(isEastHead('East Head', '')).toBe(true);
@@ -68,7 +92,7 @@ describe('Head Detection Logic', () => {
       expect(isEastHead('left head', '')).toBe(true);
     });
 
-    it('should detect generic "Head" as East Head (default)', () => {
+    it('should detect generic "Head" as East Head (default) when no location specified', () => {
       expect(isEastHead('Head', '')).toBe(true);
       expect(isEastHead('Vessel Head', '')).toBe(true);
       expect(isEastHead('', 'head')).toBe(true);
