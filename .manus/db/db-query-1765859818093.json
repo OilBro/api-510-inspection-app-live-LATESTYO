@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, vesselTagNumber, vesselName, inspectionDate FROM inspections ORDER BY createdAt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, vesselTagNumber, vesselName, inspectionDate FROM inspections ORDER BY createdAt DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "-lxVpVc4g626Ea96V94mS",
+      "vesselTagNumber": "54-11-001",
+      "vesselName": "Trimethylamine Storage Vessel",
+      "inspectionDate": "NULL"
+    },
+    {
+      "id": "SN137CPzQklk1HZB6UA0C",
+      "vesselTagNumber": "TEST-ANOMALY-001",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "inspectionDate": "NULL"
+    },
+    {
+      "id": "ou4ANIoxkJKynx7M40Q-X",
+      "vesselTagNumber": "TEST-005",
+      "vesselName": "NULL",
+      "inspectionDate": "2025-12-16 02:33:21"
+    },
+    {
+      "id": "NFUZRmIzcNdrBB7lk9RtB",
+      "vesselTagNumber": "TEST-ANOMALY-001",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "inspectionDate": "NULL"
+    },
+    {
+      "id": "mjJpac0TIb-sWozf_YmZF",
+      "vesselTagNumber": "TEST-ANOMALY-001",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "inspectionDate": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tvesselTagNumber\tvesselName\tinspectionDate\n-lxVpVc4g626Ea96V94mS\t54-11-001\tTrimethylamine Storage Vessel\tNULL\nSN137CPzQklk1HZB6UA0C\tTEST-ANOMALY-001\tTest Vessel for Anomaly Detection\tNULL\nou4ANIoxkJKynx7M40Q-X\tTEST-005\tNULL\t2025-12-16 02:33:21\nNFUZRmIzcNdrBB7lk9RtB\tTEST-ANOMALY-001\tTest Vessel for Anomaly Detection\tNULL\nmjJpac0TIb-sWozf_YmZF\tTEST-ANOMALY-001\tTest Vessel for Anomaly Detection\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 952
+}

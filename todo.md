@@ -1365,4 +1365,5 @@
   - West Head: 'west head', 'w head', 'head 2', 'head-2', 'right head'
 - [x] Default unspecified heads to East Head (first head)
 - [x] Both East Head and West Head now appear in TABLE A
-- [x] All 90 tests passing
+- [x] All 114 tests passing (6 skipped)
+- [x] Added recalculate integration test with 6 test cases
