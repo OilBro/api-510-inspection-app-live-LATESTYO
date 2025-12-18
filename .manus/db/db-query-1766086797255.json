@@ -1,0 +1,100 @@
+{
+  "query": "SELECT cmlNumber, componentType, location, previousThickness, currentThickness, tActual, nominalThickness FROM tmlReadings WHERE inspectionId IS NOT NULL LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT cmlNumber, componentType, location, previousThickness, currentThickness, tActual, nominalThickness FROM tmlReadings WHERE inspectionId IS NOT NULL LIMIT 10;",
+  "rows": [
+    {
+      "cmlNumber": "007",
+      "componentType": "East Head",
+      "location": "6 - 45",
+      "previousThickness": "NULL",
+      "currentThickness": "0.6720",
+      "tActual": "NULL",
+      "nominalThickness": "0.5000"
+    },
+    {
+      "cmlNumber": "5",
+      "componentType": "East Head",
+      "location": "Center",
+      "previousThickness": "NULL",
+      "currentThickness": "0.5810",
+      "tActual": "0.5810",
+      "nominalThickness": "0.5810"
+    },
+    {
+      "cmlNumber": "040",
+      "componentType": "Vessel Shell",
+      "location": "10 - 90",
+      "previousThickness": "NULL",
+      "currentThickness": "0.6650",
+      "tActual": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "cmlNumber": "10",
+      "componentType": "6'",
+      "location": "135°",
+      "previousThickness": "NULL",
+      "currentThickness": "0.6380",
+      "tActual": "0.6380",
+      "nominalThickness": "NULL"
+    },
+    {
+      "cmlNumber": "080",
+      "componentType": "Vessel Shell",
+      "location": "15-90",
+      "previousThickness": "NULL",
+      "currentThickness": "0.6630",
+      "tActual": "0.6630",
+      "nominalThickness": "0.6250"
+    },
+    {
+      "cmlNumber": "012",
+      "componentType": "EAST HEAD",
+      "location": "6-270",
+      "previousThickness": "NULL",
+      "currentThickness": "0.6670",
+      "tActual": "0.6670",
+      "nominalThickness": "NULL"
+    },
+    {
+      "cmlNumber": "3",
+      "componentType": "East Head",
+      "location": "6 O'Clock",
+      "previousThickness": "NULL",
+      "currentThickness": "0.5360",
+      "tActual": "0.5360",
+      "nominalThickness": "0.5520"
+    },
+    {
+      "cmlNumber": "017",
+      "componentType": "Vessel Shell",
+      "location": "7 - 135",
+      "previousThickness": "NULL",
+      "currentThickness": "0.4510",
+      "tActual": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "cmlNumber": "N/A",
+      "componentType": "Gauge",
+      "location": "Nozzle 8",
+      "previousThickness": "NULL",
+      "currentThickness": "0.1310",
+      "tActual": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "cmlNumber": "019",
+      "componentType": "Vessel Shell",
+      "location": "7-225",
+      "previousThickness": "NULL",
+      "currentThickness": "0.6610",
+      "tActual": "0.6610",
+      "nominalThickness": "0.6250"
+    }
+  ],
+  "messages": [],
+  "stdout": "cmlNumber\tcomponentType\tlocation\tpreviousThickness\tcurrentThickness\ttActual\tnominalThickness\n007\tEast Head\t6 - 45\tNULL\t0.6720\tNULL\t0.5000\n5\tEast Head\tCenter\tNULL\t0.5810\t0.5810\t0.5810\n040\tVessel Shell\t10 - 90\tNULL\t0.6650\tNULL\tNULL\n10\t6'\t135°\tNULL\t0.6380\t0.6380\tNULL\n080\tVessel Shell\t15-90\tNULL\t0.6630\t0.6630\t0.6250\n012\tEAST HEAD\t6-270\tNULL\t0.6670\t0.6670\tNULL\n3\tEast Head\t6 O'Clock\tNULL\t0.5360\t0.5360\t0.5520\n017\tVessel Shell\t7 - 135\tNULL\t0.4510\tNULL\tNULL\nN/A\tGauge\tNozzle 8\tNULL\t0.1310\tNULL\tNULL\n019\tVessel Shell\t7-225\tNULL\t0.6610\t0.6610\t0.6250\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

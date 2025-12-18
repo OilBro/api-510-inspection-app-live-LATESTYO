@@ -1,0 +1,110 @@
+{
+  "query": "SELECT id, cmlNumber, componentType, location, previousThickness, currentThickness, tActual, nominalThickness FROM tmlReadings LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, cmlNumber, componentType, location, previousThickness, currentThickness, tActual, nominalThickness FROM tmlReadings LIMIT 10;",
+  "rows": [
+    {
+      "id": "_0GZTk0GgIDnvm9ZQViNQ",
+      "cmlNumber": "007",
+      "componentType": "East Head",
+      "location": "6 - 45",
+      "previousThickness": "NULL",
+      "currentThickness": "0.6720",
+      "tActual": "NULL",
+      "nominalThickness": "0.5000"
+    },
+    {
+      "id": "_0Xl-Bw2WTw3FPHHb5zUi",
+      "cmlNumber": "5",
+      "componentType": "East Head",
+      "location": "Center",
+      "previousThickness": "NULL",
+      "currentThickness": "0.5810",
+      "tActual": "0.5810",
+      "nominalThickness": "0.5810"
+    },
+    {
+      "id": "_4hJNS5EWd0QLcAhQe2Kk",
+      "cmlNumber": "040",
+      "componentType": "Vessel Shell",
+      "location": "10 - 90",
+      "previousThickness": "NULL",
+      "currentThickness": "0.6650",
+      "tActual": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "id": "_4w3uVdrgtV8K2hMN3ofb",
+      "cmlNumber": "10",
+      "componentType": "6'",
+      "location": "135°",
+      "previousThickness": "NULL",
+      "currentThickness": "0.6380",
+      "tActual": "0.6380",
+      "nominalThickness": "NULL"
+    },
+    {
+      "id": "_aBII5aV7Qp20-nS4zBA8",
+      "cmlNumber": "080",
+      "componentType": "Vessel Shell",
+      "location": "15-90",
+      "previousThickness": "NULL",
+      "currentThickness": "0.6630",
+      "tActual": "0.6630",
+      "nominalThickness": "0.6250"
+    },
+    {
+      "id": "_beyrxQvhyMsjSJowbjPj",
+      "cmlNumber": "012",
+      "componentType": "EAST HEAD",
+      "location": "6-270",
+      "previousThickness": "NULL",
+      "currentThickness": "0.6670",
+      "tActual": "0.6670",
+      "nominalThickness": "NULL"
+    },
+    {
+      "id": "_C-q6Q_m7_XQJ0i1ooT_Z",
+      "cmlNumber": "3",
+      "componentType": "East Head",
+      "location": "6 O'Clock",
+      "previousThickness": "NULL",
+      "currentThickness": "0.5360",
+      "tActual": "0.5360",
+      "nominalThickness": "0.5520"
+    },
+    {
+      "id": "_cCaXqolsFEbruVXtdQHO",
+      "cmlNumber": "017",
+      "componentType": "Vessel Shell",
+      "location": "7 - 135",
+      "previousThickness": "NULL",
+      "currentThickness": "0.4510",
+      "tActual": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "id": "_CMx7PKcD4mz6TV9bdxJ2",
+      "cmlNumber": "N/A",
+      "componentType": "Gauge",
+      "location": "Nozzle 8",
+      "previousThickness": "NULL",
+      "currentThickness": "0.1310",
+      "tActual": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "id": "_CqZ1-0_LGx1nduHdpyKg",
+      "cmlNumber": "019",
+      "componentType": "Vessel Shell",
+      "location": "7-225",
+      "previousThickness": "NULL",
+      "currentThickness": "0.6610",
+      "tActual": "0.6610",
+      "nominalThickness": "0.6250"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcmlNumber\tcomponentType\tlocation\tpreviousThickness\tcurrentThickness\ttActual\tnominalThickness\n_0GZTk0GgIDnvm9ZQViNQ\t007\tEast Head\t6 - 45\tNULL\t0.6720\tNULL\t0.5000\n_0Xl-Bw2WTw3FPHHb5zUi\t5\tEast Head\tCenter\tNULL\t0.5810\t0.5810\t0.5810\n_4hJNS5EWd0QLcAhQe2Kk\t040\tVessel Shell\t10 - 90\tNULL\t0.6650\tNULL\tNULL\n_4w3uVdrgtV8K2hMN3ofb\t10\t6'\t135°\tNULL\t0.6380\t0.6380\tNULL\n_aBII5aV7Qp20-nS4zBA8\t080\tVessel Shell\t15-90\tNULL\t0.6630\t0.6630\t0.6250\n_beyrxQvhyMsjSJowbjPj\t012\tEAST HEAD\t6-270\tNULL\t0.6670\t0.6670\tNULL\n_C-q6Q_m7_XQJ0i1ooT_Z\t3\tEast Head\t6 O'Clock\tNULL\t0.5360\t0.5360\t0.5520\n_cCaXqolsFEbruVXtdQHO\t017\tVessel Shell\t7 - 135\tNULL\t0.4510\tNULL\tNULL\n_CMx7PKcD4mz6TV9bdxJ2\tN/A\tGauge\tNozzle 8\tNULL\t0.1310\tNULL\tNULL\n_CqZ1-0_LGx1nduHdpyKg\t019\tVessel Shell\t7-225\tNULL\t0.6610\t0.6610\t0.6250\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

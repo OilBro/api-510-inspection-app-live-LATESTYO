@@ -1,0 +1,90 @@
+{
+  "query": "SELECT componentName, componentType, previousThickness, actualThickness, nominalThickness, minimumThickness FROM componentCalculations LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT componentName, componentType, previousThickness, actualThickness, nominalThickness, minimumThickness FROM componentCalculations LIMIT 10;",
+  "rows": [
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "previousThickness": "0.5000",
+      "actualThickness": "0.5550",
+      "nominalThickness": "0.5000",
+      "minimumThickness": "0.5259"
+    },
+    {
+      "componentName": "Vessel Shell",
+      "componentType": "shell",
+      "previousThickness": "0.6250",
+      "actualThickness": "0.6520",
+      "nominalThickness": "0.6250",
+      "minimumThickness": "0.4787"
+    },
+    {
+      "componentName": "Vessel Shell",
+      "componentType": "shell",
+      "previousThickness": "0.6250",
+      "actualThickness": "0.6520",
+      "nominalThickness": "0.6250",
+      "minimumThickness": "0.5298"
+    },
+    {
+      "componentName": "Vessel Shell",
+      "componentType": "shell",
+      "previousThickness": "0.6250",
+      "actualThickness": "0.6520",
+      "nominalThickness": "0.6250",
+      "minimumThickness": "0.5298"
+    },
+    {
+      "componentName": "West Head",
+      "componentType": "head",
+      "previousThickness": "0.5000",
+      "actualThickness": "0.5550",
+      "nominalThickness": "0.5000",
+      "minimumThickness": "0.5259"
+    },
+    {
+      "componentName": "West Head",
+      "componentType": "head",
+      "previousThickness": "0.5000",
+      "actualThickness": "0.5550",
+      "nominalThickness": "0.5000",
+      "minimumThickness": "0.5259"
+    },
+    {
+      "componentName": "West Head",
+      "componentType": "head",
+      "previousThickness": "0.5000",
+      "actualThickness": "0.5550",
+      "nominalThickness": "0.5000",
+      "minimumThickness": "0.4755"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "previousThickness": "0.5000",
+      "actualThickness": "0.5550",
+      "nominalThickness": "0.5000",
+      "minimumThickness": "0.4755"
+    },
+    {
+      "componentName": "Vessel Shell",
+      "componentType": "shell",
+      "previousThickness": "0.6250",
+      "actualThickness": "0.6520",
+      "nominalThickness": "0.6250",
+      "minimumThickness": "0.2881"
+    },
+    {
+      "componentName": "East Head",
+      "componentType": "head",
+      "previousThickness": "0.5000",
+      "actualThickness": "0.5550",
+      "nominalThickness": "0.5000",
+      "minimumThickness": "0.5080"
+    }
+  ],
+  "messages": [],
+  "stdout": "componentName\tcomponentType\tpreviousThickness\tactualThickness\tnominalThickness\tminimumThickness\nEast Head\thead\t0.5000\t0.5550\t0.5000\t0.5259\nVessel Shell\tshell\t0.6250\t0.6520\t0.6250\t0.4787\nVessel Shell\tshell\t0.6250\t0.6520\t0.6250\t0.5298\nVessel Shell\tshell\t0.6250\t0.6520\t0.6250\t0.5298\nWest Head\thead\t0.5000\t0.5550\t0.5000\t0.5259\nWest Head\thead\t0.5000\t0.5550\t0.5000\t0.5259\nWest Head\thead\t0.5000\t0.5550\t0.5000\t0.4755\nEast Head\thead\t0.5000\t0.5550\t0.5000\t0.4755\nVessel Shell\tshell\t0.6250\t0.6520\t0.6250\t0.2881\nEast Head\thead\t0.5000\t0.5550\t0.5000\t0.5080\n",
+  "stderr": "",
+  "execution_time_ms": 67
+}

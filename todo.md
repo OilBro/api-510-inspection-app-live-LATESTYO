@@ -67,26 +67,26 @@
 - Some LLM message content type mismatches (non-critical)
 
 ## Bugs to Fix
-- [ ] Complete flexible PDF parser integration (parser created, needs router integration)
-- [ ] Fix TML readings insertion to handle variable PDF field names
+- [x] Complete flexible PDF parser integration (parser created, needs router integration)
+- [x] Fix TML readings insertion to handle variable PDF field names
 
 ## New Feature: Intelligent PDF Import System
 - [x] Create flexible PDF parser (two-stage: extract + map)
 - [x] Implement AI-powered field mapping using LLM
 - [x] Add confidence scores for AI mappings
-- [ ] Integrate flexible parser into PDF import router
-- [ ] Handle variable field names in TML readings mapping
-- [ ] Create "Unmatched Data" review interface
-- [ ] Add dropdown field selector for manual data mapping
-- [ ] Implement learning system to store successful mappings
-- [ ] Support incremental data import from multiple sources
+- [x] Integrate flexible parser into PDF import router
+- [x] Handle variable field names in TML readings mapping
+- [x] Create "Unmatched Data" review interface (already exists in UnmatchedDataTab.tsx)
+- [x] Add dropdown field selector for manual data mapping (already exists)
+- [x] Implement learning system to store successful mappings (fieldMappingRouters.ts)
+- [x] Support incremental data import from multiple sources (pdfImportRouter.ts)
 
 ## Urgent Bugs
 - [x] Fix missing pdfjs-dist dependency for Manus PDF parser
 
 - [x] Fix TML readings database insertion - values showing as 'default' instead of actual parsed data (fixed in routers.ts line 686-688)
 
-- [ ] Investigate why code changes to TML insert aren't taking effect (possible caching/build issue)
+- [x] Investigate why code changes to TML insert aren't taking effect (fixed by restarting server)
 
 - [x] Add status field to TML record creation (set to 'good' by default)
 - [x] Add field length truncation to prevent 'Data too long' errors
@@ -104,9 +104,9 @@
 - [ ] Use Sentry to debug Professional Report error
 
 ## Professional Report Issues
-- [ ] Fix executive summary Table A to display previous thickness values instead of dashes
-- [ ] Verify PDF import captures previousThickness field correctly
-- [ ] Ensure executive summary pulls data from correct TML reading fields
+- [x] Fix executive summary Table A to display previous thickness values instead of dashes (updated professionalPdfGenerator.ts)
+- [x] Verify PDF import captures previousThickness field correctly (added to pdfImportRouter.ts schema)
+- [x] Ensure executive summary pulls data from correct TML reading fields (professionalReportDb.ts uses TML previousThickness)
 
 ## Vision LLM PDF Parsing for Scanned Documents
 - [x] Install pdf-to-image conversion library (pdf2pic)

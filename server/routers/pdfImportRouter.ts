@@ -72,7 +72,8 @@ Analyze this inspection report PDF and extract ALL the following information in 
         "number (all thickness readings for this CML in inches, e.g., [0.663, 0.666, 0.679, 0.656])"
       ],
       "minThickness": "number (minimum of all readings)",
-      "nominalThickness": "number (tmin or nominal design thickness if available)"
+      "nominalThickness": "number (tmin or nominal design thickness if available)",
+      "previousThickness": "number (previous inspection thickness if available)"
     }
   ],
   "findings": [
@@ -203,6 +204,7 @@ Do NOT leave fields empty if the information exists anywhere in the document. Se
                         },
                         minThickness: { type: "number" },
                         nominalThickness: { type: "number" },
+                        previousThickness: { type: "number" },
                       },
                       required: ["cml", "component", "readings", "minThickness"],
                       additionalProperties: false,
@@ -441,7 +443,7 @@ Do NOT leave fields empty if the information exists anywhere in the document. Se
             tml4: readings[3]?.toString() || null,
             tActual: measurement.minThickness?.toString() || null,
             nominalThickness: measurement.nominalThickness?.toString() || null,
-            previousThickness: null as string | null,
+            previousThickness: measurement.previousThickness?.toString() || null,
             previousInspectionDate: null as Date | null,
             currentInspectionDate: null as Date | null,
             loss: null as string | null,
