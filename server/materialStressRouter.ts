@@ -29,6 +29,14 @@ const FALLBACK_STRESS_VALUES: StressRow[] = [
   { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 300, allowableStress: 17000 },
   { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 400, allowableStress: 16500 },
 
+  // SA-612 (High-strength carbon steel for moderate/lower temp service)
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: -40, allowableStress: 23800 },
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 100, allowableStress: 23800 },
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 200, allowableStress: 23800 },
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 400, allowableStress: 23800 },
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 600, allowableStress: 21300 },
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 700, allowableStress: 16400 },
+
   // SA-240 Type 316
   { materialSpec: "SA-240 Type 316", materialGrade: "Type 316", materialCategory: "Stainless Steel", temperatureF: -20, allowableStress: 20000 },
   { materialSpec: "SA-240 Type 316", materialGrade: "Type 316", materialCategory: "Stainless Steel", temperatureF: 100, allowableStress: 20000 },

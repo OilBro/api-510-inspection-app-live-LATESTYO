@@ -90,6 +90,17 @@ export const comprehensiveMaterialData: MaterialStressData[] = [
   { materialCode: 'SA-285 Gr B', category: 'Carbon Steel', description: 'Low/intermediate tensile strength carbon steel plate', temperatureF: 500, allowableStressPsi: 13500 },
   { materialCode: 'SA-285 Gr B', category: 'Carbon Steel', description: 'Low/intermediate tensile strength carbon steel plate', temperatureF: 600, allowableStressPsi: 12400 },
   
+  // SA-612 (High-strength carbon steel for moderate/lower temperature service)
+  { materialCode: 'SA-612', category: 'Carbon Steel', description: 'High-strength carbon steel plate for moderate/lower temp service', temperatureF: -40, allowableStressPsi: 23800 },
+  { materialCode: 'SA-612', category: 'Carbon Steel', description: 'High-strength carbon steel plate for moderate/lower temp service', temperatureF: 100, allowableStressPsi: 23800 },
+  { materialCode: 'SA-612', category: 'Carbon Steel', description: 'High-strength carbon steel plate for moderate/lower temp service', temperatureF: 200, allowableStressPsi: 23800 },
+  { materialCode: 'SA-612', category: 'Carbon Steel', description: 'High-strength carbon steel plate for moderate/lower temp service', temperatureF: 300, allowableStressPsi: 23800 },
+  { materialCode: 'SA-612', category: 'Carbon Steel', description: 'High-strength carbon steel plate for moderate/lower temp service', temperatureF: 400, allowableStressPsi: 23800 },
+  { materialCode: 'SA-612', category: 'Carbon Steel', description: 'High-strength carbon steel plate for moderate/lower temp service', temperatureF: 500, allowableStressPsi: 23200 },
+  { materialCode: 'SA-612', category: 'Carbon Steel', description: 'High-strength carbon steel plate for moderate/lower temp service', temperatureF: 600, allowableStressPsi: 21300 },
+  { materialCode: 'SA-612', category: 'Carbon Steel', description: 'High-strength carbon steel plate for moderate/lower temp service', temperatureF: 650, allowableStressPsi: 19400 },
+  { materialCode: 'SA-612', category: 'Carbon Steel', description: 'High-strength carbon steel plate for moderate/lower temp service', temperatureF: 700, allowableStressPsi: 16400 },
+  
   // ============================================================================
   // STAINLESS STEEL MATERIALS
   // ============================================================================

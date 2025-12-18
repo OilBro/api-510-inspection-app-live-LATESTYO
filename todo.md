@@ -1439,3 +1439,10 @@ Phase 5 - Component Hierarchy:
 - [x] Added View Trends button to ComponentCalculationsSection linking to /trends/:vesselTagNumber
 - [x] All 118 tests passing
 - [ ] Cognee MCP server not available in environment (skipped integration)
+
+
+## SA-612 Material & Phase 4 Integration (Dec 16, 2025)
+
+- [x] Add SA-612 material to materials list (added to materialData.ts and materialStressRouter.ts)
+- [x] Register trendAnalysisRouter in server/routers.ts (already done)
+- [x] Add /trend-analysis route to App.tsx (already done at /trends/:vesselTagNumber)
