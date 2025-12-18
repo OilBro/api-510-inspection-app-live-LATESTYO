@@ -28,10 +28,10 @@ function Router() {
       <Route path={"/inspections/new"} component={NewInspection} />
       <Route path={"/inspections/:id"} component={InspectionDetail} />
       <Route path={"/import"} component={ImportData} />
-      <Route path={"comparison"} component={ReportComparison} />
-      <Route path={"import-pdf"} component={ImportPDF} />
-      <Route path={"convert-images"} component={ConvertImages} />
-      <Route path={"upload-ut-results"} component={UploadUTResults} />
+      <Route path={"/comparison"} component={ReportComparison} />
+      <Route path={"/import-pdf"} component={ImportPDF} />
+      <Route path={"/convert-images"} component={ConvertImages} />
+      <Route path={"/upload-ut-results"} component={UploadUTResults} />
       <Route path={"/validation/:inspectionId"} component={ValidationDashboard} />
       <Route path={"/anomalies/trends"} component={AnomalyTrends} />
       <Route path={"/field-inspector"} component={FieldInspector} />

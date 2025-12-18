@@ -226,6 +226,7 @@ export default function VesselDataTab({ inspection }: VesselDataTabProps) {
                   <SelectItem value="SA-203 Grade B">SA-203 Grade B (Ni Alloy Steel)</SelectItem>
                   <SelectItem value="SA-203 Grade D">SA-203 Grade D (Ni Alloy Steel)</SelectItem>
                   <SelectItem value="SA-203 Grade E">SA-203 Grade E (Ni Alloy Steel)</SelectItem>
+                  <SelectItem value="SA-612">SA-612 (High Strength Carbon Steel)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

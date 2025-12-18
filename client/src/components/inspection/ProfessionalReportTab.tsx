@@ -1172,6 +1172,7 @@ function ComponentCalculationForm({
               <SelectItem value="SA-240-316">SA-240 Type 316 (Stainless)</SelectItem>
               <SelectItem value="SA-387-11-2">SA-387 Grade 11 Class 2 (Chrome-Moly)</SelectItem>
               <SelectItem value="SA-387-22-2">SA-387 Grade 22 Class 2 (Chrome-Moly)</SelectItem>
+              <SelectItem value="SA-612">SA-612 (High Strength Carbon Steel)</SelectItem>
             </SelectContent>
           </Select>
         </div>

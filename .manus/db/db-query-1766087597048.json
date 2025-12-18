@@ -1,0 +1,35 @@
+{
+  "query": "SELECT DISTINCT materialSpec, materialGrade, materialCategory FROM materialStressValues ORDER BY materialSpec;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT DISTINCT materialSpec, materialGrade, materialCategory FROM materialStressValues ORDER BY materialSpec;",
+  "rows": [
+    {
+      "materialSpec": "SA-240 Type 304",
+      "materialGrade": "Type 304",
+      "materialCategory": "Stainless Steel"
+    },
+    {
+      "materialSpec": "SA-240 Type 316",
+      "materialGrade": "Type 316",
+      "materialCategory": "Stainless Steel"
+    },
+    {
+      "materialSpec": "SA-455",
+      "materialGrade": "SA-455",
+      "materialCategory": "Stainless Steel"
+    },
+    {
+      "materialSpec": "SA-516 Grade 70",
+      "materialGrade": "Grade 70",
+      "materialCategory": "Carbon Steel"
+    },
+    {
+      "materialSpec": "SA-612",
+      "materialGrade": "Grade 70",
+      "materialCategory": "Carbon Steel"
+    }
+  ],
+  "messages": [],
+  "stdout": "materialSpec\tmaterialGrade\tmaterialCategory\nSA-240 Type 304\tType 304\tStainless Steel\nSA-240 Type 316\tType 316\tStainless Steel\nSA-455\tSA-455\tStainless Steel\nSA-516 Grade 70\tGrade 70\tCarbon Steel\nSA-612\tGrade 70\tCarbon Steel\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

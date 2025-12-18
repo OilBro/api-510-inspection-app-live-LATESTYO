@@ -1446,3 +1446,9 @@ Phase 5 - Component Hierarchy:
 - [x] Add SA-612 material to materials list (added to materialData.ts and materialStressRouter.ts)
 - [x] Register trendAnalysisRouter in server/routers.ts (already done)
 - [x] Add /trend-analysis route to App.tsx (already done at /trends/:vesselTagNumber)
+
+
+## Route Fixes
+- [x] Fixed missing leading slashes in App.tsx routes (comparison, import-pdf, convert-images, upload-ut-results)
+- [x] SA-612 material now showing in Material Selection dropdown (verified via playwright - shows in listbox with SA-240 Type 304, SA-240 Type 316, SA-455, SA-516 Grade 70)
+- [x] Added SA-612 to VesselDataTab.tsx, ProfessionalReportTab.tsx, and CalculationWorksheet.tsx dropdowns
