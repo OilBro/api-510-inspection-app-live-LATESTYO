@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO materialStressValues (materialSpec, materialGrade, materialCategory, temperatureF, allowableStress) VALUES\n('SA-612', 'Grade 70', 'Carbon Steel', -40, 23800),\n('SA-612', 'Grade 70', 'Carbon Steel', 100, 23800),\n('SA-612', 'Grade 70', 'Carbon Steel', 200, 23800),\n('SA-612', 'Grade 70', 'Carbon Steel', 300, 23800),\n('SA-612', 'Grade 70', 'Carbon Steel', 400, 23800),\n('SA-612', 'Grade 70', 'Carbon Steel', 500, 23800),\n('SA-612', 'Grade 70', 'Carbon Steel', 600, 21200),\n('SA-612', 'Grade 70', 'Carbon Steel', 650, 19200),\n('SA-612', 'Grade 70', 'Carbon Steel', 700, 16400);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute INSERT INTO materialStressValues (materialSpec, materialGrade, materialCategory, temperatureF, allowableStress) VALUES\n('SA-612', 'Grade 70', 'Carbon Steel', -40, 23800),\n('SA-612', 'Grade 70', 'Carbon Steel', 100, 23800),\n('SA-612', 'Grade 70', 'Carbon Steel', 200, 23800),\n('SA-612', 'Grade 70', 'Carbon Steel', 300, 23800),\n('SA-612', 'Grade 70', 'Carbon Steel', 400, 23800),\n('SA-612', 'Grade 70', 'Carbon Steel', 500, 23800),\n('SA-612', 'Grade 70', 'Carbon Steel', 600, 21200),\n('SA-612', 'Grade 70', 'Carbon Steel', 650, 19200),\n('SA-612', 'Grade 70', 'Carbon Steel', 700, 16400);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 69
+}

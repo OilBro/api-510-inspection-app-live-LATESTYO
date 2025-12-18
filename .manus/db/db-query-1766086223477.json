@@ -1,0 +1,64 @@
+{
+  "query": "SELECT materialSpec, materialCategory, temperatureF, allowableStress FROM materialStressValues WHERE materialSpec = 'SA-612' ORDER BY temperatureF;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT materialSpec, materialCategory, temperatureF, allowableStress FROM materialStressValues WHERE materialSpec = 'SA-612' ORDER BY temperatureF;",
+  "rows": [
+    {
+      "materialSpec": "SA-612",
+      "materialCategory": "Carbon Steel",
+      "temperatureF": "-40",
+      "allowableStress": "23800"
+    },
+    {
+      "materialSpec": "SA-612",
+      "materialCategory": "Carbon Steel",
+      "temperatureF": "100",
+      "allowableStress": "23800"
+    },
+    {
+      "materialSpec": "SA-612",
+      "materialCategory": "Carbon Steel",
+      "temperatureF": "200",
+      "allowableStress": "23800"
+    },
+    {
+      "materialSpec": "SA-612",
+      "materialCategory": "Carbon Steel",
+      "temperatureF": "300",
+      "allowableStress": "23800"
+    },
+    {
+      "materialSpec": "SA-612",
+      "materialCategory": "Carbon Steel",
+      "temperatureF": "400",
+      "allowableStress": "23800"
+    },
+    {
+      "materialSpec": "SA-612",
+      "materialCategory": "Carbon Steel",
+      "temperatureF": "500",
+      "allowableStress": "23800"
+    },
+    {
+      "materialSpec": "SA-612",
+      "materialCategory": "Carbon Steel",
+      "temperatureF": "600",
+      "allowableStress": "21200"
+    },
+    {
+      "materialSpec": "SA-612",
+      "materialCategory": "Carbon Steel",
+      "temperatureF": "650",
+      "allowableStress": "19200"
+    },
+    {
+      "materialSpec": "SA-612",
+      "materialCategory": "Carbon Steel",
+      "temperatureF": "700",
+      "allowableStress": "16400"
+    }
+  ],
+  "messages": [],
+  "stdout": "materialSpec\tmaterialCategory\ttemperatureF\tallowableStress\nSA-612\tCarbon Steel\t-40\t23800\nSA-612\tCarbon Steel\t100\t23800\nSA-612\tCarbon Steel\t200\t23800\nSA-612\tCarbon Steel\t300\t23800\nSA-612\tCarbon Steel\t400\t23800\nSA-612\tCarbon Steel\t500\t23800\nSA-612\tCarbon Steel\t600\t21200\nSA-612\tCarbon Steel\t650\t19200\nSA-612\tCarbon Steel\t700\t16400\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}
