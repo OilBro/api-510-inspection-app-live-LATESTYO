@@ -777,39 +777,46 @@ export const professionalReportRouter = router({
         
         // Calculate minimum thickness
         const P = parseFloat(inspection.designPressure || '0');
-        const R = inspection.insideDiameter ? parseFloat(inspection.insideDiameter) / 2 : 0;
-        const S = parseFloat(inspection.allowableStress || '20000'); // Allowable stress from inspection or default
-        const E = parseFloat(inspection.jointEfficiency || '0.85'); // Joint efficiency from inspection or default
-        const CA = 0.125; // Corrosion allowance
+        const insideDiameter = parseFloat(inspection.insideDiameter || '0');
+        // Correct radius calculation: R = (D/2) - nominal thickness (per API 510 / user's Excel formula)
+        const nominalThick = avgNominal ? parseFloat(avgNominal) : 0;
+        const R = insideDiameter > 0 ? (insideDiameter / 2) - nominalThick : 0;
+        // Use allowable stress from inspection data (SA-612 at 125°F = 20,000 psi)
+        const S = parseFloat(inspection.allowableStress || '20000');
+        // Use joint efficiency from inspection data (E=1.0 for full RT, E=0.85 for spot RT)
+        const E = parseFloat(inspection.jointEfficiency || '1.0');
+        // CA is for reference only - NOT added to Tmin per API 510 formulas
+        const CA = 0.125;
         
         let minThickness;
         let calculatedMAWP;
         if (P && R && S && E) {
           if (componentType === 'shell') {
-            // Shell: t_min = PR/(SE - 0.6P) + CA
+            // Shell: t_min = PR/(SE - 0.6P) - NO CA added per API 510
             const denominator = S * E - 0.6 * P;
             if (denominator > 0) {
-              minThickness = ((P * R) / denominator + CA).toFixed(4);
+              minThickness = ((P * R) / denominator).toFixed(4);
             }
-            // Shell MAWP: MAWP = SEt/(R + 0.6t)
+            // Shell MAWP: MAWP = SEt/(R + 0.6t) using actual thickness
             if (avgCurrent) {
-              const t = parseFloat(avgCurrent) - CA;
+              const t = parseFloat(avgCurrent);
               if (t > 0) {
                 calculatedMAWP = ((S * E * t) / (R + 0.6 * t)).toFixed(1);
               }
             }
           } else {
-            // Head (2:1 ellipsoidal): t_min = PD/(2SE - 0.2P) + CA
-            const D = R * 2;
+            // Head (hemispherical for this vessel): t_min = PL/(2SE - 0.2P) - NO CA added
+            // For hemispherical heads, L = R (crown radius = inside radius)
+            const L = R;
             const denominator = 2 * S * E - 0.2 * P;
             if (denominator > 0) {
-              minThickness = ((P * D) / denominator + CA).toFixed(4);
+              minThickness = ((P * L) / denominator).toFixed(4);
             }
-            // Head MAWP: MAWP = 2SEt/(D + 0.2t)
+            // Head MAWP: MAWP = 2SEt/(L + 0.2t) using actual thickness
             if (avgCurrent) {
-              const t = parseFloat(avgCurrent) - CA;
+              const t = parseFloat(avgCurrent);
               if (t > 0) {
-                calculatedMAWP = ((2 * S * E * t) / (D + 0.2 * t)).toFixed(1);
+                calculatedMAWP = ((2 * S * E * t) / (L + 0.2 * t)).toFixed(1);
               }
             }
           }

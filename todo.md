@@ -1452,3 +1452,59 @@ Phase 5 - Component Hierarchy:
 - [x] Fixed missing leading slashes in App.tsx routes (comparison, import-pdf, convert-images, upload-ut-results)
 - [x] SA-612 material now showing in Material Selection dropdown (verified via playwright - shows in listbox with SA-240 Type 304, SA-240 Type 316, SA-455, SA-516 Grade 70)
 - [x] Added SA-612 to VesselDataTab.tsx, ProfessionalReportTab.tsx, and CalculationWorksheet.tsx dropdowns
+
+
+## CRITICAL: Calculation Fixes Required (User's Excel vs App)
+
+### User's Correct Formulas (from SAChem54-11-001calcs.xlsx):
+
+**Shell Evaluation:**
+- S = 20,000 psi (Allowable Stress for SA-612 at 125°F)
+- E = 1.0 (Joint Efficiency - Full RT)
+- P = 225 psi (Design Pressure)
+- D = 130.25 inches (Inside Diameter)
+- R = 64.312 inches (calculated as 0.5*D - Tnom = 65.125 - 0.813)
+- Tnom = 0.813 inches (Nominal Thickness)
+- Tact = 0.800 inches (Actual Thickness)
+- Tprev = 0.813 inches (Previous Thickness = Nominal as baseline)
+- Y = 10 years (Time between inspections)
+
+**Correct Tmin Formula (Shell):**
+```
+Tmin = PR/(SE - 0.6P) = (225 × 64.312)/(20000 × 1.0 - 0.6 × 225) = 0.7284 inches
+```
+NOTE: NO corrosion allowance added to Tmin!
+
+**Correct Remaining Life Formula:**
+```
+Ca = Tact - Tmin = 0.800 - 0.7284 = 0.0716 inches
+Cr = (Tprev - Tact) / Y = (0.813 - 0.800) / 10 = 0.0013 in/yr
+RL = Ca / Cr = 0.0716 / 0.0013 = 55.06 years
+```
+
+**Correct MAWP at Next Inspection (Yn=5 years):**
+```
+t = Tact - 2*Yn*Cr = 0.800 - 2*5*0.0013 = 0.787 inches
+Pcalc = SEt/(R + 0.6t) = (20000 × 1.0 × 0.787)/(64.312 + 0.6 × 0.787) = 242.96 psi
+Static Head = SH × 0.433 × SG = 8 × 0.433 × 0.63 = 2.18 psi
+MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
+```
+
+**Head Evaluation (North/East Head):**
+- Tprev = 0.530 inches
+- Tact = 0.502 inches
+- Tmin = 0.421 inches
+- Ca = 0.502 - 0.421 = 0.081 inches
+- Cr = (0.530 - 0.502) / 10 = 0.0028 in/yr
+- RL = 0.081 / 0.0028 = 28.93 years
+
+### Issues Fixed:
+- [x] Fix Tmin calculation - DO NOT add corrosion allowance (CA) to Tmin (fixed in componentCalculations.ts, routers.ts, professionalReportRouters.ts)
+- [x] Fix radius calculation: R = (D/2) - Tnom (corrected in routers.ts and professionalReportRouters.ts)
+- [x] Use correct allowable stress for SA-612: 20,000 psi at 125°F (database has correct values)
+- [x] Use E=1.0 for full RT (changed default from 0.85 to 1.0)
+- [x] Fix corrosion rate: Cr = (Tprev - Tact) / Y (already correct)
+- [x] Fix remaining life: RL = (Tact - Tmin) / Cr (already correct)
+- [x] Fix head detection to include North/South Head naming (updated routers.ts)
+- [x] Add hemispherical head formula support (updated routers.ts and professionalReportRouters.ts)
+- [x] Added more materials to database: SA-285 Grade C, SA-516 Grade 70, SA-387 Grade 11/22, SA-106 Grade B

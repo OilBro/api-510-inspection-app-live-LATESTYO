@@ -1,0 +1,23 @@
+{
+  "query": "SELECT * FROM materialStressValues LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT * FROM materialStressValues LIMIT 1;",
+  "rows": [
+    {
+      "id": "60001",
+      "materialSpec": "SA-240 Type 304",
+      "materialGrade": "Type 304",
+      "materialCategory": "Stainless Steel",
+      "temperatureF": "-20",
+      "allowableStress": "20000",
+      "asmeTable": "1A",
+      "asmeEdition": "2023",
+      "notes": "NULL",
+      "createdAt": "2025-12-11 07:38:59",
+      "updatedAt": "2025-12-11 07:38:59"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tmaterialSpec\tmaterialGrade\tmaterialCategory\ttemperatureF\tallowableStress\tasmeTable\tasmeEdition\tnotes\tcreatedAt\tupdatedAt\n60001\tSA-240 Type 304\tType 304\tStainless Steel\t-20\t20000\t1A\t2023\tNULL\t2025-12-11 07:38:59\t2025-12-11 07:38:59\n",
+  "stderr": "",
+  "execution_time_ms": 47
+}

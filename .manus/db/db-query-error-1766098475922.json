@@ -1,0 +1,8 @@
+{
+  "query": "\n-- Add SA-285 Grade C (Carbon Steel Plate)\nINSERT INTO materialStressValues (id, material, temperature, allowableStress, createdAt, updatedAt)\nVALUES \n  (UUID(), 'SA-285 Grade C', -20, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 100, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 200, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 300, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 400, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 500, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 600, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 650, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 700, 12100, NOW(), NOW());\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute \n-- Add SA-285 Grade C (Carbon Steel Plate)\nINSERT INTO materialStressValues (id, material, temperature, allowableStress, createdAt, updatedAt)\nVALUES \n  (UUID(), 'SA-285 Grade C', -20, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 100, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 200, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 300, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 400, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 500, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 600, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 650, 13750, NOW(), NOW()),\n  (UUID(), 'SA-285 Grade C', 700, 12100, NOW(), NOW());\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 3: Unknown column 'material' in 'field list'"
+  ]
+}

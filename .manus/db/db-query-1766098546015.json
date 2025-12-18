@@ -1,0 +1,37 @@
+{
+  "query": "SELECT DISTINCT materialSpec FROM materialStressValues ORDER BY materialSpec;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT DISTINCT materialSpec FROM materialStressValues ORDER BY materialSpec;",
+  "rows": [
+    {
+      "materialSpec": "SA-106 Grade B"
+    },
+    {
+      "materialSpec": "SA-240 Type 304"
+    },
+    {
+      "materialSpec": "SA-240 Type 316"
+    },
+    {
+      "materialSpec": "SA-285 Grade C"
+    },
+    {
+      "materialSpec": "SA-387 Grade 11 Class 2"
+    },
+    {
+      "materialSpec": "SA-387 Grade 22 Class 2"
+    },
+    {
+      "materialSpec": "SA-455"
+    },
+    {
+      "materialSpec": "SA-516 Grade 70"
+    },
+    {
+      "materialSpec": "SA-612"
+    }
+  ],
+  "messages": [],
+  "stdout": "materialSpec\nSA-106 Grade B\nSA-240 Type 304\nSA-240 Type 316\nSA-285 Grade C\nSA-387 Grade 11 Class 2\nSA-387 Grade 22 Class 2\nSA-455\nSA-516 Grade 70\nSA-612\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

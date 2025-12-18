@@ -1068,10 +1068,16 @@ export const appRouter = router({
               
               // Calculate derived values
               const P = parseFloat(inspection.designPressure || "0");
-              const R = inspection.insideDiameter ? parseFloat(inspection.insideDiameter) / 2 : 0;
-              const S = parseFloat(inspection.allowableStress || '20000'); // Allowable stress from inspection or default
-              const E = parseFloat(inspection.jointEfficiency || '0.85'); // Joint efficiency from inspection or default
-              const CA = 0.125; // Default corrosion allowance (1/8 inch)
+              const insideDiameter = parseFloat(inspection.insideDiameter || "0");
+              // Correct radius calculation: R = (D/2) - nominal thickness (per user's Excel formula)
+              // This accounts for the inside radius at the mid-wall of the shell
+              const nominalThick = avgNominalThickness ? parseFloat(avgNominalThickness) : 0;
+              const R = insideDiameter > 0 ? (insideDiameter / 2) - nominalThick : 0;
+              // Use allowable stress from inspection data (SA-612 at 125°F = 20,000 psi)
+              const S = parseFloat(inspection.allowableStress || '20000');
+              // Use joint efficiency from inspection data (E=1.0 for full RT, E=0.85 for spot RT)
+              const E = parseFloat(inspection.jointEfficiency || '1.0');
+              const CA = 0.125; // Default corrosion allowance (1/8 inch) - used for reference only, NOT added to Tmin
               
               // Minimum thickness calculation (ASME Section VIII Div 1, UG-27)
               // t_min = PR/(SE - 0.6P) - DO NOT add CA here
@@ -1142,8 +1148,8 @@ export const appRouter = router({
               });
               logger.info(`[PDF Import] Auto-created shell component calculation for report ${report.id}`);
               
-              // Create East Head component calculation with improved detection
-              // Matches: 'east head', 'e head', 'head 1', 'head-1', 'left head', or any head without west/right keywords
+              // Create North/East Head component calculation with improved detection
+              // For vessel 54-11-001: North Head = East Head (locations 27-31)
               // IMPORTANT: Also check location field for head identification
               const eastHeadTMLs = createdTMLs.filter((tml: any) => {
                 const comp = (tml.component || '').toLowerCase();
@@ -1151,18 +1157,18 @@ export const appRouter = router({
                 const loc = (tml.location || '').toLowerCase();
                 const combined = `${comp} ${compType}`;
                 
-                // Explicit east head matches (check location too)
+                // Explicit north/east head matches
+                if (combined.includes('north') || loc.includes('north')) return true;
                 if (combined.includes('east') || loc.includes('east head')) return true;
                 if (combined.includes('e head')) return true;
                 if (combined.includes('head 1') || combined.includes('head-1')) return true;
                 if (combined.includes('left head')) return true;
                 
-                // If it's a head but not explicitly west/right, treat as east (first head)
-                // Exclude if location indicates west head
+                // If it's a head but not explicitly south/west/right, treat as north/east (first head)
                 if ((combined.includes('head') && !combined.includes('shell')) &&
-                    !combined.includes('west') && !combined.includes('w head') &&
+                    !combined.includes('south') && !combined.includes('west') && !combined.includes('w head') &&
                     !combined.includes('head 2') && !combined.includes('head-2') &&
-                    !combined.includes('right') && !loc.includes('west')) {
+                    !combined.includes('right') && !loc.includes('west') && !loc.includes('south')) {
                   return true;
                 }
                 return false;
@@ -1186,12 +1192,22 @@ export const appRouter = router({
                 const eastAvgNominal = eastNominalThicknesses.length > 0 ? 
                   (eastNominalThicknesses.reduce((a, b) => a + b, 0) / eastNominalThicknesses.length).toFixed(4) : undefined;
                 
-                // Calculate East Head minimum thickness (2:1 ellipsoidal head)
+                // Calculate East/North Head minimum thickness
+                // For hemispherical heads: t_min = PL/(2SE - 0.2P) where L = R (crown radius)
+                // For 2:1 ellipsoidal heads: t_min = PD/(2SE - 0.2P)
+                // Use head type from inspection data, default to hemispherical for this vessel
                 let eastMinThickness;
+                const headType = (inspection.headType || 'hemispherical').toLowerCase();
                 if (P && R && S && E) {
                   const denominator = 2 * S * E - 0.2 * P;
                   if (denominator > 0) {
-                    eastMinThickness = ((P * R) / denominator).toFixed(4);
+                    if (headType.includes('hemi')) {
+                      // Hemispherical: t_min = PL/(2SE - 0.2P) where L = R
+                      eastMinThickness = ((P * R) / denominator).toFixed(4);
+                    } else {
+                      // Ellipsoidal: t_min = PD/(2SE - 0.2P) where D = 2R
+                      eastMinThickness = ((P * 2 * R) / denominator).toFixed(4);
+                    }
                   }
                 }
                 
@@ -1244,8 +1260,8 @@ export const appRouter = router({
                 logger.info(`[PDF Import] Auto-created East Head component calculation for report ${report.id}`);
               }
               
-              // Create West Head component calculation with improved detection
-              // Matches: 'west head', 'w head', 'head 2', 'head-2', 'right head'
+              // Create South/West Head component calculation with improved detection
+              // For vessel 54-11-001: South Head = West Head (locations 1-5)
               // IMPORTANT: Also check location field for head identification
               const westHeadTMLs = createdTMLs.filter((tml: any) => {
                 const comp = (tml.component || '').toLowerCase();
@@ -1253,7 +1269,8 @@ export const appRouter = router({
                 const loc = (tml.location || '').toLowerCase();
                 const combined = `${comp} ${compType}`;
                 
-                // Explicit west head matches (check location too)
+                // Explicit south/west head matches (check location too)
+                if (combined.includes('south') || loc.includes('south')) return true;
                 if (combined.includes('west') || loc.includes('west head')) return true;
                 if (combined.includes('w head')) return true;
                 if (combined.includes('head 2') || combined.includes('head-2')) return true;
@@ -1280,12 +1297,21 @@ export const appRouter = router({
                 const westAvgNominal = westNominalThicknesses.length > 0 ? 
                   (westNominalThicknesses.reduce((a, b) => a + b, 0) / westNominalThicknesses.length).toFixed(4) : undefined;
                 
-                // Calculate West Head minimum thickness (2:1 ellipsoidal head)
+                // Calculate South/West Head minimum thickness
+                // For hemispherical heads: t_min = PL/(2SE - 0.2P) where L = R (crown radius)
+                // For 2:1 ellipsoidal heads: t_min = PD/(2SE - 0.2P)
                 let westMinThickness;
+                const westHeadType = (inspection.headType || 'hemispherical').toLowerCase();
                 if (P && R && S && E) {
                   const denominator = 2 * S * E - 0.2 * P;
                   if (denominator > 0) {
-                    westMinThickness = ((P * R) / denominator).toFixed(4);
+                    if (westHeadType.includes('hemi')) {
+                      // Hemispherical: t_min = PL/(2SE - 0.2P) where L = R
+                      westMinThickness = ((P * R) / denominator).toFixed(4);
+                    } else {
+                      // Ellipsoidal: t_min = PD/(2SE - 0.2P) where D = 2R
+                      westMinThickness = ((P * 2 * R) / denominator).toFixed(4);
+                    }
                   }
                 }
                 
