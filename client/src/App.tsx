@@ -18,6 +18,7 @@ import ValidationDashboard from "./pages/ValidationDashboard";
 import AnomalyTrends from "./pages/AnomalyTrends";
 import FieldInspector from "./pages/FieldInspector";
 import TrendAnalysis from "./pages/TrendAnalysis";
+import API510Calculator from "./pages/API510Calculator";
 
 function Router() {
   return (
@@ -36,6 +37,7 @@ function Router() {
       <Route path={"/anomalies/trends"} component={AnomalyTrends} />
       <Route path={"/field-inspector"} component={FieldInspector} />
       <Route path={"/trends/:vesselTagNumber"} component={TrendAnalysis} />
+      <Route path={"/calculator"} component={API510Calculator} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

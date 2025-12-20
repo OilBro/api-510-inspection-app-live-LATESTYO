@@ -1508,3 +1508,14 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Fix head detection to include North/South Head naming (updated routers.ts)
 - [x] Add hemispherical head formula support (updated routers.ts and professionalReportRouters.ts)
 - [x] Added more materials to database: SA-285 Grade C, SA-516 Grade 70, SA-387 Grade 11/22, SA-106 Grade B
+
+
+## API 510 Calculator Tool (New Feature)
+- [x] Create interactive Shell Minimum Thickness calculator
+- [x] Create interactive Head Minimum Thickness calculator (hemispherical, ellipsoidal, torispherical)
+- [x] Create interactive Corrosion Rate & Remaining Life calculator
+- [x] Create interactive MAWP calculator with static head deduction
+- [x] Add material stress lookup with temperature interpolation
+- [x] Add joint efficiency selection (RT-1 through RT-4)
+- [x] Add quick formula reference card
+- [x] Add calculator link to Home page dashboard

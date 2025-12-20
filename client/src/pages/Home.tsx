@@ -175,6 +175,16 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
           </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation("/calculator")}>
+            <CardHeader>
+              <Calculator className="h-12 w-12 text-indigo-600 mb-4" />
+              <CardTitle>API 510 Calculator</CardTitle>
+              <CardDescription>
+                Interactive ASME calculations for shell, head, MAWP, corrosion rate, and remaining life
+              </CardDescription>
+            </CardHeader>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
