@@ -1519,3 +1519,10 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add joint efficiency selection (RT-1 through RT-4)
 - [x] Add quick formula reference card
 - [x] Add calculator link to Home page dashboard
+
+
+## Photo Display Bug (User Reported)
+- [x] Fix photos not displaying in app - showing "[Photo could not be loaded]" (fixed double slash in R2 URLs)
+- [x] Fix photos not displaying in generated PDF reports (URLs now correct)
+- [x] Investigate photo URL storage and retrieval (found double slash issue in R2_PUBLIC_URL)
+- [x] Verify S3 storage URLs are accessible (fixed storage.ts to handle trailing slashes)

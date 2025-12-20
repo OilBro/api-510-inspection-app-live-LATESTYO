@@ -1,0 +1,25 @@
+{
+  "query": "SELECT id, photoUrl, caption FROM inspectionPhotos LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, photoUrl, caption FROM inspectionPhotos LIMIT 3;",
+  "rows": [
+    {
+      "id": "_YQ0YZSPqsA5YTN8xzirz",
+      "photoUrl": "https://pub-00403c9b844b4ab5a932e46119e654c8.r2.dev//inspection-photos/1765051127066-dYhrl2Klk6nKQ9xKhuLhk.jpeg",
+      "caption": "General View - Bottom"
+    },
+    {
+      "id": "-c0BmUGXLR1Gvdrr3tURW",
+      "photoUrl": "https://pub-00403c9b844b4ab5a932e46119e654c8.r2.dev//inspection-photos/1765051137566-DafHOLm0doXD1IRSIPokv.jpeg",
+      "caption": "General View - Bottom"
+    },
+    {
+      "id": "-lRsKSIh6_OuNh6yNF7uL",
+      "photoUrl": "https://pub-00403c9b844b4ab5a932e46119e654c8.r2.dev//inspection-photos/1766208065881-oOtzUJsB1J5HtjTnZTnEq.jpg",
+      "caption": "20170809_145756"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tphotoUrl\tcaption\n_YQ0YZSPqsA5YTN8xzirz\thttps://pub-00403c9b844b4ab5a932e46119e654c8.r2.dev//inspection-photos/1765051127066-dYhrl2Klk6nKQ9xKhuLhk.jpeg\tGeneral View - Bottom\n-c0BmUGXLR1Gvdrr3tURW\thttps://pub-00403c9b844b4ab5a932e46119e654c8.r2.dev//inspection-photos/1765051137566-DafHOLm0doXD1IRSIPokv.jpeg\tGeneral View - Bottom\n-lRsKSIh6_OuNh6yNF7uL\thttps://pub-00403c9b844b4ab5a932e46119e654c8.r2.dev//inspection-photos/1766208065881-oOtzUJsB1J5HtjTnZTnEq.jpg\t20170809_145756\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}
