@@ -1,0 +1,21 @@
+{
+  "query": "SELECT id, vesselTagNumber, designPressure, designTemperature, insideDiameter, materialSpec, allowableStress, jointEfficiency, specificGravity FROM inspections WHERE vesselTagNumber LIKE '%54-11-001%' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, vesselTagNumber, designPressure, designTemperature, insideDiameter, materialSpec, allowableStress, jointEfficiency, specificGravity FROM inspections WHERE vesselTagNumber LIKE '%54-11-001%' LIMIT 1;",
+  "rows": [
+    {
+      "id": "UZNDBONAZepnbaTGt99W3",
+      "vesselTagNumber": "54-11-001",
+      "designPressure": "225.00",
+      "designTemperature": "125.00",
+      "insideDiameter": "130.25",
+      "materialSpec": "Carbon Steel",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL",
+      "specificGravity": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tvesselTagNumber\tdesignPressure\tdesignTemperature\tinsideDiameter\tmaterialSpec\tallowableStress\tjointEfficiency\tspecificGravity\nUZNDBONAZepnbaTGt99W3\t54-11-001\t225.00\t125.00\t130.25\tCarbon Steel\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 49
+}

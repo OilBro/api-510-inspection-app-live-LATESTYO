@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, vesselTagNumber, designPressure, designTemperature, insideDiameter, materialSpec, allowableStress, jointEfficiency, specificGravity, nominalThickness FROM inspections WHERE vesselTagNumber LIKE '%54-11-001%' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, vesselTagNumber, designPressure, designTemperature, insideDiameter, materialSpec, allowableStress, jointEfficiency, specificGravity, nominalThickness FROM inspections WHERE vesselTagNumber LIKE '%54-11-001%' LIMIT 1;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'nominalthickness' in 'field list'"
+  ]
+}

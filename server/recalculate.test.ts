@@ -53,14 +53,15 @@ suite('Recalculate Component Calculations', () => {
     });
 
     // Create TML readings for Shell
+    // Shell readings use numeric locations (8-12) and degree component types (0, 45, 90, etc.)
     await db.insert(tmlReadings).values([
       {
         id: `tml-shell-1-${nanoid(6)}`,
         inspectionId: testInspectionId,
         cmlNumber: 'CML-1',
         component: 'Vessel Shell',
-        componentType: 'Shell',
-        location: '12 o\'clock',
+        componentType: '0',  // Degree position
+        location: '8',       // Numeric location >= 8 for shell
         tActual: '0.650',
         currentThickness: '0.650',
         previousThickness: '0.680',
@@ -73,8 +74,8 @@ suite('Recalculate Component Calculations', () => {
         inspectionId: testInspectionId,
         cmlNumber: 'CML-2',
         component: 'Vessel Shell',
-        componentType: 'Shell',
-        location: '6 o\'clock',
+        componentType: '180', // Degree position
+        location: '9',        // Numeric location >= 8 for shell
         tActual: '0.645',
         currentThickness: '0.645',
         previousThickness: '0.675',

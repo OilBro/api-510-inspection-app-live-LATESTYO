@@ -1,0 +1,42 @@
+{
+  "query": "SELECT COUNT(*) as count, previousThickness FROM tmlReadings WHERE inspectionId = 'UZNDBONAZepnbaTGt99W3' GROUP BY previousThickness;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT COUNT(*) as count, previousThickness FROM tmlReadings WHERE inspectionId = 'UZNDBONAZepnbaTGt99W3' GROUP BY previousThickness;",
+  "rows": [
+    {
+      "count": "1",
+      "previousThickness": "0.1790"
+    },
+    {
+      "count": "1",
+      "previousThickness": "0.2180"
+    },
+    {
+      "count": "1",
+      "previousThickness": "0.1330"
+    },
+    {
+      "count": "5",
+      "previousThickness": "NULL"
+    },
+    {
+      "count": "1",
+      "previousThickness": "0.1540"
+    },
+    {
+      "count": "42",
+      "previousThickness": "0.8130"
+    },
+    {
+      "count": "1",
+      "previousThickness": "0.5620"
+    },
+    {
+      "count": "2",
+      "previousThickness": "0.3000"
+    }
+  ],
+  "messages": [],
+  "stdout": "count\tpreviousThickness\n1\t0.1790\n1\t0.2180\n1\t0.1330\n5\tNULL\n1\t0.1540\n42\t0.8130\n1\t0.5620\n2\t0.3000\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

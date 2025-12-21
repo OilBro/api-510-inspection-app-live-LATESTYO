@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE inspections SET materialSpec = 'SA-612', allowableStress = 20000, jointEfficiency = 1.0, specificGravity = 0.63 WHERE id = 'UZNDBONAZepnbaTGt99W3';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute UPDATE inspections SET materialSpec = 'SA-612', allowableStress = 20000, jointEfficiency = 1.0, specificGravity = 0.63 WHERE id = 'UZNDBONAZepnbaTGt99W3';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 56
+}
