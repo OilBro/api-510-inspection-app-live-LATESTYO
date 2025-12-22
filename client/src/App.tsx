@@ -20,6 +20,7 @@ import FieldInspector from "./pages/FieldInspector";
 import TrendAnalysis from "./pages/TrendAnalysis";
 import API510Calculator from "./pages/API510Calculator";
 import LocationMappingSettings from "./pages/LocationMappingSettings";
+import BatchReprocess from "./pages/BatchReprocess";
 
 function Router() {
   return (
@@ -40,6 +41,7 @@ function Router() {
       <Route path={"/trends/:vesselTagNumber"} component={TrendAnalysis} />
       <Route path={"/calculator"} component={API510Calculator} />
       <Route path={"/settings/location-mapping"} component={LocationMappingSettings} />
+      <Route path={"/batch-reprocess"} component={BatchReprocess} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
-import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare, AlertTriangle, Smartphone, Cog } from "lucide-react";
+import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare, AlertTriangle, Smartphone, Cog, RefreshCw } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { AnomalyStats } from "@/components/AnomalyStats";
 
@@ -192,6 +192,16 @@ export default function Home() {
               <CardTitle>Settings</CardTitle>
               <CardDescription>
                 Configure location mappings for TML readings (shell vs head component assignments)
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation("/batch-reprocess")}>
+            <CardHeader>
+              <RefreshCw className="h-12 w-12 text-amber-600 mb-4" />
+              <CardTitle>Batch Re-Process PDFs</CardTitle>
+              <CardDescription>
+                Re-run improved AI extraction on previously imported PDFs to update TML readings and calculations
               </CardDescription>
             </CardHeader>
           </Card>

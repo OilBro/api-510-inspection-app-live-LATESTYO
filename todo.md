@@ -1558,3 +1558,14 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Checklist items not populating from PDF import (BY DESIGN: Checklist is manual API 510 inspection checklist, not extracted from PDF)
 
 - [x] Fix PDF import to detect North/South head naming and create both head calculations (FIXED: Improved LLM prompt with explicit instructions for dual head detection)
+
+
+## Batch Re-Process Feature (Dec 21, 2025) ✅ COMPLETE
+- [x] Create backend endpoint to list all imported PDFs with their inspection IDs
+- [x] Create backend endpoint to re-process a single PDF with improved extraction
+- [x] Create backend endpoint for batch re-process all PDFs
+- [x] Add progress tracking for batch operations
+- [x] Create UI button on dashboard for batch re-process
+- [x] Add confirmation dialog before batch re-process
+- [x] Show progress indicator during re-processing
+- [x] Display results summary after completion
