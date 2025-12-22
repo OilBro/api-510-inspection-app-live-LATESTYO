@@ -1,0 +1,478 @@
+{
+  "query": "SELECT id, cmlNumber, component, componentType, location, service, nozzleSize \nFROM tmlReadings \nWHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm' \nORDER BY cmlNumber \nLIMIT 100;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, cmlNumber, component, componentType, location, service, nozzleSize \nFROM tmlReadings \nWHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm' \nORDER BY cmlNumber \nLIMIT 100;",
+  "rows": [
+    {
+      "id": "NzSPl9LqiSe4RBQQ9E-XI",
+      "cmlNumber": "001",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "DQLRrdYDWLBVX8zX2tfGA",
+      "cmlNumber": "002",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "MIr9j5V2OzSKpAm8IntCS",
+      "cmlNumber": "003",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "ceMTfj2CWzj7ICxkvdcB8",
+      "cmlNumber": "004",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "JeDwpWJti7EM4_MHnzhGR",
+      "cmlNumber": "005",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "wuAqIgOUTi2rOSpqL3GRd",
+      "cmlNumber": "006",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "KUKAjRjtYAEbAFvCsgUWY",
+      "cmlNumber": "007",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "fL3WJs-2IKBxSogR6Yi1a",
+      "cmlNumber": "008",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "b--HPNvjtnxTiqQ7D6m5O",
+      "cmlNumber": "009",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "TmxSHLBxlEBdOABDJ7c2n",
+      "cmlNumber": "010",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "kd85lxKTOgbDg8lgiSvz4",
+      "cmlNumber": "011",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "rbU4sOZJjaDrFxLptdSd-",
+      "cmlNumber": "012",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "w0litr2mu-pS3oex7EX8U",
+      "cmlNumber": "013",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "DXOcrl9-cNjUYiv592R4L",
+      "cmlNumber": "014",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "7MBBCH_UcsLq6VyDYcyfE",
+      "cmlNumber": "015",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "9q5ZkRGRUPBL9n1sleTBy",
+      "cmlNumber": "016",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "KKhTlqtxdG4xuQBLnMoV7",
+      "cmlNumber": "017",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "mCi6B56xV10iDArS4lvX3",
+      "cmlNumber": "018",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "K93vszY2hMpYCw8ZHHtd_",
+      "cmlNumber": "019",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "mBomjSUP52ESF4t5g4h5j",
+      "cmlNumber": "020",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "TmOvBWNcR-RLZJRkU2-_Q",
+      "cmlNumber": "021",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "hVFy1LKmrQuuCHhgG4Y36",
+      "cmlNumber": "022",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "Z8yAVz_HaK4u9qXsS7g_8",
+      "cmlNumber": "023",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "09g6U_90Vett3z6dc0VkK",
+      "cmlNumber": "024",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "yhHCEhD5odX_PEGwqGXuq",
+      "cmlNumber": "025",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "l3qm7HMRf9rFqwtgYxwpq",
+      "cmlNumber": "026",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "57tZVtjxu170OwR0C-ptU",
+      "cmlNumber": "027",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "P00oAg3Im3F4bfyACRznr",
+      "cmlNumber": "028",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "w9t5CoA96P1iwe6rYIpum",
+      "cmlNumber": "029",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "yLUiYYhSUQ1Hkju49Czrw",
+      "cmlNumber": "030",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "ukqkAGteg_BsZPVz_M9Dj",
+      "cmlNumber": "031",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "HouyakyCxjntrti5cR2NG",
+      "cmlNumber": "032",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "qhhdNObEAFjpbMUW8bnLz",
+      "cmlNumber": "033",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "aWmaix0sKo4pTVR4fwbaR",
+      "cmlNumber": "034",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "weA3UztQIgAil2ogYTCJw",
+      "cmlNumber": "035",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "xjF5rSEseEP2fmukcGcPQ",
+      "cmlNumber": "036",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "jCU7pjg_sV0Sl80u0A6pZ",
+      "cmlNumber": "037",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "7yGghRrLNzq_-CM4Lwn0F",
+      "cmlNumber": "038",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "68g3o8SuokXDEJ_RMIB8p",
+      "cmlNumber": "039",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "Nj27EU_gFEK0iEEj8aoBQ",
+      "cmlNumber": "040",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "lJIbgVLQJ0AL1UoCSFMbu",
+      "cmlNumber": "041",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "syZLxf4v6WXGYfAA2kubo",
+      "cmlNumber": "042",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "KwXmyBfP-XMpaO9BK29ZE",
+      "cmlNumber": "043",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "Gn1fgSbB2NHS7xskTo_eE",
+      "cmlNumber": "044",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "itQTEJclFnFeyz2GBjAmG",
+      "cmlNumber": "045",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "_t-OIyHUgv8lMuKXb2UwI",
+      "cmlNumber": "046",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "22D7H_E9QFvUS_Q5l6Ttq",
+      "cmlNumber": "047",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "zi_eLvSjLvVnBo4HnLkMY",
+      "cmlNumber": "048",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "Jc_XeGESziv4_AqCh7PLF",
+      "cmlNumber": "049",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "EZkx3qRRzaaMGi8Fp4hq8",
+      "cmlNumber": "050",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "KjAOAdQcG7UJkigofWMX9",
+      "cmlNumber": "051",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    },
+    {
+      "id": "n6ZOMcXAveXtHsOvXhA0x",
+      "cmlNumber": "052",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "service": "NULL",
+      "nozzleSize": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcmlNumber\tcomponent\tcomponentType\tlocation\tservice\tnozzleSize\nNzSPl9LqiSe4RBQQ9E-XI\t001\tEast Head\tEast Head\tEast Head\tNULL\tNULL\nDQLRrdYDWLBVX8zX2tfGA\t002\tEast Head\tEast Head\tEast Head\tNULL\tNULL\nMIr9j5V2OzSKpAm8IntCS\t003\tEast Head\tEast Head\tEast Head\tNULL\tNULL\nceMTfj2CWzj7ICxkvdcB8\t004\tEast Head\tEast Head\tEast Head\tNULL\tNULL\nJeDwpWJti7EM4_MHnzhGR\t005\tEast Head\tEast Head\tEast Head\tNULL\tNULL\nwuAqIgOUTi2rOSpqL3GRd\t006\tEast Head\tEast Head\tEast Head\tNULL\tNULL\nKUKAjRjtYAEbAFvCsgUWY\t007\tEast Head\tEast Head\tEast Head\tNULL\tNULL\nfL3WJs-2IKBxSogR6Yi1a\t008\tEast Head\tEast Head\tEast Head\tNULL\tNULL\nb--HPNvjtnxTiqQ7D6m5O\t009\tEast Head\tEast Head\tEast Head\tNULL\tNULL\nTmxSHLBxlEBdOABDJ7c2n\t010\tEast Head\tEast Head\tEast Head\tNULL\tNULL\nkd85lxKTOgbDg8lgiSvz4\t011\tEast Head\tEast Head\tEast Head\tNULL\tNULL\nrbU4sOZJjaDrFxLptdSd-\t012\tEast Head\tEast Head\tEast Head\tNULL\tNULL\nw0litr2mu-pS3oex7EX8U\t013\tEast Head\tEast Head\tEast Head\tNULL\tNULL\nDXOcrl9-cNjUYiv592R4L\t014\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\n7MBBCH_UcsLq6VyDYcyfE\t015\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\n9q5ZkRGRUPBL9n1sleTBy\t016\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nKKhTlqtxdG4xuQBLnMoV7\t017\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nmCi6B56xV10iDArS4lvX3\t018\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nK93vszY2hMpYCw8ZHHtd_\t019\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nmBomjSUP52ESF4t5g4h5j\t020\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nTmOvBWNcR-RLZJRkU2-_Q\t021\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nhVFy1LKmrQuuCHhgG4Y36\t022\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nZ8yAVz_HaK4u9qXsS7g_8\t023\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\n09g6U_90Vett3z6dc0VkK\t024\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nyhHCEhD5odX_PEGwqGXuq\t025\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nl3qm7HMRf9rFqwtgYxwpq\t026\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\n57tZVtjxu170OwR0C-ptU\t027\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nP00oAg3Im3F4bfyACRznr\t028\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nw9t5CoA96P1iwe6rYIpum\t029\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nyLUiYYhSUQ1Hkju49Czrw\t030\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nukqkAGteg_BsZPVz_M9Dj\t031\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nHouyakyCxjntrti5cR2NG\t032\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nqhhdNObEAFjpbMUW8bnLz\t033\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\naWmaix0sKo4pTVR4fwbaR\t034\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nweA3UztQIgAil2ogYTCJw\t035\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nxjF5rSEseEP2fmukcGcPQ\t036\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\njCU7pjg_sV0Sl80u0A6pZ\t037\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\n7yGghRrLNzq_-CM4Lwn0F\t038\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\n68g3o8SuokXDEJ_RMIB8p\t039\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nNj27EU_gFEK0iEEj8aoBQ\t040\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nlJIbgVLQJ0AL1UoCSFMbu\t041\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nsyZLxf4v6WXGYfAA2kubo\t042\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nKwXmyBfP-XMpaO9BK29ZE\t043\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nGn1fgSbB2NHS7xskTo_eE\t044\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nitQTEJclFnFeyz2GBjAmG\t045\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\n_t-OIyHUgv8lMuKXb2UwI\t046\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\n22D7H_E9QFvUS_Q5l6Ttq\t047\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nzi_eLvSjLvVnBo4HnLkMY\t048\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nJc_XeGESziv4_AqCh7PLF\t049\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nEZkx3qRRzaaMGi8Fp4hq8\t050\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nKjAOAdQcG7UJkigofWMX9\t051\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\nn6ZOMcXAveXtHsOvXhA0x\t052\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

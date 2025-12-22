@@ -1,0 +1,20 @@
+{
+  "query": "SELECT DISTINCT component, componentType, COUNT(*) as count \nFROM tmlReadings \nWHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm' \nGROUP BY component, componentType \nORDER BY component;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT DISTINCT component, componentType, COUNT(*) as count \nFROM tmlReadings \nWHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm' \nGROUP BY component, componentType \nORDER BY component;",
+  "rows": [
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "count": "13"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "count": "39"
+    }
+  ],
+  "messages": [],
+  "stdout": "component\tcomponentType\tcount\nEast Head\tEast Head\t13\nVessel Shell\tVessel Shell\t39\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

@@ -1549,3 +1549,12 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Integrate with calculation logic to use custom mappings (professionalReportDb.ts updated)
 - [x] Allow vessel-specific or default mappings (supports both)
 - [x] Add categorization helper function (categorizeTmlReadings in locationMappingRouter.ts)
+
+
+## Critical Bugs Reported by User (Dec 21, 2025)
+- [x] Settings page showing 404 - need to create LocationMappingSettings component and add route
+- [x] Nozzles not showing imported data on Nozzles page (FIXED: Improved LLM extraction to detect nozzles - requires PDF re-import)
+- [x] Only one head showing in calculations (FIXED: Improved LLM extraction to detect North/South heads - requires PDF re-import)
+- [x] Checklist items not populating from PDF import (BY DESIGN: Checklist is manual API 510 inspection checklist, not extracted from PDF)
+
+- [x] Fix PDF import to detect North/South head naming and create both head calculations (FIXED: Improved LLM prompt with explicit instructions for dual head detection)

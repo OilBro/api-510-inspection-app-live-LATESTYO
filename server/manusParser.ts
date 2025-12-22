@@ -101,7 +101,23 @@ export async function parseAndStandardizeWithManus(
       {
         role: "system",
         content: `You are an expert at extracting vessel inspection data from API 510 reports. 
-Extract all available information and return it as structured JSON matching this schema:
+Extract all available information and return it as structured JSON matching this schema.
+
+CRITICAL INSTRUCTIONS:
+1. HEADS: Most pressure vessels have TWO heads (one at each end). Look for:
+   - North Head / South Head (common naming)
+   - East Head / West Head (alternative naming)
+   - Head 1 / Head 2 (numbered naming)
+   - Left Head / Right Head
+   If you see thickness readings for heads, check if there are TWO separate sections or tables for different heads.
+   Map North Head → East Head, South Head → West Head in the location field.
+   
+2. NOZZLES: Look for nozzle schedules, nozzle thickness tables, or nozzle evaluation sections.
+   Common nozzles: Manway, Relief Valve, Inlet, Outlet, Drain, Vent, Level Gauge, etc.
+   Extract ALL nozzles found in the document.
+   
+3. CHECKLIST: Look for inspection checklists, examination items, or condition assessments.
+   These may be in tables with checkboxes, pass/fail columns, or satisfactory/unsatisfactory status.
 
 {
   "reportInfo": {
@@ -149,9 +165,9 @@ Extract all available information and return it as structured JSON matching this
   "executiveSummary": "string",
   "tmlReadings": [
     {
-      "cmlNumber": "string (e.g. CML-1, CML-2)",
-      "location": "string (e.g. Shell, East Head, West Head, Nozzle N1)",
-      "component": "string (Shell/Head/Nozzle)",
+      "cmlNumber": "string (e.g. CML-1, CML-2, 001, 002)",
+      "location": "string (IMPORTANT: Use 'East Head' for North/Left/Head1, 'West Head' for South/Right/Head2, 'Shell' for shell readings)",
+      "component": "string (Shell/East Head/West Head/Nozzle - be specific about which head)",
       "readingType": "string (nozzle/seam/spot/general)",
       "nozzleSize": "string (e.g. 24\", 3\", 2\", 1\" - only for nozzles)",
       "angle": "string (e.g. 0°, 90°, 180°, 270° for multi-angle readings)",
@@ -164,16 +180,18 @@ Extract all available information and return it as structured JSON matching this
   ],
   "inspectionChecklist": [
     {
-      "itemText": "string",
-      "status": "string"
+      "category": "string (e.g. External Examination, Internal Examination, Pressure Test)",
+      "itemText": "string (the inspection item description)",
+      "status": "string (Satisfactory/Unsatisfactory/N/A/Pass/Fail)",
+      "notes": "string (any comments or observations)"
     }
   ],
   "nozzles": [
     {
-      "nozzleNumber": "string (e.g. N1, N2, Manway)",
-      "service": "string (e.g. Manway, Relief, Vapor Out)",
+      "nozzleNumber": "string (e.g. N1, N2, Manway, MW-1)",
+      "service": "string (e.g. Manway, Relief, Vapor Out, Inlet, Outlet, Drain)",
       "size": "string (e.g. 18\" NPS, 2\" NPS)",
-      "schedule": "string (e.g. STD, 40, 80)",
+      "schedule": "string (e.g. STD, 40, 80, XS)",
       "actualThickness": "number",
       "nominalThickness": "number",
       "minimumRequired": "number",
@@ -181,7 +199,7 @@ Extract all available information and return it as structured JSON matching this
       "notes": "string"
     }
   ]
-}`,
+}`
       },
       {
         role: "user",

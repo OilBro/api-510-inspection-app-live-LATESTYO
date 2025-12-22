@@ -1,0 +1,101 @@
+{
+  "query": "SELECT component, componentType, location, currentThickness, previousThickness \nFROM tmlReadings \nWHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm' \nAND (component LIKE '%head%' OR componentType LIKE '%head%' OR location LIKE '%head%')\nLIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT component, componentType, location, currentThickness, previousThickness \nFROM tmlReadings \nWHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm' \nAND (component LIKE '%head%' OR componentType LIKE '%head%' OR location LIKE '%head%')\nLIMIT 20;",
+  "rows": [
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "currentThickness": "0.5620",
+      "previousThickness": "NULL"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "currentThickness": "0.5410",
+      "previousThickness": "NULL"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "currentThickness": "0.5290",
+      "previousThickness": "0.5290"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "currentThickness": "0.5680",
+      "previousThickness": "NULL"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "currentThickness": "0.5370",
+      "previousThickness": "NULL"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "currentThickness": "0.5820",
+      "previousThickness": "NULL"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "currentThickness": "0.6060",
+      "previousThickness": "NULL"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "currentThickness": "0.5390",
+      "previousThickness": "NULL"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "currentThickness": "0.5430",
+      "previousThickness": "0.5430"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "currentThickness": "0.5650",
+      "previousThickness": "NULL"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "currentThickness": "0.5380",
+      "previousThickness": "NULL"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "currentThickness": "0.5830",
+      "previousThickness": "NULL"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "currentThickness": "0.5770",
+      "previousThickness": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "component\tcomponentType\tlocation\tcurrentThickness\tpreviousThickness\nEast Head\tEast Head\tEast Head\t0.5620\tNULL\nEast Head\tEast Head\tEast Head\t0.5410\tNULL\nEast Head\tEast Head\tEast Head\t0.5290\t0.5290\nEast Head\tEast Head\tEast Head\t0.5680\tNULL\nEast Head\tEast Head\tEast Head\t0.5370\tNULL\nEast Head\tEast Head\tEast Head\t0.5820\tNULL\nEast Head\tEast Head\tEast Head\t0.6060\tNULL\nEast Head\tEast Head\tEast Head\t0.5390\tNULL\nEast Head\tEast Head\tEast Head\t0.5430\t0.5430\nEast Head\tEast Head\tEast Head\t0.5650\tNULL\nEast Head\tEast Head\tEast Head\t0.5380\tNULL\nEast Head\tEast Head\tEast Head\t0.5830\tNULL\nEast Head\tEast Head\tEast Head\t0.5770\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

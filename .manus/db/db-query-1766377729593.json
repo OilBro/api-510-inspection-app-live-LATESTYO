@@ -1,0 +1,22 @@
+{
+  "query": "SELECT component, componentType, location, COUNT(*) as cnt \nFROM tmlReadings \nWHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm' \nGROUP BY component, componentType, location \nORDER BY component, location;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT component, componentType, location, COUNT(*) as cnt \nFROM tmlReadings \nWHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm' \nGROUP BY component, componentType, location \nORDER BY component, location;",
+  "rows": [
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "cnt": "13"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "cnt": "39"
+    }
+  ],
+  "messages": [],
+  "stdout": "component\tcomponentType\tlocation\tcnt\nEast Head\tEast Head\tEast Head\t13\nVessel Shell\tVessel Shell\tVessel Shell\t39\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

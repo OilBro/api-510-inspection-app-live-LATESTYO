@@ -423,21 +423,30 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       
       if (keyword === 'shell') {
         // Shell readings are identified by:
-        // 1. Location is a number >= 8 (locations 8, 9, 10, 11, 12 are shell positions)
-        // 2. Location 7 is typically head readings (North/West head), not shell
+        // 1. Component or componentType contains 'shell' or 'vessel shell'
+        // 2. Location is a number >= 8 (locations 8, 9, 10, 11, 12 are shell positions)
         // 3. ComponentType is a degree value (0, 45, 90, 135, 180, 225, 270, 315)
-        // 4. Exclude anything with 'head' in the location
+        // 4. Exclude anything with 'head' in any field
+        
+        // Direct shell match
+        if (comp.includes('shell') || compType.includes('shell') || loc.includes('vessel shell')) {
+          return true;
+        }
+        
         const locNum = parseInt(loc.trim(), 10);
         const isShellLocation = !isNaN(locNum) && locNum >= 8; // Shell starts at location 8
         const isDegreeComponent = /^\d+$/.test(compType.trim());
-        const isNotHead = !loc.includes('head');
+        const isNotHead = !loc.includes('head') && !comp.includes('head') && !compType.includes('head');
         
         // Shell readings have numeric location >= 8 and degree component type
         return isShellLocation && isDegreeComponent && isNotHead;
       } else if (keyword === 'east') {
         // East/South Head: match 'east head', 'south head', 'e head', 'head 1', 'head-1', 'left head'
         // Also check location field for head identifiers
+        // IMPORTANT: South Head = East Head in our naming convention
         if (loc.includes('south head') || loc === 'south head') return true;
+        if (comp.includes('south head') || compType.includes('south head')) return true;
+        if (comp.includes('south') && comp.includes('head')) return true;
         if (compType.includes('east') || comp.includes('east') || loc.includes('east head')) return true;
         if (compType.includes('e head') || comp.includes('e head')) return true;
         if (compType.includes('head 1') || comp.includes('head 1')) return true;
@@ -454,8 +463,10 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       } else if (keyword === 'west') {
         // West/North Head: match 'west head', 'north head', 'w head', 'head 2', 'head-2', 'right head'
         // Also check location field for head identifiers
-        // Location 7 with degree components is typically North/West head readings
+        // IMPORTANT: North Head = West Head in our naming convention
         if (loc.includes('north head') || loc === 'north head') return true;
+        if (comp.includes('north head') || compType.includes('north head')) return true;
+        if (comp.includes('north') && comp.includes('head')) return true;
         if (compType.includes('west') || comp.includes('west') || loc.includes('west head')) return true;
         if (compType.includes('north') || comp.includes('north')) return true;
         if (compType.includes('w head') || comp.includes('w head')) return true;

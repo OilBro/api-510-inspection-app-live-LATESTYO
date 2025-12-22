@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
-import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare, AlertTriangle, Smartphone } from "lucide-react";
+import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare, AlertTriangle, Smartphone, Cog } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { AnomalyStats } from "@/components/AnomalyStats";
 
@@ -182,6 +182,16 @@ export default function Home() {
               <CardTitle>API 510 Calculator</CardTitle>
               <CardDescription>
                 Interactive ASME calculations for shell, head, MAWP, corrosion rate, and remaining life
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation("/settings/location-mapping")}>
+            <CardHeader>
+              <Cog className="h-12 w-12 text-gray-600 mb-4" />
+              <CardTitle>Settings</CardTitle>
+              <CardDescription>
+                Configure location mappings for TML readings (shell vs head component assignments)
               </CardDescription>
             </CardHeader>
           </Card>

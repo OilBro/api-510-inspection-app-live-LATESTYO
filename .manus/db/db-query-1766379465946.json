@@ -1,0 +1,150 @@
+{
+  "query": "SELECT cmlNumber, component, componentType, location, tActual FROM tmlReadings WHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm' ORDER BY cmlNumber LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT cmlNumber, component, componentType, location, tActual FROM tmlReadings WHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm' ORDER BY cmlNumber LIMIT 20;",
+  "rows": [
+    {
+      "cmlNumber": "001",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "tActual": "0.5430"
+    },
+    {
+      "cmlNumber": "002",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "tActual": "0.5290"
+    },
+    {
+      "cmlNumber": "003",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "tActual": "0.5390"
+    },
+    {
+      "cmlNumber": "004",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "tActual": "0.5410"
+    },
+    {
+      "cmlNumber": "005",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "tActual": "0.5370"
+    },
+    {
+      "cmlNumber": "006",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "tActual": "0.5770"
+    },
+    {
+      "cmlNumber": "007",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "tActual": "0.6060"
+    },
+    {
+      "cmlNumber": "008",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "tActual": "0.5680"
+    },
+    {
+      "cmlNumber": "009",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "tActual": "0.5620"
+    },
+    {
+      "cmlNumber": "010",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "tActual": "0.5380"
+    },
+    {
+      "cmlNumber": "011",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "tActual": "0.5820"
+    },
+    {
+      "cmlNumber": "012",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "tActual": "0.5650"
+    },
+    {
+      "cmlNumber": "013",
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head",
+      "tActual": "0.5830"
+    },
+    {
+      "cmlNumber": "014",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4700"
+    },
+    {
+      "cmlNumber": "015",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4710"
+    },
+    {
+      "cmlNumber": "016",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4580"
+    },
+    {
+      "cmlNumber": "017",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4510"
+    },
+    {
+      "cmlNumber": "018",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4960"
+    },
+    {
+      "cmlNumber": "019",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4520"
+    },
+    {
+      "cmlNumber": "020",
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4530"
+    }
+  ],
+  "messages": [],
+  "stdout": "cmlNumber\tcomponent\tcomponentType\tlocation\ttActual\n001\tEast Head\tEast Head\tEast Head\t0.5430\n002\tEast Head\tEast Head\tEast Head\t0.5290\n003\tEast Head\tEast Head\tEast Head\t0.5390\n004\tEast Head\tEast Head\tEast Head\t0.5410\n005\tEast Head\tEast Head\tEast Head\t0.5370\n006\tEast Head\tEast Head\tEast Head\t0.5770\n007\tEast Head\tEast Head\tEast Head\t0.6060\n008\tEast Head\tEast Head\tEast Head\t0.5680\n009\tEast Head\tEast Head\tEast Head\t0.5620\n010\tEast Head\tEast Head\tEast Head\t0.5380\n011\tEast Head\tEast Head\tEast Head\t0.5820\n012\tEast Head\tEast Head\tEast Head\t0.5650\n013\tEast Head\tEast Head\tEast Head\t0.5830\n014\tVessel Shell\tVessel Shell\tVessel Shell\t0.4700\n015\tVessel Shell\tVessel Shell\tVessel Shell\t0.4710\n016\tVessel Shell\tVessel Shell\tVessel Shell\t0.4580\n017\tVessel Shell\tVessel Shell\tVessel Shell\t0.4510\n018\tVessel Shell\tVessel Shell\tVessel Shell\t0.4960\n019\tVessel Shell\tVessel Shell\tVessel Shell\t0.4520\n020\tVessel Shell\tVessel Shell\tVessel Shell\t0.4530\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

@@ -1,0 +1,426 @@
+{
+  "query": "SELECT cmlNumber, componentType, component, location, tActual, currentThickness FROM tmlReadings WHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm' ORDER BY cmlNumber LIMIT 60;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT cmlNumber, componentType, component, location, tActual, currentThickness FROM tmlReadings WHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm' ORDER BY cmlNumber LIMIT 60;",
+  "rows": [
+    {
+      "cmlNumber": "001",
+      "componentType": "East Head",
+      "component": "East Head",
+      "location": "East Head",
+      "tActual": "0.5430",
+      "currentThickness": "0.5430"
+    },
+    {
+      "cmlNumber": "002",
+      "componentType": "East Head",
+      "component": "East Head",
+      "location": "East Head",
+      "tActual": "0.5290",
+      "currentThickness": "0.5290"
+    },
+    {
+      "cmlNumber": "003",
+      "componentType": "East Head",
+      "component": "East Head",
+      "location": "East Head",
+      "tActual": "0.5390",
+      "currentThickness": "0.5390"
+    },
+    {
+      "cmlNumber": "004",
+      "componentType": "East Head",
+      "component": "East Head",
+      "location": "East Head",
+      "tActual": "0.5410",
+      "currentThickness": "0.5410"
+    },
+    {
+      "cmlNumber": "005",
+      "componentType": "East Head",
+      "component": "East Head",
+      "location": "East Head",
+      "tActual": "0.5370",
+      "currentThickness": "0.5370"
+    },
+    {
+      "cmlNumber": "006",
+      "componentType": "East Head",
+      "component": "East Head",
+      "location": "East Head",
+      "tActual": "0.5770",
+      "currentThickness": "0.5770"
+    },
+    {
+      "cmlNumber": "007",
+      "componentType": "East Head",
+      "component": "East Head",
+      "location": "East Head",
+      "tActual": "0.6060",
+      "currentThickness": "0.6060"
+    },
+    {
+      "cmlNumber": "008",
+      "componentType": "East Head",
+      "component": "East Head",
+      "location": "East Head",
+      "tActual": "0.5680",
+      "currentThickness": "0.5680"
+    },
+    {
+      "cmlNumber": "009",
+      "componentType": "East Head",
+      "component": "East Head",
+      "location": "East Head",
+      "tActual": "0.5620",
+      "currentThickness": "0.5620"
+    },
+    {
+      "cmlNumber": "010",
+      "componentType": "East Head",
+      "component": "East Head",
+      "location": "East Head",
+      "tActual": "0.5380",
+      "currentThickness": "0.5380"
+    },
+    {
+      "cmlNumber": "011",
+      "componentType": "East Head",
+      "component": "East Head",
+      "location": "East Head",
+      "tActual": "0.5820",
+      "currentThickness": "0.5820"
+    },
+    {
+      "cmlNumber": "012",
+      "componentType": "East Head",
+      "component": "East Head",
+      "location": "East Head",
+      "tActual": "0.5650",
+      "currentThickness": "0.5650"
+    },
+    {
+      "cmlNumber": "013",
+      "componentType": "East Head",
+      "component": "East Head",
+      "location": "East Head",
+      "tActual": "0.5830",
+      "currentThickness": "0.5830"
+    },
+    {
+      "cmlNumber": "014",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4700",
+      "currentThickness": "0.4700"
+    },
+    {
+      "cmlNumber": "015",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4710",
+      "currentThickness": "0.4710"
+    },
+    {
+      "cmlNumber": "016",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4580",
+      "currentThickness": "0.4580"
+    },
+    {
+      "cmlNumber": "017",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4510",
+      "currentThickness": "0.4510"
+    },
+    {
+      "cmlNumber": "018",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4960",
+      "currentThickness": "0.4960"
+    },
+    {
+      "cmlNumber": "019",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4520",
+      "currentThickness": "0.4520"
+    },
+    {
+      "cmlNumber": "020",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4530",
+      "currentThickness": "0.4530"
+    },
+    {
+      "cmlNumber": "021",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4690",
+      "currentThickness": "0.4690"
+    },
+    {
+      "cmlNumber": "022",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4780",
+      "currentThickness": "0.4780"
+    },
+    {
+      "cmlNumber": "023",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4790",
+      "currentThickness": "0.4790"
+    },
+    {
+      "cmlNumber": "024",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4650",
+      "currentThickness": "0.4650"
+    },
+    {
+      "cmlNumber": "025",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4570",
+      "currentThickness": "0.4570"
+    },
+    {
+      "cmlNumber": "026",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4540",
+      "currentThickness": "0.4540"
+    },
+    {
+      "cmlNumber": "027",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4610",
+      "currentThickness": "0.4610"
+    },
+    {
+      "cmlNumber": "028",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4590",
+      "currentThickness": "0.4590"
+    },
+    {
+      "cmlNumber": "029",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4760",
+      "currentThickness": "0.4760"
+    },
+    {
+      "cmlNumber": "030",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4770",
+      "currentThickness": "0.4770"
+    },
+    {
+      "cmlNumber": "031",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4780",
+      "currentThickness": "0.4780"
+    },
+    {
+      "cmlNumber": "032",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4670",
+      "currentThickness": "0.4670"
+    },
+    {
+      "cmlNumber": "033",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4590",
+      "currentThickness": "0.4590"
+    },
+    {
+      "cmlNumber": "034",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "NULL",
+      "currentThickness": "NULL"
+    },
+    {
+      "cmlNumber": "035",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4600",
+      "currentThickness": "0.4600"
+    },
+    {
+      "cmlNumber": "036",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4630",
+      "currentThickness": "0.4630"
+    },
+    {
+      "cmlNumber": "037",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4790",
+      "currentThickness": "0.4790"
+    },
+    {
+      "cmlNumber": "038",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4770",
+      "currentThickness": "0.4770"
+    },
+    {
+      "cmlNumber": "039",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4710",
+      "currentThickness": "0.4710"
+    },
+    {
+      "cmlNumber": "040",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4590",
+      "currentThickness": "0.4590"
+    },
+    {
+      "cmlNumber": "041",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4540",
+      "currentThickness": "0.4540"
+    },
+    {
+      "cmlNumber": "042",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4450",
+      "currentThickness": "0.4450"
+    },
+    {
+      "cmlNumber": "043",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4540",
+      "currentThickness": "0.4540"
+    },
+    {
+      "cmlNumber": "044",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4570",
+      "currentThickness": "0.4570"
+    },
+    {
+      "cmlNumber": "045",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4720",
+      "currentThickness": "0.4720"
+    },
+    {
+      "cmlNumber": "046",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4790",
+      "currentThickness": "0.4790"
+    },
+    {
+      "cmlNumber": "047",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4690",
+      "currentThickness": "0.4690"
+    },
+    {
+      "cmlNumber": "048",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4570",
+      "currentThickness": "0.4570"
+    },
+    {
+      "cmlNumber": "049",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4560",
+      "currentThickness": "0.4560"
+    },
+    {
+      "cmlNumber": "050",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4490",
+      "currentThickness": "0.4490"
+    },
+    {
+      "cmlNumber": "051",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4590",
+      "currentThickness": "0.4590"
+    },
+    {
+      "cmlNumber": "052",
+      "componentType": "Vessel Shell",
+      "component": "Vessel Shell",
+      "location": "Vessel Shell",
+      "tActual": "0.4640",
+      "currentThickness": "0.4640"
+    }
+  ],
+  "messages": [],
+  "stdout": "cmlNumber\tcomponentType\tcomponent\tlocation\ttActual\tcurrentThickness\n001\tEast Head\tEast Head\tEast Head\t0.5430\t0.5430\n002\tEast Head\tEast Head\tEast Head\t0.5290\t0.5290\n003\tEast Head\tEast Head\tEast Head\t0.5390\t0.5390\n004\tEast Head\tEast Head\tEast Head\t0.5410\t0.5410\n005\tEast Head\tEast Head\tEast Head\t0.5370\t0.5370\n006\tEast Head\tEast Head\tEast Head\t0.5770\t0.5770\n007\tEast Head\tEast Head\tEast Head\t0.6060\t0.6060\n008\tEast Head\tEast Head\tEast Head\t0.5680\t0.5680\n009\tEast Head\tEast Head\tEast Head\t0.5620\t0.5620\n010\tEast Head\tEast Head\tEast Head\t0.5380\t0.5380\n011\tEast Head\tEast Head\tEast Head\t0.5820\t0.5820\n012\tEast Head\tEast Head\tEast Head\t0.5650\t0.5650\n013\tEast Head\tEast Head\tEast Head\t0.5830\t0.5830\n014\tVessel Shell\tVessel Shell\tVessel Shell\t0.4700\t0.4700\n015\tVessel Shell\tVessel Shell\tVessel Shell\t0.4710\t0.4710\n016\tVessel Shell\tVessel Shell\tVessel Shell\t0.4580\t0.4580\n017\tVessel Shell\tVessel Shell\tVessel Shell\t0.4510\t0.4510\n018\tVessel Shell\tVessel Shell\tVessel Shell\t0.4960\t0.4960\n019\tVessel Shell\tVessel Shell\tVessel Shell\t0.4520\t0.4520\n020\tVessel Shell\tVessel Shell\tVessel Shell\t0.4530\t0.4530\n021\tVessel Shell\tVessel Shell\tVessel Shell\t0.4690\t0.4690\n022\tVessel Shell\tVessel Shell\tVessel Shell\t0.4780\t0.4780\n023\tVessel Shell\tVessel Shell\tVessel Shell\t0.4790\t0.4790\n024\tVessel Shell\tVessel Shell\tVessel Shell\t0.4650\t0.4650\n025\tVessel Shell\tVessel Shell\tVessel Shell\t0.4570\t0.4570\n026\tVessel Shell\tVessel Shell\tVessel Shell\t0.4540\t0.4540\n027\tVessel Shell\tVessel Shell\tVessel Shell\t0.4610\t0.4610\n028\tVessel Shell\tVessel Shell\tVessel Shell\t0.4590\t0.4590\n029\tVessel Shell\tVessel Shell\tVessel Shell\t0.4760\t0.4760\n030\tVessel Shell\tVessel Shell\tVessel Shell\t0.4770\t0.4770\n031\tVessel Shell\tVessel Shell\tVessel Shell\t0.4780\t0.4780\n032\tVessel Shell\tVessel Shell\tVessel Shell\t0.4670\t0.4670\n033\tVessel Shell\tVessel Shell\tVessel Shell\t0.4590\t0.4590\n034\tVessel Shell\tVessel Shell\tVessel Shell\tNULL\tNULL\n035\tVessel Shell\tVessel Shell\tVessel Shell\t0.4600\t0.4600\n036\tVessel Shell\tVessel Shell\tVessel Shell\t0.4630\t0.4630\n037\tVessel Shell\tVessel Shell\tVessel Shell\t0.4790\t0.4790\n038\tVessel Shell\tVessel Shell\tVessel Shell\t0.4770\t0.4770\n039\tVessel Shell\tVessel Shell\tVessel Shell\t0.4710\t0.4710\n040\tVessel Shell\tVessel Shell\tVessel Shell\t0.4590\t0.4590\n041\tVessel Shell\tVessel Shell\tVessel Shell\t0.4540\t0.4540\n042\tVessel Shell\tVessel Shell\tVessel Shell\t0.4450\t0.4450\n043\tVessel Shell\tVessel Shell\tVessel Shell\t0.4540\t0.4540\n044\tVessel Shell\tVessel Shell\tVessel Shell\t0.4570\t0.4570\n045\tVessel Shell\tVessel Shell\tVessel Shell\t0.4720\t0.4720\n046\tVessel Shell\tVessel Shell\tVessel Shell\t0.4790\t0.4790\n047\tVessel Shell\tVessel Shell\tVessel Shell\t0.4690\t0.4690\n048\tVessel Shell\tVessel Shell\tVessel Shell\t0.4570\t0.4570\n049\tVessel Shell\tVessel Shell\tVessel Shell\t0.4560\t0.4560\n050\tVessel Shell\tVessel Shell\tVessel Shell\t0.4490\t0.4490\n051\tVessel Shell\tVessel Shell\tVessel Shell\t0.4590\t0.4590\n052\tVessel Shell\tVessel Shell\tVessel Shell\t0.4640\t0.4640\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

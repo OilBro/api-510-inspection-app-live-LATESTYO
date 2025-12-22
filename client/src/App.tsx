@@ -19,6 +19,7 @@ import AnomalyTrends from "./pages/AnomalyTrends";
 import FieldInspector from "./pages/FieldInspector";
 import TrendAnalysis from "./pages/TrendAnalysis";
 import API510Calculator from "./pages/API510Calculator";
+import LocationMappingSettings from "./pages/LocationMappingSettings";
 
 function Router() {
   return (
@@ -38,6 +39,7 @@ function Router() {
       <Route path={"/field-inspector"} component={FieldInspector} />
       <Route path={"/trends/:vesselTagNumber"} component={TrendAnalysis} />
       <Route path={"/calculator"} component={API510Calculator} />
+      <Route path={"/settings/location-mapping"} component={LocationMappingSettings} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

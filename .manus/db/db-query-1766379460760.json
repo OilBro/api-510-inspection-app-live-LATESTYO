@@ -1,0 +1,9 @@
+{
+  "query": "SELECT cmlNumber, component, componentType, location, tActual FROM tmlReadings WHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm' AND (location LIKE '%south%' OR location LIKE '%west%' OR location LIKE '%north%' OR component LIKE '%south%' OR component LIKE '%west%' OR component LIKE '%north%');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT cmlNumber, component, componentType, location, tActual FROM tmlReadings WHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm' AND (location LIKE '%south%' OR location LIKE '%west%' OR location LIKE '%north%' OR component LIKE '%south%' OR component LIKE '%west%' OR component LIKE '%north%');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 62
+}

@@ -1,0 +1,20 @@
+{
+  "query": "SELECT DISTINCT component, componentType, location \nFROM tmlReadings \nWHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT DISTINCT component, componentType, location \nFROM tmlReadings \nWHERE inspectionId = '31Szaxnol2E9ueSa-k4Tm';",
+  "rows": [
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "location": "Vessel Shell"
+    },
+    {
+      "component": "East Head",
+      "componentType": "East Head",
+      "location": "East Head"
+    }
+  ],
+  "messages": [],
+  "stdout": "component\tcomponentType\tlocation\nVessel Shell\tVessel Shell\tVessel Shell\nEast Head\tEast Head\tEast Head\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}
