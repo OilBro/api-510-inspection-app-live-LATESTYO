@@ -1540,3 +1540,12 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Shell MAWP now calculates to 243.04 psi (matches Excel 240.78 psi within rounding)
 - [x] North Head correctly identified with t_act = 0.493", RL = 32.82 years
 - [x] South Head correctly identified with t_act = 0.515", RL = 95.62 years
+
+
+## Configurable Location Mapping Feature (Completed)
+- [x] Create database table for location mappings (locationMappings table added)
+- [x] Build settings page UI for defining location-to-component mappings (LocationMappingSettings.tsx)
+- [x] Add route for settings page (/settings/location-mapping)
+- [x] Integrate with calculation logic to use custom mappings (professionalReportDb.ts updated)
+- [x] Allow vessel-specific or default mappings (supports both)
+- [x] Add categorization helper function (categorizeTmlReadings in locationMappingRouter.ts)
