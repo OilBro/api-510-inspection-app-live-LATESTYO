@@ -1,0 +1,87 @@
+{
+  "query": "SELECT i.id as inspection_id, i.vesselTagNumber, pr.id as report_id, cc.componentName, cc.componentType \nFROM inspections i \nLEFT JOIN professionalReports pr ON pr.inspectionId = i.id \nLEFT JOIN componentCalculations cc ON cc.reportId = pr.id \nWHERE i.vesselTagNumber = '54-11-001' \nORDER BY i.createdAt DESC \nLIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT i.id as inspection_id, i.vesselTagNumber, pr.id as report_id, cc.componentName, cc.componentType \nFROM inspections i \nLEFT JOIN professionalReports pr ON pr.inspectionId = i.id \nLEFT JOIN componentCalculations cc ON cc.reportId = pr.id \nWHERE i.vesselTagNumber = '54-11-001' \nORDER BY i.createdAt DESC \nLIMIT 20",
+  "rows": [
+    {
+      "inspection_id": "AeT7KIXu7Nx1pOv7TwpTj",
+      "vesselTagNumber": "54-11-001",
+      "report_id": "u0KNJR5vsadw9HcWvnohI",
+      "componentName": "Shell",
+      "componentType": "shell"
+    },
+    {
+      "inspection_id": "AeT7KIXu7Nx1pOv7TwpTj",
+      "vesselTagNumber": "54-11-001",
+      "report_id": "u0KNJR5vsadw9HcWvnohI",
+      "componentName": "East Head",
+      "componentType": "head"
+    },
+    {
+      "inspection_id": "AeT7KIXu7Nx1pOv7TwpTj",
+      "vesselTagNumber": "54-11-001",
+      "report_id": "u0KNJR5vsadw9HcWvnohI",
+      "componentName": "South Head",
+      "componentType": "head"
+    },
+    {
+      "inspection_id": "JfaYrqq66nqzA-yGWGwm3",
+      "vesselTagNumber": "54-11-001",
+      "report_id": "VdvS_UjXpTQ3noh4Qh-F6",
+      "componentName": "Shell",
+      "componentType": "shell"
+    },
+    {
+      "inspection_id": "JfaYrqq66nqzA-yGWGwm3",
+      "vesselTagNumber": "54-11-001",
+      "report_id": "VdvS_UjXpTQ3noh4Qh-F6",
+      "componentName": "South Head",
+      "componentType": "head"
+    },
+    {
+      "inspection_id": "JfaYrqq66nqzA-yGWGwm3",
+      "vesselTagNumber": "54-11-001",
+      "report_id": "VdvS_UjXpTQ3noh4Qh-F6",
+      "componentName": "East Head",
+      "componentType": "head"
+    },
+    {
+      "inspection_id": "FaVKCJWqfnEfGgPuUQWdZ",
+      "vesselTagNumber": "54-11-001",
+      "report_id": "sb03euQ7DTvrbQ1L4yCxb",
+      "componentName": "East Head",
+      "componentType": "head"
+    },
+    {
+      "inspection_id": "FaVKCJWqfnEfGgPuUQWdZ",
+      "vesselTagNumber": "54-11-001",
+      "report_id": "sb03euQ7DTvrbQ1L4yCxb",
+      "componentName": "South Head",
+      "componentType": "head"
+    },
+    {
+      "inspection_id": "FaVKCJWqfnEfGgPuUQWdZ",
+      "vesselTagNumber": "54-11-001",
+      "report_id": "sb03euQ7DTvrbQ1L4yCxb",
+      "componentName": "Shell",
+      "componentType": "shell"
+    },
+    {
+      "inspection_id": "5_r4Pvg4QiCed9Su9AnsK",
+      "vesselTagNumber": "54-11-001",
+      "report_id": "6qai7cjYOfhBu2CIeHLDf",
+      "componentName": "NULL",
+      "componentType": "NULL"
+    },
+    {
+      "inspection_id": "HuTOekukvTK4jYlAZ3a5C",
+      "vesselTagNumber": "54-11-001",
+      "report_id": "cveAYLvbn_VNQD07Txjvx",
+      "componentName": "NULL",
+      "componentType": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "inspection_id\tvesselTagNumber\treport_id\tcomponentName\tcomponentType\nAeT7KIXu7Nx1pOv7TwpTj\t54-11-001\tu0KNJR5vsadw9HcWvnohI\tShell\tshell\nAeT7KIXu7Nx1pOv7TwpTj\t54-11-001\tu0KNJR5vsadw9HcWvnohI\tEast Head\thead\nAeT7KIXu7Nx1pOv7TwpTj\t54-11-001\tu0KNJR5vsadw9HcWvnohI\tSouth Head\thead\nJfaYrqq66nqzA-yGWGwm3\t54-11-001\tVdvS_UjXpTQ3noh4Qh-F6\tShell\tshell\nJfaYrqq66nqzA-yGWGwm3\t54-11-001\tVdvS_UjXpTQ3noh4Qh-F6\tSouth Head\thead\nJfaYrqq66nqzA-yGWGwm3\t54-11-001\tVdvS_UjXpTQ3noh4Qh-F6\tEast Head\thead\nFaVKCJWqfnEfGgPuUQWdZ\t54-11-001\tsb03euQ7DTvrbQ1L4yCxb\tEast Head\thead\nFaVKCJWqfnEfGgPuUQWdZ\t54-11-001\tsb03euQ7DTvrbQ1L4yCxb\tSouth Head\thead\nFaVKCJWqfnEfGgPuUQWdZ\t54-11-001\tsb03euQ7DTvrbQ1L4yCxb\tShell\tshell\n5_r4Pvg4QiCed9Su9AnsK\t54-11-001\t6qai7cjYOfhBu2CIeHLDf\tNULL\tNULL\nHuTOekukvTK4jYlAZ3a5C\t54-11-001\tcveAYLvbn_VNQD07Txjvx\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 111
+}

@@ -1,0 +1,37 @@
+{
+  "query": "SELECT i.id as inspection_id, i.vesselTagNumber, pr.id as report_id, cc.componentName, cc.componentType, cc.actualThickness, cc.remainingLife\nFROM inspections i \nLEFT JOIN professionalReports pr ON pr.inspectionId = i.id \nLEFT JOIN componentCalculations cc ON cc.reportId = pr.id \nWHERE i.vesselTagNumber = '54-11-001' \nAND i.id = 'AeT7KIXu7Nx1pOv7TwpTj'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT i.id as inspection_id, i.vesselTagNumber, pr.id as report_id, cc.componentName, cc.componentType, cc.actualThickness, cc.remainingLife\nFROM inspections i \nLEFT JOIN professionalReports pr ON pr.inspectionId = i.id \nLEFT JOIN componentCalculations cc ON cc.reportId = pr.id \nWHERE i.vesselTagNumber = '54-11-001' \nAND i.id = 'AeT7KIXu7Nx1pOv7TwpTj'",
+  "rows": [
+    {
+      "inspection_id": "AeT7KIXu7Nx1pOv7TwpTj",
+      "vesselTagNumber": "54-11-001",
+      "report_id": "u0KNJR5vsadw9HcWvnohI",
+      "componentName": "South Head",
+      "componentType": "head",
+      "actualThickness": "NULL",
+      "remainingLife": "NULL"
+    },
+    {
+      "inspection_id": "AeT7KIXu7Nx1pOv7TwpTj",
+      "vesselTagNumber": "54-11-001",
+      "report_id": "u0KNJR5vsadw9HcWvnohI",
+      "componentName": "East Head",
+      "componentType": "head",
+      "actualThickness": "0.5080",
+      "remainingLife": "8.16"
+    },
+    {
+      "inspection_id": "AeT7KIXu7Nx1pOv7TwpTj",
+      "vesselTagNumber": "54-11-001",
+      "report_id": "u0KNJR5vsadw9HcWvnohI",
+      "componentName": "Shell",
+      "componentType": "shell",
+      "actualThickness": "0.3826",
+      "remainingLife": "8.16"
+    }
+  ],
+  "messages": [],
+  "stdout": "inspection_id\tvesselTagNumber\treport_id\tcomponentName\tcomponentType\tactualThickness\tremainingLife\nAeT7KIXu7Nx1pOv7TwpTj\t54-11-001\tu0KNJR5vsadw9HcWvnohI\tSouth Head\thead\tNULL\tNULL\nAeT7KIXu7Nx1pOv7TwpTj\t54-11-001\tu0KNJR5vsadw9HcWvnohI\tEast Head\thead\t0.5080\t8.16\nAeT7KIXu7Nx1pOv7TwpTj\t54-11-001\tu0KNJR5vsadw9HcWvnohI\tShell\tshell\t0.3826\t8.16\n",
+  "stderr": "",
+  "execution_time_ms": 96
+}
