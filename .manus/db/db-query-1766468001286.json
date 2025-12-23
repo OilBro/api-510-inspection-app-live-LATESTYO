@@ -1,0 +1,190 @@
+{
+  "query": "SELECT cmlNumber, componentType, location, nominalThickness, previousThickness, tActual, currentThickness FROM tmlReadings WHERE inspectionId = 'AeT7KIXu7Nx1pOv7TwpTj' AND componentType LIKE '%Shell%' LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT cmlNumber, componentType, location, nominalThickness, previousThickness, tActual, currentThickness FROM tmlReadings WHERE inspectionId = 'AeT7KIXu7Nx1pOv7TwpTj' AND componentType LIKE '%Shell%' LIMIT 20;",
+  "rows": [
+    {
+      "cmlNumber": "101",
+      "componentType": "Shell",
+      "location": "225",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8080",
+      "currentThickness": "0.8000"
+    },
+    {
+      "cmlNumber": "85",
+      "componentType": "Shell",
+      "location": "45",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8110",
+      "currentThickness": "0.8010"
+    },
+    {
+      "cmlNumber": "52",
+      "componentType": "Shell",
+      "location": "90",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8070",
+      "currentThickness": "NULL"
+    },
+    {
+      "cmlNumber": "141",
+      "componentType": "Shell",
+      "location": "180",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8130",
+      "currentThickness": "0.8010"
+    },
+    {
+      "cmlNumber": "99",
+      "componentType": "Shell",
+      "location": "135",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8170",
+      "currentThickness": "0.8000"
+    },
+    {
+      "cmlNumber": "92",
+      "componentType": "Shell",
+      "location": "0",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8080",
+      "currentThickness": "NULL"
+    },
+    {
+      "cmlNumber": "147",
+      "componentType": "Shell",
+      "location": "270",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8070",
+      "currentThickness": "NULL"
+    },
+    {
+      "cmlNumber": "79",
+      "componentType": "Shell",
+      "location": "135",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8070",
+      "currentThickness": "NULL"
+    },
+    {
+      "cmlNumber": "68",
+      "componentType": "Shell",
+      "location": "315",
+      "nominalThickness": "0.8120",
+      "previousThickness": "0.8120",
+      "tActual": "0.8080",
+      "currentThickness": "NULL"
+    },
+    {
+      "cmlNumber": "150",
+      "componentType": "Shell",
+      "location": "90",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8080",
+      "currentThickness": "0.8000"
+    },
+    {
+      "cmlNumber": "78",
+      "componentType": "Shell",
+      "location": "90",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8170",
+      "currentThickness": "NULL"
+    },
+    {
+      "cmlNumber": "77",
+      "componentType": "Shell",
+      "location": "45",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8170",
+      "currentThickness": "NULL"
+    },
+    {
+      "cmlNumber": "62",
+      "componentType": "Shell",
+      "location": "45",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8070",
+      "currentThickness": "NULL"
+    },
+    {
+      "cmlNumber": "156",
+      "componentType": "Shell",
+      "location": "135",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8070",
+      "currentThickness": "NULL"
+    },
+    {
+      "cmlNumber": "125",
+      "componentType": "Shell",
+      "location": "0",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8080",
+      "currentThickness": "0.8000"
+    },
+    {
+      "cmlNumber": "59",
+      "componentType": "Shell",
+      "location": "270",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8110",
+      "currentThickness": "NULL"
+    },
+    {
+      "cmlNumber": "55",
+      "componentType": "Shell",
+      "location": "225",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8070",
+      "currentThickness": "NULL"
+    },
+    {
+      "cmlNumber": "142",
+      "componentType": "Shell",
+      "location": "270",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8070",
+      "currentThickness": "NULL"
+    },
+    {
+      "cmlNumber": "69",
+      "componentType": "Shell",
+      "location": "0",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8080",
+      "currentThickness": "NULL"
+    },
+    {
+      "cmlNumber": "48",
+      "componentType": "Shell",
+      "location": "225",
+      "nominalThickness": "0.8130",
+      "previousThickness": "0.8130",
+      "tActual": "0.8120",
+      "currentThickness": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "cmlNumber\tcomponentType\tlocation\tnominalThickness\tpreviousThickness\ttActual\tcurrentThickness\n101\tShell\t225\t0.8130\t0.8130\t0.8080\t0.8000\n85\tShell\t45\t0.8130\t0.8130\t0.8110\t0.8010\n52\tShell\t90\t0.8130\t0.8130\t0.8070\tNULL\n141\tShell\t180\t0.8130\t0.8130\t0.8130\t0.8010\n99\tShell\t135\t0.8130\t0.8130\t0.8170\t0.8000\n92\tShell\t0\t0.8130\t0.8130\t0.8080\tNULL\n147\tShell\t270\t0.8130\t0.8130\t0.8070\tNULL\n79\tShell\t135\t0.8130\t0.8130\t0.8070\tNULL\n68\tShell\t315\t0.8120\t0.8120\t0.8080\tNULL\n150\tShell\t90\t0.8130\t0.8130\t0.8080\t0.8000\n78\tShell\t90\t0.8130\t0.8130\t0.8170\tNULL\n77\tShell\t45\t0.8130\t0.8130\t0.8170\tNULL\n62\tShell\t45\t0.8130\t0.8130\t0.8070\tNULL\n156\tShell\t135\t0.8130\t0.8130\t0.8070\tNULL\n125\tShell\t0\t0.8130\t0.8130\t0.8080\t0.8000\n59\tShell\t270\t0.8130\t0.8130\t0.8110\tNULL\n55\tShell\t225\t0.8130\t0.8130\t0.8070\tNULL\n142\tShell\t270\t0.8130\t0.8130\t0.8070\tNULL\n69\tShell\t0\t0.8130\t0.8130\t0.8080\tNULL\n48\tShell\t225\t0.8130\t0.8130\t0.8120\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 92
+}

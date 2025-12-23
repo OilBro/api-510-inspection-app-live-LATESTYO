@@ -836,15 +836,26 @@ export const professionalReportRouter = router({
           const { calculateDualCorrosionRates, calculateRemainingLife, calculateInspectionInterval } = 
             await import('./enhancedCalculations');
           
+          // Get dates from TML readings (more accurate than inspection-level dates)
+          const tmlWithDates = componentTMLs.find((t: any) => t.previousInspectionDate && t.currentInspectionDate);
+          const previousDate = tmlWithDates?.previousInspectionDate ? new Date(tmlWithDates.previousInspectionDate) : 
+            (inspection.inspectionDate ? new Date(inspection.inspectionDate) : undefined);
+          const currentDate = tmlWithDates?.currentInspectionDate ? new Date(tmlWithDates.currentInspectionDate) : new Date();
+          
+          // For initial date, use year built or a reasonable default
+          const yearBuilt = inspection.yearBuilt;
+          const initialDate = yearBuilt ? new Date(`${yearBuilt}-01-01`) : 
+            (inspection.createdAt ? new Date(inspection.createdAt) : undefined);
+          
           // Prepare thickness data for dual corrosion rate calculation
           const thicknessData = {
             initialThickness: nomThick, // Use nominal as baseline if available
             previousThickness: prevThick,
             actualThickness: currThick,
             minimumThickness: minThick,
-            initialDate: inspection.createdAt ? new Date(inspection.createdAt) : undefined,
-            previousDate: inspection.inspectionDate ? new Date(inspection.inspectionDate) : undefined,
-            currentDate: new Date()
+            initialDate: initialDate,
+            previousDate: previousDate,
+            currentDate: currentDate
           };
           
           // Calculate dual corrosion rates with anomaly detection

@@ -1,0 +1,35 @@
+{
+  "query": "SELECT id, vesselTagNumber, vesselName FROM inspections WHERE vesselTagNumber = '54-11-001'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, vesselTagNumber, vesselName FROM inspections WHERE vesselTagNumber = '54-11-001'",
+  "rows": [
+    {
+      "id": "5_r4Pvg4QiCed9Su9AnsK",
+      "vesselTagNumber": "54-11-001",
+      "vesselName": "Triethylamine Storage Tank"
+    },
+    {
+      "id": "AeT7KIXu7Nx1pOv7TwpTj",
+      "vesselTagNumber": "54-11-001",
+      "vesselName": "Triethylamine Storage Tank"
+    },
+    {
+      "id": "FaVKCJWqfnEfGgPuUQWdZ",
+      "vesselTagNumber": "54-11-001",
+      "vesselName": "Triethylamine Storage Tank"
+    },
+    {
+      "id": "HuTOekukvTK4jYlAZ3a5C",
+      "vesselTagNumber": "54-11-001",
+      "vesselName": "Trimethylamine Storage Tank"
+    },
+    {
+      "id": "JfaYrqq66nqzA-yGWGwm3",
+      "vesselTagNumber": "54-11-001",
+      "vesselName": "Triethylamine Storage Tank"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tvesselTagNumber\tvesselName\n5_r4Pvg4QiCed9Su9AnsK\t54-11-001\tTriethylamine Storage Tank\nAeT7KIXu7Nx1pOv7TwpTj\t54-11-001\tTriethylamine Storage Tank\nFaVKCJWqfnEfGgPuUQWdZ\t54-11-001\tTriethylamine Storage Tank\nHuTOekukvTK4jYlAZ3a5C\t54-11-001\tTrimethylamine Storage Tank\nJfaYrqq66nqzA-yGWGwm3\t54-11-001\tTriethylamine Storage Tank\n",
+  "stderr": "",
+  "execution_time_ms": 77
+}
