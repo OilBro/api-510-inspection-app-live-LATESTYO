@@ -190,17 +190,67 @@ export async function parsePDFFile(buffer: Buffer, parserType?: "docupipe" | "ma
       const { parseWithVision } = await import('./visionPdfParser');
       const visionData = await parseWithVision(buffer);
       
-      // Convert vision data to ParsedVesselData format
+      // Convert vision data to ParsedVesselData format (comprehensive mapping)
       return {
+        // Report Information
+        reportNumber: visionData.reportInfo?.reportNumber || '',
+        reportDate: visionData.reportInfo?.reportDate || '',
+        inspectionDate: visionData.reportInfo?.inspectionDate || '',
+        inspectionType: visionData.reportInfo?.inspectionType || '',
+        inspectionCompany: visionData.reportInfo?.inspectionCompany || '',
+        inspectorName: visionData.reportInfo?.inspectorName || '',
+        inspectorCert: visionData.reportInfo?.inspectorCert || '',
+        
+        // Client Information
+        clientName: visionData.clientInfo?.clientName || '',
+        clientLocation: visionData.clientInfo?.clientLocation || '',
+        product: visionData.clientInfo?.product || visionData.vesselInfo?.product || '',
+        
+        // Vessel Information
         vesselTagNumber: visionData.vesselInfo?.vesselTag || '',
         vesselName: visionData.vesselInfo?.vesselDescription || '',
         manufacturer: visionData.vesselInfo?.manufacturer || '',
         yearBuilt: visionData.vesselInfo?.yearBuilt ? parseInt(visionData.vesselInfo.yearBuilt, 10) : undefined,
+        nbNumber: visionData.vesselInfo?.nbNumber || '',
+        constructionCode: visionData.vesselInfo?.constructionCode || '',
+        vesselType: visionData.vesselInfo?.vesselType || '',
+        vesselConfiguration: visionData.vesselInfo?.vesselConfiguration || '',
         designPressure: visionData.vesselInfo?.designPressure || '',
         designTemperature: visionData.vesselInfo?.designTemperature || '',
+        operatingPressure: visionData.vesselInfo?.operatingPressure || '',
         corrosionAllowance: visionData.vesselInfo?.corrosionAllowance || '',
+        insideDiameter: visionData.vesselInfo?.insideDiameter || '',
+        overallLength: visionData.vesselInfo?.overallLength || '',
+        materialSpec: visionData.vesselInfo?.materialSpec || '',
+        headType: visionData.vesselInfo?.headType || '',
+        insulationType: visionData.vesselInfo?.insulationType || '',
+        
+        // ASME Calculation Parameters
+        allowableStress: visionData.vesselInfo?.allowableStress || '',
+        jointEfficiency: visionData.vesselInfo?.jointEfficiency || '',
+        specificGravity: visionData.vesselInfo?.specificGravity || '',
+        crownRadius: visionData.vesselInfo?.crownRadius || '',
+        knuckleRadius: visionData.vesselInfo?.knuckleRadius || '',
+        
+        // Summary and Results
+        executiveSummary: visionData.executiveSummary || '',
+        inspectionResults: visionData.inspectionResults || '',
+        recommendations: visionData.recommendations || '',
+        
+        // TML Readings, Checklist, and Nozzles
         tmlReadings: visionData.thicknessMeasurements || [],
         checklistItems: visionData.checklistItems || [],
+        nozzles: (visionData.nozzles || []).map(n => ({
+          nozzleNumber: n.nozzleNumber || '',
+          nozzleDescription: n.service || n.description || '',
+          nominalSize: n.size || '',
+          schedule: n.schedule || '',
+          actualThickness: n.actualThickness,
+          pipeNominalThickness: n.nominalThickness,
+          minimumRequired: n.minimumRequired,
+          acceptable: n.acceptable,
+          notes: n.notes || '',
+        })),
       };
     }
     
