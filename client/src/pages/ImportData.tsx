@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
-import { Settings, ArrowLeft, Upload, FileText, FileSpreadsheet, CheckCircle2, AlertCircle, X } from "lucide-react";
+import { Settings, ArrowLeft, Upload, FileText, FileSpreadsheet, CheckCircle2, AlertCircle, X, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,7 +20,8 @@ export default function ImportData() {
   const [parseResult, setParseResult] = useState<any>(null);
   const [showChecklistReview, setShowChecklistReview] = useState(false);
   const [checklistItems, setChecklistItems] = useState<any[]>([]);
-  const [parserType, setParserType] = useState<"manus" | "vision">("manus");
+  const [parserType, setParserType] = useState<"manus" | "vision" | "documentai">("manus");
+  const [documentAiAccessToken, setDocumentAiAccessToken] = useState<string>("");
   const [existingInspectionId, setExistingInspectionId] = useState<string | null>(null);
   const [continueMode, setContinueMode] = useState(false);
   
@@ -71,6 +72,7 @@ export default function ImportData() {
             fileName: selectedFile.name,
             fileType,
             parserType, // Pass selected parser type
+            documentAiAccessToken: parserType === "documentai" ? documentAiAccessToken : undefined,
             inspectionId: existingInspectionId || undefined, // Append to existing if selected
           });
 
@@ -194,6 +196,16 @@ export default function ImportData() {
                   <span>Flexible column header matching</span>
                 </li>
               </ul>
+              <div className="mt-4 pt-4 border-t">
+                <a
+                  href="/api510_import_template.xlsx"
+                  download="api510_import_template.xlsx"
+                  className="inline-flex items-center text-sm text-primary hover:underline"
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Download Excel Template
+                </a>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -206,17 +218,39 @@ export default function ImportData() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="parser">PDF Parser (for PDF files only)</Label>
-              <Select value={parserType} onValueChange={(value: "manus" | "vision") => setParserType(value)}>
+              <Select value={parserType} onValueChange={(value: "manus" | "vision" | "documentai") => setParserType(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="manus">Manus AI Parser (Recommended)</SelectItem>
                   <SelectItem value="vision">Vision Parser (For Scanned PDFs)</SelectItem>
+                  <SelectItem value="documentai">Google Document AI + Manus AI</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500">Manus AI Parser is recommended for most PDFs. Use Vision Parser for scanned documents with images.</p>
+              <p className="text-xs text-gray-500">
+                {parserType === "manus" && "Manus AI Parser is recommended for most PDFs."}
+                {parserType === "vision" && "Vision Parser uses AI vision to extract data from scanned documents."}
+                {parserType === "documentai" && "Uses Google Cloud Document AI for OCR, then Manus AI for data extraction. Requires Google Cloud access token."}
+              </p>
             </div>
+
+            {parserType === "documentai" && (
+              <div className="space-y-2">
+                <Label htmlFor="documentAiToken">Google Cloud Access Token</Label>
+                <Input
+                  id="documentAiToken"
+                  type="password"
+                  placeholder="Enter your Google Cloud access token"
+                  value={documentAiAccessToken}
+                  onChange={(e) => setDocumentAiAccessToken(e.target.value)}
+                />
+                <p className="text-xs text-gray-500">
+                  Get a token by running <code className="bg-gray-100 px-1 rounded">gcloud auth print-access-token</code> in your terminal.
+                  You also need Document AI Project ID and Processor ID configured in the app settings.
+                </p>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="file">Select File</Label>

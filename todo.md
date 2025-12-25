@@ -1569,3 +1569,20 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add confirmation dialog before batch re-process
 - [x] Show progress indicator during re-processing
 - [x] Display results summary after completion
+
+
+## Google Cloud Document AI Integration
+- [x] Create Document AI parser module
+- [x] Request Google Cloud credentials from user (project ID, location, processor ID)
+- [x] Add Document AI + Manus AI parser option to UI
+- [x] Implement PDF extraction via Document AI API
+- [x] Pass extracted text to Manus AI for structured data parsing
+- [ ] Test with scanned PDFs
+
+## Excel Parser and Template Updates
+- [x] Update Excel parser to support all 27 Vessel Information fields
+- [x] Update Excel parser to support multi-angle TML readings (TML 1-4)
+- [x] Update Excel parser to support Nozzles sheet
+- [x] Update Excel parser to support Inspection Details sheet
+- [x] Add Excel template as downloadable file in app
+- [x] Add template download button to Import page
