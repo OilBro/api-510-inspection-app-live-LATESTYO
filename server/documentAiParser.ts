@@ -12,9 +12,22 @@ import { SignJWT, importPKCS8 } from 'jose';
 
 // Environment variables for Document AI configuration
 const DOCUMENT_AI_PROJECT_ID = process.env.DOCUMENT_AI_PROJECT_ID;
-const DOCUMENT_AI_LOCATION = process.env.DOCUMENT_AI_LOCATION || 'us';
 const DOCUMENT_AI_PROCESSOR_ID = process.env.DOCUMENT_AI_PROCESSOR_ID;
 const GOOGLE_SERVICE_ACCOUNT_KEY = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+
+// Validate and normalize location - must be 'us' or 'eu'
+function getValidLocation(): string {
+  const rawLocation = process.env.DOCUMENT_AI_LOCATION || 'us';
+  // Only accept 'us' or 'eu' as valid locations
+  if (rawLocation === 'us' || rawLocation === 'eu') {
+    return rawLocation;
+  }
+  // Default to 'us' for any invalid value
+  console.warn(`[DocumentAI] Invalid location '${rawLocation}', defaulting to 'us'`);
+  return 'us';
+}
+
+const DOCUMENT_AI_LOCATION = getValidLocation();
 
 interface ServiceAccountKey {
   type: string;

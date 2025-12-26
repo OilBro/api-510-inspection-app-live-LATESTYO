@@ -1593,3 +1593,10 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Request service account JSON key from user
 - [x] Remove access token input from UI
 - [x] Test service account authentication
+
+
+## Document AI 404 Error Fix
+- [x] Diagnose Document AI 404 error
+- [x] Verify processor ID and project ID configuration
+- [x] Fix endpoint URL construction (added location validation)
+- [ ] Test Document AI parsing
