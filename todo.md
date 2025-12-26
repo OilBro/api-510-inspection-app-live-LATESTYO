@@ -1586,3 +1586,10 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Update Excel parser to support Inspection Details sheet
 - [x] Add Excel template as downloadable file in app
 - [x] Add template download button to Import page
+
+
+## Document AI Service Account Authentication
+- [x] Update Document AI parser to use service account instead of access token
+- [x] Request service account JSON key from user
+- [x] Remove access token input from UI
+- [x] Test service account authentication

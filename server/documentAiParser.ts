@@ -3,20 +3,36 @@
  * 
  * Uses Google Cloud Document AI to extract text from PDFs with high-quality OCR,
  * then passes the extracted text to Manus AI for structured data parsing.
+ * 
+ * Authentication: Uses service account credentials stored in environment variable
  */
 
 import { invokeLLM } from "./_core/llm";
+import { SignJWT, importPKCS8 } from 'jose';
 
 // Environment variables for Document AI configuration
 const DOCUMENT_AI_PROJECT_ID = process.env.DOCUMENT_AI_PROJECT_ID;
 const DOCUMENT_AI_LOCATION = process.env.DOCUMENT_AI_LOCATION || 'us';
 const DOCUMENT_AI_PROCESSOR_ID = process.env.DOCUMENT_AI_PROCESSOR_ID;
+const GOOGLE_SERVICE_ACCOUNT_KEY = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+
+interface ServiceAccountKey {
+  type: string;
+  project_id: string;
+  private_key_id: string;
+  private_key: string;
+  client_email: string;
+  client_id: string;
+  auth_uri: string;
+  token_uri: string;
+  auth_provider_x509_cert_url: string;
+  client_x509_cert_url: string;
+}
 
 interface DocumentAiConfig {
   projectId: string;
   location: string;
   processorId: string;
-  accessToken: string;
 }
 
 interface DocumentAiResponse {
@@ -147,11 +163,77 @@ interface DocumentAiResponse {
 }
 
 /**
+ * Generate an access token from service account credentials using JWT
+ */
+async function getAccessTokenFromServiceAccount(): Promise<string> {
+  if (!GOOGLE_SERVICE_ACCOUNT_KEY) {
+    throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY environment variable is not set. Please provide the service account JSON key.');
+  }
+
+  let serviceAccount: ServiceAccountKey;
+  try {
+    serviceAccount = JSON.parse(GOOGLE_SERVICE_ACCOUNT_KEY);
+  } catch (e) {
+    throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_KEY format. Must be valid JSON.');
+  }
+
+  if (!serviceAccount.private_key || !serviceAccount.client_email) {
+    throw new Error('Service account key missing required fields (private_key, client_email).');
+  }
+  
+  // Normalize private key format - some keys have spaces removed from headers
+  let normalizedPrivateKey = serviceAccount.private_key;
+  if (normalizedPrivateKey.includes('-----BEGINPRIVATEKEY-----')) {
+    normalizedPrivateKey = normalizedPrivateKey
+      .replace('-----BEGINPRIVATEKEY-----', '-----BEGIN PRIVATE KEY-----')
+      .replace('-----ENDPRIVATEKEY-----', '-----END PRIVATE KEY-----');
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const expiry = now + 3600; // Token valid for 1 hour
+
+  // Create JWT for Google OAuth
+  const privateKey = await importPKCS8(normalizedPrivateKey, 'RS256');
+  
+  const jwt = await new SignJWT({
+    scope: 'https://www.googleapis.com/auth/cloud-platform'
+  })
+    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
+    .setIssuedAt(now)
+    .setExpirationTime(expiry)
+    .setIssuer(serviceAccount.client_email)
+    .setSubject(serviceAccount.client_email)
+    .setAudience('https://oauth2.googleapis.com/token')
+    .sign(privateKey);
+
+  // Exchange JWT for access token
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    const errorText = await tokenResponse.text();
+    console.error('[DocumentAI] Token exchange failed:', errorText);
+    throw new Error(`Failed to get access token: ${tokenResponse.status} - ${errorText}`);
+  }
+
+  const tokenData = await tokenResponse.json() as { access_token: string };
+  return tokenData.access_token;
+}
+
+/**
  * Extract text from a PDF using Google Cloud Document AI
  */
 export async function extractTextWithDocumentAi(
   pdfBuffer: Buffer,
-  accessToken: string,
+  accessToken?: string,
   config?: Partial<DocumentAiConfig>
 ): Promise<{ text: string; pages: number; confidence: number }> {
   const projectId = config?.projectId || DOCUMENT_AI_PROJECT_ID;
@@ -161,6 +243,9 @@ export async function extractTextWithDocumentAi(
   if (!projectId || !processorId) {
     throw new Error('Document AI configuration missing. Please provide Project ID and Processor ID.');
   }
+
+  // Get access token from service account if not provided
+  const token = accessToken || await getAccessTokenFromServiceAccount();
 
   // Determine the correct endpoint based on location
   let endpoint = 'documentai.googleapis.com';
@@ -188,7 +273,7 @@ export async function extractTextWithDocumentAi(
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(requestBody)
@@ -293,7 +378,7 @@ Return ONLY valid JSON, no markdown or explanation.`;
  */
 export async function parseWithDocumentAi(
   pdfBuffer: Buffer,
-  accessToken: string,
+  accessToken?: string,
   config?: Partial<DocumentAiConfig>
 ): Promise<{
   extractedText: string;
@@ -331,7 +416,7 @@ export async function parseWithDocumentAi(
  * Check if Document AI is configured
  */
 export function isDocumentAiConfigured(): boolean {
-  return !!(DOCUMENT_AI_PROJECT_ID && DOCUMENT_AI_PROCESSOR_ID);
+  return !!(DOCUMENT_AI_PROJECT_ID && DOCUMENT_AI_PROCESSOR_ID && GOOGLE_SERVICE_ACCOUNT_KEY);
 }
 
 /**
@@ -342,11 +427,13 @@ export function getDocumentAiStatus(): {
   projectId: string | null;
   location: string;
   processorId: string | null;
+  hasServiceAccount: boolean;
 } {
   return {
     configured: isDocumentAiConfigured(),
     projectId: DOCUMENT_AI_PROJECT_ID || null,
     location: DOCUMENT_AI_LOCATION || 'us',
-    processorId: DOCUMENT_AI_PROCESSOR_ID || null
+    processorId: DOCUMENT_AI_PROCESSOR_ID || null,
+    hasServiceAccount: !!GOOGLE_SERVICE_ACCOUNT_KEY
   };
 }

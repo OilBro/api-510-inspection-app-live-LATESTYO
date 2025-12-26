@@ -21,11 +21,28 @@ describe('Document AI Configuration', () => {
     expect(typeof status.location).toBe('string');
     expect(status.location.length).toBeGreaterThan(0);
     
+    // Check that service account key is set
+    expect(status.hasServiceAccount).toBe(true);
+    
     // Overall configuration check
     expect(status.configured).toBe(true);
   });
 
   it('isDocumentAiConfigured should return true when configured', () => {
     expect(isDocumentAiConfigured()).toBe(true);
+  });
+  
+  it('should have valid service account JSON structure', () => {
+    const serviceAccountKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+    expect(serviceAccountKey).toBeTruthy();
+    
+    // Parse and validate structure
+    const parsed = JSON.parse(serviceAccountKey!);
+    expect(parsed.type).toBe('service_account');
+    expect(parsed.private_key).toBeTruthy();
+    expect(parsed.client_email).toBeTruthy();
+    expect(parsed.client_email).toContain('@');
+    // Private key should contain BEGIN marker (with or without spaces)
+    expect(parsed.private_key).toMatch(/-----BEGIN\s*PRIVATE\s*KEY-----/);
   });
 });

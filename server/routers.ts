@@ -601,7 +601,6 @@ export const appRouter = router({
         fileName: z.string(),
         fileType: z.enum(["pdf", "excel"]),
         parserType: z.enum(["docupipe", "manus", "vision", "documentai"]).optional(), // Optional parser selection
-        documentAiAccessToken: z.string().optional(), // Google Cloud access token for Document AI
         inspectionId: z.string().optional(), // Optional: append to existing inspection
       }))
       .mutation(async ({ ctx, input }) => {
@@ -614,7 +613,7 @@ export const appRouter = router({
           if (input.fileType === "excel") {
             parsedData = await parseExcelFile(buffer);
           } else {
-            parsedData = await parsePDFFile(buffer, input.parserType, input.documentAiAccessToken);
+            parsedData = await parsePDFFile(buffer, input.parserType);
           }
 
           // Upload file to S3

@@ -21,7 +21,6 @@ export default function ImportData() {
   const [showChecklistReview, setShowChecklistReview] = useState(false);
   const [checklistItems, setChecklistItems] = useState<any[]>([]);
   const [parserType, setParserType] = useState<"manus" | "vision" | "documentai">("manus");
-  const [documentAiAccessToken, setDocumentAiAccessToken] = useState<string>("");
   const [existingInspectionId, setExistingInspectionId] = useState<string | null>(null);
   const [continueMode, setContinueMode] = useState(false);
   
@@ -72,7 +71,7 @@ export default function ImportData() {
             fileName: selectedFile.name,
             fileType,
             parserType, // Pass selected parser type
-            documentAiAccessToken: parserType === "documentai" ? documentAiAccessToken : undefined,
+
             inspectionId: existingInspectionId || undefined, // Append to existing if selected
           });
 
@@ -231,26 +230,9 @@ export default function ImportData() {
               <p className="text-xs text-gray-500">
                 {parserType === "manus" && "Manus AI Parser is recommended for most PDFs."}
                 {parserType === "vision" && "Vision Parser uses AI vision to extract data from scanned documents."}
-                {parserType === "documentai" && "Uses Google Cloud Document AI for OCR, then Manus AI for data extraction. Requires Google Cloud access token."}
+                {parserType === "documentai" && "Uses Google Cloud Document AI for high-quality OCR, then Manus AI for data extraction."}
               </p>
             </div>
-
-            {parserType === "documentai" && (
-              <div className="space-y-2">
-                <Label htmlFor="documentAiToken">Google Cloud Access Token</Label>
-                <Input
-                  id="documentAiToken"
-                  type="password"
-                  placeholder="Enter your Google Cloud access token"
-                  value={documentAiAccessToken}
-                  onChange={(e) => setDocumentAiAccessToken(e.target.value)}
-                />
-                <p className="text-xs text-gray-500">
-                  Get a token by running <code className="bg-gray-100 px-1 rounded">gcloud auth print-access-token</code> in your terminal.
-                  You also need Document AI Project ID and Processor ID configured in the app settings.
-                </p>
-              </div>
-            )}
 
             <div className="space-y-2">
               <Label htmlFor="file">Select File</Label>

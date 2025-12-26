@@ -533,7 +533,7 @@ function parseGenericSheet(worksheet: XLSX.WorkSheet, result: ParsedVesselData):
 /**
  * Parse PDF file using Docupipe standardized extraction
  */
-export async function parsePDFFile(buffer: Buffer, parserType?: "docupipe" | "manus" | "vision" | "documentai", documentAiAccessToken?: string): Promise<ParsedVesselData> {
+export async function parsePDFFile(buffer: Buffer, parserType?: "docupipe" | "manus" | "vision" | "documentai"): Promise<ParsedVesselData> {
   // Use provided parser type or fall back to default
   const selectedParser = parserType || "manus";
   logger.info(`[PDF Parser] Using parser: ${selectedParser}`);
@@ -543,12 +543,13 @@ export async function parsePDFFile(buffer: Buffer, parserType?: "docupipe" | "ma
     if (selectedParser === "documentai") {
       logger.info("[PDF Parser] Using Google Cloud Document AI + Manus AI parser...");
       
-      if (!documentAiAccessToken) {
-        throw new Error('Document AI access token is required. Please configure your Google Cloud credentials.');
+      const { parseWithDocumentAi, isDocumentAiConfigured } = await import('./documentAiParser');
+      
+      if (!isDocumentAiConfigured()) {
+        throw new Error('Document AI is not configured. Please set up your Google Cloud service account credentials in Settings > Secrets.');
       }
       
-      const { parseWithDocumentAi } = await import('./documentAiParser');
-      const { parsedData, metadata } = await parseWithDocumentAi(buffer, documentAiAccessToken);
+      const { parsedData, metadata } = await parseWithDocumentAi(buffer);
       
       logger.info(`[PDF Parser] Document AI extracted ${metadata.textLength} chars from ${metadata.pages} pages (OCR confidence: ${(metadata.ocrConfidence * 100).toFixed(1)}%)`);
       
