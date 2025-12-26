@@ -230,10 +230,8 @@ async function r2Put(
 
   // Return public URL if configured, otherwise presigned URL
   const publicUrl = getR2PublicUrl();
-  // Remove trailing slash from publicUrl to prevent double slashes
-  const cleanPublicUrl = publicUrl?.replace(/\/+$/, '');
-  const url = cleanPublicUrl 
-    ? `${cleanPublicUrl}/${key}`
+  const url = publicUrl 
+    ? `${publicUrl}/${key}`
     : await getR2PresignedUrl(client, bucketName, key);
 
   return { key, url };
@@ -252,10 +250,8 @@ async function r2Get(
 
   // Return public URL if configured, otherwise presigned URL
   const publicUrl = getR2PublicUrl();
-  // Remove trailing slash from publicUrl to prevent double slashes
-  const cleanPublicUrl = publicUrl?.replace(/\/+$/, '');
-  const url = cleanPublicUrl
-    ? `${cleanPublicUrl}/${key}`
+  const url = publicUrl
+    ? `${publicUrl}/${key}`
     : await getR2PresignedUrl(client, bucketName, key, expiresIn);
 
   return { key, url };

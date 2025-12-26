@@ -5,7 +5,7 @@ import { storagePut } from './storage';
 
 /**
  * Manus API Parser - Uses Manus built-in LLM with PDF file_url for parsing
- * Alternative to Docupipe API with similar functionality
+ * Enhanced with vision capabilities and comprehensive field extraction
  */
 
 const MANUS_API_KEY = ENV.forgeApiKey;
@@ -54,19 +54,21 @@ export async function parseWithManusAPI(
     // Extract text from all pages
     const numPages = pdfDocument.numPages;
     let fullText = '';
+    const pages: Array<{ pageNumber: number; text: string }> = [];
     
     for (let i = 1; i <= numPages; i++) {
       const page = await pdfDocument.getPage(i);
       const textContent = await page.getTextContent();
       const pageText = textContent.items.map((item: any) => item.str).join(' ');
       fullText += pageText + '\n';
+      pages.push({ pageNumber: i, text: pageText });
     }
     
     logger.info("[Manus Parser] Text extraction successful, pages:", numPages, "length:", fullText.length);
 
     return {
       text: fullText,
-      pages: [],
+      pages: pages,
       metadata: {
         numPages: numPages,
       },
@@ -76,6 +78,126 @@ export async function parseWithManusAPI(
     throw error;
   }
 }
+
+/**
+ * Enhanced extraction prompt for comprehensive API 510 data extraction
+ */
+const ENHANCED_EXTRACTION_PROMPT = `You are an expert at extracting vessel inspection data from API 510 reports. 
+Extract all available information and return it as structured JSON matching this schema:
+
+{
+  "reportInfo": {
+    "reportNumber": "string - report/inspection number",
+    "reportDate": "string - date report was issued (YYYY-MM-DD)",
+    "inspectionDate": "string - date inspection was performed (YYYY-MM-DD)",
+    "inspectionType": "string - type of inspection (Internal, External, On-Stream, etc.)",
+    "inspectionCompany": "string - company performing inspection",
+    "inspectorName": "string - inspector's full name",
+    "inspectorCert": "string - inspector certification number"
+  },
+  "clientInfo": {
+    "clientName": "string - client/owner company name",
+    "clientLocation": "string - facility/plant location",
+    "product": "string - product/service in vessel (e.g., METHYLCHLORIDE CLEAN)"
+  },
+  "vesselData": {
+    "vesselTagNumber": "string - vessel tag/ID number",
+    "vesselName": "string - vessel description/name",
+    "manufacturer": "string - vessel manufacturer",
+    "serialNumber": "string - manufacturer serial number",
+    "yearBuilt": "number - year vessel was built",
+    "nbNumber": "string - National Board Number",
+    "constructionCode": "string - construction code (e.g., ASME S8 D1)",
+    "vesselType": "string - type of vessel (Pressure Vessel, Storage Tank, etc.)",
+    "vesselConfiguration": "string - Horizontal or Vertical",
+    "designPressure": "string - design pressure in psig",
+    "designTemperature": "string - design temperature in °F",
+    "operatingPressure": "string - operating pressure in psig",
+    "operatingTemperature": "string - operating temperature in °F",
+    "mdmt": "string - Minimum Design Metal Temperature in °F",
+    "product": "string - Product/Service (e.g., METHYLCHLORIDE CLEAN)",
+    "materialSpec": "string - material specification (e.g., SA-516 Gr 70)",
+    "insideDiameter": "string - inside diameter in inches",
+    "overallLength": "string - overall length in inches or feet",
+    "headType": "string - head type (e.g., 2:1 Ellipsoidal, Hemispherical, Torispherical)",
+    "insulationType": "string - insulation type (e.g., None, Fiberglass)",
+    "allowableStress": "string - allowable stress at design temperature in psi",
+    "jointEfficiency": "string - weld joint efficiency factor (E value, typically 0.85, 1.0)",
+    "radiographyType": "string - radiographic examination type (RT-1, RT-2, RT-3, RT-4)",
+    "specificGravity": "string - specific gravity of vessel contents",
+    "crownRadius": "string - L parameter for torispherical heads in inches",
+    "knuckleRadius": "string - r parameter for torispherical heads in inches"
+  },
+  "executiveSummary": "string - full executive summary text from the report",
+  "inspectionResults": "string - Section 3.0 Inspection Results - all findings, observations, and condition assessments",
+  "recommendations": "string - Section 4.0 Recommendations - all recommendations for repairs, replacements, next inspection date, or continued service",
+  "tmlReadings": [
+    {
+      "cmlNumber": "string - CML number (e.g., CML-1, CML-2, 1, 2)",
+      "location": "string - physical location description (e.g., Shell, East Head, West Head)",
+      "component": "string - component name (Shell/Head/Nozzle)",
+      "readingType": "string - type of reading (nozzle/seam/spot/general)",
+      "nozzleSize": "string - nozzle size if applicable (e.g., 24\", 3\", 2\", 1\")",
+      "angle": "string - angle for multi-angle readings (e.g., 0°, 90°, 180°, 270°)",
+      "nominalThickness": "number - nominal/design thickness in inches",
+      "previousThickness": "number - previous inspection thickness in inches",
+      "currentThickness": "number - current measured thickness in inches",
+      "minimumRequired": "number - minimum required thickness in inches",
+      "calculatedMAWP": "number - calculated MAWP at current thickness"
+    }
+  ],
+  "inspectionChecklist": [
+    {
+      "category": "string - checklist category (e.g., External Visual, Internal Visual, Foundation)",
+      "itemNumber": "string - item number if available",
+      "itemText": "string - checklist item description",
+      "status": "string - status (Satisfactory, Unsatisfactory, N/A, Not Checked)",
+      "notes": "string - any notes or comments",
+      "checkedBy": "string - inspector who checked this item",
+      "checkedDate": "string - date item was checked"
+    }
+  ],
+  "nozzles": [
+    {
+      "nozzleNumber": "string - nozzle identifier (e.g., N1, N2, Manway)",
+      "service": "string - nozzle service (e.g., Manway, Relief, Vapor Out, Inlet, Outlet)",
+      "size": "string - nozzle size (e.g., 18\" NPS, 2\" NPS)",
+      "schedule": "string - pipe schedule (e.g., STD, 40, 80)",
+      "actualThickness": "number - measured thickness in inches",
+      "nominalThickness": "number - nominal thickness in inches",
+      "minimumRequired": "number - minimum required thickness in inches",
+      "acceptable": "boolean - whether nozzle passes evaluation",
+      "notes": "string - additional notes or observations"
+    }
+  ],
+  "tableA": {
+    "description": "Executive Summary TABLE A - Component Calculations (if present)",
+    "components": [
+      {
+        "componentName": "string - component name (e.g., Vessel Shell, East Head, West Head)",
+        "nominalThickness": "number - nominal thickness in inches",
+        "actualThickness": "number - actual measured thickness in inches",
+        "minimumRequiredThickness": "number - minimum required thickness in inches",
+        "designMAWP": "number - design MAWP in psi",
+        "calculatedMAWP": "number - calculated MAWP in psi",
+        "corrosionRate": "number - corrosion rate in inches per year",
+        "remainingLife": "number - remaining life in years (or 999 if >20 years)"
+      }
+    ]
+  }
+}
+
+CRITICAL EXTRACTION GUIDELINES:
+1. Extract ALL available data - search the entire document thoroughly
+2. For thickness measurements, extract EVERY reading including all angles (0°, 90°, 180°, 270°)
+3. Look for TABLE A or Executive Summary tables with component calculations
+4. Extract the FULL component names (e.g., '2" East Head Seam - Head Side', not just 'East Head')
+5. For checklist items, extract the complete text and status
+6. For nozzles, extract all nozzle data from nozzle evaluation tables
+7. Joint Efficiency (E value) is CRITICAL - look in vessel metadata AND in minimum thickness calculation tables
+8. If a field is not found, use null rather than guessing
+9. Dates should be in YYYY-MM-DD format when possible
+10. Numeric values should be numbers, not strings with units`;
 
 /**
  * Parse and standardize PDF using Manus API + LLM extraction
@@ -93,117 +215,18 @@ export async function parseAndStandardizeWithManus(
 
   logger.info("[Manus Parser] Text extracted, length:", fullText.length);
 
-  // Step 2: Use LLM to extract structured data
+  // Step 2: Use LLM to extract structured data with enhanced prompt
   logger.info("[Manus Parser] Extracting structured data with LLM...");
 
   const llmResponse = await invokeLLM({
     messages: [
       {
         role: "system",
-        content: `You are an expert at extracting vessel inspection data from API 510 reports. 
-Extract all available information and return it as structured JSON matching this schema.
-
-CRITICAL INSTRUCTIONS:
-1. HEADS: Most pressure vessels have TWO heads (one at each end). Look for:
-   - North Head / South Head (common naming)
-   - East Head / West Head (alternative naming)
-   - Head 1 / Head 2 (numbered naming)
-   - Left Head / Right Head
-   If you see thickness readings for heads, check if there are TWO separate sections or tables for different heads.
-   Map North Head → East Head, South Head → West Head in the location field.
-   
-2. NOZZLES: Look for nozzle schedules, nozzle thickness tables, or nozzle evaluation sections.
-   Common nozzles: Manway, Relief Valve, Inlet, Outlet, Drain, Vent, Level Gauge, etc.
-   Extract ALL nozzles found in the document.
-   
-3. CHECKLIST: Look for inspection checklists, examination items, or condition assessments.
-   These may be in tables with checkboxes, pass/fail columns, or satisfactory/unsatisfactory status.
-
-{
-  "reportInfo": {
-    "reportNumber": "string",
-    "reportDate": "string",
-    "inspectionDate": "string",
-    "inspectionType": "string",
-    "inspectionCompany": "string",
-    "inspectorName": "string",
-    "inspectorCert": "string"
-  },
-  "clientInfo": {
-    "clientName": "string",
-    "clientLocation": "string",
-    "product": "string"
-  },
-  "vesselData": {
-    "vesselTagNumber": "string",
-    "vesselName": "string",
-    "manufacturer": "string",
-    "serialNumber": "string",
-    "yearBuilt": "number",
-    "nbNumber": "string",
-    "constructionCode": "string",
-    "vesselType": "string",
-    "vesselConfiguration": "string (Horizontal/Vertical)",
-    "designPressure": "string",
-    "designTemperature": "string",
-    "operatingPressure": "string",
-    "operatingTemperature": "string",
-    "mdmt": "string (Minimum Design Metal Temperature)",
-    "product": "string (Product/Service e.g. METHYLCHLORIDE CLEAN)",
-    "materialSpec": "string",
-    "insideDiameter": "string",
-    "overallLength": "string",
-    "headType": "string (e.g. 2:1 Ellipsoidal, Hemispherical, Torispherical)",
-    "insulationType": "string",
-    "allowableStress": "string (S value - IMPORTANT: Look in the MINIMUM THICKNESS CALCULATION section for the actual S value used in calculations, NOT the nameplate value. The calculation table shows S in psi, typically 17500, 20000, etc.)",
-    "jointEfficiency": "string (E value - IMPORTANT: Look in the MINIMUM THICKNESS CALCULATION section for the actual E value used in calculations, NOT the nameplate value. The calculation table shows E as a decimal like 0.85, 1.0, etc. If the table shows E=1.0, use 1.0 not 0.85)",
-    "radiographyType": "string (RT-1, RT-2, RT-3, or RT-4)",
-    "specificGravity": "string",
-    "crownRadius": "string (L parameter for torispherical heads, in inches)",
-    "knuckleRadius": "string (r parameter for torispherical heads, in inches)"
-  },
-  "executiveSummary": "string",
-  "tmlReadings": [
-    {
-      "cmlNumber": "string (e.g. CML-1, CML-2, 001, 002)",
-      "location": "string (IMPORTANT: Use 'East Head' for North/Left/Head1, 'West Head' for South/Right/Head2, 'Shell' for shell readings)",
-      "component": "string (Shell/East Head/West Head/Nozzle - be specific about which head)",
-      "readingType": "string (nozzle/seam/spot/general)",
-      "nozzleSize": "string (e.g. 24\", 3\", 2\", 1\" - only for nozzles)",
-      "angle": "string (e.g. 0°, 90°, 180°, 270° for multi-angle readings)",
-      "nominalThickness": "number",
-      "previousThickness": "number",
-      "currentThickness": "number",
-      "minimumRequired": "number",
-      "calculatedMAWP": "number"
-    }
-  ],
-  "inspectionChecklist": [
-    {
-      "category": "string (e.g. External Examination, Internal Examination, Pressure Test)",
-      "itemText": "string (the inspection item description)",
-      "status": "string (Satisfactory/Unsatisfactory/N/A/Pass/Fail)",
-      "notes": "string (any comments or observations)"
-    }
-  ],
-  "nozzles": [
-    {
-      "nozzleNumber": "string (e.g. N1, N2, Manway, MW-1)",
-      "service": "string (e.g. Manway, Relief, Vapor Out, Inlet, Outlet, Drain)",
-      "size": "string (e.g. 18\" NPS, 2\" NPS)",
-      "schedule": "string (e.g. STD, 40, 80, XS)",
-      "actualThickness": "number",
-      "nominalThickness": "number",
-      "minimumRequired": "number",
-      "acceptable": "boolean",
-      "notes": "string"
-    }
-  ]
-}`
+        content: ENHANCED_EXTRACTION_PROMPT,
       },
       {
         role: "user",
-        content: `Extract vessel inspection data from this API 510 report:\n\n${fullText.substring(0, 50000)}`,
+        content: `Extract vessel inspection data from this API 510 report:\n\n${fullText.substring(0, 60000)}`,
       },
     ],
     response_format: {
@@ -272,8 +295,8 @@ CRITICAL INSTRUCTIONS:
               additionalProperties: false,
             },
             executiveSummary: { type: "string" },
-            inspectionResults: { type: "string", description: "Section 3.0 Inspection Results - all findings, observations, and condition assessments" },
-            recommendations: { type: "string", description: "Section 4.0 Recommendations - all recommendations for repairs, replacements, next inspection date, or continued service" },
+            inspectionResults: { type: "string" },
+            recommendations: { type: "string" },
             tmlReadings: {
               type: "array",
               items: {
@@ -300,8 +323,13 @@ CRITICAL INSTRUCTIONS:
               items: {
                 type: "object",
                 properties: {
+                  category: { type: "string" },
+                  itemNumber: { type: "string" },
                   itemText: { type: "string" },
                   status: { type: "string" },
+                  notes: { type: "string" },
+                  checkedBy: { type: "string" },
+                  checkedDate: { type: "string" },
                 },
                 required: ["itemText", "status"],
                 additionalProperties: false,
@@ -309,26 +337,51 @@ CRITICAL INSTRUCTIONS:
             },
             nozzles: {
               type: "array",
-              description: "Nozzle evaluation data from PDF",
               items: {
                 type: "object",
                 properties: {
-                  nozzleNumber: { type: "string", description: "Nozzle identifier (e.g., N1, N2, Manway)" },
-                  service: { type: "string", description: "Nozzle service (e.g., Manway, Relief, Vapor Out)" },
-                  size: { type: "string", description: "Nozzle size (e.g., 18\" NPS, 2\" NPS)" },
-                  schedule: { type: "string", description: "Pipe schedule (e.g., STD, 40, 80)" },
-                  actualThickness: { type: "number", description: "Measured thickness in inches" },
-                  nominalThickness: { type: "number", description: "Nominal thickness in inches" },
-                  minimumRequired: { type: "number", description: "Minimum required thickness in inches" },
-                  acceptable: { type: "boolean", description: "Whether nozzle passes evaluation" },
-                  notes: { type: "string", description: "Additional notes or observations" },
+                  nozzleNumber: { type: "string" },
+                  service: { type: "string" },
+                  size: { type: "string" },
+                  schedule: { type: "string" },
+                  actualThickness: { type: "number" },
+                  nominalThickness: { type: "number" },
+                  minimumRequired: { type: "number" },
+                  acceptable: { type: "boolean" },
+                  notes: { type: "string" },
                 },
                 required: [],
                 additionalProperties: false,
               },
             },
+            tableA: {
+              type: "object",
+              properties: {
+                description: { type: "string" },
+                components: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      componentName: { type: "string" },
+                      nominalThickness: { type: "number" },
+                      actualThickness: { type: "number" },
+                      minimumRequiredThickness: { type: "number" },
+                      designMAWP: { type: "number" },
+                      calculatedMAWP: { type: "number" },
+                      corrosionRate: { type: "number" },
+                      remainingLife: { type: "number" },
+                    },
+                    required: ["componentName"],
+                    additionalProperties: false,
+                  },
+                },
+              },
+              required: ["components"],
+              additionalProperties: false,
+            },
           },
-          required: ["reportInfo", "clientInfo", "vesselData", "executiveSummary", "inspectionResults", "recommendations", "tmlReadings", "inspectionChecklist", "nozzles"],
+          required: ["reportInfo", "clientInfo", "vesselData", "executiveSummary", "inspectionResults", "recommendations", "tmlReadings", "inspectionChecklist", "nozzles", "tableA"],
           additionalProperties: false,
         },
       },
@@ -339,8 +392,45 @@ CRITICAL INSTRUCTIONS:
   const contentText = typeof messageContent === 'string' ? messageContent : JSON.stringify(messageContent);
   const extractedData = JSON.parse(contentText || "{}");
   logger.info("[Manus Parser] Structured data extracted successfully");
+  
+  // Log extraction summary
+  logger.info("[Manus Parser] Extraction summary:", {
+    vesselTag: extractedData.vesselData?.vesselTagNumber,
+    tmlReadings: extractedData.tmlReadings?.length || 0,
+    checklistItems: extractedData.inspectionChecklist?.length || 0,
+    nozzles: extractedData.nozzles?.length || 0,
+    tableAComponents: extractedData.tableA?.components?.length || 0,
+  });
 
   return extractedData;
+}
+
+/**
+ * Parse PDF using vision LLM for scanned documents
+ * Converts PDF pages to images and sends to vision LLM
+ */
+export async function parseWithVisionLLM(
+  fileBuffer: Buffer,
+  filename: string
+): Promise<any> {
+  logger.info("[Manus Parser] Starting vision-based PDF parsing...");
+  
+  try {
+    // Import vision parser
+    const { parseWithVision } = await import('./visionPdfParser');
+    const visionData = await parseWithVision(fileBuffer);
+    
+    logger.info("[Manus Parser] Vision parsing completed:", {
+      vesselInfo: !!visionData.vesselInfo,
+      thicknessMeasurements: visionData.thicknessMeasurements?.length || 0,
+      checklistItems: visionData.checklistItems?.length || 0,
+    });
+    
+    return visionData;
+  } catch (error) {
+    logger.error("[Manus Parser] Vision parsing failed:", error);
+    throw error;
+  }
 }
 
 /**
@@ -363,3 +453,44 @@ export async function parseDocumentWithManus(
   };
 }
 
+/**
+ * Auto-detect parser type based on PDF content
+ * Returns "text" for text-based PDFs, "vision" for scanned/image-based PDFs
+ */
+export async function detectPdfType(fileBuffer: Buffer): Promise<"text" | "vision"> {
+  try {
+    const parseResult = await parseWithManusAPI(fileBuffer, "detect.pdf");
+    const textLength = parseResult.text.trim().length;
+    const pageCount = parseResult.metadata?.numPages || 1;
+    
+    // If average text per page is less than 100 characters, likely scanned
+    const avgTextPerPage = textLength / pageCount;
+    
+    if (avgTextPerPage < 100) {
+      logger.info("[Manus Parser] Detected scanned PDF (low text content)");
+      return "vision";
+    }
+    
+    logger.info("[Manus Parser] Detected text-based PDF");
+    return "text";
+  } catch (error) {
+    logger.warn("[Manus Parser] PDF type detection failed, defaulting to text");
+    return "text";
+  }
+}
+
+/**
+ * Smart parse function that auto-detects and uses appropriate parser
+ */
+export async function smartParsePDF(
+  fileBuffer: Buffer,
+  filename: string
+): Promise<any> {
+  const pdfType = await detectPdfType(fileBuffer);
+  
+  if (pdfType === "vision") {
+    return await parseWithVisionLLM(fileBuffer, filename);
+  }
+  
+  return await parseAndStandardizeWithManus(fileBuffer, filename);
+}

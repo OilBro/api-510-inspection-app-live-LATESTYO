@@ -1,0 +1,125 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1764189332127,
+      "tag": "0000_odd_zaladane",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1764189653297,
+      "tag": "0001_glorious_gamma_corps",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1764378964057,
+      "tag": "0002_volatile_lilandra",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1764379099639,
+      "tag": "0003_smiling_husk",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1764558769083,
+      "tag": "0004_grey_kingpin",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1764603236621,
+      "tag": "0005_wealthy_swarm",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1764686005809,
+      "tag": "0006_slim_old_lace",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1765050151386,
+      "tag": "0007_fine_stick",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1765132682437,
+      "tag": "0008_rare_blindfold",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1765171162080,
+      "tag": "0009_tough_natasha_romanoff",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1765171388598,
+      "tag": "0010_blue_mongu",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1765174356981,
+      "tag": "0011_magical_jack_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1765494852227,
+      "tag": "0012_blushing_alex_wilder",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1765498650925,
+      "tag": "0013_pale_marvel_apes",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "5",
+      "when": 1765589659839,
+      "tag": "0014_free_dakota_north",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "5",
+      "when": 1765592892003,
+      "tag": "0015_complete_strong_guy",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "5",
+      "when": 1765761115793,
+      "tag": "0016_sweet_shriek",
+      "breakpoints": true
+    }
+  ]
+}

@@ -5,13 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { Link, useParams, useLocation } from "wouter";
-import { Settings, ArrowLeft, FileText, Calculator, BarChart3, Eye, Upload, AlertCircle, RefreshCw } from "lucide-react";
+import { Settings, ArrowLeft, FileText, Calculator, BarChart3, Eye, Upload, AlertCircle } from "lucide-react";
 import { APP_TITLE } from "@/const";
 import VesselDataTab from "@/components/inspection/VesselDataTab";
 import ProfessionalReportTab from "@/components/inspection/ProfessionalReportTab";
-import { ValidationWarnings } from "@/components/ValidationWarnings";
-import { AnomalyPanel } from "@/components/inspection/AnomalyPanel";
-import { toast } from "sonner";
 
 export default function InspectionDetail() {
   const params = useParams();
@@ -19,18 +16,6 @@ export default function InspectionDetail() {
   const [activeTab, setActiveTab] = useState("vessel-data");
 
   const { data: inspection, isLoading } = trpc.inspections.get.useQuery({ id });
-  const utils = trpc.useUtils();
-
-  const rescanMutation = trpc.anomalies.detectForInspection.useMutation({
-    onSuccess: (result) => {
-      toast.success(`Re-scan complete: ${result.anomalyCount} anomalies detected (${result.criticalCount} critical)`);
-      utils.anomalies.getForInspection.invalidate({ inspectionId: id });
-      utils.anomalies.getStatistics.invalidate();
-    },
-    onError: (error) => {
-      toast.error(`Re-scan failed: ${error.message}`);
-    },
-  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -89,15 +74,6 @@ export default function InspectionDetail() {
               <Badge className={getStatusColor(inspection.status || "draft")}>
                 {inspection.status || "draft"}
               </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => rescanMutation.mutate({ inspectionId: id })}
-                disabled={rescanMutation.isPending}
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${rescanMutation.isPending ? 'animate-spin' : ''}`} />
-                Re-scan Anomalies
-              </Button>
               <Button asChild variant="outline" size="sm">
                 <Link href="/inspections">
                   <ArrowLeft className="mr-2 h-4 w-4" />
@@ -110,16 +86,6 @@ export default function InspectionDetail() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Validation Warnings */}
-        <div className="mb-6">
-          <ValidationWarnings inspectionId={id} />
-        </div>
-
-        {/* Anomaly Detection */}
-        <div className="mb-6">
-          <AnomalyPanel inspectionId={id} />
-        </div>
-
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="vessel-data">

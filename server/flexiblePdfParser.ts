@@ -46,8 +46,6 @@ export interface MappedInspectionData {
     componentType?: string;
     location?: string;
     thickness?: number;
-    previousThickness?: number;
-    nominalThickness?: number;
     tml1?: number;
     tml2?: number;
     tml3?: number;
@@ -159,9 +157,7 @@ Schema to map to:
       "component": "string - component name (Shell, Head, Nozzle, etc.)",
       "componentType": "string - standardized component type",
       "location": "string - physical location on vessel",
-      "thickness": "number - current thickness in inches",
-      "previousThickness": "number - previous inspection thickness in inches",
-      "nominalThickness": "number - nominal/original thickness in inches",
+      "thickness": "number - thickness in inches",
       "tml1": "number - first reading",
       "tml2": "number - second reading",
       "tml3": "number - third reading",
@@ -189,8 +185,6 @@ IMPORTANT MAPPING RULES:
 - Location: Look for grid references, clock positions, or physical descriptions
 - If multiple thickness readings exist (T1, T2, T3, T4), map to tml1, tml2, tml3, tml4
 - Always provide "tActual" as the minimum thickness if available
-- CRITICAL: Look for "Previous Thickness", "Last Reading", "Prior Thickness", "Previous", "Prev" columns and map to "previousThickness"
-- CRITICAL: Look for "Nominal Thickness", "Original Thickness", "Nom", "Design Thickness" and map to "nominalThickness"
 - Confidence: 90-100 = very sure, 70-89 = pretty sure, 50-69 = uncertain, <50 = guessing
 
 Return the mapped data as JSON.`;

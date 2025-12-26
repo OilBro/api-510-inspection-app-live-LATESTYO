@@ -164,12 +164,9 @@ function calculateShellMinThickness(
   jointEfficiency: number,
   corrosionAllowance: number
 ): number {
-  // t = (P × R) / (S × E - 0.6 × P)
-  // NOTE: Per API 510, CA is NOT added to Tmin - it's used separately for remaining life calculations
-  const denominator = allowableStress * jointEfficiency - 0.6 * pressure;
-  if (denominator <= 0) return 0;
-  const t = (pressure * radius) / denominator;
-  return t; // DO NOT add CA here
+  // t = (P × R) / (S × E - 0.6 × P) + CA
+  const t = (pressure * radius) / (allowableStress * jointEfficiency - 0.6 * pressure);
+  return t + corrosionAllowance;
 }
 
 /**
@@ -242,7 +239,7 @@ export function calculateHeadMinThickness(
       t = (pressure * D) / denom_def;
   }
   
-  return t; // DO NOT add CA here - per API 510, CA is used separately for remaining life
+  return t + corrosionAllowance;
 }
 
 /**
