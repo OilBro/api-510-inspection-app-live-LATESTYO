@@ -315,8 +315,13 @@ function SortablePhotoCard({ photo, onDelete, onAnnotate }: SortablePhotoCardPro
           
           <img
             src={photo.photoUrl}
-            alt={photo.caption}
+            alt={photo.caption || 'Photo'}
             className="w-24 h-24 object-cover rounded"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.onerror = null;
+              target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect fill="%23f3f4f6" width="96" height="96"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-size="10">No Image</text></svg>';
+            }}
           />
           
           <div className="flex-1">

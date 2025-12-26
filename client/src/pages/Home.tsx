@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
-import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare } from "lucide-react";
+import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare, AlertTriangle, Smartphone, Cog, RefreshCw } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { AnomalyStats } from "@/components/AnomalyStats";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -154,6 +156,16 @@ export default function Home() {
             </CardHeader>
           </Card>
 
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation("/field-inspector")}>
+            <CardHeader>
+              <Smartphone className="h-12 w-12 text-teal-600 mb-4" />
+              <CardTitle>Field Inspector</CardTitle>
+              <CardDescription>
+                Mobile app for capturing thickness readings on-site with offline support
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation("/comparison")}>
             <CardHeader>
               <GitCompare className="h-12 w-12 text-orange-600 mb-4" />
@@ -163,9 +175,42 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
           </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation("/calculator")}>
+            <CardHeader>
+              <Calculator className="h-12 w-12 text-indigo-600 mb-4" />
+              <CardTitle>API 510 Calculator</CardTitle>
+              <CardDescription>
+                Interactive ASME calculations for shell, head, MAWP, corrosion rate, and remaining life
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation("/settings/location-mapping")}>
+            <CardHeader>
+              <Cog className="h-12 w-12 text-gray-600 mb-4" />
+              <CardTitle>Settings</CardTitle>
+              <CardDescription>
+                Configure location mappings for TML readings (shell vs head component assignments)
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation("/batch-reprocess")}>
+            <CardHeader>
+              <RefreshCw className="h-12 w-12 text-amber-600 mb-4" />
+              <CardTitle>Batch Re-Process PDFs</CardTitle>
+              <CardDescription>
+                Re-run improved AI extraction on previously imported PDFs to update TML readings and calculations
+              </CardDescription>
+            </CardHeader>
+          </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Anomaly Statistics */}
+          <AnomalyStats />
+
           <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>

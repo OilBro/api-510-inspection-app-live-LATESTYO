@@ -360,6 +360,7 @@ export default function CalculationWorksheet() {
                         <SelectItem value="SA-285-C">SA-285-C</SelectItem>
                         <SelectItem value="SA-240-304">SA-240-304</SelectItem>
                         <SelectItem value="SA-240-316">SA-240-316</SelectItem>
+                        <SelectItem value="SA-612">SA-612</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -621,6 +622,7 @@ export default function CalculationWorksheet() {
                         <SelectItem value="SA-285-C">SA-285-C</SelectItem>
                         <SelectItem value="SA-240-304">SA-240-304</SelectItem>
                         <SelectItem value="SA-240-316">SA-240-316</SelectItem>
+                        <SelectItem value="SA-612">SA-612</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

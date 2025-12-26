@@ -1,1 +1,0 @@
-ALTER TABLE `inspections` ADD `previousInspectionId` varchar(64);

@@ -1,74 +1,94 @@
 import { invokeLLM } from './_core/llm';
 import { logger } from "./_core/logger";
 import { storagePut } from './storage';
-import { pdfToPng } from 'pdf-to-png-converter';
-import { writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
-import { tmpdir } from 'os';
 
 /**
  * Vision-capable PDF parser that handles both text and scanned/image-based PDFs
- * Converts PDF pages to images and sends to vision LLM for comprehensive analysis
+ * Uses the LLM's native PDF file handling capability for comprehensive data extraction
  */
 
 interface VisionParsedData {
+  // Report Information
+  reportInfo?: {
+    reportNumber?: string;
+    reportDate?: string;
+    inspectionDate?: string;
+    inspectionType?: string;
+    inspectionCompany?: string;
+    inspectorName?: string;
+    inspectorCert?: string;
+  };
+  
+  // Client Information
+  clientInfo?: {
+    clientName?: string;
+    clientLocation?: string;
+    product?: string;
+  };
+  
+  // Vessel Information (comprehensive)
   vesselInfo?: {
     vesselTag?: string;
     vesselDescription?: string;
     manufacturer?: string;
     serialNumber?: string;
     yearBuilt?: string;
+    nbNumber?: string;
+    constructionCode?: string;
+    vesselType?: string;
+    vesselConfiguration?: string;
     designPressure?: string;
     designTemperature?: string;
     operatingPressure?: string;
     operatingTemperature?: string;
     mdmt?: string;
+    product?: string;
     corrosionAllowance?: string;
-    materialSpec?: string;
-    allowableStress?: string;
-    jointEfficiency?: string;
     insideDiameter?: string;
     overallLength?: string;
+    materialSpec?: string;
     headType?: string;
-    vesselConfiguration?: string;
-    constructionCode?: string;
-    nbNumber?: string;
-    product?: string;
     insulationType?: string;
+    allowableStress?: string;
+    jointEfficiency?: string;
+    radiographyType?: string;
+    specificGravity?: string;
+    crownRadius?: string;
+    knuckleRadius?: string;
   };
-  inspectionInfo?: {
-    inspectionDate?: string;
-    reportNumber?: string;
-    reportDate?: string;
-    inspectorName?: string;
-    inspectorCertification?: string;
-    inspectionType?: string;
-    clientName?: string;
-    clientLocation?: string;
-  };
+  
+  // Executive Summary
   executiveSummary?: string;
+  
+  // Inspection Results (Section 3.0)
   inspectionResults?: string;
+  
+  // Recommendations (Section 4.0)
   recommendations?: string;
+  
+  // Thickness Measurements
   thicknessMeasurements?: Array<{
     cmlNumber?: string;
     tmlId?: string;
     location?: string;
     component?: string;
     componentType?: string;
+    readingType?: string;
+    nozzleSize?: string;
+    angle?: string;
     currentThickness?: string | number;
     previousThickness?: string | number;
     nominalThickness?: string | number;
     minimumRequired?: number;
+    calculatedMAWP?: number;
     tActual?: string | number;
     tml1?: string | number;
     tml2?: string | number;
     tml3?: string | number;
     tml4?: string | number;
-    angle?: string;
-    readingType?: string;
-    nozzleSize?: string;
-    service?: string;
   }>;
+  
+  // Checklist Items
   checklistItems?: Array<{
     category?: string;
     itemNumber?: string;
@@ -76,616 +96,283 @@ interface VisionParsedData {
     description?: string;
     status?: string;
     notes?: string;
-    checkedBy?: string;
-    checkedDate?: string;
   }>;
+  
+  // Nozzle Evaluations
   nozzles?: Array<{
     nozzleNumber?: string;
     service?: string;
+    description?: string;
     size?: string;
     schedule?: string;
-    actualThickness?: number;
-    nominalThickness?: number;
-    minimumRequired?: number;
+    actualThickness?: string | number;
+    nominalThickness?: string | number;
+    minimumRequired?: string | number;
     acceptable?: boolean;
     notes?: string;
-  }>;
-  tableA?: {
-    components?: Array<{
-      componentName?: string;
-      nominalThickness?: number;
-      actualThickness?: number;
-      minimumRequiredThickness?: number;
-      designMAWP?: number;
-      calculatedMAWP?: number;
-      corrosionRate?: number;
-      remainingLife?: number;
-    }>;
-  };
-  photos?: Array<{
-    description?: string;
-    location?: string;
-    url?: string;
   }>;
 }
 
 /**
- * Comprehensive extraction prompt for vision LLM
+ * Parse a PDF using vision LLM to extract comprehensive inspection data
+ * Uploads PDF to S3 and sends URL directly to LLM
  */
-const VISION_EXTRACTION_PROMPT = `You are an expert at extracting data from API 510 pressure vessel inspection reports.
+export async function parseWithVision(pdfBuffer: Buffer): Promise<VisionParsedData> {
+  try {
+    logger.info('[Vision Parser] Starting PDF upload to S3');
+    
+    // Upload PDF directly to S3
+    const timestamp = Date.now();
+    const pdfKey = `vision-parser/${timestamp}-inspection.pdf`;
+    
+    const { url: pdfUrl } = await storagePut(pdfKey, pdfBuffer, 'application/pdf');
+    logger.info(`[Vision Parser] PDF uploaded to S3: ${pdfUrl}`);
+    
+    // Comprehensive extraction prompt matching Manus parser capabilities
+    const extractionPrompt = `You are an expert at extracting vessel inspection data from API 510 pressure vessel inspection reports.
+Extract ALL available information and return it as structured JSON.
 
-Analyze these inspection report pages and extract ALL available data in the following JSON structure:
+CRITICAL INSTRUCTIONS:
+
+1. REPORT & CLIENT INFO:
+   - Extract report number, date, inspection date, inspector name/certification
+   - Extract client name, location, and product/service
+
+2. VESSEL DATA - Extract ALL of these fields:
+   - Vessel tag number, name/description, manufacturer, serial number
+   - Year built, NB number, construction code
+   - Vessel type (pressure vessel, storage tank, etc.)
+   - Vessel configuration (Horizontal or Vertical)
+   - Design pressure (psi), design temperature (°F)
+   - Operating pressure, operating temperature
+   - MDMT (Minimum Design Metal Temperature)
+   - Product/service (e.g., METHYLCHLORIDE, TRIETHYLAMINE, etc.)
+   - Corrosion allowance (inches)
+   - Inside diameter (inches), overall length (inches)
+   - Material specification (e.g., SA-516 Grade 70, SA-612, SA-240)
+   - Head type (2:1 Ellipsoidal, Hemispherical, Torispherical, Flanged & Dished)
+   - Insulation type
+
+3. ASME CALCULATION PARAMETERS - VERY IMPORTANT:
+   - Look in the MINIMUM THICKNESS CALCULATION section or TABLE A
+   - S (Allowable Stress) - typically 17500, 20000, etc. psi
+   - E (Joint Efficiency) - typically 0.85 or 1.0
+   - Radiography type (RT-1, RT-2, RT-3, RT-4)
+   - Specific gravity of contents
+   - For torispherical heads: Crown radius (L) and Knuckle radius (r)
+
+4. HEADS - Most vessels have TWO heads:
+   - Look for North Head / South Head OR East Head / West Head
+   - Map: North Head → East Head, South Head → West Head
+   - Extract thickness readings for BOTH heads separately
+
+5. THICKNESS MEASUREMENTS (TML Readings):
+   - Extract ALL CML/TML readings from thickness tables
+   - Include: CML number, location, component (Shell/East Head/West Head/Nozzle)
+   - Include: nominal thickness, previous thickness, current thickness
+   - Include: minimum required thickness, calculated MAWP
+   - For multi-angle readings (0°, 90°, 180°, 270°), use tml1, tml2, tml3, tml4
+
+6. NOZZLES:
+   - Extract ALL nozzle data from nozzle schedule or evaluation tables
+   - Include: nozzle number (N1, N2, MW-1, etc.)
+   - Include: service/description (Manway, Relief, Inlet, Outlet, Drain, Vent)
+   - Include: size (e.g., 24" NPS, 2" NPS), schedule (STD, 40, 80, XS)
+   - Include: actual thickness, nominal thickness, minimum required
+   - Include: acceptable status (true/false)
+
+7. INSPECTION CHECKLIST:
+   - Extract inspection checklist items with category, description, status
+   - Status should be: Satisfactory, Unsatisfactory, N/A, Pass, Fail
+
+8. EXECUTIVE SUMMARY, INSPECTION RESULTS, RECOMMENDATIONS:
+   - Extract the executive summary text
+   - Extract Section 3.0 Inspection Results (findings, observations)
+   - Extract Section 4.0 Recommendations (repairs, next inspection, etc.)
+
+Return the data in this JSON structure:
 
 {
+  "reportInfo": {
+    "reportNumber": "string",
+    "reportDate": "string",
+    "inspectionDate": "string",
+    "inspectionType": "string",
+    "inspectionCompany": "string",
+    "inspectorName": "string",
+    "inspectorCert": "string"
+  },
+  "clientInfo": {
+    "clientName": "string",
+    "clientLocation": "string",
+    "product": "string"
+  },
   "vesselInfo": {
-    "vesselTag": "vessel tag number or ID",
-    "vesselDescription": "vessel description/name",
-    "manufacturer": "manufacturer name",
-    "serialNumber": "serial number",
-    "yearBuilt": "year built",
-    "designPressure": "design pressure in psi",
-    "designTemperature": "design temperature in °F",
-    "operatingPressure": "operating pressure in psi",
-    "operatingTemperature": "operating temperature in °F",
-    "mdmt": "Minimum Design Metal Temperature in °F",
-    "corrosionAllowance": "corrosion allowance in inches",
-    "materialSpec": "material specification (e.g., SA-516 Gr 70)",
-    "allowableStress": "allowable stress in psi",
-    "jointEfficiency": "joint efficiency factor (E value)",
-    "insideDiameter": "inside diameter in inches",
-    "overallLength": "overall length in inches",
-    "headType": "head type (e.g., 2:1 Ellipsoidal)",
-    "vesselConfiguration": "Horizontal or Vertical",
-    "constructionCode": "construction code (e.g., ASME S8 D1)",
-    "nbNumber": "National Board Number",
-    "product": "product/service in vessel",
-    "insulationType": "insulation type"
+    "vesselTag": "string",
+    "vesselDescription": "string",
+    "manufacturer": "string",
+    "serialNumber": "string",
+    "yearBuilt": "string",
+    "nbNumber": "string",
+    "constructionCode": "string",
+    "vesselType": "string",
+    "vesselConfiguration": "string",
+    "designPressure": "string",
+    "designTemperature": "string",
+    "operatingPressure": "string",
+    "operatingTemperature": "string",
+    "mdmt": "string",
+    "product": "string",
+    "corrosionAllowance": "string",
+    "insideDiameter": "string",
+    "overallLength": "string",
+    "materialSpec": "string",
+    "headType": "string",
+    "insulationType": "string",
+    "allowableStress": "string",
+    "jointEfficiency": "string",
+    "radiographyType": "string",
+    "specificGravity": "string",
+    "crownRadius": "string",
+    "knuckleRadius": "string"
   },
-  "inspectionInfo": {
-    "inspectionDate": "YYYY-MM-DD",
-    "reportNumber": "report number",
-    "reportDate": "YYYY-MM-DD",
-    "inspectorName": "inspector name",
-    "inspectorCertification": "certification number",
-    "inspectionType": "Internal/External/On-Stream",
-    "clientName": "client company name",
-    "clientLocation": "facility location"
-  },
-  "executiveSummary": "full executive summary text",
-  "inspectionResults": "Section 3.0 Inspection Results - all findings",
-  "recommendations": "Section 4.0 Recommendations - all recommendations",
+  "executiveSummary": "string",
+  "inspectionResults": "string",
+  "recommendations": "string",
   "thicknessMeasurements": [
     {
-      "cmlNumber": "CML number (e.g., 1, 2, CML-1)",
-      "location": "measurement location description",
-      "component": "FULL component name (e.g., 'Vessel Shell', '2\" East Head Seam - Head Side')",
-      "componentType": "Shell/Head/Nozzle",
-      "currentThickness": 0.652,
-      "previousThickness": 0.689,
+      "cmlNumber": "string",
+      "location": "string",
+      "component": "string (Shell/East Head/West Head/Nozzle)",
+      "componentType": "string (shell/head/nozzle)",
+      "readingType": "string (spot/seam/nozzle/general)",
+      "nozzleSize": "string",
+      "angle": "string",
       "nominalThickness": 0.750,
+      "previousThickness": 0.689,
+      "currentThickness": 0.652,
       "minimumRequired": 0.500,
-      "tActual": 0.652,
+      "calculatedMAWP": 250.0,
       "tml1": 0.652,
       "tml2": 0.648,
       "tml3": 0.655,
-      "tml4": 0.650,
-      "angle": "0°/90°/180°/270°",
-      "readingType": "nozzle/seam/spot/general",
-      "nozzleSize": "24\" (only for nozzles)",
-      "service": "nozzle service description"
+      "tml4": 0.650
     }
   ],
   "checklistItems": [
     {
-      "category": "External Visual/Internal Visual/Foundation/etc.",
-      "itemNumber": "1",
-      "itemText": "Check item description",
-      "status": "Satisfactory/Unsatisfactory/N/A/Not Checked",
-      "notes": "any notes or comments"
+      "category": "string",
+      "itemNumber": "string",
+      "itemText": "string",
+      "description": "string",
+      "status": "string",
+      "notes": "string"
     }
   ],
   "nozzles": [
     {
-      "nozzleNumber": "N1/N2/MW-1/etc.",
-      "service": "Manway/Relief/Inlet/Outlet/etc.",
-      "size": "18\" NPS",
-      "schedule": "STD/40/80",
+      "nozzleNumber": "string",
+      "service": "string",
+      "description": "string",
+      "size": "string",
+      "schedule": "string",
       "actualThickness": 0.500,
-      "nominalThickness": 0.562,
-      "minimumRequired": 0.375,
-      "acceptable": true
+      "nominalThickness": 0.500,
+      "minimumRequired": 0.300,
+      "acceptable": true,
+      "notes": "string"
     }
-  ],
-  "tableA": {
-    "components": [
-      {
-        "componentName": "Vessel Shell/East Head/West Head",
-        "nominalThickness": 0.750,
-        "actualThickness": 0.652,
-        "minimumRequiredThickness": 0.500,
-        "designMAWP": 150,
-        "calculatedMAWP": 180,
-        "corrosionRate": 0.002,
-        "remainingLife": 76
-      }
-    ]
-  }
+  ]
 }
 
-CRITICAL EXTRACTION RULES:
-1. Extract EVERYTHING visible in the document - search all pages thoroughly
-2. For thickness measurements: Extract ALL readings including multi-angle measurements (0°, 90°, 180°, 270°)
-3. Extract the FULL component names exactly as written (e.g., '2" East Head Seam - Head Side')
-4. Look for TABLE A or Executive Summary tables with component calculations
-5. Extract ALL checklist items with their exact status
-6. Extract ALL nozzle data from nozzle evaluation tables
-7. Joint Efficiency (E value) is CRITICAL - look in vessel metadata AND calculation tables
-8. For PREVIOUS THICKNESS: Look for columns labeled "Previous", "Last Reading", "Prior", etc.
-9. If a field is not found, omit it from JSON (do not use null or empty string)
-10. Pay special attention to scanned tables and handwritten values
-11. Return ONLY valid JSON, no additional text`;
+IMPORTANT: 
+- If a field is not present in the document, omit it from the JSON (do not use null or empty string)
+- Return ONLY valid JSON, no additional text, explanations, or markdown code blocks`;
 
-/**
- * Parse a PDF using vision LLM to extract inspection data
- * Handles scanned PDFs and images within PDFs
- */
-export async function parseWithVision(pdfBuffer: Buffer): Promise<VisionParsedData> {
-  const tempDir = join(tmpdir(), `pdf-vision-${Date.now()}`);
-  mkdirSync(tempDir, { recursive: true });
-  
-  const pdfPath = join(tempDir, 'input.pdf');
-  writeFileSync(pdfPath, pdfBuffer);
-  
-  try {
-    logger.info('[Vision Parser] Starting PDF to image conversion');
+    logger.info('[Vision Parser] Sending PDF to LLM for comprehensive analysis...');
     
-    // Convert PDF to PNG images
-    const pngPages = await pdfToPng(pdfPath, {
-      outputFolder: tempDir,
-    });
-    
-    logger.info(`[Vision Parser] Converted ${pngPages.length} pages to images`);
-    
-    if (pngPages.length === 0) {
-      throw new Error('Failed to convert PDF pages to images');
-    }
-    
-    // Upload images to S3 and collect URLs
-    const imageUrls: string[] = [];
-    const maxPages = Math.min(pngPages.length, 50); // Process max 50 pages
-    
-    for (let i = 0; i < maxPages; i++) {
-      const page = pngPages[i];
-      if (!page.content) {
-        logger.warn(`[Vision Parser] Page ${i + 1} has no content, skipping`);
-        continue;
-      }
-      const { url } = await storagePut(
-        `vision-parser/${Date.now()}-page-${i + 1}.png`,
-        page.content,
-        'image/png'
-      );
-      imageUrls.push(url);
-      logger.info(`[Vision Parser] Uploaded page ${i + 1} to S3`);
-    }
-    
-    logger.info(`[Vision Parser] Successfully uploaded ${imageUrls.length} images`);
-    
-    // Build message content with images
-    const messageContent: Array<{ type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string; detail?: 'auto' | 'low' | 'high' } }> = [
-      { type: 'text', text: VISION_EXTRACTION_PROMPT }
-    ];
-    
-    // Add all page images
-    for (const imageUrl of imageUrls) {
-      messageContent.push({
-        type: 'image_url',
-        image_url: { 
-          url: imageUrl,
-          detail: 'high' as const // Request high detail for better text extraction
-        }
-      });
-    }
-    
-    logger.info('[Vision Parser] Sending images to LLM for analysis...');
-    
-    // Call vision LLM with images
-    const response = await invokeLLM({
-      messages: [
-        {
-          role: 'user',
-          content: messageContent
-        }
-      ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'inspection_data',
-          strict: true,
-          schema: {
-            type: 'object',
-            properties: {
-              vesselInfo: {
-                type: 'object',
-                properties: {
-                  vesselTag: { type: 'string' },
-                  vesselDescription: { type: 'string' },
-                  manufacturer: { type: 'string' },
-                  serialNumber: { type: 'string' },
-                  yearBuilt: { type: 'string' },
-                  designPressure: { type: 'string' },
-                  designTemperature: { type: 'string' },
-                  operatingPressure: { type: 'string' },
-                  operatingTemperature: { type: 'string' },
-                  mdmt: { type: 'string' },
-                  corrosionAllowance: { type: 'string' },
-                  materialSpec: { type: 'string' },
-                  allowableStress: { type: 'string' },
-                  jointEfficiency: { type: 'string' },
-                  insideDiameter: { type: 'string' },
-                  overallLength: { type: 'string' },
-                  headType: { type: 'string' },
-                  vesselConfiguration: { type: 'string' },
-                  constructionCode: { type: 'string' },
-                  nbNumber: { type: 'string' },
-                  product: { type: 'string' },
-                  insulationType: { type: 'string' },
-                },
-                required: [],
-                additionalProperties: false,
-              },
-              inspectionInfo: {
-                type: 'object',
-                properties: {
-                  inspectionDate: { type: 'string' },
-                  reportNumber: { type: 'string' },
-                  reportDate: { type: 'string' },
-                  inspectorName: { type: 'string' },
-                  inspectorCertification: { type: 'string' },
-                  inspectionType: { type: 'string' },
-                  clientName: { type: 'string' },
-                  clientLocation: { type: 'string' },
-                },
-                required: [],
-                additionalProperties: false,
-              },
-              executiveSummary: { type: 'string' },
-              inspectionResults: { type: 'string' },
-              recommendations: { type: 'string' },
-              thicknessMeasurements: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    cmlNumber: { type: 'string' },
-                    tmlId: { type: 'string' },
-                    location: { type: 'string' },
-                    component: { type: 'string' },
-                    componentType: { type: 'string' },
-                    currentThickness: { type: 'number' },
-                    previousThickness: { type: 'number' },
-                    nominalThickness: { type: 'number' },
-                    minimumRequired: { type: 'number' },
-                    tActual: { type: 'number' },
-                    tml1: { type: 'number' },
-                    tml2: { type: 'number' },
-                    tml3: { type: 'number' },
-                    tml4: { type: 'number' },
-                    angle: { type: 'string' },
-                    readingType: { type: 'string' },
-                    nozzleSize: { type: 'string' },
-                    service: { type: 'string' },
-                  },
-                  required: [],
-                  additionalProperties: false,
-                },
-              },
-              checklistItems: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    category: { type: 'string' },
-                    itemNumber: { type: 'string' },
-                    itemText: { type: 'string' },
-                    description: { type: 'string' },
-                    status: { type: 'string' },
-                    notes: { type: 'string' },
-                    checkedBy: { type: 'string' },
-                    checkedDate: { type: 'string' },
-                  },
-                  required: [],
-                  additionalProperties: false,
-                },
-              },
-              nozzles: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    nozzleNumber: { type: 'string' },
-                    service: { type: 'string' },
-                    size: { type: 'string' },
-                    schedule: { type: 'string' },
-                    actualThickness: { type: 'number' },
-                    nominalThickness: { type: 'number' },
-                    minimumRequired: { type: 'number' },
-                    acceptable: { type: 'boolean' },
-                    notes: { type: 'string' },
-                  },
-                  required: [],
-                  additionalProperties: false,
-                },
-              },
-              tableA: {
-                type: 'object',
-                properties: {
-                  components: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        componentName: { type: 'string' },
-                        nominalThickness: { type: 'number' },
-                        actualThickness: { type: 'number' },
-                        minimumRequiredThickness: { type: 'number' },
-                        designMAWP: { type: 'number' },
-                        calculatedMAWP: { type: 'number' },
-                        corrosionRate: { type: 'number' },
-                        remainingLife: { type: 'number' },
-                      },
-                      required: [],
-                      additionalProperties: false,
-                    },
-                  },
-                },
-                required: [],
-                additionalProperties: false,
-              },
-            },
-            required: [],
-            additionalProperties: false,
-          },
-        },
-      },
-    });
-    
-    // Check if response is valid
-    if (!response || !response.choices || response.choices.length === 0) {
-      logger.error('[Vision Parser] Invalid LLM response:', response);
-      throw new Error('LLM returned empty or invalid response');
-    }
-    
-    const content = response.choices[0].message.content;
-    if (typeof content !== 'string') {
-      logger.error('[Vision Parser] Content is not a string:', content);
-      throw new Error('Unexpected response format from LLM');
-    }
-    
-    const parsedData: VisionParsedData = JSON.parse(content);
-    
-    logger.info('[Vision Parser] Successfully extracted data from PDF');
-    logger.info('[Vision Parser] Vessel info:', parsedData.vesselInfo);
-    logger.info('[Vision Parser] TML readings:', parsedData.thicknessMeasurements?.length || 0);
-    logger.info('[Vision Parser] Checklist items:', parsedData.checklistItems?.length || 0);
-    logger.info('[Vision Parser] Nozzles:', parsedData.nozzles?.length || 0);
-    logger.info('[Vision Parser] TABLE A components:', parsedData.tableA?.components?.length || 0);
-    
-    return parsedData;
-    
-  } catch (error: any) {
-    logger.error('[Vision Parser] Error:', error);
-    throw new Error(`Failed to parse PDF file: ${error.message}`);
-  } finally {
-    // Cleanup temp directory
-    try {
-      const fs = await import('fs/promises');
-      await fs.rm(tempDir, { recursive: true, force: true });
-    } catch (cleanupError) {
-      logger.error('[Vision Parser] Cleanup error:', cleanupError);
-    }
-  }
-}
-
-/**
- * Parse PDF using direct file_url approach (for text-based PDFs)
- * More efficient than converting to images for readable PDFs
- */
-export async function parseWithVisionDirect(pdfUrl: string): Promise<VisionParsedData> {
-  logger.info('[Vision Parser] Using direct file_url approach');
-  
-  try {
+    // Call LLM with PDF file URL
     const response = await invokeLLM({
       messages: [
         {
           role: 'user',
           content: [
-            {
-              type: 'text',
-              text: VISION_EXTRACTION_PROMPT,
-            },
-            {
-              type: 'file_url',
-              file_url: {
+            { type: 'text', text: extractionPrompt },
+            { 
+              type: 'file_url', 
+              file_url: { 
                 url: pdfUrl,
-                mime_type: 'application/pdf',
-              },
-            },
-          ],
-        },
-      ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'inspection_data',
-          strict: true,
-          schema: {
-            type: 'object',
-            properties: {
-              vesselInfo: {
-                type: 'object',
-                properties: {
-                  vesselTag: { type: 'string' },
-                  vesselDescription: { type: 'string' },
-                  manufacturer: { type: 'string' },
-                  serialNumber: { type: 'string' },
-                  yearBuilt: { type: 'string' },
-                  designPressure: { type: 'string' },
-                  designTemperature: { type: 'string' },
-                  operatingPressure: { type: 'string' },
-                  operatingTemperature: { type: 'string' },
-                  mdmt: { type: 'string' },
-                  corrosionAllowance: { type: 'string' },
-                  materialSpec: { type: 'string' },
-                  allowableStress: { type: 'string' },
-                  jointEfficiency: { type: 'string' },
-                  insideDiameter: { type: 'string' },
-                  overallLength: { type: 'string' },
-                  headType: { type: 'string' },
-                  vesselConfiguration: { type: 'string' },
-                  constructionCode: { type: 'string' },
-                  nbNumber: { type: 'string' },
-                  product: { type: 'string' },
-                  insulationType: { type: 'string' },
-                },
-                required: [],
-                additionalProperties: false,
-              },
-              inspectionInfo: {
-                type: 'object',
-                properties: {
-                  inspectionDate: { type: 'string' },
-                  reportNumber: { type: 'string' },
-                  reportDate: { type: 'string' },
-                  inspectorName: { type: 'string' },
-                  inspectorCertification: { type: 'string' },
-                  inspectionType: { type: 'string' },
-                  clientName: { type: 'string' },
-                  clientLocation: { type: 'string' },
-                },
-                required: [],
-                additionalProperties: false,
-              },
-              executiveSummary: { type: 'string' },
-              inspectionResults: { type: 'string' },
-              recommendations: { type: 'string' },
-              thicknessMeasurements: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    cmlNumber: { type: 'string' },
-                    tmlId: { type: 'string' },
-                    location: { type: 'string' },
-                    component: { type: 'string' },
-                    componentType: { type: 'string' },
-                    currentThickness: { type: 'number' },
-                    previousThickness: { type: 'number' },
-                    nominalThickness: { type: 'number' },
-                    minimumRequired: { type: 'number' },
-                    tActual: { type: 'number' },
-                    tml1: { type: 'number' },
-                    tml2: { type: 'number' },
-                    tml3: { type: 'number' },
-                    tml4: { type: 'number' },
-                    angle: { type: 'string' },
-                    readingType: { type: 'string' },
-                    nozzleSize: { type: 'string' },
-                    service: { type: 'string' },
-                  },
-                  required: [],
-                  additionalProperties: false,
-                },
-              },
-              checklistItems: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    category: { type: 'string' },
-                    itemNumber: { type: 'string' },
-                    itemText: { type: 'string' },
-                    description: { type: 'string' },
-                    status: { type: 'string' },
-                    notes: { type: 'string' },
-                    checkedBy: { type: 'string' },
-                    checkedDate: { type: 'string' },
-                  },
-                  required: [],
-                  additionalProperties: false,
-                },
-              },
-              nozzles: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    nozzleNumber: { type: 'string' },
-                    service: { type: 'string' },
-                    size: { type: 'string' },
-                    schedule: { type: 'string' },
-                    actualThickness: { type: 'number' },
-                    nominalThickness: { type: 'number' },
-                    minimumRequired: { type: 'number' },
-                    acceptable: { type: 'boolean' },
-                    notes: { type: 'string' },
-                  },
-                  required: [],
-                  additionalProperties: false,
-                },
-              },
-              tableA: {
-                type: 'object',
-                properties: {
-                  components: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        componentName: { type: 'string' },
-                        nominalThickness: { type: 'number' },
-                        actualThickness: { type: 'number' },
-                        minimumRequiredThickness: { type: 'number' },
-                        designMAWP: { type: 'number' },
-                        calculatedMAWP: { type: 'number' },
-                        corrosionRate: { type: 'number' },
-                        remainingLife: { type: 'number' },
-                      },
-                      required: [],
-                      additionalProperties: false,
-                    },
-                  },
-                },
-                required: [],
-                additionalProperties: false,
-              },
-            },
-            required: [],
-            additionalProperties: false,
-          },
-        },
-      },
+                mime_type: 'application/pdf' as const
+              } 
+            }
+          ]
+        }
+      ]
     });
     
+    // Check if response is valid
     if (!response || !response.choices || response.choices.length === 0) {
+      logger.error('[Vision Parser] Invalid LLM response:', JSON.stringify(response));
       throw new Error('LLM returned empty or invalid response');
     }
     
     const content = response.choices[0].message.content;
     if (typeof content !== 'string') {
+      logger.error('[Vision Parser] Content is not a string:', typeof content);
       throw new Error('Unexpected response format from LLM');
     }
     
-    const parsedData: VisionParsedData = JSON.parse(content);
+    logger.info('[Vision Parser] Raw LLM response length:', content.length);
+    logger.info('[Vision Parser] Raw LLM response preview:', content.substring(0, 500));
     
-    logger.info('[Vision Parser Direct] Successfully extracted data');
-    logger.info('[Vision Parser Direct] Vessel info:', parsedData.vesselInfo);
-    logger.info('[Vision Parser Direct] TML readings:', parsedData.thicknessMeasurements?.length || 0);
+    // Clean the response - remove markdown code blocks if present
+    let cleanedContent = content.trim();
+    if (cleanedContent.startsWith('```json')) {
+      cleanedContent = cleanedContent.slice(7);
+    } else if (cleanedContent.startsWith('```')) {
+      cleanedContent = cleanedContent.slice(3);
+    }
+    if (cleanedContent.endsWith('```')) {
+      cleanedContent = cleanedContent.slice(0, -3);
+    }
+    cleanedContent = cleanedContent.trim();
+    
+    // Parse the JSON response
+    let parsedData: VisionParsedData;
+    try {
+      parsedData = JSON.parse(cleanedContent);
+    } catch (parseError: any) {
+      logger.error('[Vision Parser] JSON parse error:', parseError.message);
+      logger.error('[Vision Parser] Content that failed to parse:', cleanedContent.substring(0, 1000));
+      throw new Error(`Failed to parse LLM response as JSON: ${parseError.message}`);
+    }
+    
+    // Log extraction results
+    logger.info('[Vision Parser] Successfully extracted data from PDF');
+    logger.info('[Vision Parser] Report info:', JSON.stringify(parsedData.reportInfo));
+    logger.info('[Vision Parser] Client info:', JSON.stringify(parsedData.clientInfo));
+    logger.info('[Vision Parser] Vessel info:', JSON.stringify(parsedData.vesselInfo));
+    logger.info('[Vision Parser] TML readings:', parsedData.thicknessMeasurements?.length || 0);
+    logger.info('[Vision Parser] Nozzles:', parsedData.nozzles?.length || 0);
+    logger.info('[Vision Parser] Checklist items:', parsedData.checklistItems?.length || 0);
+    logger.info('[Vision Parser] Has executive summary:', !!parsedData.executiveSummary);
+    logger.info('[Vision Parser] Has inspection results:', !!parsedData.inspectionResults);
+    logger.info('[Vision Parser] Has recommendations:', !!parsedData.recommendations);
     
     return parsedData;
     
   } catch (error: any) {
-    logger.error('[Vision Parser Direct] Error:', error);
-    throw new Error(`Failed to parse PDF: ${error.message}`);
+    logger.error('[Vision Parser] Error:', error.message);
+    logger.error('[Vision Parser] Stack:', error.stack);
+    
+    // Provide more specific error messages
+    if (error.message.includes('Service Unavailable')) {
+      throw new Error('Vision parser service is temporarily unavailable. Please try the Manus AI Parser instead.');
+    }
+    if (error.message.includes('fetch')) {
+      throw new Error('Network error while processing PDF. Please check your connection and try again.');
+    }
+    
+    throw new Error(`Failed to parse PDF file: ${error.message}`);
   }
 }

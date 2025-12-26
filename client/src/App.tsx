@@ -18,6 +18,9 @@ import ValidationDashboard from "./pages/ValidationDashboard";
 import AnomalyTrends from "./pages/AnomalyTrends";
 import FieldInspector from "./pages/FieldInspector";
 import TrendAnalysis from "./pages/TrendAnalysis";
+import API510Calculator from "./pages/API510Calculator";
+import LocationMappingSettings from "./pages/LocationMappingSettings";
+import BatchReprocess from "./pages/BatchReprocess";
 
 function Router() {
   return (
@@ -28,14 +31,17 @@ function Router() {
       <Route path={"/inspections/new"} component={NewInspection} />
       <Route path={"/inspections/:id"} component={InspectionDetail} />
       <Route path={"/import"} component={ImportData} />
-      <Route path={"comparison"} component={ReportComparison} />
-      <Route path={"import-pdf"} component={ImportPDF} />
-      <Route path={"convert-images"} component={ConvertImages} />
-      <Route path={"upload-ut-results"} component={UploadUTResults} />
+      <Route path={"/comparison"} component={ReportComparison} />
+      <Route path={"/import-pdf"} component={ImportPDF} />
+      <Route path={"/convert-images"} component={ConvertImages} />
+      <Route path={"/upload-ut-results"} component={UploadUTResults} />
       <Route path={"/validation/:inspectionId"} component={ValidationDashboard} />
       <Route path={"/anomalies/trends"} component={AnomalyTrends} />
       <Route path={"/field-inspector"} component={FieldInspector} />
       <Route path={"/trends/:vesselTagNumber"} component={TrendAnalysis} />
+      <Route path={"/calculator"} component={API510Calculator} />
+      <Route path={"/settings/location-mapping"} component={LocationMappingSettings} />
+      <Route path={"/batch-reprocess"} component={BatchReprocess} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

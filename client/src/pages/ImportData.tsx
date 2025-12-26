@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
-import { Settings, ArrowLeft, Upload, FileText, FileSpreadsheet, CheckCircle2, AlertCircle, X } from "lucide-react";
+import { Settings, ArrowLeft, Upload, FileText, FileSpreadsheet, CheckCircle2, AlertCircle, X, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,7 +20,7 @@ export default function ImportData() {
   const [parseResult, setParseResult] = useState<any>(null);
   const [showChecklistReview, setShowChecklistReview] = useState(false);
   const [checklistItems, setChecklistItems] = useState<any[]>([]);
-  const [parserType, setParserType] = useState<"docupipe" | "manus" | "vision">("docupipe");
+  const [parserType, setParserType] = useState<"manus" | "vision" | "documentai">("manus");
   const [existingInspectionId, setExistingInspectionId] = useState<string | null>(null);
   const [continueMode, setContinueMode] = useState(false);
   
@@ -71,6 +71,7 @@ export default function ImportData() {
             fileName: selectedFile.name,
             fileType,
             parserType, // Pass selected parser type
+
             inspectionId: existingInspectionId || undefined, // Append to existing if selected
           });
 
@@ -194,6 +195,16 @@ export default function ImportData() {
                   <span>Flexible column header matching</span>
                 </li>
               </ul>
+              <div className="mt-4 pt-4 border-t">
+                <a
+                  href="/api510_import_template.xlsx"
+                  download="api510_import_template.xlsx"
+                  className="inline-flex items-center text-sm text-primary hover:underline"
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Download Excel Template
+                </a>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -206,17 +217,21 @@ export default function ImportData() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="parser">PDF Parser (for PDF files only)</Label>
-              <Select value={parserType} onValueChange={(value: "docupipe" | "manus" | "vision") => setParserType(value)}>
+              <Select value={parserType} onValueChange={(value: "manus" | "vision" | "documentai") => setParserType(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="docupipe">Docupipe API (Recommended)</SelectItem>
-                  <SelectItem value="manus">Manus Built-in API</SelectItem>
+                  <SelectItem value="manus">Manus AI Parser (Recommended)</SelectItem>
                   <SelectItem value="vision">Vision Parser (For Scanned PDFs)</SelectItem>
+                  <SelectItem value="documentai">Google Document AI + Manus AI</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500">Choose which parser to use for PDF extraction. Use Vision Parser for scanned documents with images.</p>
+              <p className="text-xs text-gray-500">
+                {parserType === "manus" && "Manus AI Parser is recommended for most PDFs."}
+                {parserType === "vision" && "Vision Parser uses AI vision to extract data from scanned documents."}
+                {parserType === "documentai" && "Uses Google Cloud Document AI for high-quality OCR, then Manus AI for data extraction."}
+              </p>
             </div>
 
             <div className="space-y-2">

@@ -1,1 +1,0 @@
-ALTER TABLE `componentCalculations` ADD `calculatedMAWP` decimal(10,2);

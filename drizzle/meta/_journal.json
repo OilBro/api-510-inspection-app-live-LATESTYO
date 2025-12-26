@@ -85,6 +85,41 @@
       "when": 1765174356981,
       "tag": "0011_magical_jack_power",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1765494852227,
+      "tag": "0012_blushing_alex_wilder",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1765498650925,
+      "tag": "0013_pale_marvel_apes",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "5",
+      "when": 1765589659839,
+      "tag": "0014_free_dakota_north",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "5",
+      "when": 1765592892003,
+      "tag": "0015_complete_strong_guy",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "5",
+      "when": 1765761115793,
+      "tag": "0016_sweet_shriek",
+      "breakpoints": true
     }
   ]
 }
