@@ -8,8 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Download, Plus, Trash2, Upload, FileText, Mail, Calculator, CheckSquare, FileSpreadsheet, TrendingUp, AlertTriangle, BarChart3 } from "lucide-react";
-import { useLocation } from "wouter";
+import { Loader2, Download, Plus, Trash2, Upload, FileText, Mail, Calculator, CheckSquare, FileSpreadsheet, TrendingUp, AlertTriangle } from "lucide-react";
 import { DataQualityIndicator, CorrosionRateDisplay } from "@/components/DataQualityIndicator";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -305,7 +304,7 @@ export default function ProfessionalReportTab({ inspectionId }: ProfessionalRepo
         </TabsList>
 
         {/* Report Information Tab */}
-        <TabsContent value="info" className="space-y-4">
+        <TabsContent value="overview" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Report Information</CardTitle>
@@ -714,11 +713,7 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
   const [dialogOpen, setDialogOpen] = useState(false);
   const [componentType, setComponentType] = useState<"shell" | "head">("shell");
   const [recalculating, setRecalculating] = useState(false);
-  const [, setLocation] = useLocation();
   const utils = trpc.useUtils();
-  
-  // Get vessel tag number for trend analysis link
-  const { data: inspection } = trpc.inspections.get.useQuery({ id: inspectionId });
 
   const { data: calculations, isLoading } = trpc.professionalReport.componentCalculations.list.useQuery({
     reportId,
@@ -895,16 +890,6 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
             )}
             Recalculate
           </Button>
-          {inspection?.vesselTagNumber && (
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => setLocation(`/trends/${encodeURIComponent(inspection.vesselTagNumber)}`)}
-            >
-              <BarChart3 className="h-4 w-4" />
-              View Trends
-            </Button>
-          )}
           <input
             id="component-import-input"
             type="file"
@@ -1172,7 +1157,6 @@ function ComponentCalculationForm({
               <SelectItem value="SA-240-316">SA-240 Type 316 (Stainless)</SelectItem>
               <SelectItem value="SA-387-11-2">SA-387 Grade 11 Class 2 (Chrome-Moly)</SelectItem>
               <SelectItem value="SA-387-22-2">SA-387 Grade 22 Class 2 (Chrome-Moly)</SelectItem>
-              <SelectItem value="SA-612">SA-612 (High Strength Carbon Steel)</SelectItem>
             </SelectContent>
           </Select>
         </div>
