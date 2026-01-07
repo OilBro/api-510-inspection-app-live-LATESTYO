@@ -1600,3 +1600,45 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Verify processor ID and project ID configuration
 - [x] Fix endpoint URL construction (added location validation)
 - [ ] Test Document AI parsing
+
+
+## API 510 Industry-Leading Implementation (Completed)
+- [x] Created comprehensive ASME calculation engine (asmeCalculations.ts)
+  - UG-27 cylindrical shell formulas
+  - UG-32(d) 2:1 ellipsoidal head formulas
+  - UG-32(e) torispherical head formulas with M factor
+  - UG-32(f) hemispherical head formulas
+  - UG-45 nozzle thickness formulas
+  - Corrosion rate and remaining life calculations
+- [x] Created comprehensive materials database (asmeMaterialsDatabase.ts)
+  - Temperature-dependent stress values for all common materials
+  - SA-516 Gr 55/60/65/70
+  - SA-515 Gr 55/60/65/70
+  - SA-612
+  - SA-285 Gr A/B/C
+  - SA-240 Type 304/304L/316/316L
+  - SA-312 TP304/TP316
+  - SA-106 Gr A/B/C
+  - SA-53 Gr A/B
+  - SA-105
+  - Interpolation for intermediate temperatures
+- [x] Created pipe schedule database (pipeScheduleDatabase.ts)
+  - All standard pipe schedules (5, 10, 20, 30, 40, 60, 80, 100, 120, 140, 160, STD, XS, XXS)
+  - Sizes from 1/8" to 24"
+- [x] Created API 510 compliance validation module (api510Compliance.ts)
+  - Thickness checks per ASME UG-27, UG-32
+  - MAWP verification
+  - Corrosion rate analysis
+  - Remaining life calculations
+  - Inspection interval determination per API 510 Section 6.4
+  - MDMT checks per ASME UCS-66
+  - Material verification against ASME Section II Part D
+  - Nozzle evaluation per UG-45
+  - Comprehensive compliance reporting
+- [x] Fixed PDF import to capture all nozzle data
+- [x] Added uploadUTResults endpoint for adding UT readings to existing inspections
+- [x] Created comprehensive test suite (asmeCalculations.test.ts)
+  - 20 tests covering all calculation formulas
+  - Verification against hand calculations
+  - Real-world test cases from PDF data
+- [x] All 146 tests passing

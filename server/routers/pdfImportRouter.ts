@@ -7,11 +7,21 @@ import { inspections, tmlReadings, inspectionFindings, nozzleEvaluations, profes
 import { sql, eq, and } from "drizzle-orm";
 import { getDb } from "../db";
 import { logger } from "../_core/logger";
+import { getAllowableStress } from "../asmeMaterialsDatabase";
+import { getPipeSchedule, getNozzleMinThickness } from "../pipeScheduleDatabase";
 
 /**
  * PDF Import Router
  * Handles uploading and extracting data from inspection report PDFs
  * Enhanced with comprehensive field extraction and proper data population
+ * 
+ * CRITICAL: This router extracts ALL data from API 510 inspection reports including:
+ * - Vessel data (design parameters, materials, dimensions)
+ * - Thickness measurements (TML readings)
+ * - Nozzle evaluations (ALL nozzles with thickness data)
+ * - Component calculations (TABLE A data)
+ * - Findings and recommendations
+ * - Checklist items
  */
 
 // Comprehensive extraction prompt for API 510 reports
@@ -90,13 +100,19 @@ ANALYZE THIS PDF THOROUGHLY AND EXTRACT ALL INFORMATION IN JSON FORMAT:
   ],
   "nozzles": [
     {
+      "cml": "string - CML number for this nozzle if available",
       "nozzleNumber": "string - nozzle identifier (N1, N2, MW-1, Vent-1, etc.)",
-      "service": "string - nozzle service (Manway, Relief, Inlet, Outlet, Vent, etc.)",
-      "size": "string - nozzle size (e.g., 18 inch, 2 inch, 24 inch NPS, 1/2 inch)",
+      "service": "string - nozzle service (Manway, Relief, Inlet, Outlet, Vent, Drain, Gauge, Thermowell, etc.)",
+      "size": "number - nozzle size in inches (e.g., 18, 2, 24, 0.75)",
+      "material": "string - nozzle material specification (e.g., CS-A516-70, SS-A312, SA-106-B)",
       "schedule": "string - pipe schedule (STD, 40, 80, XS, etc.)",
-      "actualThickness": "number - measured thickness in inches - CURRENT inspection",
-      "nominalThickness": "number - nominal pipe thickness in inches - from pipe spec",
-      "minimumRequired": "number - minimum required thickness in inches",
+      "age": "number - age in years",
+      "previousThickness": "number - previous thickness reading in inches (t_prev)",
+      "actualThickness": "number - current measured thickness in inches (t_act)",
+      "minimumRequired": "number - minimum required thickness in inches (t_min)",
+      "corrosionAllowance": "number - corrosion allowance in inches (Ca = t_act - t_min)",
+      "corrosionRate": "number - corrosion rate in inches per year (Cr)",
+      "remainingLife": "number or string - remaining life in years (RL) - may be '>20' for long life",
       "acceptable": "boolean - true if passes evaluation, false if failed"
     }
   ],
@@ -104,14 +120,19 @@ ANALYZE THIS PDF THOROUGHLY AND EXTRACT ALL INFORMATION IN JSON FORMAT:
     "description": "Executive Summary TABLE A - Component Calculations",
     "components": [
       {
-        "componentName": "string - component name (Vessel Shell, East Head, West Head, etc.)",
+        "cml": "string - CML number for this component",
+        "componentName": "string - component name (Vessel Shell, Shell 1, East Head, West Head, North Head, South Head, etc.)",
+        "material": "string - material specification",
+        "age": "number - age in years",
         "nominalThickness": "number - nominal thickness (inches)",
+        "previousThickness": "number - previous thickness (inches)",
         "actualThickness": "number - actual measured thickness (inches)",
         "minimumRequiredThickness": "number - minimum required thickness (inches)",
+        "corrosionAllowance": "number - corrosion allowance (inches)",
+        "corrosionRate": "number - corrosion rate (inches per year)",
         "designMAWP": "number - design MAWP (psi)",
         "calculatedMAWP": "number - calculated MAWP at current thickness (psi)",
-        "corrosionRate": "number - corrosion rate (inches per year)",
-        "remainingLife": "number - remaining life (years)"
+        "remainingLife": "number or string - remaining life (years) - may be '>20' for long life"
       }
     ]
   }
@@ -146,21 +167,27 @@ CRITICAL EXTRACTION RULES AND REQUIREMENTS:
    - Values typically: 1.0 (Full RT), 0.85 (Spot RT), 0.70 (No RT)
    - If not explicitly stated, infer from radiography type
 
-5. NOZZLES:
+5. NOZZLES - EXTRACT ALL:
    - Extract EVERY nozzle from nozzle evaluation tables
+   - Look for tables titled "Nozzle Evaluation", "Appendix B", "TABLE B"
    - Include ALL sizes mentioned (18", 2", 24", etc.)
    - Include service type for identification
+   - Extract ALL columns: CML, Noz ID, Size, Material, Age, t_prev, t_act, t_min, Ca, Cr, RL
+   - If remaining life shows ">20", use 999 as the number
    - Extract acceptability status clearly
+   - CRITICAL: Do not miss any nozzles - count them and verify
 
 6. CHECKLIST:
    - Extract ALL checklist items with their EXACT status from report
    - Do not infer or assume - use exact text from document
    - Include all categories present
 
-7. TABLE A:
+7. TABLE A - COMPONENT CALCULATIONS:
    - Extract data exactly as shown in Executive Summary table
-   - Include ALL components listed (Shell, Head 1, Head 2, etc.)
+   - Include ALL components listed (Shell, Shell 1, Head 1, Head 2, etc.)
    - Preserve all calculation results
+   - Extract CML numbers for each component
+   - Extract material specifications for each component
 
 8. GENERAL RULES:
    - For missing values: use null, NOT zeros or guesses
@@ -176,6 +203,227 @@ CRITICAL EXTRACTION RULES AND REQUIREMENTS:
    - executiveSummary: Full summary including governing component`;
 
 export const pdfImportRouter = router({
+  /**
+   * Upload UT results PDF and add readings to an existing inspection
+   */
+  uploadUTResults: protectedProcedure
+    .input(
+      z.object({
+        targetInspectionId: z.string(),
+        pdfUrl: z.string().url(),
+        fileName: z.string(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new Error("Database not available");
+      }
+
+      logger.info("[UT Upload] Starting extraction from:", input.fileName, "for inspection:", input.targetInspectionId);
+
+      // Verify the inspection exists and belongs to user
+      const existingInspection = await db
+        .select()
+        .from(inspections)
+        .where(
+          and(
+            eq(inspections.id, input.targetInspectionId),
+            eq(inspections.userId, ctx.user.id)
+          )
+        )
+        .limit(1);
+
+      if (existingInspection.length === 0) {
+        throw new Error("Inspection not found or access denied");
+      }
+
+      // Extract UT readings from PDF using LLM
+      const UT_EXTRACTION_PROMPT = `You are an expert at extracting ultrasonic thickness (UT) measurement data from inspection PDFs.
+
+Extract ALL thickness readings from this UT results document in JSON format:
+
+{
+  "inspectionDate": "YYYY-MM-DD - date the UT readings were taken",
+  "technician": "string - name of technician who performed measurements",
+  "thicknessMeasurements": [
+    {
+      "cml": "string - CML number (e.g., '1', '2', 'CML-1', '171')",
+      "component": "string - component name (e.g., 'Shell', 'East Head', 'N1 Manway')",
+      "location": "string - specific location (e.g., '12 o'clock', 'Top')",
+      "readings": [0.000] - array of ALL readings at this location in inches,
+      "minThickness": "number - minimum reading value"
+    }
+  ],
+  "nozzleReadings": [
+    {
+      "nozzleNumber": "string - nozzle ID (N1, N2, etc.)",
+      "service": "string - nozzle service/description",
+      "size": "number - nozzle size in inches",
+      "readings": [0.000] - array of readings,
+      "minThickness": "number - minimum reading"
+    }
+  ]
+}
+
+CRITICAL RULES:
+1. Extract EVERY thickness reading from the document
+2. Include ALL CML locations
+3. Include ALL nozzle readings if present
+4. Readings should be in inches
+5. If multiple readings at same location, include all in the readings array
+6. Use null for missing values, not zeros`;
+
+      const response = await invokeLLM({
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: UT_EXTRACTION_PROMPT,
+              },
+              {
+                type: "file_url",
+                file_url: {
+                  url: input.pdfUrl,
+                  mime_type: "application/pdf",
+                },
+              },
+            ],
+          },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "ut_readings",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                inspectionDate: { type: "string" },
+                technician: { type: "string" },
+                thicknessMeasurements: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      cml: { type: "string" },
+                      component: { type: "string" },
+                      location: { type: "string" },
+                      readings: { type: "array", items: { type: "number" } },
+                      minThickness: { type: "number" },
+                    },
+                    required: ["cml", "component", "readings", "minThickness"],
+                    additionalProperties: false,
+                  },
+                },
+                nozzleReadings: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      nozzleNumber: { type: "string" },
+                      service: { type: "string" },
+                      size: { type: "number" },
+                      readings: { type: "array", items: { type: "number" } },
+                      minThickness: { type: "number" },
+                    },
+                    required: ["nozzleNumber", "readings", "minThickness"],
+                    additionalProperties: false,
+                  },
+                },
+              },
+              required: ["thicknessMeasurements", "nozzleReadings"],
+              additionalProperties: false,
+            },
+          },
+        },
+      });
+
+      const messageContent = response.choices[0].message.content;
+      const extractedData = JSON.parse(typeof messageContent === 'string' ? messageContent : "{}");
+
+      logger.info("[UT Upload] Extracted:", {
+        tmlCount: extractedData.thicknessMeasurements?.length || 0,
+        nozzleCount: extractedData.nozzleReadings?.length || 0,
+      });
+
+      // Add new TML readings to the inspection
+      let tmlAdded = 0;
+      if (extractedData.thicknessMeasurements && extractedData.thicknessMeasurements.length > 0) {
+        for (const measurement of extractedData.thicknessMeasurements) {
+          const readings = measurement.readings || [];
+          
+          await db.execute(sql`
+            INSERT INTO tmlReadings (
+              id, inspectionId, cmlNumber, componentType, location, service,
+              tml1, tml2, tml3, tml4, tActual, currentThickness,
+              currentInspectionDate, status, tmlId, component
+            ) VALUES (
+              ${nanoid()}, ${input.targetInspectionId}, ${String(measurement.cml || 'N/A')}, 
+              ${String(measurement.component || 'Unknown')}, ${String(measurement.location || 'N/A')}, ${null},
+              ${readings[0]?.toString() || null}, ${readings[1]?.toString() || null}, 
+              ${readings[2]?.toString() || null}, ${readings[3]?.toString() || null},
+              ${measurement.minThickness?.toString() || null}, ${measurement.minThickness?.toString() || null},
+              ${extractedData.inspectionDate ? new Date(extractedData.inspectionDate) : new Date()},
+              ${'good'}, ${measurement.cml || null}, ${measurement.component || null}
+            )
+          `);
+          tmlAdded++;
+        }
+      }
+
+      // Update nozzle readings if present
+      let nozzlesUpdated = 0;
+      if (extractedData.nozzleReadings && extractedData.nozzleReadings.length > 0) {
+        for (const nozzle of extractedData.nozzleReadings) {
+          // Try to update existing nozzle
+          const result = await db.execute(sql`
+            UPDATE nozzleEvaluations 
+            SET actualThickness = ${nozzle.minThickness?.toString() || null},
+                updatedAt = NOW()
+            WHERE inspectionId = ${input.targetInspectionId}
+              AND nozzleNumber = ${nozzle.nozzleNumber}
+          `);
+          
+          // If no existing nozzle, create new one
+          if ((result as any).affectedRows === 0) {
+            await db.insert(nozzleEvaluations).values({
+              id: nanoid(),
+              inspectionId: input.targetInspectionId,
+              nozzleNumber: nozzle.nozzleNumber,
+              nozzleDescription: nozzle.service || null,
+              nominalSize: nozzle.size?.toString() || '1',
+              actualThickness: nozzle.minThickness?.toString() || null,
+              acceptable: true,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+          }
+          nozzlesUpdated++;
+        }
+      }
+
+      // Update inspection date if provided
+      if (extractedData.inspectionDate) {
+        await db.execute(sql`
+          UPDATE inspections 
+          SET inspectionDate = ${new Date(extractedData.inspectionDate)},
+              updatedAt = NOW()
+          WHERE id = ${input.targetInspectionId}
+        `);
+      }
+
+      return {
+        success: true,
+        message: `Added ${tmlAdded} thickness measurements and updated ${nozzlesUpdated} nozzles`,
+        tmlCount: tmlAdded,
+        nozzleCount: nozzlesUpdated,
+      };
+    }),
+
+
   /**
    * Upload PDF and extract inspection data using AI
    */
@@ -322,13 +570,19 @@ export const pdfImportRouter = router({
                     items: {
                       type: "object",
                       properties: {
+                        cml: { type: "string" },
                         nozzleNumber: { type: "string" },
                         service: { type: "string" },
-                        size: { type: "string" },
+                        size: { type: "number" },
+                        material: { type: "string" },
                         schedule: { type: "string" },
+                        age: { type: "number" },
+                        previousThickness: { type: "number" },
                         actualThickness: { type: "number" },
-                        nominalThickness: { type: "number" },
                         minimumRequired: { type: "number" },
+                        corrosionAllowance: { type: "number" },
+                        corrosionRate: { type: "number" },
+                        remainingLife: { type: "number" },
                         acceptable: { type: "boolean" },
                       },
                       required: ["nozzleNumber"],
@@ -344,13 +598,18 @@ export const pdfImportRouter = router({
                         items: {
                           type: "object",
                           properties: {
+                            cml: { type: "string" },
                             componentName: { type: "string" },
+                            material: { type: "string" },
+                            age: { type: "number" },
                             nominalThickness: { type: "number" },
+                            previousThickness: { type: "number" },
                             actualThickness: { type: "number" },
                             minimumRequiredThickness: { type: "number" },
+                            corrosionAllowance: { type: "number" },
+                            corrosionRate: { type: "number" },
                             designMAWP: { type: "number" },
                             calculatedMAWP: { type: "number" },
-                            corrosionRate: { type: "number" },
                             remainingLife: { type: "number" },
                           },
                           required: ["componentName"],
@@ -380,6 +639,19 @@ export const pdfImportRouter = router({
           nozzleCount: extractedData.nozzles?.length || 0,
           tableACount: extractedData.tableA?.components?.length || 0,
         });
+
+        // Log nozzle details for debugging
+        if (extractedData.nozzles && extractedData.nozzles.length > 0) {
+          logger.info("[PDF Import] Nozzles extracted:", extractedData.nozzles.map((n: any) => ({
+            number: n.nozzleNumber,
+            size: n.size,
+            service: n.service,
+            actualThickness: n.actualThickness,
+            minimumRequired: n.minimumRequired,
+          })));
+        } else {
+          logger.warn("[PDF Import] NO NOZZLES EXTRACTED - Check PDF content");
+        }
 
         return {
           success: true,
@@ -474,13 +746,19 @@ export const pdfImportRouter = router({
         nozzles: z
           .array(
             z.object({
+              cml: z.string().optional(),
               nozzleNumber: z.string(),
               service: z.string().optional(),
-              size: z.string().optional(),
+              size: z.number().optional(),
+              material: z.string().optional(),
               schedule: z.string().optional(),
+              age: z.number().optional(),
+              previousThickness: z.number().optional(),
               actualThickness: z.number().optional(),
-              nominalThickness: z.number().optional(),
               minimumRequired: z.number().optional(),
+              corrosionAllowance: z.number().optional(),
+              corrosionRate: z.number().optional(),
+              remainingLife: z.number().optional(),
               acceptable: z.boolean().optional(),
             })
           )
@@ -490,13 +768,18 @@ export const pdfImportRouter = router({
             description: z.string().optional(),
             components: z.array(
               z.object({
+                cml: z.string().optional(),
                 componentName: z.string(),
+                material: z.string().optional(),
+                age: z.number().optional(),
                 nominalThickness: z.number().optional(),
+                previousThickness: z.number().optional(),
                 actualThickness: z.number().optional(),
                 minimumRequiredThickness: z.number().optional(),
+                corrosionAllowance: z.number().optional(),
+                corrosionRate: z.number().optional(),
                 designMAWP: z.number().optional(),
                 calculatedMAWP: z.number().optional(),
-                corrosionRate: z.number().optional(),
                 remainingLife: z.number().optional(),
               })
             ),
@@ -511,6 +794,7 @@ export const pdfImportRouter = router({
       }
 
       logger.info("[PDF Import] Starting save for vessel:", input.vesselData.vesselTagNumber);
+      logger.info("[PDF Import] Nozzles to save:", input.nozzles?.length || 0);
 
       // Delete existing inspection with same vessel tag to prevent duplicates
       const existingInspections = await db
@@ -631,31 +915,61 @@ export const pdfImportRouter = router({
         logger.info("[PDF Import] Created", input.thicknessMeasurements.length, "TML records");
       }
 
-      // Import nozzle evaluations
+      // Import nozzle evaluations - CRITICAL SECTION
       if (input.nozzles && input.nozzles.length > 0) {
+        logger.info("[PDF Import] Processing", input.nozzles.length, "nozzles");
+        
         for (const nozzle of input.nozzles) {
+          // Calculate minimum required thickness if not provided
+          let minimumRequired = nozzle.minimumRequired;
+          if (!minimumRequired && nozzle.size) {
+            // Use pipe schedule database to get tmin
+            const tmin = getNozzleMinThickness(nozzle.size, nozzle.schedule || 'STD');
+            if (tmin) {
+              minimumRequired = tmin;
+            }
+          }
+          
+          // Get pipe schedule data for nominal thickness
+          let pipeNominalThickness = nozzle.previousThickness;
+          if (!pipeNominalThickness && nozzle.size) {
+            const pipeData = getPipeSchedule(nozzle.size, nozzle.schedule || 'STD');
+            if (pipeData) {
+              pipeNominalThickness = pipeData.wallThickness;
+            }
+          }
+          
           const nozzleRecord = {
             id: nanoid(),
             inspectionId: inspectionId,
             nozzleNumber: nozzle.nozzleNumber,
             nozzleDescription: nozzle.service || null,
             location: null as string | null,
-            nominalSize: nozzle.size || '1',
+            nominalSize: nozzle.size?.toString() || '1',
             schedule: nozzle.schedule || null,
             actualThickness: nozzle.actualThickness?.toString() || null,
-            pipeNominalThickness: nozzle.nominalThickness?.toString() || null,
-            pipeMinusManufacturingTolerance: null as string | null,
+            pipeNominalThickness: pipeNominalThickness?.toString() || null,
+            pipeMinusManufacturingTolerance: pipeNominalThickness ? (pipeNominalThickness * 0.875).toString() : null,
             shellHeadRequiredThickness: null as string | null,
-            minimumRequired: nozzle.minimumRequired?.toString() || null,
+            minimumRequired: minimumRequired?.toString() || null,
             acceptable: nozzle.acceptable !== false,
-            notes: null as string | null,
+            notes: nozzle.material ? `Material: ${nozzle.material}, Age: ${nozzle.age || 'N/A'} yrs, Ca: ${nozzle.corrosionAllowance || 'N/A'}", Cr: ${nozzle.corrosionRate || 'N/A'} in/yr, RL: ${nozzle.remainingLife || 'N/A'} yrs` : null,
             createdAt: new Date(),
             updatedAt: new Date(),
           };
 
+          logger.info("[PDF Import] Inserting nozzle:", {
+            number: nozzleRecord.nozzleNumber,
+            size: nozzleRecord.nominalSize,
+            actualThickness: nozzleRecord.actualThickness,
+            minimumRequired: nozzleRecord.minimumRequired,
+          });
+
           await db.insert(nozzleEvaluations).values(nozzleRecord);
         }
         logger.info("[PDF Import] Created", input.nozzles.length, "nozzle evaluation records");
+      } else {
+        logger.warn("[PDF Import] No nozzles to import");
       }
 
       // Import findings
@@ -732,9 +1046,9 @@ export const pdfImportRouter = router({
             id: nanoid(),
             reportId: reportId,
             componentName: comp.componentName,
-            componentType: comp.componentName.toLowerCase().includes('head') ? 'head' : 'shell',
-            materialCode: input.vesselData.materialSpec || null,
-            materialName: input.vesselData.materialSpec || null,
+            componentType: comp.componentName.toLowerCase().includes('head') ? 'head' as const : 'shell' as const,
+            materialCode: comp.material || input.vesselData.materialSpec || null,
+            materialName: comp.material || input.vesselData.materialSpec || null,
             designTemp: input.vesselData.designTemperature?.toString() || null,
             designMAWP: comp.designMAWP?.toString() || input.vesselData.designPressure?.toString() || null,
             insideDiameter: input.vesselData.insideDiameter?.toString() || null,
@@ -746,355 +1060,58 @@ export const pdfImportRouter = router({
             calculatedMAWP: comp.calculatedMAWP?.toString() || null,
             allowableStress: S.toString(),
             jointEfficiency: E.toString(),
-            pdfOriginalActualThickness: comp.actualThickness?.toString() || null,
-            pdfOriginalMinimumThickness: comp.minimumRequiredThickness?.toString() || null,
-            pdfOriginalCalculatedMAWP: comp.calculatedMAWP?.toString() || null,
-            pdfOriginalCorrosionRate: comp.corrosionRate?.toString() || null,
-            pdfOriginalRemainingLife: comp.remainingLife?.toString() || null,
             createdAt: new Date(),
             updatedAt: new Date(),
           });
         }
         logger.info("[PDF Import] Created", input.tableA.components.length, "component calculations from TABLE A");
       } else {
-        // Generate default component calculations
-        const shellTMLs = input.thicknessMeasurements?.filter(t => 
-          t.component.toLowerCase().includes('shell')
-        ) || [];
-        
-        if (shellTMLs.length > 0) {
-          const avgThickness = shellTMLs.reduce((sum, t) => sum + (t.minThickness || 0), 0) / shellTMLs.length;
-          const minThicknessCalc = P && R && S && E ? (P * R) / (S * E - 0.6 * P) : null;
-          
-          await db.insert(componentCalculations).values({
-            id: nanoid(),
-            reportId: reportId,
-            componentName: "Vessel Shell",
-            componentType: "shell",
-            materialCode: input.vesselData.materialSpec || null,
-            designTemp: input.vesselData.designTemperature?.toString() || null,
-            designMAWP: input.vesselData.designPressure?.toString() || null,
-            insideDiameter: input.vesselData.insideDiameter?.toString() || null,
-            actualThickness: avgThickness.toFixed(4),
-            minimumThickness: minThicknessCalc?.toFixed(4) || null,
-            allowableStress: S.toString(),
-            jointEfficiency: E.toString(),
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
-          logger.info("[PDF Import] Created default shell component calculation");
-        }
+        // Generate default calculations if no TABLE A
+        const defaultComponents = [
+          { name: 'Shell', type: 'shell' },
+          { name: 'Head 1', type: 'head' },
+          { name: 'Head 2', type: 'head' },
+        ];
 
-        // Create head calculations
-        const eastHeadTMLs = input.thicknessMeasurements?.filter(t => 
-          t.component.toLowerCase().includes('east') || 
-          (t.component.toLowerCase().includes('head') && !t.component.toLowerCase().includes('west'))
-        ) || [];
-        
-        if (eastHeadTMLs.length > 0) {
-          const avgThickness = eastHeadTMLs.reduce((sum, t) => sum + (t.minThickness || 0), 0) / eastHeadTMLs.length;
-          const minThicknessCalc = P && R && S && E ? (P * R) / (2 * S * E - 0.2 * P) : null;
-          
-          await db.insert(componentCalculations).values({
-            id: nanoid(),
-            reportId: reportId,
-            componentName: "East Head",
-            componentType: "head",
-            materialCode: input.vesselData.materialSpec || null,
-            designTemp: input.vesselData.designTemperature?.toString() || null,
-            designMAWP: input.vesselData.designPressure?.toString() || null,
-            insideDiameter: input.vesselData.insideDiameter?.toString() || null,
-            actualThickness: avgThickness.toFixed(4),
-            minimumThickness: minThicknessCalc?.toFixed(4) || null,
-            allowableStress: S.toString(),
-            jointEfficiency: E.toString(),
-            headType: input.vesselData.headType || '2:1 Ellipsoidal',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
-          logger.info("[PDF Import] Created East Head component calculation");
-        }
+        for (const comp of defaultComponents) {
+          // Calculate minimum thickness based on component type
+          let tMin = 0;
+          if (comp.type === 'shell' && P > 0 && R > 0 && S > 0 && E > 0) {
+            tMin = (P * R) / (S * E - 0.6 * P);
+          } else if (comp.type === 'head' && P > 0 && R > 0 && S > 0 && E > 0) {
+            tMin = (P * R * 2) / (2 * S * E - 0.2 * P);
+          }
 
-        const westHeadTMLs = input.thicknessMeasurements?.filter(t => 
-          t.component.toLowerCase().includes('west')
-        ) || [];
-        
-        if (westHeadTMLs.length > 0) {
-          const avgThickness = westHeadTMLs.reduce((sum, t) => sum + (t.minThickness || 0), 0) / westHeadTMLs.length;
-          const minThicknessCalc = P && R && S && E ? (P * R) / (2 * S * E - 0.2 * P) : null;
-          
           await db.insert(componentCalculations).values({
             id: nanoid(),
             reportId: reportId,
-            componentName: "West Head",
-            componentType: "head",
+            componentName: comp.name,
+            componentType: comp.type as 'shell' | 'head',
             materialCode: input.vesselData.materialSpec || null,
+            materialName: input.vesselData.materialSpec || null,
             designTemp: input.vesselData.designTemperature?.toString() || null,
             designMAWP: input.vesselData.designPressure?.toString() || null,
             insideDiameter: input.vesselData.insideDiameter?.toString() || null,
-            actualThickness: avgThickness.toFixed(4),
-            minimumThickness: minThicknessCalc?.toFixed(4) || null,
+            nominalThickness: null,
+            actualThickness: null,
+            minimumThickness: tMin > 0 ? tMin.toFixed(4) : null,
+            corrosionRate: null,
+            remainingLife: null,
+            calculatedMAWP: null,
             allowableStress: S.toString(),
             jointEfficiency: E.toString(),
-            headType: input.vesselData.headType || '2:1 Ellipsoidal',
             createdAt: new Date(),
             updatedAt: new Date(),
           });
-          logger.info("[PDF Import] Created West Head component calculation");
         }
+        logger.info("[PDF Import] Created default component calculations");
       }
-
-      logger.info("[PDF Import] Save complete for inspection:", inspectionId);
 
       return {
         success: true,
-        inspectionId: inspectionId,
+        inspectionId,
+        message: `Inspection imported successfully with ${input.thicknessMeasurements?.length || 0} TML readings, ${input.nozzles?.length || 0} nozzles, and ${input.tableA?.components?.length || 0} component calculations`,
       };
     }),
-
-  /**
-   * Upload new UT results to an existing inspection/report
-   */
-  uploadUTResults: protectedProcedure
-    .input(
-      z.object({
-        targetInspectionId: z.string(),
-        pdfUrl: z.string().url(),
-        fileName: z.string(),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
-          throw new Error("Database not available");
-        }
-
-        // Verify the target inspection exists and belongs to the user
-        const [existingInspection] = await db
-          .select()
-          .from(inspections)
-          .where(
-            and(
-              eq(inspections.id, input.targetInspectionId),
-              eq(inspections.userId, ctx.user.id)
-            )
-          )
-          .limit(1);
-
-        if (!existingInspection) {
-          throw new Error("Inspection not found or access denied");
-        }
-
-        // Extract UT data from PDF
-        const extractionPrompt = `You are an expert at extracting ultrasonic thickness (UT) measurement data from API 510 pressure vessel inspection reports.
-
-Analyze this UT report PDF and extract ALL thickness measurements in JSON format.
-
-IMPORTANT INSTRUCTIONS:
-1. CML numbers: Extract the exact CML identifier (e.g., "CML-1", "CML-2", "1", "2", etc.)
-2. Component: Identify the vessel component (e.g., "Vessel Shell", "Shell", "East Head", "West Head", "Nozzle N1")
-3. Location: Extract specific location description if available (e.g., "12 o'clock", "Top", "Bottom")
-4. Thickness: Current measured thickness in inches (decimal format)
-5. Previous Thickness: If shown in the report, extract the previous inspection thickness
-
-Format:
-{
-  "inspectionDate": "YYYY-MM-DD",
-  "thicknessMeasurements": [
-    {
-      "cml": "CML identifier (e.g., 'CML-1', '1', 'A-1')",
-      "component": "Component name (e.g., 'Vessel Shell', 'East Head')",
-      "location": "Specific location (e.g., '12 o'clock', 'Top')",
-      "thickness": 0.XXX (current thickness in inches),
-      "previousThickness": 0.XXX (previous thickness if available)
-    }
-  ]
-}
-
-Extract ALL thickness measurements from tables. Be thorough and accurate. Match CML numbers exactly as they appear in the document.`;
-
-        const response = await invokeLLM({
-          messages: [
-            {
-              role: "user",
-              content: [
-                {
-                  type: "text",
-                  text: extractionPrompt,
-                },
-                {
-                  type: "file_url",
-                  file_url: {
-                    url: input.pdfUrl,
-                    mime_type: "application/pdf",
-                  },
-                },
-              ],
-            },
-          ],
-          response_format: {
-            type: "json_schema",
-            json_schema: {
-              name: "ut_results",
-              strict: true,
-              schema: {
-                type: "object",
-                properties: {
-                  inspectionDate: { type: "string" },
-                  thicknessMeasurements: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        cml: { type: "string" },
-                        component: { type: "string" },
-                        location: { type: "string" },
-                        thickness: { type: "number" },
-                        previousThickness: { type: "number" },
-                      },
-                      required: ["cml", "component", "thickness"],
-                      additionalProperties: false,
-                    },
-                  },
-                },
-                required: ["inspectionDate", "thicknessMeasurements"],
-                additionalProperties: false,
-              },
-            },
-          },
-        });
-
-        const messageContent = response.choices[0].message.content;
-        const extractedData = JSON.parse(typeof messageContent === 'string' ? messageContent : "{}");
-
-        if (!extractedData.thicknessMeasurements || extractedData.thicknessMeasurements.length === 0) {
-          throw new Error("No thickness measurements found in the uploaded file");
-        }
-
-        // Update inspection date if provided
-        const newInspectionDate = extractedData.inspectionDate ? new Date(extractedData.inspectionDate) : new Date();
-        if (extractedData.inspectionDate) {
-          await db
-            .update(inspections)
-            .set({
-              inspectionDate: newInspectionDate,
-              updatedAt: new Date(),
-            })
-            .where(sql`id = ${input.targetInspectionId}`);
-        }
-
-        // Get existing TML readings for this inspection
-        const existingTmlReadings = await db
-          .select()
-          .from(tmlReadings)
-          .where(eq(tmlReadings.inspectionId, input.targetInspectionId));
-
-        let updatedCount = 0;
-        let addedCount = 0;
-
-        // Process each measurement
-        for (const measurement of extractedData.thicknessMeasurements) {
-          const cmlNumber = String(measurement.cml || "N/A");
-          const componentType = String(measurement.component || "Unknown");
-          const location = String(measurement.location || "N/A");
-          const newThickness = measurement.thickness?.toString() || null;
-
-          // Try to find matching existing TML record by CML number and component
-          const existingRecord = existingTmlReadings.find(
-            (tml) =>
-              tml.cmlNumber === cmlNumber &&
-              (tml.componentType === componentType || tml.component === componentType)
-          );
-
-          if (existingRecord && newThickness) {
-            // Update existing record: move current to previous, set new as current
-            const previousThickness = existingRecord.currentThickness || existingRecord.tActual;
-            const previousDate = existingRecord.currentInspectionDate || existingRecord.previousInspectionDate || existingInspection.inspectionDate;
-
-            // Calculate corrosion rate if we have both dates and thicknesses
-            let corrosionRate = null;
-            if (previousThickness && previousDate) {
-              const prevThick = parseFloat(previousThickness);
-              const currThick = parseFloat(newThickness);
-              const timeSpanMs = newInspectionDate.getTime() - new Date(previousDate).getTime();
-              const timeSpanYears = timeSpanMs / (1000 * 60 * 60 * 24 * 365.25);
-
-              if (timeSpanYears > 0) {
-                const thicknessLoss = prevThick - currThick;
-                const corrosionRateMpy = (thicknessLoss / timeSpanYears) * 1000; // Convert to mils per year
-                corrosionRate = corrosionRateMpy.toFixed(4);
-              }
-            }
-
-            // Update the existing record
-            await db.execute(sql`
-              UPDATE tmlReadings
-              SET
-                previousThickness = ${previousThickness},
-                previousInspectionDate = ${previousDate},
-                currentThickness = ${newThickness},
-                tActual = ${newThickness},
-                currentInspectionDate = ${newInspectionDate},
-                corrosionRate = ${corrosionRate},
-                tml1 = ${newThickness}
-              WHERE id = ${existingRecord.id}
-            `);
-            updatedCount++;
-          } else {
-            // Create new TML record
-            const record = {
-              id: nanoid(),
-              inspectionId: input.targetInspectionId,
-              cmlNumber,
-              componentType,
-              location,
-              service: null as string | null,
-              tml1: newThickness,
-              tml2: null as string | null,
-              tml3: null as string | null,
-              tml4: null as string | null,
-              tActual: newThickness,
-              nominalThickness: null as string | null,
-              previousThickness: measurement.previousThickness?.toString() || null,
-              previousInspectionDate: existingInspection.inspectionDate || null,
-              currentInspectionDate: newInspectionDate,
-              loss: null as string | null,
-              lossPercent: null as string | null,
-              corrosionRate: null as string | null,
-              status: "good" as const,
-              tmlId: measurement.cml || null,
-              component: measurement.component || null,
-              currentThickness: newThickness,
-            };
-
-            await db.execute(sql`
-              INSERT INTO tmlReadings (
-                id, inspectionId, cmlNumber, componentType, location, service,
-                tml1, tml2, tml3, tml4, tActual, nominalThickness, previousThickness,
-                previousInspectionDate, currentInspectionDate, loss, lossPercent, corrosionRate,
-                status, tmlId, component, currentThickness
-              ) VALUES (
-                ${record.id}, ${record.inspectionId}, ${record.cmlNumber}, ${record.componentType}, ${record.location}, ${record.service},
-                ${record.tml1}, ${record.tml2}, ${record.tml3}, ${record.tml4}, ${record.tActual}, ${record.nominalThickness}, ${record.previousThickness},
-                ${record.previousInspectionDate}, ${record.currentInspectionDate}, ${record.loss}, ${record.lossPercent}, ${record.corrosionRate},
-                ${record.status}, ${record.tmlId}, ${record.component}, ${record.currentThickness}
-              )
-            `);
-            addedCount++;
-          }
-        }
-
-        return {
-          success: true,
-          inspectionId: input.targetInspectionId,
-          addedMeasurements: addedCount,
-          updatedMeasurements: updatedCount,
-          message: `Successfully processed ${addedCount + updatedCount} thickness measurements (${updatedCount} updated, ${addedCount} new)`,
-        };
-      } catch (error) {
-        logger.error("[PDF Import] UT upload failed:", error);
-        throw new Error(`Failed to upload UT results: ${error instanceof Error ? error.message : "Unknown error"}`);
-      }
-    }),
 });
+

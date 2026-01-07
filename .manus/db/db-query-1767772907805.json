@@ -1,0 +1,60 @@
+{
+  "query": "SELECT id, inspectionId, nozzleNumber, nozzleDescription, nominalSize, actualThickness, minimumRequired, acceptable FROM nozzleEvaluations LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, inspectionId, nozzleNumber, nozzleDescription, nominalSize, actualThickness, minimumRequired, acceptable FROM nozzleEvaluations LIMIT 5",
+  "rows": [
+    {
+      "id": "_OLA-k6tDcI_rO1U2HnZt",
+      "inspectionId": "3BDUVGwLP3eqZmlWT8uGH",
+      "nozzleNumber": "N9",
+      "nozzleDescription": "Instrument",
+      "nominalSize": "1\"",
+      "actualThickness": "0.1320",
+      "minimumRequired": "0.1330",
+      "acceptable": "1"
+    },
+    {
+      "id": "-dMhALXmsVYkP7hXZntQh",
+      "inspectionId": "-hVQHlzdjeyw4lqUsqKry",
+      "nozzleNumber": "6",
+      "nozzleDescription": "Reactor Feed",
+      "nominalSize": "2",
+      "actualThickness": "0.1600",
+      "minimumRequired": "0.1540",
+      "acceptable": "1"
+    },
+    {
+      "id": "0cC3f7zljS7jbT7EPs1Dh",
+      "inspectionId": "-hVQHlzdjeyw4lqUsqKry",
+      "nozzleNumber": "N2",
+      "nozzleDescription": "SS A...",
+      "nominalSize": "3",
+      "actualThickness": "0.1950",
+      "minimumRequired": "0.1890",
+      "acceptable": "1"
+    },
+    {
+      "id": "0kcbEyteS5u37ZAK4vwsA",
+      "inspectionId": "oqQ5tVf2R7trnfIZJzHUQ",
+      "nozzleNumber": "4",
+      "nozzleDescription": "Sight Gauge",
+      "nominalSize": "1",
+      "actualThickness": "NULL",
+      "minimumRequired": "NULL",
+      "acceptable": "1"
+    },
+    {
+      "id": "1DGI5Bwm8Oey_0Qb8-uwm",
+      "inspectionId": "_aIiSlYlZnJcqYyYw7r4R",
+      "nozzleNumber": "12",
+      "nozzleDescription": "Gauge",
+      "nominalSize": "1",
+      "actualThickness": "NULL",
+      "minimumRequired": "NULL",
+      "acceptable": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tinspectionId\tnozzleNumber\tnozzleDescription\tnominalSize\tactualThickness\tminimumRequired\tacceptable\n_OLA-k6tDcI_rO1U2HnZt\t3BDUVGwLP3eqZmlWT8uGH\tN9\tInstrument\t1\"\t0.1320\t0.1330\t1\n-dMhALXmsVYkP7hXZntQh\t-hVQHlzdjeyw4lqUsqKry\t6\tReactor Feed\t2\t0.1600\t0.1540\t1\n0cC3f7zljS7jbT7EPs1Dh\t-hVQHlzdjeyw4lqUsqKry\tN2\tSS A...\t3\t0.1950\t0.1890\t1\n0kcbEyteS5u37ZAK4vwsA\toqQ5tVf2R7trnfIZJzHUQ\t4\tSight Gauge\t1\tNULL\tNULL\t1\n1DGI5Bwm8Oey_0Qb8-uwm\t_aIiSlYlZnJcqYyYw7r4R\t12\tGauge\t1\tNULL\tNULL\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1622
+}
