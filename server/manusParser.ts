@@ -51,22 +51,29 @@ export async function parseWithManusAPI(
     const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
     const pdfDocument = await loadingTask.promise;
     
-    // Extract text from all pages
+    // Extract text from all pages - store per-page text for hybrid parser
     const numPages = pdfDocument.numPages;
     let fullText = '';
+    const pages: Array<{ pageNumber: number; text: string }> = [];
     
     for (let i = 1; i <= numPages; i++) {
       const page = await pdfDocument.getPage(i);
       const textContent = await page.getTextContent();
       const pageText = textContent.items.map((item: any) => item.str).join(' ');
       fullText += pageText + '\n';
+      
+      // Store per-page text for hybrid parser analysis
+      pages.push({
+        pageNumber: i,
+        text: pageText,
+      });
     }
     
     logger.info("[Manus Parser] Text extraction successful, pages:", numPages, "length:", fullText.length);
 
     return {
       text: fullText,
-      pages: [],
+      pages: pages,
       metadata: {
         numPages: numPages,
       },
