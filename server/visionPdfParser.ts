@@ -98,6 +98,31 @@ interface VisionParsedData {
     notes?: string;
   }>;
   
+  // Inspection Info (alternative structure)
+  inspectionInfo?: {
+    reportNumber?: string;
+    reportDate?: string;
+    inspectionDate?: string;
+    inspectionType?: string;
+    inspectorName?: string;
+    inspectorCertification?: string;
+    clientName?: string;
+    clientLocation?: string;
+  };
+  
+  // Table A - Component Calculations
+  tableA?: {
+    components?: Array<{
+      component?: string;
+      nominalThickness?: number;
+      actualThickness?: number;
+      minimumRequired?: number;
+      calculatedMAWP?: number;
+      corrosionRate?: number;
+      remainingLife?: number;
+    }>;
+  };
+  
   // Nozzle Evaluations
   nozzles?: Array<{
     nozzleNumber?: string;

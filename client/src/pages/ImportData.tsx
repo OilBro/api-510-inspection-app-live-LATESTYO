@@ -1,11 +1,11 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
-import { Settings, ArrowLeft, Upload, FileText, FileSpreadsheet, CheckCircle2, AlertCircle, X, Download } from "lucide-react";
+import { Settings, ArrowLeft, Upload, FileText, FileSpreadsheet, CheckCircle2, AlertCircle, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,7 +20,7 @@ export default function ImportData() {
   const [parseResult, setParseResult] = useState<any>(null);
   const [showChecklistReview, setShowChecklistReview] = useState(false);
   const [checklistItems, setChecklistItems] = useState<any[]>([]);
-  const [parserType, setParserType] = useState<"manus" | "vision" | "documentai">("manus");
+  const [parserType, setParserType] = useState<"docupipe" | "manus" | "vision" | "hybrid">("hybrid");
   const [existingInspectionId, setExistingInspectionId] = useState<string | null>(null);
   const [continueMode, setContinueMode] = useState(false);
   
@@ -71,7 +71,6 @@ export default function ImportData() {
             fileName: selectedFile.name,
             fileType,
             parserType, // Pass selected parser type
-
             inspectionId: existingInspectionId || undefined, // Append to existing if selected
           });
 
@@ -151,19 +150,19 @@ export default function ImportData() {
             <CardContent>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-start">
-                  <span className="text-primary mr-2">✓</span>
+                  <span className="text-primary mr-2">âœ“</span>
                   <span>Automatically extracts vessel identification</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-primary mr-2">✓</span>
+                  <span className="text-primary mr-2">âœ“</span>
                   <span>Parses design specifications</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-primary mr-2">✓</span>
+                  <span className="text-primary mr-2">âœ“</span>
                   <span>Extracts thickness measurement data</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-primary mr-2">✓</span>
+                  <span className="text-primary mr-2">âœ“</span>
                   <span>AI-powered intelligent parsing</span>
                 </li>
               </ul>
@@ -179,32 +178,22 @@ export default function ImportData() {
             <CardContent>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-start">
-                  <span className="text-primary mr-2">✓</span>
+                  <span className="text-primary mr-2">âœ“</span>
                   <span>Supports .xlsx and .xls formats</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-primary mr-2">✓</span>
+                  <span className="text-primary mr-2">âœ“</span>
                   <span>Multi-sheet workbook processing</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-primary mr-2">✓</span>
+                  <span className="text-primary mr-2">âœ“</span>
                   <span>Bulk TML reading import</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-primary mr-2">✓</span>
+                  <span className="text-primary mr-2">âœ“</span>
                   <span>Flexible column header matching</span>
                 </li>
               </ul>
-              <div className="mt-4 pt-4 border-t">
-                <a
-                  href="/api510_import_template.xlsx"
-                  download="api510_import_template.xlsx"
-                  className="inline-flex items-center text-sm text-primary hover:underline"
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  Download Excel Template
-                </a>
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -217,21 +206,18 @@ export default function ImportData() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="parser">PDF Parser (for PDF files only)</Label>
-              <Select value={parserType} onValueChange={(value: "manus" | "vision" | "documentai") => setParserType(value)}>
+              <Select value={parserType} onValueChange={(value: "docupipe" | "manus" | "vision" | "hybrid") => setParserType(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="manus">Manus AI Parser (Recommended)</SelectItem>
+                  <SelectItem value="hybrid">Hybrid Auto-Detect (Recommended)</SelectItem>
+                  <SelectItem value="docupipe">Docupipe API</SelectItem>
+                  <SelectItem value="manus">Manus Built-in API</SelectItem>
                   <SelectItem value="vision">Vision Parser (For Scanned PDFs)</SelectItem>
-                  <SelectItem value="documentai">Google Document AI + Manus AI</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500">
-                {parserType === "manus" && "Manus AI Parser is recommended for most PDFs."}
-                {parserType === "vision" && "Vision Parser uses AI vision to extract data from scanned documents."}
-                {parserType === "documentai" && "Uses Google Cloud Document AI for high-quality OCR, then Manus AI for data extraction."}
-              </p>
+              <p className="text-xs text-gray-500">Hybrid Auto-Detect handles mixed text/scanned PDFs automatically. Use Vision Parser for fully scanned documents.</p>
             </div>
 
             <div className="space-y-2">
@@ -291,7 +277,7 @@ export default function ImportData() {
                   </Button>
                 </div>
                 <p className="text-xs text-green-600">
-                  💡 You can upload more files to add additional data to this inspection
+                  ðŸ’¡ You can upload more files to add additional data to this inspection
                 </p>
               </div>
             )}
@@ -469,4 +455,8 @@ export default function ImportData() {
     </div>
   );
 }
+
+
+
+
 
