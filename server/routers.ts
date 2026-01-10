@@ -592,6 +592,343 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Preview extraction without saving to database
+    previewExtraction: protectedProcedure
+      .input(z.object({
+        fileData: z.string(), // Base64 encoded file
+        fileName: z.string(),
+        fileType: z.enum(["pdf", "excel"]),
+        parserType: z.enum(["docupipe", "manus", "vision", "hybrid"]).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        try {
+          logger.info(`[Preview Extraction] Starting preview for ${input.fileName}`);
+          
+          // Decode base64 file data
+          const buffer = Buffer.from(input.fileData, "base64");
+
+          // Parse based on file type
+          let parsedData;
+          if (input.fileType === "excel") {
+            parsedData = await parseExcelFile(buffer);
+          } else {
+            parsedData = await parsePDFFile(buffer, input.parserType);
+          }
+
+          // Helper function to parse numeric values for display
+          const parseNumeric = (value: any): string | null => {
+            if (value === null || value === undefined || value === '') return null;
+            const str = String(value).trim();
+            const match = str.match(/([0-9]+\.?[0-9]*)/);
+            return match ? match[1] : null;
+          };
+
+          // Structure the preview data
+          const previewData = {
+            vesselInfo: {
+              vesselTagNumber: parsedData.vesselTagNumber || '',
+              vesselName: parsedData.vesselName || '',
+              manufacturer: parsedData.manufacturer || '',
+              serialNumber: parsedData.serialNumber || '',
+              yearBuilt: parsedData.yearBuilt ? String(parsedData.yearBuilt) : '',
+              nbNumber: parsedData.nbNumber || '',
+              designPressure: parseNumeric(parsedData.designPressure) || '',
+              designTemperature: parseNumeric(parsedData.designTemperature) || '',
+              operatingPressure: parseNumeric(parsedData.operatingPressure) || '',
+              operatingTemperature: parseNumeric(parsedData.operatingTemperature) || '',
+              mdmt: parsedData.mdmt || '',
+              materialSpec: parsedData.materialSpec || '',
+              allowableStress: parseNumeric(parsedData.allowableStress) || '',
+              jointEfficiency: parsedData.jointEfficiency || '',
+              insideDiameter: parseNumeric(parsedData.insideDiameter) || '',
+              overallLength: parseNumeric(parsedData.overallLength) || '',
+              headType: parsedData.headType || '',
+              vesselType: parsedData.vesselType || '',
+              vesselConfiguration: parsedData.vesselConfiguration || '',
+              constructionCode: parsedData.constructionCode || '',
+              product: parsedData.product || '',
+              insulationType: parsedData.insulationType || '',
+              corrosionAllowance: parseNumeric(parsedData.corrosionAllowance) || '',
+            },
+            reportInfo: {
+              reportNumber: parsedData.reportNumber || '',
+              reportDate: parsedData.reportDate || '',
+              inspectionDate: parsedData.inspectionDate || '',
+              inspectionType: parsedData.inspectionType || '',
+              inspectorName: parsedData.inspectorName || '',
+              inspectorCert: parsedData.inspectorCert || '',
+              clientName: parsedData.clientName || '',
+              clientLocation: parsedData.clientLocation || '',
+            },
+            tmlReadings: (parsedData.tmlReadings || []).map((tml: any, idx: number) => ({
+              id: `tml-${idx}`,
+              cmlNumber: tml.cmlNumber || tml.cml || '',
+              tmlId: tml.tmlId || '',
+              location: tml.location || '',
+              component: tml.component || '',
+              componentType: tml.componentType || '',
+              currentThickness: tml.currentThickness || tml.tActual || '',
+              previousThickness: tml.previousThickness || '',
+              nominalThickness: tml.nominalThickness || '',
+              angle: tml.angle || '',
+              readingType: tml.readingType || '',
+            })),
+            nozzles: (parsedData.nozzles || []).map((noz: any, idx: number) => ({
+              id: `noz-${idx}`,
+              nozzleNumber: noz.nozzleNumber || '',
+              nozzleDescription: noz.nozzleDescription || noz.service || '',
+              nominalSize: noz.nominalSize || '',
+              schedule: noz.schedule || '',
+              actualThickness: noz.actualThickness || '',
+              pipeNominalThickness: noz.pipeNominalThickness || '',
+              minimumRequired: noz.minimumRequired || '',
+              acceptable: noz.acceptable !== undefined ? noz.acceptable : true,
+              notes: noz.notes || '',
+            })),
+            checklistItems: (parsedData.checklistItems || []).map((item: any, idx: number) => ({
+              id: `chk-${idx}`,
+              category: item.category || '',
+              itemNumber: item.itemNumber || '',
+              itemText: item.itemText || item.description || '',
+              checked: item.checked || false,
+              notes: item.notes || '',
+            })),
+            narratives: {
+              executiveSummary: parsedData.executiveSummary || '',
+              inspectionResults: parsedData.inspectionResults || '',
+              recommendations: parsedData.recommendations || '',
+            },
+            tableA: parsedData.tableA || null,
+            rawParsedData: parsedData, // Keep raw data for reference
+          };
+
+          // Count extracted items for summary
+          const extractionSummary = {
+            hasVesselInfo: !!previewData.vesselInfo.vesselTagNumber,
+            vesselFieldsCount: Object.values(previewData.vesselInfo).filter(v => v && v !== '').length,
+            tmlReadingsCount: previewData.tmlReadings.length,
+            nozzlesCount: previewData.nozzles.length,
+            checklistItemsCount: previewData.checklistItems.length,
+            hasNarratives: !!(previewData.narratives.executiveSummary || previewData.narratives.inspectionResults),
+          };
+
+          logger.info(`[Preview Extraction] Complete:`, extractionSummary);
+
+          return {
+            success: true,
+            preview: previewData,
+            summary: extractionSummary,
+            parserUsed: input.parserType || 'manus',
+          };
+        } catch (error) {
+          logger.error('[Preview Extraction] Error:', error);
+          throw new Error(`Failed to extract data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }),
+
+    // Confirm and save previewed extraction
+    confirmExtraction: protectedProcedure
+      .input(z.object({
+        vesselInfo: z.object({
+          vesselTagNumber: z.string(),
+          vesselName: z.string().optional(),
+          manufacturer: z.string().optional(),
+          serialNumber: z.string().optional(),
+          yearBuilt: z.string().optional(),
+          nbNumber: z.string().optional(),
+          designPressure: z.string().optional(),
+          designTemperature: z.string().optional(),
+          operatingPressure: z.string().optional(),
+          operatingTemperature: z.string().optional(),
+          mdmt: z.string().optional(),
+          materialSpec: z.string().optional(),
+          allowableStress: z.string().optional(),
+          jointEfficiency: z.string().optional(),
+          insideDiameter: z.string().optional(),
+          overallLength: z.string().optional(),
+          headType: z.string().optional(),
+          vesselType: z.string().optional(),
+          vesselConfiguration: z.string().optional(),
+          constructionCode: z.string().optional(),
+          product: z.string().optional(),
+          insulationType: z.string().optional(),
+          corrosionAllowance: z.string().optional(),
+        }),
+        reportInfo: z.object({
+          reportNumber: z.string().optional(),
+          reportDate: z.string().optional(),
+          inspectionDate: z.string().optional(),
+          inspectionType: z.string().optional(),
+          inspectorName: z.string().optional(),
+          inspectorCert: z.string().optional(),
+          clientName: z.string().optional(),
+          clientLocation: z.string().optional(),
+        }),
+        tmlReadings: z.array(z.object({
+          id: z.string(),
+          cmlNumber: z.string(),
+          tmlId: z.string().optional(),
+          location: z.string().optional(),
+          component: z.string().optional(),
+          componentType: z.string().optional(),
+          currentThickness: z.string().optional(),
+          previousThickness: z.string().optional(),
+          nominalThickness: z.string().optional(),
+          angle: z.string().optional(),
+          readingType: z.string().optional(),
+        })),
+        nozzles: z.array(z.object({
+          id: z.string(),
+          nozzleNumber: z.string(),
+          nozzleDescription: z.string().optional(),
+          nominalSize: z.string().optional(),
+          schedule: z.string().optional(),
+          actualThickness: z.string().optional(),
+          pipeNominalThickness: z.string().optional(),
+          minimumRequired: z.string().optional(),
+          acceptable: z.boolean().optional(),
+          notes: z.string().optional(),
+        })),
+        inspectionId: z.string().optional(), // Optional: append to existing
+      }))
+      .mutation(async ({ ctx, input }) => {
+        try {
+          logger.info(`[Confirm Extraction] Saving confirmed data for vessel: ${input.vesselInfo.vesselTagNumber}`);
+
+          // Helper to parse numeric strings
+          const parseNum = (val: string | undefined): string | null => {
+            if (!val || val === '') return null;
+            return val;
+          };
+          const parseIntVal = (val: string | undefined): number | null => {
+            if (!val || val === '') return null;
+            const num = Number(val);
+            return isNaN(num) ? null : Math.floor(num);
+          };
+
+          // Get or create inspection
+          let inspection: any;
+          let isNewInspection = false;
+
+          if (input.inspectionId) {
+            inspection = await db.getInspection(input.inspectionId);
+            if (!inspection || inspection.userId !== ctx.user.id) {
+              throw new Error('Inspection not found or unauthorized');
+            }
+          } else {
+            // Check for existing inspection with same vessel tag
+            const userInspections = await db.getInspections(ctx.user.id);
+            const existing = userInspections.find(
+              (insp: any) => insp.vesselTagNumber === input.vesselInfo.vesselTagNumber
+            );
+            
+            if (existing) {
+              inspection = existing;
+            } else {
+              isNewInspection = true;
+              inspection = {
+                id: nanoid(),
+                userId: ctx.user.id,
+                vesselTagNumber: input.vesselInfo.vesselTagNumber || `IMPORT-${Date.now()}`,
+                status: 'draft' as const,
+              };
+            }
+          }
+
+          // Update inspection with vessel info
+          const vi = input.vesselInfo;
+          if (vi.vesselName) inspection.vesselName = vi.vesselName.substring(0, 500);
+          if (vi.manufacturer) inspection.manufacturer = vi.manufacturer.substring(0, 500);
+          if (vi.yearBuilt) inspection.yearBuilt = parseIntVal(vi.yearBuilt);
+          if (vi.designPressure) inspection.designPressure = parseNum(vi.designPressure);
+          if (vi.designTemperature) inspection.designTemperature = parseNum(vi.designTemperature);
+          if (vi.operatingPressure) inspection.operatingPressure = parseNum(vi.operatingPressure);
+          if (vi.materialSpec) inspection.materialSpec = vi.materialSpec.substring(0, 255);
+          if (vi.vesselType) inspection.vesselType = vi.vesselType.substring(0, 255);
+          if (vi.insideDiameter) inspection.insideDiameter = parseNum(vi.insideDiameter);
+          if (vi.overallLength) inspection.overallLength = parseNum(vi.overallLength);
+          if (vi.headType) inspection.headType = vi.headType.substring(0, 255);
+          if (vi.vesselConfiguration) inspection.vesselConfiguration = vi.vesselConfiguration.substring(0, 255);
+          if (vi.constructionCode) inspection.constructionCode = vi.constructionCode.substring(0, 255);
+          if (vi.product) inspection.product = vi.product.substring(0, 255);
+          if (vi.mdmt) inspection.mdmt = vi.mdmt.substring(0, 50);
+          if (vi.allowableStress) inspection.allowableStress = parseNum(vi.allowableStress);
+          if (vi.jointEfficiency) inspection.jointEfficiency = vi.jointEfficiency.substring(0, 50);
+          if (vi.corrosionAllowance) inspection.corrosionAllowance = parseNum(vi.corrosionAllowance);
+          if (vi.insulationType) inspection.insulationType = vi.insulationType.substring(0, 255);
+          if (vi.nbNumber) inspection.nbNumber = vi.nbNumber.substring(0, 100);
+          if (vi.serialNumber) inspection.serialNumber = vi.serialNumber.substring(0, 100);
+
+          // Update report info
+          const ri = input.reportInfo;
+          if (ri.reportNumber) inspection.reportNumber = ri.reportNumber.substring(0, 100);
+          if (ri.inspectionDate) inspection.inspectionDate = ri.inspectionDate;
+          if (ri.inspectionType) inspection.inspectionType = ri.inspectionType.substring(0, 100);
+          if (ri.inspectorName) inspection.inspectorName = ri.inspectorName.substring(0, 255);
+          if (ri.clientName) inspection.clientName = ri.clientName.substring(0, 255);
+
+          // Save inspection
+          if (isNewInspection) {
+            await db.createInspection(inspection);
+          } else {
+            await db.updateInspection(inspection.id, inspection);
+          }
+
+          // Save TML readings
+          for (const tml of input.tmlReadings) {
+            if (!tml.cmlNumber && !tml.currentThickness) continue;
+            
+            await db.createTmlReading({
+              id: nanoid(),
+              inspectionId: inspection.id,
+              cmlNumber: (tml.cmlNumber || '').substring(0, 50),
+              tmlId: (tml.tmlId || '').substring(0, 50),
+              location: (tml.location || '').substring(0, 255),
+              component: (tml.component || '').substring(0, 255),
+              componentType: (tml.componentType || '').substring(0, 100),
+              currentThickness: tml.currentThickness || null,
+              previousThickness: tml.previousThickness || null,
+              nominalThickness: tml.nominalThickness || null,
+              readingType: (tml.readingType || '').substring(0, 50),
+              status: 'good',
+            });
+          }
+
+          // Save nozzles
+          for (const noz of input.nozzles) {
+            if (!noz.nozzleNumber) continue;
+            
+            await db.createNozzleEvaluation({
+              id: nanoid(),
+              inspectionId: inspection.id,
+              nozzleNumber: noz.nozzleNumber.substring(0, 50),
+              nozzleDescription: (noz.nozzleDescription || '').substring(0, 255),
+              nominalSize: (noz.nominalSize || '').substring(0, 50),
+              schedule: (noz.schedule || '').substring(0, 50),
+              actualThickness: noz.actualThickness || null,
+              pipeNominalThickness: noz.pipeNominalThickness || null,
+              minimumRequired: noz.minimumRequired || null,
+              acceptable: noz.acceptable ?? true,
+              notes: (noz.notes || '').substring(0, 1000),
+            });
+          }
+
+          logger.info(`[Confirm Extraction] Saved inspection ${inspection.id} with ${input.tmlReadings.length} TML readings and ${input.nozzles.length} nozzles`);
+
+          return {
+            success: true,
+            inspectionId: inspection.id,
+            isNewInspection,
+            message: isNewInspection 
+              ? 'New inspection created successfully' 
+              : 'Data added to existing inspection',
+          };
+        } catch (error) {
+          logger.error('[Confirm Extraction] Error:', error);
+          throw new Error(`Failed to save data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }),
+
     // Parse and import file
     parseFile: protectedProcedure
       .input(z.object({

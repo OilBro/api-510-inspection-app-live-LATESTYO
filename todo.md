@@ -1642,3 +1642,14 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
   - Verification against hand calculations
   - Real-world test cases from PDF data
 - [x] All 146 tests passing
+
+
+## Extraction Preview Feature
+- [x] Create previewExtraction backend procedure (extract without saving)
+- [x] Build ExtractionPreview component with editable fields
+- [x] Add vessel info editing in preview
+- [x] Add TML readings editing in preview
+- [x] Add nozzle data editing in preview
+- [x] Add confirm/cancel/edit actions
+- [x] Update ImportData page to use preview flow
+- [x] Test complete preview workflow (14 tests passing)
