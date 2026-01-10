@@ -1653,3 +1653,8 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add confirm/cancel/edit actions
 - [x] Update ImportData page to use preview flow
 - [x] Test complete preview workflow (14 tests passing)
+
+
+## Import Bug Fix (User Reported)
+- [x] Fix "unexpected number" error in hybrid PDF import - converted numeric values to strings
+- [ ] Test import with real PDF file
