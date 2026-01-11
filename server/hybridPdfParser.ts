@@ -13,25 +13,53 @@ export async function parseWithHybrid(
 
   try {
     // Step 1: Extract text from all pages and analyze each
-    const parseResult = await parseWithManusAPI(fileBuffer, filename);
-    const pages = parseResult.pages || [];
+    let parseResult: any;
+    try {
+      parseResult = await parseWithManusAPI(fileBuffer, filename);
+    } catch (error) {
+      logger.error('[Hybrid Parser] Manus API failed, falling back to standard parser:', error);
+      return await parseAndStandardizeWithManus(fileBuffer, filename);
+    }
+
+    // Validate parse result structure
+    if (!parseResult || typeof parseResult !== 'object') {
+      logger.warn('[Hybrid Parser] Invalid parse result, using standard parser');
+      return await parseAndStandardizeWithManus(fileBuffer, filename);
+    }
+
+    const pages = Array.isArray(parseResult.pages) ? parseResult.pages : [];
     const totalPages = parseResult.metadata?.numPages || pages.length;
 
+    if (pages.length === 0) {
+      logger.warn('[Hybrid Parser] No pages extracted, falling back to standard parser');
+      return await parseAndStandardizeWithManus(fileBuffer, filename);
+    }
+
     // Step 2: Identify which pages are scanned vs text-based
-    const TEXT_THRESHOLD = 100; // chars per page minimum
+    const TEXT_THRESHOLD = 200; // chars per page minimum (increased for better detection)
     const scannedPageNumbers: number[] = [];
     const textPageNumbers: number[] = [];
     let combinedText = '';
 
     for (let i = 0; i < pages.length; i++) {
-      const pageText = pages[i].text.trim();
+      const page = pages[i];
+      
+      // Validate page structure
+      if (!page || typeof page !== 'object') {
+        logger.warn(`[Hybrid Parser] Invalid page structure at index ${i}, skipping`);
+        continue;
+      }
+
+      const pageText = (page.text || '').toString().trim();
+      const pageNum = page.pageNumber || (i + 1);
+      
       if (pageText.length < TEXT_THRESHOLD) {
-        scannedPageNumbers.push(pages[i].pageNumber);
-        logger.info(`[Hybrid Parser] Page ${pages[i].pageNumber} detected as SCANNED (${pageText.length} chars)`);
+        scannedPageNumbers.push(pageNum);
+        logger.info(`[Hybrid Parser] Page ${pageNum} detected as SCANNED (${pageText.length} chars)`);
       } else {
-        textPageNumbers.push(pages[i].pageNumber);
+        textPageNumbers.push(pageNum);
         combinedText += pageText + '\n';
-        logger.info(`[Hybrid Parser] Page ${pages[i].pageNumber} detected as TEXT (${pageText.length} chars)`);
+        logger.info(`[Hybrid Parser] Page ${pageNum} detected as TEXT (${pageText.length} chars)`);
       }
     }
 
@@ -74,8 +102,15 @@ export async function parseWithHybrid(
 
     return merged;
   } catch (error) {
-    logger.error('[Hybrid Parser] Error:', error);
-    throw error;
+    logger.error('[Hybrid Parser] Fatal error in hybrid parser:', error);
+    logger.info('[Hybrid Parser] Attempting fallback to standard parser');
+    
+    try {
+      return await parseAndStandardizeWithManus(fileBuffer, filename);
+    } catch (fallbackError) {
+      logger.error('[Hybrid Parser] Fallback parser also failed:', fallbackError);
+      throw error; // Throw original error
+    }
   }
 }
 
