@@ -862,7 +862,19 @@ export const appRouter = router({
           // Update report info
           const ri = input.reportInfo;
           if (ri.reportNumber) inspection.reportNumber = ri.reportNumber.substring(0, 100);
-          if (ri.inspectionDate) inspection.inspectionDate = ri.inspectionDate;
+          if (ri.inspectionDate && ri.inspectionDate.trim() !== '') {
+            // Convert string date to Date object for database
+            try {
+              const dateStr = ri.inspectionDate.trim();
+              // Handle various date formats
+              const parsed = new Date(dateStr);
+              if (!isNaN(parsed.getTime())) {
+                inspection.inspectionDate = parsed;
+              }
+            } catch (e) {
+              logger.warn('[Confirm Extraction] Could not parse inspection date:', ri.inspectionDate);
+            }
+          }
           if (ri.inspectionType) inspection.inspectionType = ri.inspectionType.substring(0, 100);
           if (ri.inspectorName) inspection.inspectorName = ri.inspectorName.substring(0, 255);
           if (ri.clientName) inspection.clientName = ri.clientName.substring(0, 255);
