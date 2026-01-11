@@ -1665,3 +1665,5 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 
 - [x] Fix 524 timeout error on previewExtraction (production) - added async background processing
 - [ ] Add missing icon-192.png for PWA manifest
+
+- [x] Fix confirmExtraction database insert error (Failed query: insert into inspections) - fixed parseNum to strip units from values like "-20 °F"

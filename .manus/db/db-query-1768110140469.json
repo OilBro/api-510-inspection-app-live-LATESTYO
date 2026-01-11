@@ -1,0 +1,21 @@
+{
+  "query": "SELECT \n  i.id, \n  i.vesselTagNumber, \n  i.vesselName, \n  i.status,\n  i.inspectionDate,\n  (SELECT COUNT(*) FROM tmlReadings WHERE inspectionId = i.id) as tml_count,\n  (SELECT COUNT(*) FROM nozzleEvaluations WHERE inspectionId = i.id) as nozzle_count,\n  (SELECT COUNT(*) FROM calculations WHERE inspectionId = i.id) as calc_count,\n  (SELECT COUNT(*) FROM externalInspections WHERE inspectionId = i.id) as ext_count\nFROM inspections i \nWHERE i.vesselTagNumber = '54-11-067'\nORDER BY i.createdAt DESC\nLIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT \n  i.id, \n  i.vesselTagNumber, \n  i.vesselName, \n  i.status,\n  i.inspectionDate,\n  (SELECT COUNT(*) FROM tmlReadings WHERE inspectionId = i.id) as tml_count,\n  (SELECT COUNT(*) FROM nozzleEvaluations WHERE inspectionId = i.id) as nozzle_count,\n  (SELECT COUNT(*) FROM calculations WHERE inspectionId = i.id) as calc_count,\n  (SELECT COUNT(*) FROM externalInspections WHERE inspectionId = i.id) as ext_count\nFROM inspections i \nWHERE i.vesselTagNumber = '54-11-067'\nORDER BY i.createdAt DESC\nLIMIT 1;",
+  "rows": [
+    {
+      "id": "insp_d6b8faa9d6fb4b48",
+      "vesselTagNumber": "54-11-067",
+      "vesselName": "CLEAN MTHYL Tank",
+      "status": "completed",
+      "inspectionDate": "2017-10-08 00:00:00",
+      "tml_count": "80",
+      "nozzle_count": "12",
+      "calc_count": "1",
+      "ext_count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tvesselTagNumber\tvesselName\tstatus\tinspectionDate\ttml_count\tnozzle_count\tcalc_count\text_count\ninsp_d6b8faa9d6fb4b48\t54-11-067\tCLEAN MTHYL Tank\tcompleted\t2017-10-08 00:00:00\t80\t12\t1\t1\n",
+  "stderr": "",
+  "execution_time_ms": 451
+}

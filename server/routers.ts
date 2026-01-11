@@ -878,15 +878,27 @@ export const appRouter = router({
         try {
           logger.info(`[Confirm Extraction] Saving confirmed data for vessel: ${input.vesselInfo.vesselTagNumber}`);
 
-          // Helper to parse numeric strings
+          // Helper to parse numeric strings and strip units
           const parseNum = (val: string | undefined): string | null => {
             if (!val || val === '') return null;
-            return val;
+            // Extract numeric value from string (handles "250", "-20 °F", "0.85", etc.)
+            const match = val.match(/^-?[\d.]+/);
+            if (match) {
+              const num = parseFloat(match[0]);
+              if (!isNaN(num)) return num.toString();
+            }
+            // If no numeric value found, return null
+            return null;
           };
           const parseIntVal = (val: string | undefined): number | null => {
             if (!val || val === '') return null;
-            const num = Number(val);
-            return isNaN(num) ? null : Math.floor(num);
+            // Extract numeric value from string
+            const match = val.match(/^-?[\d.]+/);
+            if (match) {
+              const num = parseFloat(match[0]);
+              if (!isNaN(num)) return Math.floor(num);
+            }
+            return null;
           };
 
           // Get or create inspection
@@ -934,9 +946,9 @@ export const appRouter = router({
           if (vi.vesselConfiguration) inspection.vesselConfiguration = vi.vesselConfiguration.substring(0, 255);
           if (vi.constructionCode) inspection.constructionCode = vi.constructionCode.substring(0, 255);
           if (vi.product) inspection.product = vi.product.substring(0, 255);
-          if (vi.mdmt) inspection.mdmt = vi.mdmt.substring(0, 50);
+          if (vi.mdmt) inspection.mdmt = parseNum(vi.mdmt);
           if (vi.allowableStress) inspection.allowableStress = parseNum(vi.allowableStress);
-          if (vi.jointEfficiency) inspection.jointEfficiency = vi.jointEfficiency.substring(0, 50);
+          if (vi.jointEfficiency) inspection.jointEfficiency = parseNum(vi.jointEfficiency);
           if (vi.corrosionAllowance) inspection.corrosionAllowance = parseNum(vi.corrosionAllowance);
           if (vi.insulationType) inspection.insulationType = vi.insulationType.substring(0, 255);
           if (vi.nbNumber) inspection.nbNumber = vi.nbNumber.substring(0, 100);

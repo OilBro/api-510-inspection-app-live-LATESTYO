@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, vesselTagNumber, vesselName, status, inspectionDate, designPressure, designTemperature, materialSpec, product, constructionCode FROM inspections WHERE vesselTagNumber = '54-11-067' ORDER BY createdAt DESC LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, vesselTagNumber, vesselName, status, inspectionDate, designPressure, designTemperature, materialSpec, product, constructionCode FROM inspections WHERE vesselTagNumber = '54-11-067' ORDER BY createdAt DESC LIMIT 1;",
+  "rows": [
+    {
+      "id": "insp_d6b8faa9d6fb4b48",
+      "vesselTagNumber": "54-11-067",
+      "vesselName": "CLEAN MTHYL Tank",
+      "status": "completed",
+      "inspectionDate": "2017-10-08 00:00:00",
+      "designPressure": "250.00",
+      "designTemperature": "200.00",
+      "materialSpec": "Stainless Steel",
+      "product": "METHYLCHLORIDE CLEAN",
+      "constructionCode": "ASME S8 D1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tvesselTagNumber\tvesselName\tstatus\tinspectionDate\tdesignPressure\tdesignTemperature\tmaterialSpec\tproduct\tconstructionCode\ninsp_d6b8faa9d6fb4b48\t54-11-067\tCLEAN MTHYL Tank\tcompleted\t2017-10-08 00:00:00\t250.00\t200.00\tStainless Steel\tMETHYLCHLORIDE CLEAN\tASME S8 D1\n",
+  "stderr": "",
+  "execution_time_ms": 390
+}
