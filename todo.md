@@ -1662,3 +1662,6 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Fix toISOString date handling error in confirmExtraction - convert string dates to Date objects
 
 - [x] Fix JSON parsing error in PDF extraction (Unterminated string) - added robust JSON recovery
+
+- [x] Fix 524 timeout error on previewExtraction (production) - added async background processing
+- [ ] Add missing icon-192.png for PWA manifest

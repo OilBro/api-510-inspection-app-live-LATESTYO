@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `extractionJobs` (\n  `id` varchar(64) NOT NULL,\n  `userId` int NOT NULL,\n  `status` enum('pending','processing','completed','failed') NOT NULL DEFAULT 'pending',\n  `progress` int NOT NULL DEFAULT 0,\n  `progressMessage` text,\n  `filename` varchar(255) NOT NULL,\n  `fileUrl` text NOT NULL,\n  `parserType` varchar(50) NOT NULL,\n  `extractedData` json,\n  `errorMessage` text,\n  `startedAt` timestamp NULL,\n  `completedAt` timestamp NULL,\n  `createdAt` timestamp DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute CREATE TABLE IF NOT EXISTS `extractionJobs` (\n  `id` varchar(64) NOT NULL,\n  `userId` int NOT NULL,\n  `status` enum('pending','processing','completed','failed') NOT NULL DEFAULT 'pending',\n  `progress` int NOT NULL DEFAULT 0,\n  `progressMessage` text,\n  `filename` varchar(255) NOT NULL,\n  `fileUrl` text NOT NULL,\n  `parserType` varchar(50) NOT NULL,\n  `extractedData` json,\n  `errorMessage` text,\n  `startedAt` timestamp NULL,\n  `completedAt` timestamp NULL,\n  `createdAt` timestamp DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1684
+}

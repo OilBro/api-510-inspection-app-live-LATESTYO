@@ -1,17 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
-import { Settings, ArrowLeft, Upload, FileText, FileSpreadsheet, CheckCircle2, AlertCircle, Eye } from "lucide-react";
+import { Settings, ArrowLeft, Upload, FileText, FileSpreadsheet, CheckCircle2, AlertCircle, Eye, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { APP_TITLE } from "@/const";
 import { toast } from "sonner";
 import ExtractionPreview from "@/components/ExtractionPreview";
+import { Progress } from "@/components/ui/progress";
 
-type ImportStep = "upload" | "preview" | "success";
+type ImportStep = "upload" | "extracting" | "preview" | "success";
 
 export default function ImportData() {
   const [, setLocation] = useLocation();
@@ -24,8 +25,66 @@ export default function ImportData() {
   const [savedInspectionId, setSavedInspectionId] = useState<string | null>(null);
   const [isNewInspection, setIsNewInspection] = useState(true);
   
-  const previewMutation = trpc.importedFiles.previewExtraction.useMutation();
+  // Async extraction state
+  const [extractionJobId, setExtractionJobId] = useState<string | null>(null);
+  const [extractionProgress, setExtractionProgress] = useState(0);
+  const [extractionMessage, setExtractionMessage] = useState("");
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const startJobMutation = trpc.importedFiles.startExtractionJob.useMutation();
   const confirmMutation = trpc.importedFiles.confirmExtraction.useMutation();
+  const utils = trpc.useUtils();
+
+  // Poll for job status
+  useEffect(() => {
+    if (extractionJobId && step === "extracting") {
+      const pollStatus = async () => {
+        try {
+          const status = await utils.importedFiles.getExtractionJobStatus.fetch({ jobId: extractionJobId });
+          
+          setExtractionProgress(status.progress || 0);
+          setExtractionMessage(status.progressMessage || "Processing...");
+          
+          if (status.status === "completed" && status.extractedData) {
+            // Stop polling
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+              pollingIntervalRef.current = null;
+            }
+            
+            const data = status.extractedData as any;
+            setPreviewData(data.preview);
+            setPreviewSummary(data.summary);
+            setStep("preview");
+            toast.success("Data extracted! Review and edit before saving.");
+          } else if (status.status === "failed") {
+            // Stop polling
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+              pollingIntervalRef.current = null;
+            }
+            
+            setStep("upload");
+            toast.error(`Extraction failed: ${status.errorMessage || "Unknown error"}`);
+          }
+        } catch (error) {
+          console.error("Error polling job status:", error);
+        }
+      };
+      
+      // Start polling every 2 seconds
+      pollingIntervalRef.current = setInterval(pollStatus, 2000);
+      // Also poll immediately
+      pollStatus();
+      
+      return () => {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      };
+    }
+  }, [extractionJobId, step, utils]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,23 +124,23 @@ export default function ImportData() {
         const fileType = selectedFile.name.endsWith(".pdf") ? "pdf" : "excel";
 
         try {
-          const result = await previewMutation.mutateAsync({
+          // Start async extraction job
+          const result = await startJobMutation.mutateAsync({
             fileData: base64Content,
             fileName: selectedFile.name,
             fileType,
             parserType,
           });
 
-          if (result.success) {
-            setPreviewData(result.preview);
-            setPreviewSummary(result.summary);
-            setStep("preview");
-            toast.success("Data extracted! Review and edit before saving.");
-          }
+          setExtractionJobId(result.jobId);
+          setExtractionProgress(0);
+          setExtractionMessage("Starting extraction...");
+          setStep("extracting");
+          setUploading(false);
+          
         } catch (error) {
-          console.error("Preview error:", error);
-          toast.error(`Failed to extract data: ${error instanceof Error ? error.message : "Unknown error"}`);
-        } finally {
+          console.error("Start job error:", error);
+          toast.error(`Failed to start extraction: ${error instanceof Error ? error.message : "Unknown error"}`);
           setUploading(false);
         }
       };
@@ -120,9 +179,15 @@ export default function ImportData() {
   };
 
   const handleCancel = () => {
+    // Stop any polling
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
     setStep("upload");
     setPreviewData(null);
     setPreviewSummary(null);
+    setExtractionJobId(null);
   };
 
   const handleReset = () => {
@@ -131,6 +196,7 @@ export default function ImportData() {
     setPreviewData(null);
     setPreviewSummary(null);
     setSavedInspectionId(null);
+    setExtractionJobId(null);
   };
 
   return (
@@ -168,9 +234,9 @@ export default function ImportData() {
               <span className="font-medium">Upload</span>
             </div>
             <div className="w-12 h-0.5 bg-muted" />
-            <div className={`flex items-center space-x-2 ${step === "preview" ? "text-primary" : "text-muted-foreground"}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === "preview" ? "bg-primary text-white" : step === "success" ? "bg-green-500 text-white" : "bg-muted"}`}>
-                {step === "success" ? <CheckCircle2 className="h-5 w-5" /> : "2"}
+            <div className={`flex items-center space-x-2 ${step === "extracting" || step === "preview" ? "text-primary" : "text-muted-foreground"}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === "extracting" ? "bg-primary text-white" : step === "preview" || step === "success" ? "bg-green-500 text-white" : "bg-muted"}`}>
+                {step === "preview" || step === "success" ? <CheckCircle2 className="h-5 w-5" /> : step === "extracting" ? <Loader2 className="h-5 w-5 animate-spin" /> : "2"}
               </div>
               <span className="font-medium">Review & Edit</span>
             </div>
@@ -183,6 +249,31 @@ export default function ImportData() {
             </div>
           </div>
         </div>
+
+        {/* Extracting Step */}
+        {step === "extracting" && (
+          <Card className="mb-8">
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center justify-center space-y-6">
+                <Loader2 className="h-16 w-16 text-primary animate-spin" />
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold mb-2">Extracting Data...</h3>
+                  <p className="text-muted-foreground mb-4">{extractionMessage}</p>
+                </div>
+                <div className="w-full max-w-md">
+                  <Progress value={extractionProgress} className="h-3" />
+                  <p className="text-center text-sm text-muted-foreground mt-2">{extractionProgress}% complete</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  This may take a few minutes for large documents. Please don't close this page.
+                </p>
+                <Button variant="outline" onClick={handleCancel}>
+                  Cancel
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Upload Step */}
         {step === "upload" && (
@@ -198,19 +289,15 @@ export default function ImportData() {
                   <ul className="space-y-2 text-sm text-gray-600">
                     <li className="flex items-start">
                       <span className="text-primary mr-2">✔</span>
-                      <span>Automatically extracts vessel identification</span>
+                      Extracts vessel info, TML readings, nozzles
                     </li>
                     <li className="flex items-start">
                       <span className="text-primary mr-2">✔</span>
-                      <span>Parses design specifications</span>
+                      AI-powered data recognition
                     </li>
                     <li className="flex items-start">
                       <span className="text-primary mr-2">✔</span>
-                      <span>Extracts thickness measurement data</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-primary mr-2">✔</span>
-                      <span>AI-powered intelligent parsing</span>
+                      Supports scanned and digital PDFs
                     </li>
                   </ul>
                 </CardContent>
@@ -220,25 +307,21 @@ export default function ImportData() {
                 <CardHeader>
                   <FileSpreadsheet className="h-10 w-10 text-green-600 mb-2" />
                   <CardTitle>Excel Import</CardTitle>
-                  <CardDescription>Upload inspection data from Excel spreadsheets</CardDescription>
+                  <CardDescription>Upload structured Excel spreadsheets</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2 text-sm text-gray-600">
                     <li className="flex items-start">
                       <span className="text-primary mr-2">✔</span>
-                      <span>Supports .xlsx and .xls formats</span>
+                      Imports TML readings from spreadsheets
                     </li>
                     <li className="flex items-start">
                       <span className="text-primary mr-2">✔</span>
-                      <span>Multi-sheet workbook processing</span>
+                      Supports .xlsx and .xls formats
                     </li>
                     <li className="flex items-start">
                       <span className="text-primary mr-2">✔</span>
-                      <span>Bulk TML reading import</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-primary mr-2">✔</span>
-                      <span>Flexible column header matching</span>
+                      Fast structured data import
                     </li>
                   </ul>
                 </CardContent>
@@ -247,89 +330,67 @@ export default function ImportData() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Upload File</CardTitle>
-                <CardDescription>Select a PDF or Excel file to extract and preview inspection data</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="h-5 w-5" />
+                  Upload File
+                </CardTitle>
+                <CardDescription>
+                  Select a PDF or Excel file to extract inspection data
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="parser">PDF Parser (for PDF files only)</Label>
-                  <Select value={parserType} onValueChange={(value: "docupipe" | "manus" | "vision" | "hybrid") => setParserType(value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="hybrid">Hybrid Auto-Detect (Recommended)</SelectItem>
-                      <SelectItem value="docupipe">Docupipe API</SelectItem>
-                      <SelectItem value="manus">Manus Built-in API</SelectItem>
-                      <SelectItem value="vision">Vision Parser (For Scanned PDFs)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500">Hybrid Auto-Detect handles mixed text/scanned PDFs automatically. Use Vision Parser for fully scanned documents.</p>
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="file">Select File</Label>
                   <Input
                     id="file"
                     type="file"
-                    accept=".pdf,.xlsx,.xls,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                    accept=".pdf,.xlsx,.xls"
                     onChange={handleFileSelect}
-                    disabled={uploading}
+                    className="cursor-pointer"
                   />
                   {selectedFile && (
-                    <p className="text-sm text-gray-600 mt-2">
-                      Selected: <span className="font-medium">{selectedFile.name}</span> ({(selectedFile.size / 1024).toFixed(2)} KB)
+                    <p className="text-sm text-muted-foreground">
+                      Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
                     </p>
                   )}
                 </div>
 
-                <Button
-                  onClick={handlePreview}
-                  disabled={!selectedFile || uploading}
-                  className="w-full"
-                  size="lg"
-                >
-                  <Eye className="mr-2 h-4 w-4" />
-                  {uploading ? "Extracting Data..." : "Extract & Preview"}
-                </Button>
-
-                {uploading && (
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center space-x-3">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                      <div>
-                        <p className="font-medium text-blue-900">Processing file...</p>
-                        <p className="text-sm text-blue-700">Extracting data with {parserType} parser</p>
-                      </div>
-                    </div>
+                {selectedFile?.name.endsWith(".pdf") && (
+                  <div className="space-y-2">
+                    <Label htmlFor="parser">Parser Type</Label>
+                    <Select value={parserType} onValueChange={(v: any) => setParserType(v)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select parser" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hybrid">Hybrid (Recommended)</SelectItem>
+                        <SelectItem value="manus">Manus AI Parser</SelectItem>
+                        <SelectItem value="vision">Vision Parser (for scanned)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Hybrid automatically detects and handles mixed text/scanned documents
+                    </p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
 
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Import Tips</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-start">
-                    <AlertCircle className="h-4 w-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Use Hybrid parser for mixed text/scanned PDFs - it auto-detects page types</span>
-                  </li>
-                  <li className="flex items-start">
-                    <AlertCircle className="h-4 w-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>You can edit all extracted data before saving to the database</span>
-                  </li>
-                  <li className="flex items-start">
-                    <AlertCircle className="h-4 w-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Missing fields can be added manually in the preview step</span>
-                  </li>
-                  <li className="flex items-start">
-                    <AlertCircle className="h-4 w-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Excel files should have clear column headers for vessel data and TML readings</span>
-                  </li>
-                </ul>
+                <Button 
+                  onClick={handlePreview} 
+                  disabled={!selectedFile || uploading}
+                  className="w-full"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Starting Extraction...
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Extract & Preview
+                    </>
+                  )}
+                </Button>
               </CardContent>
             </Card>
           </>
@@ -337,55 +398,36 @@ export default function ImportData() {
 
         {/* Preview Step */}
         {step === "preview" && previewData && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Review Extracted Data</CardTitle>
-              <CardDescription>
-                Review and edit the extracted data below. Click on any field to modify it before saving.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ExtractionPreview
-                preview={previewData}
-                summary={previewSummary}
-                parserUsed={parserType}
-                onConfirm={handleConfirm}
-                onCancel={handleCancel}
-                isConfirming={confirmMutation.isPending}
-              />
-            </CardContent>
-          </Card>
+          <ExtractionPreview
+            preview={previewData}
+            summary={previewSummary}
+            parserUsed={parserType}
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+            isConfirming={confirmMutation.isPending}
+          />
         )}
 
         {/* Success Step */}
         {step === "success" && (
           <Card>
-            <CardContent className="pt-8">
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="h-10 w-10 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    {isNewInspection ? "Inspection Created Successfully!" : "Data Added Successfully!"}
-                  </h3>
-                  <p className="text-gray-600 mt-1">
-                    {isNewInspection 
-                      ? "A new inspection record has been created with the imported data."
-                      : "The data has been added to the existing inspection record."}
-                  </p>
-                </div>
-                <div className="flex gap-3 justify-center pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={handleReset}
-                  >
-                    Import Another File
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <CheckCircle2 className="h-16 w-16 text-green-500" />
+                <h3 className="text-2xl font-bold">Import Successful!</h3>
+                <p className="text-muted-foreground text-center max-w-md">
+                  {isNewInspection 
+                    ? "A new inspection record has been created with the extracted data."
+                    : "The existing inspection record has been updated with the new data."}
+                </p>
+                <div className="flex gap-4 mt-4">
+                  <Button asChild>
+                    <Link href={`/inspection/${savedInspectionId}`}>
+                      View Inspection
+                    </Link>
                   </Button>
-                  <Button
-                    onClick={() => setLocation(`/inspections/${savedInspectionId}`)}
-                  >
-                    View Inspection
+                  <Button variant="outline" onClick={handleReset}>
+                    Import Another
                   </Button>
                 </div>
               </div>

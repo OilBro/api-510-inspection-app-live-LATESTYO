@@ -25,6 +25,9 @@ import * as fieldMappingDb from "./fieldMappingDb";
 import * as professionalReportDb from "./professionalReportDb";
 import { consolidateTMLReadings } from "./cmlDeduplication";
 import { organizeReadingsByComponent, getFullComponentName } from "./componentOrganizer";
+import { processExtractionJob } from "./extractionJobHandler";
+import { extractionJobs } from "../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * Calculate time span in years between two dates
@@ -592,7 +595,87 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // Preview extraction without saving to database
+    // Start async extraction job (returns immediately with job ID)
+    startExtractionJob: protectedProcedure
+      .input(z.object({
+        fileData: z.string(), // Base64 encoded file
+        fileName: z.string(),
+        fileType: z.enum(["pdf", "excel"]),
+        parserType: z.enum(["docupipe", "manus", "vision", "hybrid"]).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const jobId = nanoid();
+        const drizzleDb = await db.getDb();
+        
+        if (!drizzleDb) {
+          throw new Error("Database not available");
+        }
+
+        // Create job record
+        await drizzleDb.insert(extractionJobs).values({
+          id: jobId,
+          userId: ctx.user.id,
+          status: "pending",
+          progress: 0,
+          progressMessage: "Job queued",
+          filename: input.fileName,
+          fileUrl: "", // Not storing file URL for now
+          parserType: input.parserType || "manus",
+        });
+
+        logger.info(`[Extraction Job] Created job ${jobId} for ${input.fileName}`);
+
+        // Start processing in background (don't await)
+        const buffer = Buffer.from(input.fileData, "base64");
+        processExtractionJob(
+          jobId,
+          buffer,
+          input.fileName,
+          input.fileType,
+          input.parserType
+        ).catch(err => {
+          logger.error(`[Extraction Job ${jobId}] Background processing error:`, err);
+        });
+
+        return { jobId };
+      }),
+
+    // Check extraction job status
+    getExtractionJobStatus: protectedProcedure
+      .input(z.object({
+        jobId: z.string(),
+      }))
+      .query(async ({ ctx, input }) => {
+        const drizzleDb = await db.getDb();
+        
+        if (!drizzleDb) {
+          throw new Error("Database not available");
+        }
+
+        const [job] = await drizzleDb
+          .select()
+          .from(extractionJobs)
+          .where(eq(extractionJobs.id, input.jobId));
+
+        if (!job) {
+          throw new Error("Job not found");
+        }
+
+        // Verify user owns this job
+        if (job.userId !== ctx.user.id) {
+          throw new Error("Unauthorized");
+        }
+
+        return {
+          status: job.status,
+          progress: job.progress,
+          progressMessage: job.progressMessage,
+          extractedData: job.extractedData,
+          errorMessage: job.errorMessage,
+        };
+      }),
+
+    // Preview extraction without saving to database (legacy sync version)
     previewExtraction: protectedProcedure
       .input(z.object({
         fileData: z.string(), // Base64 encoded file

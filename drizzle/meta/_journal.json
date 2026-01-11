@@ -120,6 +120,13 @@
       "when": 1765761115793,
       "tag": "0016_sweet_shriek",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1768099347844,
+      "tag": "0017_clean_earthquake",
+      "breakpoints": true
     }
   ]
 }

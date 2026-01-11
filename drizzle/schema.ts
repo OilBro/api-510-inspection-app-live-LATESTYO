@@ -1,4 +1,4 @@
-import { mysqlEnum, mysqlTable, text, timestamp, varchar, int, boolean, decimal, date } from "drizzle-orm/mysql-core";
+import { mysqlEnum, mysqlTable, text, timestamp, varchar, int, boolean, decimal, date, json } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -782,3 +782,36 @@ export const materialStressValues = mysqlTable("materialStressValues", {
 
 export type MaterialStressValue = typeof materialStressValues.$inferSelect;
 export type InsertMaterialStressValue = typeof materialStressValues.$inferInsert;
+
+
+/**
+ * Extraction Jobs - Background PDF extraction processing
+ * Tracks async extraction jobs to avoid timeout issues
+ */
+export const extractionJobs = mysqlTable("extractionJobs", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  userId: int("userId").notNull(),
+  
+  // Job status
+  status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
+  progress: int("progress").default(0).notNull(), // 0-100 percentage
+  progressMessage: text("progressMessage"),
+  
+  // Input data
+  filename: varchar("filename", { length: 255 }).notNull(),
+  fileUrl: text("fileUrl").notNull(),
+  parserType: varchar("parserType", { length: 50 }).notNull(), // manus, vision, hybrid
+  
+  // Result data (stored as JSON)
+  extractedData: json("extractedData"),
+  errorMessage: text("errorMessage"),
+  
+  // Timing
+  startedAt: timestamp("startedAt"),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+});
+
+export type ExtractionJob = typeof extractionJobs.$inferSelect;
+export type InsertExtractionJob = typeof extractionJobs.$inferInsert;
