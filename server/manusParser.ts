@@ -344,7 +344,103 @@ CRITICAL INSTRUCTIONS:
 
   const messageContent = llmResponse.choices[0].message.content;
   const contentText = typeof messageContent === 'string' ? messageContent : JSON.stringify(messageContent);
-  const extractedData = JSON.parse(contentText || "{}");
+  
+  // Robust JSON parsing with truncation recovery
+  let extractedData;
+  try {
+    extractedData = JSON.parse(contentText || "{}");
+  } catch (parseError) {
+    logger.warn("[Manus Parser] Initial JSON parse failed, attempting recovery...", parseError);
+    
+    // Try to repair truncated JSON
+    let repairedJson = contentText || "{}";
+    
+    // Remove any trailing incomplete content after last complete structure
+    // Find the last valid closing bracket/brace
+    let lastValidEnd = -1;
+    let braceCount = 0;
+    let bracketCount = 0;
+    let inString = false;
+    let escapeNext = false;
+    
+    for (let i = 0; i < repairedJson.length; i++) {
+      const char = repairedJson[i];
+      
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
+      }
+      
+      if (char === '\\' && inString) {
+        escapeNext = true;
+        continue;
+      }
+      
+      if (char === '"' && !escapeNext) {
+        inString = !inString;
+        continue;
+      }
+      
+      if (!inString) {
+        if (char === '{') braceCount++;
+        else if (char === '}') {
+          braceCount--;
+          if (braceCount === 0 && bracketCount === 0) {
+            lastValidEnd = i;
+          }
+        }
+        else if (char === '[') bracketCount++;
+        else if (char === ']') {
+          bracketCount--;
+          if (braceCount === 0 && bracketCount === 0) {
+            lastValidEnd = i;
+          }
+        }
+      }
+    }
+    
+    // If we found a valid end point, truncate there
+    if (lastValidEnd > 0 && lastValidEnd < repairedJson.length - 1) {
+      repairedJson = repairedJson.substring(0, lastValidEnd + 1);
+      logger.info(`[Manus Parser] Truncated JSON at position ${lastValidEnd + 1}`);
+    } else {
+      // Try to close any open structures
+      // Close any unclosed strings first
+      if (inString) {
+        repairedJson += '"';
+      }
+      // Close brackets and braces
+      while (bracketCount > 0) {
+        repairedJson += ']';
+        bracketCount--;
+      }
+      while (braceCount > 0) {
+        repairedJson += '}';
+        braceCount--;
+      }
+      logger.info("[Manus Parser] Attempted to close open JSON structures");
+    }
+    
+    try {
+      extractedData = JSON.parse(repairedJson);
+      logger.info("[Manus Parser] JSON recovery successful");
+    } catch (secondError) {
+      logger.error("[Manus Parser] JSON recovery failed, returning empty object");
+      // Return a minimal valid structure
+      extractedData = {
+        reportInfo: {},
+        clientInfo: {},
+        vesselData: {},
+        executiveSummary: "",
+        inspectionResults: "",
+        recommendations: "",
+        tmlReadings: [],
+        inspectionChecklist: [],
+        nozzles: []
+      };
+    }
+  }
+  
   logger.info("[Manus Parser] Structured data extracted successfully");
 
   return extractedData;

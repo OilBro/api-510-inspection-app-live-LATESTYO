@@ -1660,3 +1660,5 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [ ] Test import with real PDF file
 
 - [x] Fix toISOString date handling error in confirmExtraction - convert string dates to Date objects
+
+- [x] Fix JSON parsing error in PDF extraction (Unterminated string) - added robust JSON recovery

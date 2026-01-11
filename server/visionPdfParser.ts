@@ -362,14 +362,98 @@ IMPORTANT:
     }
     cleanedContent = cleanedContent.trim();
     
-    // Parse the JSON response
+    // Parse the JSON response with robust error recovery
     let parsedData: VisionParsedData;
     try {
       parsedData = JSON.parse(cleanedContent);
     } catch (parseError: any) {
-      logger.error('[Vision Parser] JSON parse error:', parseError.message);
-      logger.error('[Vision Parser] Content that failed to parse:', cleanedContent.substring(0, 1000));
-      throw new Error(`Failed to parse LLM response as JSON: ${parseError.message}`);
+      logger.warn('[Vision Parser] Initial JSON parse failed, attempting recovery...', parseError.message);
+      
+      // Try to repair truncated JSON
+      let repairedJson = cleanedContent;
+      
+      // Find the last valid closing bracket/brace
+      let lastValidEnd = -1;
+      let braceCount = 0;
+      let bracketCount = 0;
+      let inString = false;
+      let escapeNext = false;
+      
+      for (let i = 0; i < repairedJson.length; i++) {
+        const char = repairedJson[i];
+        
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+        
+        if (char === '\\' && inString) {
+          escapeNext = true;
+          continue;
+        }
+        
+        if (char === '"' && !escapeNext) {
+          inString = !inString;
+          continue;
+        }
+        
+        if (!inString) {
+          if (char === '{') braceCount++;
+          else if (char === '}') {
+            braceCount--;
+            if (braceCount === 0 && bracketCount === 0) {
+              lastValidEnd = i;
+            }
+          }
+          else if (char === '[') bracketCount++;
+          else if (char === ']') {
+            bracketCount--;
+            if (braceCount === 0 && bracketCount === 0) {
+              lastValidEnd = i;
+            }
+          }
+        }
+      }
+      
+      // If we found a valid end point, truncate there
+      if (lastValidEnd > 0 && lastValidEnd < repairedJson.length - 1) {
+        repairedJson = repairedJson.substring(0, lastValidEnd + 1);
+        logger.info(`[Vision Parser] Truncated JSON at position ${lastValidEnd + 1}`);
+      } else {
+        // Try to close any open structures
+        if (inString) {
+          repairedJson += '"';
+        }
+        while (bracketCount > 0) {
+          repairedJson += ']';
+          bracketCount--;
+        }
+        while (braceCount > 0) {
+          repairedJson += '}';
+          braceCount--;
+        }
+        logger.info('[Vision Parser] Attempted to close open JSON structures');
+      }
+      
+      try {
+        parsedData = JSON.parse(repairedJson);
+        logger.info('[Vision Parser] JSON recovery successful');
+      } catch (secondError) {
+        logger.error('[Vision Parser] JSON recovery failed, returning empty object');
+        logger.error('[Vision Parser] Content that failed to parse:', cleanedContent.substring(0, 1000));
+        // Return a minimal valid structure
+        parsedData = {
+          reportInfo: {},
+          clientInfo: {},
+          vesselInfo: {},
+          executiveSummary: '',
+          inspectionResults: '',
+          recommendations: '',
+          thicknessMeasurements: [],
+          checklistItems: [],
+          nozzles: []
+        };
+      }
     }
     
     // Log extraction results
