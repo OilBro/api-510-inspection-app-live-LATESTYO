@@ -2,131 +2,200 @@
 
 ## Architecture Overview
 
-Full-stack TypeScript app: **Express + tRPC** backend, **React + Vite** frontend, **Drizzle ORM** with PostgreSQL.
+Full-stack TypeScript app: **Express + tRPC 11** backend, **React 19 + Vite** frontend, **Drizzle ORM** with **MySQL/TiDB**.
 
 ```
 client/src/
 ├── pages/              # Route components (Home, InspectionDetail, ValidationDashboard, etc.)
 ├── components/
-│   ├── ui/             # shadcn/ui primitives
+│   ├── ui/             # shadcn/ui primitives (Radix UI + Tailwind CSS 4)
 │   ├── inspection/     # Inspection tabs (VesselDataTab, CalculationsTab, ThicknessAnalysisTab)
 │   └── professionalReport/  # PDF report components
 ├── lib/
 │   ├── trpc.ts         # tRPC client (createTRPCReact<AppRouter>)
 │   └── thicknessCalculations.ts  # Client-side ASME formulas
 server/
-├── _core/              # Infrastructure (index.ts, trpc.ts, llm.ts, logger.ts)
+├── _core/              # Infrastructure (index.ts, trpc.ts, llm.ts, logger.ts, oauth.ts, sentry.ts)
 ├── routers.ts          # Main appRouter combining all sub-routers
-├── routers/pdfImportRouter.ts  # AI-powered PDF extraction
+├── routers/pdfImportRouter.ts  # AI-powered PDF extraction with LLM
+├── hybridPdfParser.ts  # Auto-detects text vs scanned PDF pages, merges results
+├── manusParser.ts      # Default text-based PDF parser (uses pdfjs-dist)
+├── visionPdfParser.ts  # Vision-based parser for scanned/handwritten PDFs
 ├── professionalReportRouters.ts  # Report generation, recalculate logic
 ├── professionalPdfGenerator.ts   # jsPDF-based PDF generation
-├── componentCalculations.ts      # ASME calculation engine
+├── componentCalculations.ts      # ASME Section VIII calculation engine
 ├── enhancedCalculations.ts       # Dual corrosion rate, anomaly detection
 ├── db.ts               # Database queries (inspections, TML readings)
 ├── professionalReportDb.ts       # Component calculations, findings
 drizzle/schema.ts       # Database schema (inspections, tmlReadings, componentCalculations, etc.)
 ```
 
-## Running the App
+**Tech Stack**: React 19, TypeScript, tRPC 11, TanStack Query, Wouter (routing), Tailwind CSS 4, Radix UI, Framer Motion, Chart.js, jsPDF, Drizzle ORM, Express, OpenAI, AWS S3/R2, Sentry, Jose (JWT).
+
+## Critical Development Commands
 
 ```bash
-pnpm install
-pnpm dev          # Starts both server (port 3000) and Vite dev server
-pnpm test         # Vitest tests
-pnpm db:push      # Push schema changes to database
-pnpm db:seed:material-stress  # Seed material stress lookup table
+pnpm install          # REQUIRED: pnpm only (see package.json packageManager)
+pnpm dev              # Starts Express server + Vite dev (auto port 3000-3019 if busy)
+pnpm build            # Production build: Vite + esbuild server bundle
+pnpm start            # Run production build (NODE_ENV=production)
+pnpm test             # Run all Vitest tests (node environment)
+pnpm test <file>      # Run specific test file (e.g., pnpm test server/audit.test.ts)
+pnpm check            # TypeScript type checking (no emit)
+pnpm db:push          # Generate + apply Drizzle migrations to database
+pnpm db:seed:material-stress  # Seed ASME material stress lookup table (187+ data points)
 ```
 
-## ASME Calculation Formulas (CRITICAL)
+## ASME Calculation Formulas (CRITICAL - DO NOT MODIFY)
 
-All formulas in `server/componentCalculations.ts` and `server/professionalCalculations.ts`:
+All formulas in [server/componentCalculations.ts](server/componentCalculations.ts) and [server/professionalCalculations.ts](server/professionalCalculations.ts):
 
 | Component | Formula | ASME Reference |
 |-----------|---------|----------------|
-| Shell t_min | `t = PR/(SE - 0.6P)` | UG-27(c)(1) |
-| Shell MAWP | `P = SEt/(R + 0.6t)` (hoop) and `P = 2SEt/(R - 0.4t)` (longitudinal) — use minimum | UG-27(c) |
-| 2:1 Ellipsoidal Head t_min | `t = PD/(2SE - 0.2P)` | UG-32(d) |
-| Torispherical Head t_min | `t = PLM/(2SE - 0.2P)` where `M = 0.25(3 + √(L/r))` | UG-32(e) |
-| Hemispherical Head t_min | `t = PR/(2SE - 0.2P)` | UG-32(f) |
-| Corrosion Rate | `Cr = (t_prev - t_act) / Years` | API 510 |
-| Remaining Life | `RL = (t_act - t_min) / Cr` | API 510 |
-| Next Inspection | `min(RL/2, 10 years)` | API 510 §6.4 |
+| **Shell t_min** | `t = PR/(SE - 0.6P)` | UG-27(c)(1) |
+| **Shell MAWP** | `P = SEt/(R + 0.6t)` (hoop) and `P = 2SEt/(R - 0.4t)` (long.) — **use minimum** | UG-27(c) |
+| **2:1 Ellipsoidal Head t_min** | `t = PD/(2SE - 0.2P)` | UG-32(d) |
+| **Torispherical Head t_min** | `t = PLM/(2SE - 0.2P)` where `M = 0.25(3 + √(L/r))` | UG-32(e) |
+| **Hemispherical Head t_min** | `t = PR/(2SE - 0.2P)` | UG-32(f) |
+| **Corrosion Rate** | `Cr = (t_prev - t_act) / Years` | API 510 |
+| **Remaining Life** | `RL = (t_act - t_min) / Cr` | API 510 |
+| **Next Inspection** | `min(RL/2, 10 years)` | API 510 §6.4 |
 
-**DO NOT add corrosion allowance (CA) to t_min** — CA is only for design, not fitness-for-service calculations.
+**Variables**: `P`=pressure (psi), `R`=radius (in), `D`=diameter (in), `S`=allowable stress (psi), `E`=joint efficiency (0.6-1.0), `t`=thickness (in), `L`=crown radius (in), `r`=knuckle radius (in).
+
+**⚠️ CRITICAL**: DO NOT add corrosion allowance (CA) to `t_min` — CA is only for design, not fitness-for-service calculations.
+
+## Mandatory Coding Conventions
+
+1. **Logger Only**: `import { logger } from './_core/logger'` — NEVER use `console.log`, `console.error`, etc.
+   ```typescript
+   logger.info('Processing inspection', { inspectionId });
+   logger.error('Failed to generate PDF', error);
+   logger.debug('Debug info'); // Only in development
+   ```
+
+2. **No Hardcoded Values**: ALWAYS read from database — `inspection.allowableStress`, `inspection.jointEfficiency`, etc.
+   ```typescript
+   // ❌ WRONG
+   const S = 17100; // Never hardcode
+   
+   // ✅ CORRECT
+   const inspection = await getInspection(inspectionId);
+   const S = inspection.allowableStress;
+   ```
+
+3. **Time Span Helper**: Use `calculateTimeSpanYears()` from [server/routers.ts](server/routers.ts) — NOT hardcoded 10 years.
+   ```typescript
+   const years = calculateTimeSpanYears(previousDate, currentDate, 10); // 10 = default
+   ```
+
+4. **Dual Corrosion Rates**: Always calculate long-term (LT) and short-term (ST), use governing (max) rate.
+   ```typescript
+   const CR_LT = (t_initial - t_actual) / totalYears;
+   const CR_ST = (t_previous - t_actual) / intervalYears;
+   const governingRate = Math.max(CR_LT, CR_ST);
+   ```
+
+5. **Error Handling**: Wrap PDF operations, LLM calls, and file I/O in try-catch. Use `toast.error()` on client.
+
+6. **Storage**: Use `storagePut()` for R2/S3 uploads. Handle trailing slashes in URLs (R2 includes them).
+
 
 ## Key Data Flow Patterns
 
-### PDF Import → Calculations
-1. User uploads PDF → `pdfImportRouter.extractFromPDF` 
-2. LLM extracts structured data (vessel, TML readings, findings)
-3. Data saved to `inspections`, `tmlReadings` tables
-4. `generateDefaultCalculationsForInspection()` creates Shell, East Head, West Head calculations
-5. Anomaly detection runs via `anomalyRouter.detectAnomalies`
+### 1. PDF Import → Calculations
+```typescript
+// 1. User uploads PDF → pdfImportRouter.extractFromPDF
+// 2. Hybrid parser auto-detects text vs scanned pages (hybridPdfParser.ts)
+// 3. LLM extracts structured data (COMPREHENSIVE_EXTRACTION_PROMPT in pdfImportRouter.ts)
+// 4. Data saved to inspections, tmlReadings tables
+// 5. generateDefaultCalculationsForInspection() creates Shell, East Head, West Head calcs
+// 6. anomalyRouter.detectAnomalies runs automatically
+```
 
-### Professional Report Generation
-1. `professionalReportRouter.generatePdf` called with reportId
-2. `generateProfessionalPDF()` in `professionalPdfGenerator.ts` builds PDF
-3. Fetches data: inspection → componentCalculations → tmlReadings → findings
-4. Uses jsPDF with custom table helpers
+### 2. Professional Report Generation
+```typescript
+// 1. professionalReportRouter.generatePdf called with reportId
+// 2. generateProfessionalPDF() in professionalPdfGenerator.ts builds PDF
+// 3. Fetches data chain: inspection → componentCalculations → tmlReadings → findings
+// 4. Uses jsPDF with custom table helpers (see professionalPdfGenerator.ts)
+```
 
-### Recalculate Flow
-1. `professionalReportRouter.recalculate` with inspectionId
-2. Fetches inspection-specific `allowableStress`, `jointEfficiency` (NOT hardcoded!)
-3. Groups TML readings by component (shell, east head, west head)
-4. Calculates t_min, MAWP, corrosion rate, remaining life per component
-5. Updates `componentCalculations` table
+### 3. Recalculate Flow (CRITICAL for accuracy)
+```typescript
+// 1. professionalReportRouter.recalculate with inspectionId
+// 2. Fetch inspection-specific allowableStress, jointEfficiency (NEVER use hardcoded)
+// 3. Group TML readings by component using component detection patterns
+// 4. Calculate t_min, MAWP, corrosion rate, remaining life per component
+// 5. Update componentCalculations table with results
+```
 
 ## Component Detection Patterns
 
+Located in [server/routers.ts](server/routers.ts) and [server/professionalReportRouters.ts](server/professionalReportRouters.ts):
+
 ```typescript
-// In routers.ts and professionalReportRouters.ts
-const isShell = (c: string) => c.includes('shell') && !c.includes('head');
-const isEastHead = (c: string) => 
-  c.includes('east') || c.includes('e head') || c.includes('head 1') || c.includes('north');
-const isWestHead = (c: string) => 
-  c.includes('west') || c.includes('w head') || c.includes('head 2') || c.includes('south');
+// Detect component type from TML reading component/location strings
+const isShell = (c: string) => 
+  c.toLowerCase().includes('shell') && !c.toLowerCase().includes('head');
+
+const isEastHead = (c: string) => {
+  const lc = c.toLowerCase();
+  return lc.includes('east') || lc.includes('e head') || 
+         lc.includes('head 1') || lc.includes('north');
+};
+
+const isWestHead = (c: string) => {
+  const lc = c.toLowerCase();
+  return lc.includes('west') || lc.includes('w head') || 
+         lc.includes('head 2') || lc.includes('south');
+};
+
+// GOTCHA: TML readings may have component="Head" with location="West Head"
+// Always check BOTH fields when categorizing
 ```
+
 
 ## Database Schema Highlights
 
+Key tables in [drizzle/schema.ts](drizzle/schema.ts):
+
 ```typescript
-// Key tables in drizzle/schema.ts
 inspections        // Vessel metadata, design parameters, allowableStress, jointEfficiency
-tmlReadings        // Thickness readings with tml1-4 for multi-angle, readingType (nozzle/seam/spot)
-componentCalculations  // Shell/Head calculations with t_min, MAWP, corrosionRate, remainingLife
-professionalReports    // Links to inspection, generated PDF URL
-reportAnomalies        // Detected issues (thickness below min, high corrosion, etc.)
+tmlReadings        // Thickness readings with tml1-4 for multi-angle measurements
+                   // readingType: "nozzle" | "seam" | "spot" | "general"
+componentCalculations  // Per-component calcs: t_min, MAWP, corrosionRate, remainingLife
+                       // Includes corrosionRateLT, corrosionRateST, governingRate
+professionalReports    // Links to inspection, stores generated PDF URL
+reportAnomalies        // Auto-detected issues (thickness below min, high corrosion, etc.)
+                       // reviewStatus: "pending" | "acknowledged" | "resolved" | "false_positive"
+anomalyActionPlans     // Tracks remediation with assignments, due dates, priority
 materialStressValues   // ASME allowable stress lookup by material and temperature
+locationMappings       // CML-to-component mapping patterns (vessel-specific or default)
 ```
 
 ## Testing Patterns
 
 ```bash
-pnpm test                    # Run all tests
-pnpm test server/audit.test.ts  # Specific test file
+pnpm test                    # Run all Vitest tests (node environment)
+pnpm test server/audit.test.ts  # Run specific test file
 ```
 
-Key test files:
-- `server/audit.test.ts` — Validation dashboard, component calculations
-- `server/asmeCalculations.test.ts` — Formula verification
-- `server/cmlDeduplication.test.ts` — TML reading consolidation
-
-## Critical Conventions
-
-1. **Use centralized logger**: `import { logger } from './_core/logger'` — NOT `console.log`
-2. **No hardcoded calculation values**: Always read `inspection.allowableStress`, `inspection.jointEfficiency`
-3. **Time span calculation**: Use `calculateTimeSpanYears()` helper, not hardcoded 10 years
-4. **Dual corrosion rates**: Long-term (LT) and Short-term (ST), use governing (max) rate
-5. **Error handling**: Wrap PDF operations in try-catch, use toast notifications on client
-6. **File storage**: Use `storagePut()` for R2/S3 uploads, handle trailing slashes in URLs
+Key test files demonstrate real-world usage:
+- [server/audit.test.ts](server/audit.test.ts) — Full PDF import → calculation → report generation
+- [server/asmeCalculations.test.ts](server/asmeCalculations.test.ts) — Formula verification with known values
+- [server/cmlDeduplication.test.ts](server/cmlDeduplication.test.ts) — Multi-angle TML reading consolidation
+- [server/hardcodedValues.test.ts](server/hardcodedValues.test.ts) — Checks for hardcoded calculation values
 
 ## Common Gotchas
 
-- **Head detection**: TML readings may have component="Head" with location="West Head" — check both fields
-- **Radius vs Diameter**: Shell formulas use R (radius), head formulas often use D (diameter)
-- **Joint efficiency defaults**: RT-1=1.0, RT-2=0.85, RT-3=0.70, RT-4=0.60
-- **Material stress lookup**: `materialStressRouter.getStressValue` with temperature interpolation
-- **PDF generation hardcodes**: Check `professionalPdfGenerator.ts` for any remaining hardcoded arrays
+1. **Head detection**: TML readings may have `component="Head"` with `location="West Head"` — check BOTH fields
+2. **Radius vs Diameter**: Shell formulas use R (radius), head formulas often use D (diameter)
+3. **Joint efficiency defaults**: RT-1=1.0, RT-2=0.85, RT-3=0.70, RT-4=0.60
+4. **Material stress lookup**: Use `materialStressRouter.getStressValue` with temperature interpolation
+5. **R2/S3 URLs**: Handle trailing slashes in storage URLs (R2 includes them, S3 doesn't)
+6. **TML reading types**: `readingType` field distinguishes nozzle/seam/spot measurements
+
 
 ## Location Mapping System
 
@@ -167,7 +236,7 @@ readings.forEach(r => {
 | Missing E value | `jointEfficiency === null` | warning |
 | Thickness variation | `stdDev > 0.050"` within component | medium |
 
-**Database table**: `reportAnomalies` — stores detected issues with `reviewStatus` (pending_review, reviewed, approved).
+**Database table**: `reportAnomalies` — stores detected issues with `reviewStatus` (pending, acknowledged, resolved, false_positive).
 
 **Action plans**: `anomalyActionPlans` table for tracking remediation with assignments, due dates, priority.
 
@@ -185,6 +254,7 @@ Three parser options in `server/routers/pdfImportRouter.ts`:
 - Extracts vessel data, TML readings, nozzles, findings, TABLE A calculations
 - Looks for E value in both metadata AND calculation tables
 - Handles North/South and East/West head naming conventions
+
 
 ## Mobile Field Inspector (PWA)
 
@@ -262,23 +332,23 @@ Database fields in `componentCalculations`:
 
 ## Hybrid PDF Parser (NEW - Mixed Content Support)
 
-\\server/hybridPdfParser.ts\\ - Auto-detects and handles mixed text/scanned PDFs:
+`server/hybridPdfParser.ts` - Auto-detects and handles mixed text/scanned PDFs:
 
-\\\	ypescript
+```typescript
 // Detection algorithm:
 // 1. Extract text from all pages using pdfjs-dist
 // 2. Analyze each page - if <100 chars, mark as scanned
 // 3. Choose strategy based on scanned ratio:
-//    - >50% scanned  full vision parsing
-//    - 0% scanned  standard text parsing  
-//    - Mixed  hybrid extraction with merge
+//    - >50% scanned → full vision parsing
+//    - 0% scanned → standard text parsing  
+//    - Mixed → hybrid extraction with merge
 
 // Merge priority:
 // - Text extraction takes priority (more accurate for text)
 // - Vision fills gaps for scanned content
 // - TML readings deduplicated by CML number
 // - Larger checklist/nozzle arrays preferred
-\\\
+```
 
 **Parser Selection (UI dropdown):**
 | Option | Use Case |
@@ -287,4 +357,3 @@ Database fields in `componentCalculations`:
 | Manus AI | Pure text-based PDFs |
 | Vision Parser | Fully scanned/handwritten PDFs |
 | Docupipe | Legacy |
-
