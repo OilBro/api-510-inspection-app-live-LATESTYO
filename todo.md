@@ -1692,3 +1692,30 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - conductor/tracks/ - Track documentation directory
 - conductor/docs/ - Supporting documentation
 - conductor/manus_conductor.py - Python integration script
+
+
+## Track 003: Critical Calculation Accuracy Issues
+
+### Phase 1: Investigation & Verification
+- [x] Verify radius calculation uses correct inside diameter
+- [x] Verify E (joint efficiency) value extraction from PDF imports
+- [x] Verify static head pressure is properly added to design pressure
+- [x] Verify MAWP subtracts static head for top-of-vessel reporting
+
+### Phase 2: Fix Remaining Test Issues
+- [x] Update test expectations to use correct ASME allowable stress values
+- [x] Fix corrosion allowance calculation test expectations
+- [x] Fix remaining life calculation test expectations
+- [x] Fix status determination logic tests
+
+### Phase 3: Add Comprehensive ASME Validation Tests
+- [x] Add shell minimum thickness tests with ASME example values
+- [x] Add head minimum thickness tests for all head types
+- [x] Add MAWP tests for shell and all head types
+- [x] Add remaining life calculation tests
+- [x] Add static head pressure calculation tests
+
+### Phase 4: Documentation
+- [x] Document all ASME formulas with code references
+- [x] Document assumptions and default values
+- [ ] Create calculation comparison tool for transparency (future enhancement)

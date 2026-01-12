@@ -302,7 +302,7 @@ function calculateShellMAWP(
  * @param useUG32eStandard - If true, use UG-32(e) standard formula (0.885/0.1)
  *                          If false (default), use Appendix 1-4(d) M-factor formula
  */
-function calculateHeadMAWP(
+export function calculateHeadMAWP(
   thickness: number,
   radius: number,
   allowableStress: number,
