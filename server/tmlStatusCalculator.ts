@@ -18,9 +18,11 @@ interface StatusInput {
 /**
  * Calculate TML status based on thickness vs minimum required
  */
-export function calculateTMLStatus(input: StatusInput): "good" | "monitor" | "critical" {
-  const { calculateComponent } = require('./componentCalculations');
-  
+export function calculateTMLStatus(
+  input: StatusInput
+): "good" | "monitor" | "critical" {
+  const { calculateComponent } = require("./componentCalculations");
+
   try {
     const calc = calculateComponent({
       designPressure: input.designPressure,
@@ -31,14 +33,14 @@ export function calculateTMLStatus(input: StatusInput): "good" | "monitor" | "cr
       actualThickness: input.currentThickness,
       corrosionAllowance: input.corrosionAllowance ?? 0.125, // Default to 1/8" if not provided
       jointEfficiency: input.jointEfficiency ?? 0.85, // Default to 0.85 if not provided
-      componentType: 'shell',
-      corrosionRate: 0
+      componentType: "shell",
+      corrosionRate: 0,
     });
-    
+
     const minRequired = calc.minimumRequiredThickness;
     const current = input.currentThickness;
     const ca = input.corrosionAllowance ?? 0.125;
-    
+
     if (current < minRequired) {
       return "critical";
     } else if (current < minRequired + ca * 0.5) {
@@ -47,7 +49,7 @@ export function calculateTMLStatus(input: StatusInput): "good" | "monitor" | "cr
       return "good";
     }
   } catch (error) {
-    logger.error('[TML Status] Calculation error:', error);
+    logger.error("[TML Status] Calculation error:", error);
     // Fallback: simple comparison to nominal
     if (input.currentThickness < input.nominalThickness * 0.8) {
       return "critical";
@@ -58,4 +60,3 @@ export function calculateTMLStatus(input: StatusInput): "good" | "monitor" | "cr
     }
   }
 }
-
