@@ -47,29 +47,60 @@ export async function parseWithManusAPI(
     // Convert Buffer to Uint8Array (required by pdfjs-dist)
     const uint8Array = new Uint8Array(fileBuffer);
     
-    // Load PDF document
-    const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
+    // Load PDF document with memory-efficient options
+    const loadingTask = pdfjsLib.getDocument({ 
+      data: uint8Array,
+      // Disable features that consume extra memory
+      disableFontFace: true,
+      disableRange: true,
+      disableStream: true,
+    });
     const pdfDocument = await loadingTask.promise;
     
-    // Extract text from all pages - store per-page text for hybrid parser
+    // Extract text from pages with limits to prevent memory issues
     const numPages = pdfDocument.numPages;
-    let fullText = '';
-    const pages: Array<{ pageNumber: number; text: string }> = [];
+    const MAX_PAGES = 100; // Limit to 100 pages for memory safety
+    const pagesToProcess = Math.min(numPages, MAX_PAGES);
     
-    for (let i = 1; i <= numPages; i++) {
-      const page = await pdfDocument.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items.map((item: any) => item.str).join(' ');
-      fullText += pageText + '\n';
-      
-      // Store per-page text for hybrid parser analysis
-      pages.push({
-        pageNumber: i,
-        text: pageText,
-      });
+    if (numPages > MAX_PAGES) {
+      logger.warn(`[Manus Parser] PDF has ${numPages} pages, limiting to first ${MAX_PAGES} pages for memory safety`);
     }
     
-    logger.info("[Manus Parser] Text extraction successful, pages:", numPages, "length:", fullText.length);
+    let fullText = '';
+    const pages: Array<{ pageNumber: number; text: string }> = [];
+    const MAX_TEXT_LENGTH = 500000; // 500KB text limit
+    
+    for (let i = 1; i <= pagesToProcess; i++) {
+      // Check if we've exceeded text limit
+      if (fullText.length > MAX_TEXT_LENGTH) {
+        logger.warn(`[Manus Parser] Text limit reached at page ${i}, stopping extraction`);
+        break;
+      }
+      
+      try {
+        const page = await pdfDocument.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((item: any) => item.str).join(' ');
+        fullText += pageText + '\n';
+        
+        // Store per-page text for hybrid parser analysis
+        pages.push({
+          pageNumber: i,
+          text: pageText,
+        });
+        
+        // Clean up page resources
+        page.cleanup();
+      } catch (pageError) {
+        logger.warn(`[Manus Parser] Error extracting page ${i}, skipping:`, pageError);
+        continue;
+      }
+    }
+    
+    // Clean up document resources
+    pdfDocument.cleanup();
+    
+    logger.info("[Manus Parser] Text extraction successful, pages:", pagesToProcess, "length:", fullText.length);
 
     return {
       text: fullText,

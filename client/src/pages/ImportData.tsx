@@ -100,6 +100,13 @@ export default function ImportData() {
         toast.error("Please select a PDF or Excel file");
         return;
       }
+      
+      // File size validation - 25MB limit
+      const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB exceeds 25MB limit. Please use a smaller file or split into multiple files.`);
+        return;
+      }
 
       setSelectedFile(file);
       setStep("upload");

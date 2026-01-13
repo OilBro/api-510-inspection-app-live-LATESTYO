@@ -604,6 +604,17 @@ export const appRouter = router({
         parserType: z.enum(["docupipe", "manus", "vision", "hybrid"]).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
+        // Check base64 string size before processing (base64 is ~33% larger than binary)
+        const base64Size = input.fileData.length;
+        const estimatedFileSize = Math.floor(base64Size * 0.75);
+        const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB limit
+        
+        if (estimatedFileSize > MAX_FILE_SIZE) {
+          throw new Error(`File too large: ${(estimatedFileSize / 1024 / 1024).toFixed(1)}MB exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit. Please use a smaller PDF or split into multiple files.`);
+        }
+        
+        logger.info(`[Extraction Job] Starting job for file: ${input.fileName}, estimated size: ${(estimatedFileSize / 1024 / 1024).toFixed(2)}MB`);
+        
         const jobId = nanoid();
         const drizzleDb = await db.getDb();
         
@@ -1047,6 +1058,17 @@ export const appRouter = router({
       }))
       .mutation(async ({ ctx, input }) => {
         try {
+          // Check base64 string size before decoding (base64 is ~33% larger than binary)
+          const base64Size = input.fileData.length;
+          const estimatedFileSize = Math.floor(base64Size * 0.75);
+          const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB limit
+          
+          if (estimatedFileSize > MAX_FILE_SIZE) {
+            throw new Error(`File too large: ${(estimatedFileSize / 1024 / 1024).toFixed(1)}MB exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit. Please use a smaller PDF or split into multiple files.`);
+          }
+          
+          logger.info(`[PDF Import] Processing file: ${input.fileName}, estimated size: ${(estimatedFileSize / 1024 / 1024).toFixed(2)}MB`);
+          
           // Decode base64 file data
           const buffer = Buffer.from(input.fileData, "base64");
 
