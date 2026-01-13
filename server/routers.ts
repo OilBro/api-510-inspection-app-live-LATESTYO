@@ -20,6 +20,7 @@ import { anomalyRouter } from "./anomalyRouter";
 import { actionPlanRouter } from "./actionPlanRouter";
 import { trendAnalysisRouter } from "./trendAnalysisRouter";
 import { hierarchyRouter } from "./hierarchyRouter";
+import { rcraComplianceRouter } from "./routers/rcraComplianceRouter";
 import { convertToJpeg } from "./_core/freeconvert";
 import * as fieldMappingDb from "./fieldMappingDb";
 import * as professionalReportDb from "./professionalReportDb";
@@ -63,6 +64,7 @@ export const appRouter = router({
   actionPlans: actionPlanRouter,
   trendAnalysis: trendAnalysisRouter,
   hierarchy: hierarchyRouter,
+  rcraCompliance: rcraComplianceRouter,
 
   images: router({
     convertToJpeg: protectedProcedure

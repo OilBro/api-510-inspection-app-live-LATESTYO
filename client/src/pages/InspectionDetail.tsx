@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { Link, useParams, useLocation } from "wouter";
-import { Settings, ArrowLeft, FileText, Calculator, BarChart3, Eye, Upload, AlertCircle, RefreshCw, Layers, ClipboardList } from "lucide-react";
+import { Settings, ArrowLeft, FileText, Calculator, BarChart3, Eye, Upload, AlertCircle, RefreshCw, Layers, ClipboardList, Shield } from "lucide-react";
 import { APP_TITLE } from "@/const";
 import VesselDataTab from "@/components/inspection/VesselDataTab";
 import ProfessionalReportTab from "@/components/inspection/ProfessionalReportTab";
@@ -100,6 +100,12 @@ export default function InspectionDetail() {
               >
                 <RefreshCw className={`mr-2 h-4 w-4 ${rescanMutation.isPending ? 'animate-spin' : ''}`} />
                 Re-scan Anomalies
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/rcra-compliance/${id}`}>
+                  <Shield className="mr-2 h-4 w-4" />
+                  RCRA Compliance
+                </Link>
               </Button>
               <Button asChild variant="outline" size="sm">
                 <Link href="/inspections">
