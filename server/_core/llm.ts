@@ -323,10 +323,34 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
 
   if (!response.ok) {
     const errorText = await response.text();
+    // Check if we received HTML instead of JSON (common error page response)
+    if (errorText.trim().startsWith('<') || errorText.includes('<html')) {
+      throw new Error(
+        `LLM service returned an error page (HTTP ${response.status}). The service may be temporarily unavailable. Please try again in a few moments.`
+      );
+    }
     throw new Error(
       `LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`
     );
   }
 
-  return (await response.json()) as InvokeResult;
+  // Parse response and check for HTML error pages
+  const responseText = await response.text();
+  
+  // Check if response is HTML instead of JSON
+  if (responseText.trim().startsWith('<') || responseText.includes('<html')) {
+    throw new Error(
+      'LLM service returned an HTML error page instead of JSON. The service may be experiencing issues. Please try again.'
+    );
+  }
+  
+  try {
+    return JSON.parse(responseText) as InvokeResult;
+  } catch (parseError) {
+    // Log the first 500 chars of the response for debugging
+    console.error('[LLM] Failed to parse response:', responseText.substring(0, 500));
+    throw new Error(
+      `Failed to parse LLM response as JSON. Response preview: ${responseText.substring(0, 200)}...`
+    );
+  }
 }

@@ -1719,3 +1719,9 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Document all ASME formulas with code references
 - [x] Document assumptions and default values
 - [ ] Create calculation comparison tool for transparency (future enhancement)
+
+
+## Bug Fix: PDF Import Extraction Error
+- [x] Fix "Failed to start extraction: Unexpected token '<'" error during PDF import - added HTML detection in LLM response
+- [x] Investigate API endpoint returning HTML instead of JSON - root cause: LLM service returns HTML error pages
+- [x] Add proper error handling for API failures - now shows user-friendly messages
