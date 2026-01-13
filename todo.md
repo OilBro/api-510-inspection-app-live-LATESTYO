@@ -1725,3 +1725,31 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Fix "Failed to start extraction: Unexpected token '<'" error during PDF import - added HTML detection in LLM response
 - [x] Investigate API endpoint returning HTML instead of JSON - root cause: LLM service returns HTML error pages
 - [x] Add proper error handling for API failures - now shows user-friendly messages
+
+
+## Track 004: Enhance Data Extraction & Organization ✅ COMPLETE
+
+### Phase 1: Multi-Page Thickness Table Parsing
+- [x] Review current text extraction limits (50k characters)
+- [x] Enhance LLM prompt for multi-page table detection
+- [x] Add validation for reading count completeness
+
+### Phase 2: Component Type Organization
+- [x] Ensure componentType field populated for all TML readings
+- [x] Create UI grouping by Shell/East Head/West Head/Nozzles (ThicknessOrganizedView)
+- [x] Add filtering by component type in thickness table
+
+### Phase 3: Nozzle Extraction Improvements
+- [x] Enhance nozzle size parsing from descriptions (24", 3", 2", 1")
+- [x] Extract nozzle service types (Manway, Relief, Vapor Out, etc.)
+- [x] Validate nozzle records created during import
+
+### Phase 4: Inspection Results & Recommendations UI
+- [x] Create InspectionResultsTab component for Section 3.0 content
+- [x] Create RecommendationsTab component for Section 4.0 content (combined in InspectionResultsTab)
+- [x] Integrate tabs into inspection detail view
+
+### Phase 5: Component Type Detection
+- [x] Verify shell vs head detection accuracy (41 tests passing)
+- [x] Ensure correct formulas applied based on component type
+- [x] Handle edge cases in component naming (North/South → East/West mapping)

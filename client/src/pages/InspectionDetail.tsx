@@ -5,10 +5,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { Link, useParams, useLocation } from "wouter";
-import { Settings, ArrowLeft, FileText, Calculator, BarChart3, Eye, Upload, AlertCircle, RefreshCw } from "lucide-react";
+import { Settings, ArrowLeft, FileText, Calculator, BarChart3, Eye, Upload, AlertCircle, RefreshCw, Layers, ClipboardList } from "lucide-react";
 import { APP_TITLE } from "@/const";
 import VesselDataTab from "@/components/inspection/VesselDataTab";
 import ProfessionalReportTab from "@/components/inspection/ProfessionalReportTab";
+import InspectionResultsTab from "@/components/inspection/InspectionResultsTab";
+import ThicknessOrganizedView from "@/components/inspection/ThicknessOrganizedView";
 import { ValidationWarnings } from "@/components/ValidationWarnings";
 import { AnomalyPanel } from "@/components/inspection/AnomalyPanel";
 import { toast } from "sonner";
@@ -19,6 +21,7 @@ export default function InspectionDetail() {
   const [activeTab, setActiveTab] = useState("vessel-data");
 
   const { data: inspection, isLoading } = trpc.inspections.get.useQuery({ id });
+  const { data: tmlReadings } = trpc.tmlReadings.list.useQuery({ inspectionId: id });
   const utils = trpc.useUtils();
 
   const rescanMutation = trpc.anomalies.detectForInspection.useMutation({
@@ -121,10 +124,18 @@ export default function InspectionDetail() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="vessel-data">
               <FileText className="h-4 w-4 mr-2" />
               Vessel Data
+            </TabsTrigger>
+            <TabsTrigger value="thickness">
+              <Layers className="h-4 w-4 mr-2" />
+              Thickness Analysis
+            </TabsTrigger>
+            <TabsTrigger value="results">
+              <ClipboardList className="h-4 w-4 mr-2" />
+              Results & Recommendations
             </TabsTrigger>
             <TabsTrigger value="professional">
               <FileText className="h-4 w-4 mr-2" />
@@ -136,6 +147,17 @@ export default function InspectionDetail() {
             <VesselDataTab inspection={inspection} />
           </TabsContent>
 
+          <TabsContent value="thickness">
+            <ThicknessOrganizedView readings={tmlReadings || []} />
+          </TabsContent>
+
+          <TabsContent value="results">
+            <InspectionResultsTab 
+              inspectionResults={inspection.inspectionResults} 
+              recommendations={inspection.recommendations} 
+            />
+          </TabsContent>
+
           <TabsContent value="professional">
             <ProfessionalReportTab inspectionId={id} />
           </TabsContent>
@@ -144,4 +166,3 @@ export default function InspectionDetail() {
     </div>
   );
 }
-

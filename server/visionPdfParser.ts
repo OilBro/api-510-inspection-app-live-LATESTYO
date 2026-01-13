@@ -159,6 +159,13 @@ Extract ALL available information and return it as structured JSON.
 
 CRITICAL INSTRUCTIONS:
 
+0. MULTI-PAGE TABLES - VERY IMPORTANT:
+   - Thickness measurement tables often span MULTIPLE PAGES
+   - Continue reading ALL pages of the document
+   - Look for table continuations ("continued", "cont'd", page breaks in tables)
+   - Extract EVERY row from thickness tables, even if they span 5+ pages
+   - Do NOT stop at the first page of a table
+
 1. REPORT & CLIENT INFO:
    - Extract report number, date, inspection date, inspector name/certification
    - Extract client name, location, and product/service
@@ -192,7 +199,12 @@ CRITICAL INSTRUCTIONS:
    - Extract thickness readings for BOTH heads separately
 
 5. THICKNESS MEASUREMENTS (TML Readings):
-   - Extract ALL CML/TML readings from thickness tables
+   - Extract ALL CML/TML readings from ALL pages of thickness tables
+   - COMPONENT TYPE ORGANIZATION - The 'component' field MUST be one of:
+     * "Shell" for cylindrical shell readings
+     * "East Head" for north/left/head1 readings
+     * "West Head" for south/right/head2 readings
+     * "Nozzle" for nozzle readings (include nozzle name in location)
    - Include: CML number, location, component (Shell/East Head/West Head/Nozzle)
    - Include: nominal thickness, previous thickness, current thickness
    - Include: minimum required thickness, calculated MAWP
@@ -202,7 +214,9 @@ CRITICAL INSTRUCTIONS:
    - Extract ALL nozzle data from nozzle schedule or evaluation tables
    - Include: nozzle number (N1, N2, MW-1, etc.)
    - Include: service/description (Manway, Relief, Inlet, Outlet, Drain, Vent)
-   - Include: size (e.g., 24" NPS, 2" NPS), schedule (STD, 40, 80, XS)
+   - PARSE SIZE from descriptions: "24\" Manway" → size: "24\"", service: "Manway"
+   - Common size patterns: 24\", 18\", 12\", 8\", 6\", 4\", 3\", 2\", 1\", 3/4\"
+   - Include: size (e.g., 24\" NPS, 2\" NPS), schedule (STD, 40, 80, XS)
    - Include: actual thickness, nominal thickness, minimum required
    - Include: acceptable status (true/false)
 

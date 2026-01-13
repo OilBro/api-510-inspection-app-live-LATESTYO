@@ -111,20 +111,44 @@ export async function parseAndStandardizeWithManus(
 Extract all available information and return it as structured JSON matching this schema.
 
 CRITICAL INSTRUCTIONS:
-1. HEADS: Most pressure vessels have TWO heads (one at each end). Look for:
+
+1. MULTI-PAGE TABLES: Thickness measurement tables often span MULTIPLE PAGES.
+   - Continue reading ALL pages of the document
+   - Look for table continuations ("continued", "cont'd", page breaks in tables)
+   - Extract EVERY row from thickness tables, even if they span 5+ pages
+   - Do NOT stop at the first page of a table
+
+2. HEADS: Most pressure vessels have TWO heads (one at each end). Look for:
    - North Head / South Head (common naming)
    - East Head / West Head (alternative naming)
    - Head 1 / Head 2 (numbered naming)
    - Left Head / Right Head
    If you see thickness readings for heads, check if there are TWO separate sections or tables for different heads.
    Map North Head → East Head, South Head → West Head in the location field.
+
+3. COMPONENT TYPE ORGANIZATION: Categorize each TML reading by component:
+   - "Shell" for cylindrical shell readings
+   - "East Head" for north/left/head1 readings
+   - "West Head" for south/right/head2 readings  
+   - "Nozzle" for nozzle readings (include nozzle name in location)
+   The 'component' field MUST be one of: Shell, East Head, West Head, Nozzle
    
-2. NOZZLES: Look for nozzle schedules, nozzle thickness tables, or nozzle evaluation sections.
+4. NOZZLES: Look for nozzle schedules, nozzle thickness tables, or nozzle evaluation sections.
    Common nozzles: Manway, Relief Valve, Inlet, Outlet, Drain, Vent, Level Gauge, etc.
    Extract ALL nozzles found in the document.
+   IMPORTANT: Parse nozzle SIZE from descriptions (e.g., "24\" Manway" → size: "24\"", service: "Manway")
+   Common size patterns: 24\", 18\", 12\", 8\", 6\", 4\", 3\", 2\", 1\", 3/4\"
    
-3. CHECKLIST: Look for inspection checklists, examination items, or condition assessments.
+5. CHECKLIST: Look for inspection checklists, examination items, or condition assessments.
    These may be in tables with checkboxes, pass/fail columns, or satisfactory/unsatisfactory status.
+
+6. INSPECTION RESULTS (Section 3.0): Extract ALL findings from the inspection results section.
+   Include: foundation condition, shell condition, head condition, appurtenances, corrosion findings, etc.
+   This is typically a narrative section describing what was found during inspection.
+
+7. RECOMMENDATIONS (Section 4.0): Extract ALL recommendations from the recommendations section.
+   Include: repair recommendations, replacement needs, next inspection date, continued service approval, etc.
+   This is typically a narrative section with action items and future planning.
 
 {
   "reportInfo": {
