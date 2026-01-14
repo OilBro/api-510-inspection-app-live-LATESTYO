@@ -140,85 +140,38 @@ export async function parseExcelFile(buffer: Buffer): Promise<ParsedVesselData> 
     const workbook = XLSX.read(buffer, { type: "buffer" });
     const result: ParsedVesselData = {
       tmlReadings: [],
+      nozzles: [],
     };
 
     // Process each sheet
     for (const sheetName of workbook.SheetNames) {
+      const sheetNameLower = sheetName.toLowerCase();
       const worksheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-
-      // Look for vessel identification data in headers
-      for (let i = 0; i < Math.min(20, data.length); i++) {
-        const row = data[i];
-        if (!row) continue;
-
-        for (let j = 0; j < row.length - 1; j++) {
-          const key = String(row[j] || "").toLowerCase();
-          const value = String(row[j + 1] || "").trim();
-
-          if (!value) continue;
-
-          // Match vessel identification fields
-          if (key.includes("tag") || key.includes("vessel id")) {
-            result.vesselTagNumber = value;
-          } else if (key.includes("vessel name") || key.includes("equipment")) {
-            result.vesselName = value;
-          } else if (key.includes("manufacturer") || key.includes("fabricator")) {
-            result.manufacturer = value;
-          } else if (key.includes("year") && key.includes("built")) {
-            result.yearBuilt = parseInt(value);
-          } else if (key.includes("design pressure") || key.includes("mawp")) {
-            result.designPressure = value;
-          } else if (key.includes("design temp")) {
-            result.designTemperature = value;
-          } else if (key.includes("operating pressure")) {
-            result.operatingPressure = value;
-          } else if (key.includes("material")) {
-            result.materialSpec = value;
-          } else if (key.includes("diameter") || key.includes("id")) {
-            result.insideDiameter = value;
-          } else if (key.includes("length")) {
-            result.overallLength = value;
-          }
-        }
+      
+      // Skip instruction sheets
+      if (sheetNameLower.includes('instruction') || sheetNameLower.includes('readme')) {
+        continue;
       }
 
-      // Look for TML reading data (usually in tabular format)
-      const headers = data[0]?.map((h: any) => String(h || "").toLowerCase()) || [];
-      const tmlIdCol = headers.findIndex((h) =>
-        h.includes("tml") || h.includes("cml") || h.includes("location")
-      );
-      const componentCol = headers.findIndex((h) => h.includes("component") || h.includes("area"));
-      const currentThicknessCol = headers.findIndex(
-        (h) => h.includes("current") || h.includes("actual") || h.includes("measured")
-      );
-      const nominalCol = headers.findIndex((h) => h.includes("nominal") || h.includes("design"));
-      const previousCol = headers.findIndex((h) => h.includes("previous") || h.includes("prior") || h.includes("last"));
-
-      if (tmlIdCol >= 0 && currentThicknessCol >= 0) {
-        for (let i = 1; i < data.length; i++) {
-          const row = data[i];
-          if (!row || !row[tmlIdCol]) continue;
-
-          const reading: any = {
-            tmlId: String(row[tmlIdCol]),
-            cmlNumber: String(row[tmlIdCol]),
-            component: componentCol >= 0 ? String(row[componentCol] || "Shell") : "Shell",
-            currentThickness: row[currentThicknessCol]
-              ? String(row[currentThicknessCol])
-              : undefined,
-          };
-
-          if (nominalCol >= 0 && row[nominalCol]) {
-            reading.nominalThickness = String(row[nominalCol]);
-          }
-          
-          if (previousCol >= 0 && row[previousCol]) {
-            reading.previousThickness = String(row[previousCol]);
-          }
-
-          result.tmlReadings?.push(reading);
-        }
+      // Parse Vessel Information sheet (Field/Value format)
+      if (sheetNameLower.includes('vessel') || sheetNameLower.includes('equipment')) {
+        parseFieldValueSheet(data, result);
+      }
+      
+      // Parse Inspection Details sheet (Field/Value format)
+      if (sheetNameLower.includes('inspection') && sheetNameLower.includes('detail')) {
+        parseInspectionDetailsSheet(data, result);
+      }
+      
+      // Parse TML Readings sheet (tabular format)
+      if (sheetNameLower.includes('tml') || sheetNameLower.includes('thickness') || sheetNameLower.includes('reading')) {
+        parseTmlReadingsSheet(data, result);
+      }
+      
+      // Parse Nozzles sheet (tabular format)
+      if (sheetNameLower.includes('nozzle')) {
+        parseNozzlesSheet(data, result);
       }
     }
 
@@ -226,6 +179,178 @@ export async function parseExcelFile(buffer: Buffer): Promise<ParsedVesselData> 
   } catch (error) {
     logger.error("[Excel Parser] Error:", error);
     throw new Error(`Failed to parse Excel file: ${error instanceof Error ? error.message : "Unknown error"}`);
+  }
+}
+
+/**
+ * Parse Field/Value format sheets (Vessel Information, Inspection Details)
+ */
+function parseFieldValueSheet(data: any[][], result: ParsedVesselData): void {
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    if (!row || row.length < 2) continue;
+
+    const key = String(row[0] || "").toLowerCase().trim();
+    const value = row[1];
+    
+    if (value === undefined || value === null || value === '') continue;
+    const valueStr = String(value).trim();
+
+    // Vessel identification
+    if (key.includes("tag") && key.includes("number")) result.vesselTagNumber = valueStr;
+    else if (key === "vessel name" || key.includes("vessel name")) result.vesselName = valueStr;
+    else if (key.includes("manufacturer") || key.includes("fabricator")) result.manufacturer = valueStr;
+    else if (key.includes("serial") && key.includes("number")) result.serialNumber = valueStr;
+    else if (key.includes("year") && key.includes("built")) result.yearBuilt = typeof value === 'number' ? value : parseInt(valueStr);
+    else if (key.includes("nb number") || key.includes("national board")) result.nbNumber = valueStr;
+    
+    // Design specifications
+    else if (key.includes("design pressure")) result.designPressure = valueStr;
+    else if (key.includes("design temp")) result.designTemperature = valueStr;
+    else if (key.includes("operating pressure")) result.operatingPressure = valueStr;
+    else if (key.includes("operating temp")) result.operatingTemperature = valueStr;
+    else if (key.includes("material") && key.includes("spec")) result.materialSpec = valueStr;
+    else if (key.includes("joint") && key.includes("efficiency")) result.jointEfficiency = valueStr;
+    else if (key.includes("inside") && key.includes("diameter")) result.insideDiameter = valueStr;
+    else if (key.includes("overall") && key.includes("length")) result.overallLength = valueStr;
+    else if (key.includes("head") && key.includes("type")) result.headType = valueStr;
+    else if (key.includes("construction") && key.includes("code")) result.constructionCode = valueStr;
+  }
+}
+
+/**
+ * Parse Inspection Details sheet
+ */
+function parseInspectionDetailsSheet(data: any[][], result: ParsedVesselData): void {
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    if (!row || row.length < 2) continue;
+
+    const key = String(row[0] || "").toLowerCase().trim();
+    const value = row[1];
+    
+    if (value === undefined || value === null || value === '') continue;
+    const valueStr = String(value).trim();
+
+    // Report information
+    if (key === "report number" || key.includes("report number")) result.reportNumber = valueStr;
+    else if (key === "report date" || key.includes("report date")) result.reportDate = valueStr;
+    else if (key === "inspection date" || key.includes("inspection date")) result.inspectionDate = valueStr;
+    else if (key === "inspection type" || key.includes("inspection type")) result.inspectionType = valueStr;
+    else if (key.includes("inspection company") || key.includes("company")) result.inspectionCompany = valueStr;
+    else if (key === "inspector name" || key.includes("inspector name")) result.inspectorName = valueStr;
+    else if (key.includes("inspector") && key.includes("cert")) result.inspectorCert = valueStr;
+    else if (key === "client name" || key.includes("client name")) result.clientName = valueStr;
+    else if (key === "client location" || key.includes("client location")) result.clientLocation = valueStr;
+    else if (key === "executive summary" || key.includes("executive summary")) result.executiveSummary = valueStr;
+    else if (key === "recommendations" || key.includes("recommendation")) result.recommendations = valueStr;
+  }
+}
+
+/**
+ * Parse TML Readings sheet (tabular format with headers)
+ */
+function parseTmlReadingsSheet(data: any[][], result: ParsedVesselData): void {
+  if (!data || data.length < 2) return;
+  
+  const headers = data[0]?.map((h: any) => String(h || "").toLowerCase()) || [];
+  
+  // Find column indices
+  const cmlCol = headers.findIndex(h => h.includes('cml') && h.includes('number'));
+  const tmlIdCol = headers.findIndex(h => h === 'tml id' || h.includes('tml id'));
+  const locationCol = headers.findIndex(h => h === 'location' || h.includes('location'));
+  const componentCol = headers.findIndex(h => h.includes('component'));
+  const tml1Col = headers.findIndex(h => h.includes('tml 1') || h === 'tml1');
+  const tml2Col = headers.findIndex(h => h.includes('tml 2') || h === 'tml2');
+  const tml3Col = headers.findIndex(h => h.includes('tml 3') || h === 'tml3');
+  const tml4Col = headers.findIndex(h => h.includes('tml 4') || h === 'tml4');
+  const tActualCol = headers.findIndex(h => h.includes('t actual') || h.includes('actual'));
+  const nominalCol = headers.findIndex(h => h.includes('nominal'));
+  const previousCol = headers.findIndex(h => h.includes('previous'));
+  const corrosionRateCol = headers.findIndex(h => h.includes('corrosion rate'));
+  const statusCol = headers.findIndex(h => h === 'status' || h.includes('status'));
+  
+  // Parse data rows
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row) continue;
+    
+    // Skip empty rows
+    const hasData = row.some(cell => cell !== undefined && cell !== null && cell !== '');
+    if (!hasData) continue;
+    
+    const reading: any = {};
+    
+    if (cmlCol >= 0 && row[cmlCol] !== undefined) reading.cmlNumber = String(row[cmlCol]);
+    if (tmlIdCol >= 0 && row[tmlIdCol] !== undefined) reading.tmlId = String(row[tmlIdCol]);
+    if (locationCol >= 0 && row[locationCol] !== undefined) reading.location = String(row[locationCol]);
+    if (componentCol >= 0 && row[componentCol] !== undefined) reading.component = String(row[componentCol]);
+    if (tml1Col >= 0 && row[tml1Col] !== undefined) reading.tml1 = row[tml1Col];
+    if (tml2Col >= 0 && row[tml2Col] !== undefined) reading.tml2 = row[tml2Col];
+    if (tml3Col >= 0 && row[tml3Col] !== undefined) reading.tml3 = row[tml3Col];
+    if (tml4Col >= 0 && row[tml4Col] !== undefined) reading.tml4 = row[tml4Col];
+    if (tActualCol >= 0 && row[tActualCol] !== undefined) reading.tActual = row[tActualCol];
+    if (nominalCol >= 0 && row[nominalCol] !== undefined) reading.nominalThickness = row[nominalCol];
+    if (previousCol >= 0 && row[previousCol] !== undefined) reading.previousThickness = row[previousCol];
+    if (corrosionRateCol >= 0 && row[corrosionRateCol] !== undefined) reading.corrosionRate = row[corrosionRateCol];
+    if (statusCol >= 0 && row[statusCol] !== undefined) reading.status = String(row[statusCol]).toLowerCase();
+    
+    // Only add if we have at least a CML number or TML ID
+    if (reading.cmlNumber || reading.tmlId) {
+      result.tmlReadings?.push(reading);
+    }
+  }
+}
+
+/**
+ * Parse Nozzles sheet (tabular format with headers)
+ */
+function parseNozzlesSheet(data: any[][], result: ParsedVesselData): void {
+  if (!data || data.length < 2) return;
+  
+  const headers = data[0]?.map((h: any) => String(h || "").toLowerCase()) || [];
+  
+  // Find column indices
+  const nozzleNumCol = headers.findIndex(h => h.includes('nozzle') && h.includes('number'));
+  const descCol = headers.findIndex(h => h === 'description' || h.includes('description'));
+  const locationCol = headers.findIndex(h => h === 'location' || h.includes('location'));
+  const sizeCol = headers.findIndex(h => h.includes('nominal') && h.includes('size'));
+  const scheduleCol = headers.findIndex(h => h === 'schedule' || h.includes('schedule'));
+  const actualThicknessCol = headers.findIndex(h => h.includes('actual') && h.includes('thickness'));
+  const pipeNominalCol = headers.findIndex(h => h.includes('pipe') && h.includes('nominal'));
+  const minRequiredCol = headers.findIndex(h => h.includes('minimum') && h.includes('required'));
+  const acceptableCol = headers.findIndex(h => h === 'acceptable' || h.includes('acceptable'));
+  const notesCol = headers.findIndex(h => h === 'notes' || h.includes('notes'));
+  
+  // Parse data rows
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row) continue;
+    
+    // Skip empty rows
+    const hasData = row.some(cell => cell !== undefined && cell !== null && cell !== '');
+    if (!hasData) continue;
+    
+    const nozzle: any = {};
+    
+    if (nozzleNumCol >= 0 && row[nozzleNumCol] !== undefined) nozzle.nozzleNumber = String(row[nozzleNumCol]);
+    if (descCol >= 0 && row[descCol] !== undefined) nozzle.nozzleDescription = String(row[descCol]);
+    if (locationCol >= 0 && row[locationCol] !== undefined) nozzle.location = String(row[locationCol]);
+    if (sizeCol >= 0 && row[sizeCol] !== undefined) nozzle.nominalSize = String(row[sizeCol]);
+    if (scheduleCol >= 0 && row[scheduleCol] !== undefined) nozzle.schedule = String(row[scheduleCol]);
+    if (actualThicknessCol >= 0 && row[actualThicknessCol] !== undefined) nozzle.actualThickness = row[actualThicknessCol];
+    if (pipeNominalCol >= 0 && row[pipeNominalCol] !== undefined) nozzle.pipeNominalThickness = row[pipeNominalCol];
+    if (minRequiredCol >= 0 && row[minRequiredCol] !== undefined) nozzle.minimumRequired = row[minRequiredCol];
+    if (acceptableCol >= 0 && row[acceptableCol] !== undefined) {
+      const acceptVal = String(row[acceptableCol]).toLowerCase();
+      nozzle.acceptable = acceptVal === 'yes' || acceptVal === 'true' || acceptVal === '1';
+    }
+    if (notesCol >= 0 && row[notesCol] !== undefined) nozzle.notes = String(row[notesCol]);
+    
+    // Only add if we have a nozzle number
+    if (nozzle.nozzleNumber) {
+      result.nozzles?.push(nozzle);
+    }
   }
 }
 
