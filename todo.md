@@ -1780,3 +1780,16 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Test containment compliance calculations
 - [x] Test regulatory reference formats
 - [x] Test inspection schedule frequencies
+
+## Documentation Fixes (from code review)
+- [x] Fix incorrect file reference (locationMappingRouter.ts → fieldMappingRouters.ts)
+- [x] Clarify locationMappings vs fieldMappings terminology
+- [x] Add missing tables to database schema section
+- [ ] Complete router list (remove "10+ more" placeholder)
+- [x] Add missing error handling examples
+
+## RCRA Enhancements (Final Phase)
+- [ ] Add RCRA inspection scheduling with automated reminders
+- [ ] Create RCRA compliance PDF report generation
+- [ ] Add findings and corrective action tracking with due dates
+- [ ] Push all changes to GitHub

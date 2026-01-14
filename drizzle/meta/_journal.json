@@ -127,6 +127,13 @@
       "when": 1768099347844,
       "tag": "0017_clean_earthquake",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1768372489873,
+      "tag": "0018_closed_harrier",
+      "breakpoints": true
     }
   ]
 }

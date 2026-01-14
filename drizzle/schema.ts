@@ -815,3 +815,156 @@ export const extractionJobs = mysqlTable("extractionJobs", {
 
 export type ExtractionJob = typeof extractionJobs.$inferSelect;
 export type InsertExtractionJob = typeof extractionJobs.$inferInsert;
+
+
+/**
+ * RCRA Facility Status - Tracks RCRA compliance status for tank systems
+ * Per 40 CFR Part 265 Subpart J requirements
+ */
+export const rcraFacilityStatus = mysqlTable("rcraFacilityStatus", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  inspectionId: varchar("inspectionId", { length: 64 }).notNull(),
+  
+  // Facility identification
+  epaId: varchar("epaId", { length: 50 }),
+  facilityName: varchar("facilityName", { length: 255 }),
+  
+  // Tank system status
+  interimStatus: mysqlEnum("interimStatus", ["active", "transitioning", "permitted", "closed"]).default("active"),
+  tankSystemType: mysqlEnum("tankSystemType", ["existing", "new"]).default("existing"),
+  tankMaterial: mysqlEnum("tankMaterial", ["metal", "polyethylene", "fiberglass", "concrete", "other"]).default("metal"),
+  tankCapacityGallons: int("tankCapacityGallons"),
+  wasteTypes: text("wasteTypes"), // JSON array of waste codes
+  
+  // PE certification tracking
+  peCertificationDate: date("peCertificationDate"),
+  peCertificationExpiry: date("peCertificationExpiry"),
+  peEngineerName: varchar("peEngineerName", { length: 255 }),
+  peEngineerLicense: varchar("peEngineerLicense", { length: 100 }),
+  
+  // Compliance status
+  secondaryContainmentStatus: mysqlEnum("secondaryContainmentStatus", ["compliant", "exempt_daily_inspection", "upgrade_required", "non_compliant"]).default("compliant"),
+  airEmissionControlLevel: mysqlEnum("airEmissionControlLevel", ["level_1", "level_2", "exempt"]).default("level_1"),
+  closureStatus: mysqlEnum("closureStatus", ["operational", "closure_planned", "clean_closure", "landfill_closure"]).default("operational"),
+  
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+});
+export type RcraFacilityStatus = typeof rcraFacilityStatus.$inferSelect;
+export type InsertRcraFacilityStatus = typeof rcraFacilityStatus.$inferInsert;
+
+/**
+ * RCRA Checklist Items - Individual inspection checklist items per 40 CFR Part 265 Subpart J
+ */
+export const rcraChecklistItems = mysqlTable("rcraChecklistItems", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  inspectionId: varchar("inspectionId", { length: 64 }).notNull(),
+  
+  // Item identification
+  category: mysqlEnum("category", [
+    "integrity_assessment",
+    "daily_visual", 
+    "corrosion_protection",
+    "secondary_containment",
+    "ancillary_equipment",
+    "air_emission_controls",
+    "leak_detection",
+    "spill_overfill_prevention"
+  ]).notNull(),
+  itemCode: varchar("itemCode", { length: 20 }).notNull(),
+  itemDescription: text("itemDescription").notNull(),
+  regulatoryReference: varchar("regulatoryReference", { length: 100 }),
+  
+  // Inspection results
+  status: mysqlEnum("status", ["satisfactory", "unsatisfactory", "na", "not_inspected"]).default("not_inspected"),
+  findings: text("findings"),
+  
+  // Corrective action tracking
+  correctiveActionRequired: boolean("correctiveActionRequired").default(false),
+  correctiveActionDescription: text("correctiveActionDescription"),
+  correctiveActionDueDate: date("correctiveActionDueDate"),
+  correctiveActionCompletedDate: date("correctiveActionCompletedDate"),
+  
+  // Inspector info
+  inspectorName: varchar("inspectorName", { length: 255 }),
+  inspectionDate: timestamp("inspectionDate"),
+  
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+});
+export type RcraChecklistItem = typeof rcraChecklistItems.$inferSelect;
+export type InsertRcraChecklistItem = typeof rcraChecklistItems.$inferInsert;
+
+/**
+ * RCRA Inspection Schedules - Regulatory inspection frequency tracking
+ * Per 40 CFR 265.195 requirements
+ */
+export const rcraInspectionSchedules = mysqlTable("rcraInspectionSchedules", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  inspectionId: varchar("inspectionId", { length: 64 }).notNull(),
+  
+  // Schedule type
+  scheduleType: mysqlEnum("scheduleType", [
+    "daily_visual",           // 40 CFR 265.195(a) - daily for aboveground
+    "weekly_visual",          // 40 CFR 265.195(a) - weekly for underground
+    "bimonthly_impressed",    // 40 CFR 265.195(b) - every 2 months for impressed current
+    "annual_cathodic",        // 40 CFR 265.195(b) - annual cathodic protection survey
+    "pe_assessment",          // 40 CFR 265.191 - PE assessment before use
+    "leak_test"               // 40 CFR 265.191 - leak test as required
+  ]).notNull(),
+  
+  // Schedule details
+  frequencyDays: int("frequencyDays").notNull(), // Days between inspections
+  lastCompletedDate: date("lastCompletedDate"),
+  nextDueDate: date("nextDueDate"),
+  
+  // Notification settings
+  reminderDaysBefore: int("reminderDaysBefore").default(7),
+  notificationEmail: varchar("notificationEmail", { length: 320 }),
+  notificationEnabled: boolean("notificationEnabled").default(true),
+  
+  // Status
+  isOverdue: boolean("isOverdue").default(false),
+  overdueByDays: int("overdueByDays").default(0),
+  
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+});
+export type RcraInspectionSchedule = typeof rcraInspectionSchedules.$inferSelect;
+export type InsertRcraInspectionSchedule = typeof rcraInspectionSchedules.$inferInsert;
+
+/**
+ * RCRA Corrective Actions - Tracks findings and corrective actions
+ */
+export const rcraCorrectiveActions = mysqlTable("rcraCorrectiveActions", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  inspectionId: varchar("inspectionId", { length: 64 }).notNull(),
+  checklistItemId: varchar("checklistItemId", { length: 64 }),
+  
+  // Finding details
+  findingDescription: text("findingDescription").notNull(),
+  findingSeverity: mysqlEnum("findingSeverity", ["critical", "major", "minor", "observation"]).default("minor"),
+  regulatoryReference: varchar("regulatoryReference", { length: 100 }),
+  
+  // Corrective action
+  actionDescription: text("actionDescription"),
+  assignedTo: varchar("assignedTo", { length: 255 }),
+  dueDate: date("dueDate"),
+  completedDate: date("completedDate"),
+  status: mysqlEnum("status", ["open", "in_progress", "completed", "verified", "overdue"]).default("open"),
+  
+  // Verification
+  verifiedBy: varchar("verifiedBy", { length: 255 }),
+  verificationDate: date("verificationDate"),
+  verificationNotes: text("verificationNotes"),
+  
+  // Attachments (photos, documents)
+  attachmentUrls: json("attachmentUrls"),
+  
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+});
+export type RcraCorrectiveAction = typeof rcraCorrectiveActions.$inferSelect;
+export type InsertRcraCorrectiveAction = typeof rcraCorrectiveActions.$inferInsert;

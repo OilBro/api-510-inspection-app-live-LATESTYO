@@ -1,0 +1,81 @@
+CREATE TABLE `rcraChecklistItems` (
+	`id` varchar(64) NOT NULL,
+	`inspectionId` varchar(64) NOT NULL,
+	`category` enum('integrity_assessment','daily_visual','corrosion_protection','secondary_containment','ancillary_equipment','air_emission_controls','leak_detection','spill_overfill_prevention') NOT NULL,
+	`itemCode` varchar(20) NOT NULL,
+	`itemDescription` text NOT NULL,
+	`regulatoryReference` varchar(100),
+	`status` enum('satisfactory','unsatisfactory','na','not_inspected') DEFAULT 'not_inspected',
+	`findings` text,
+	`correctiveActionRequired` boolean DEFAULT false,
+	`correctiveActionDescription` text,
+	`correctiveActionDueDate` date,
+	`correctiveActionCompletedDate` date,
+	`inspectorName` varchar(255),
+	`inspectionDate` timestamp,
+	`createdAt` timestamp DEFAULT (now()),
+	`updatedAt` timestamp DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `rcraChecklistItems_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `rcraCorrectiveActions` (
+	`id` varchar(64) NOT NULL,
+	`inspectionId` varchar(64) NOT NULL,
+	`checklistItemId` varchar(64),
+	`findingDescription` text NOT NULL,
+	`findingSeverity` enum('critical','major','minor','observation') DEFAULT 'minor',
+	`regulatoryReference` varchar(100),
+	`actionDescription` text,
+	`assignedTo` varchar(255),
+	`dueDate` date,
+	`completedDate` date,
+	`status` enum('open','in_progress','completed','verified','overdue') DEFAULT 'open',
+	`verifiedBy` varchar(255),
+	`verificationDate` date,
+	`verificationNotes` text,
+	`attachmentUrls` json,
+	`createdAt` timestamp DEFAULT (now()),
+	`updatedAt` timestamp DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `rcraCorrectiveActions_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `rcraFacilityStatus` (
+	`id` varchar(64) NOT NULL,
+	`inspectionId` varchar(64) NOT NULL,
+	`epaId` varchar(50),
+	`facilityName` varchar(255),
+	`interimStatus` enum('active','transitioning','permitted','closed') DEFAULT 'active',
+	`tankSystemType` enum('existing','new') DEFAULT 'existing',
+	`tankMaterial` enum('metal','polyethylene','fiberglass','concrete','other') DEFAULT 'metal',
+	`tankCapacityGallons` int,
+	`wasteTypes` text,
+	`peCertificationDate` date,
+	`peCertificationExpiry` date,
+	`peEngineerName` varchar(255),
+	`peEngineerLicense` varchar(100),
+	`secondaryContainmentStatus` enum('compliant','exempt_daily_inspection','upgrade_required','non_compliant') DEFAULT 'compliant',
+	`airEmissionControlLevel` enum('level_1','level_2','exempt') DEFAULT 'level_1',
+	`closureStatus` enum('operational','closure_planned','clean_closure','landfill_closure') DEFAULT 'operational',
+	`notes` text,
+	`createdAt` timestamp DEFAULT (now()),
+	`updatedAt` timestamp DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `rcraFacilityStatus_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `rcraInspectionSchedules` (
+	`id` varchar(64) NOT NULL,
+	`inspectionId` varchar(64) NOT NULL,
+	`scheduleType` enum('daily_visual','weekly_visual','bimonthly_impressed','annual_cathodic','pe_assessment','leak_test') NOT NULL,
+	`frequencyDays` int NOT NULL,
+	`lastCompletedDate` date,
+	`nextDueDate` date,
+	`reminderDaysBefore` int DEFAULT 7,
+	`notificationEmail` varchar(320),
+	`notificationEnabled` boolean DEFAULT true,
+	`isOverdue` boolean DEFAULT false,
+	`overdueByDays` int DEFAULT 0,
+	`notes` text,
+	`createdAt` timestamp DEFAULT (now()),
+	`updatedAt` timestamp DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `rcraInspectionSchedules_id` PRIMARY KEY(`id`)
+);

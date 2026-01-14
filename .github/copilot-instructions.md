@@ -97,6 +97,21 @@ All formulas in [server/componentCalculations.ts](server/componentCalculations.t
    ```
 
 5. **Error Handling**: Wrap PDF operations, LLM calls, and file I/O in try-catch. Use `toast.error()` on client.
+   ```typescript
+   // Server-side error handling pattern
+   try {
+     const result = await invokeLLM({ messages });
+     return result;
+   } catch (error) {
+     logger.error('LLM extraction failed', { error, inspectionId });
+     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'PDF extraction failed' });
+   }
+   
+   // Client-side error handling
+   const mutation = trpc.pdfImport.extract.useMutation({
+     onError: (error) => toast.error(error.message),
+   });
+   ```
 
 6. **Storage**: Use `storagePut()` for R2/S3 uploads. Handle trailing slashes in URLs (R2 includes them).
 
@@ -161,17 +176,23 @@ const isWestHead = (c: string) => {
 Key tables in [drizzle/schema.ts](drizzle/schema.ts):
 
 ```typescript
-inspections        // Vessel metadata, design parameters, allowableStress, jointEfficiency
-tmlReadings        // Thickness readings with tml1-4 for multi-angle measurements
-                   // readingType: "nozzle" | "seam" | "spot" | "general"
-componentCalculations  // Per-component calcs: t_min, MAWP, corrosionRate, remainingLife
-                       // Includes corrosionRateLT, corrosionRateST, governingRate
-professionalReports    // Links to inspection, stores generated PDF URL
-reportAnomalies        // Auto-detected issues (thickness below min, high corrosion, etc.)
-                       // reviewStatus: "pending" | "acknowledged" | "resolved" | "false_positive"
-anomalyActionPlans     // Tracks remediation with assignments, due dates, priority
-materialStressValues   // ASME allowable stress lookup by material and temperature
-locationMappings       // CML-to-component mapping patterns (vessel-specific or default)
+inspections           // Vessel metadata, design parameters, allowableStress, jointEfficiency
+tmlReadings           // Thickness readings with tml1-4 for multi-angle measurements
+                      // readingType: "nozzle" | "seam" | "spot" | "general"
+componentCalculations // Per-component calcs: t_min, MAWP, corrosionRate, remainingLife
+                      // Includes corrosionRateLT, corrosionRateST, governingRate
+professionalReports   // Links to inspection, stores generated PDF URL
+reportAnomalies       // Auto-detected issues (thickness below min, high corrosion, etc.)
+                      // reviewStatus: "pending" | "acknowledged" | "resolved" | "false_positive"
+anomalyActionPlans    // Tracks remediation with assignments, due dates, priority
+materialStressValues  // ASME allowable stress lookup by material and temperature
+fieldMappings         // PDF field-to-database field mapping patterns
+extractionJobs        // Background PDF extraction processing with progress tracking
+nozzleEvaluations     // Nozzle thickness evaluations and calculations
+ffsAssessments        // Fitness-for-Service assessment records
+inLieuOfAssessments   // In-lieu-of inspection assessment records
+inspectionFindings    // Findings from inspections
+recommendations       // Recommendations for inspections
 ```
 
 ## Testing Patterns
@@ -197,32 +218,32 @@ Key test files demonstrate real-world usage:
 6. **TML reading types**: `readingType` field distinguishes nozzle/seam/spot measurements
 
 
-## Location Mapping System
+## Field Mapping System
 
-Configurable CML-to-component mappings in `server/locationMappingRouter.ts`:
+Configurable PDF field-to-database field mappings in `server/fieldMappingRouters.ts`:
 
 ```typescript
-// Database table: locationMappings
-// Allows vessel-specific or default mappings
+// Database table: fieldMappings
+// Maps extracted PDF field names to database columns
 {
-  vesselTagNumber: "54-11-001",  // null for default mappings
-  locationPattern: "8|9|10|11|12",  // regex pattern for CML locations
-  componentType: "shell",
-  componentName: "Vessel Shell"
+  sourceField: "Vessel Tag",      // Field name from PDF extraction
+  targetField: "vesselTagNumber", // Database column name
+  confidence: 0.95,               // AI confidence score
+  isVerified: true                // User-verified mapping
 }
 ```
 
-**Usage in calculations:**
+**Usage in PDF import:**
 ```typescript
-// In professionalReportDb.ts - categorizeTmlReadings()
-const mappings = await getLocationMappings(vesselTagNumber);
-readings.forEach(r => {
-  const match = mappings.find(m => new RegExp(m.locationPattern).test(r.location));
-  r.componentType = match?.componentType || 'shell';
+// In pdfImportRouter.ts - applies field mappings during extraction
+const mappings = await getFieldMappings();
+extractedData.forEach(field => {
+  const mapping = mappings.find(m => m.sourceField === field.name);
+  if (mapping) field.targetField = mapping.targetField;
 });
 ```
 
-**Settings page**: `/settings/location-mapping` — UI for defining location-to-component mappings.
+**Settings page**: `/import-settings` — UI for managing field mappings and import configurations.
 
 ## Anomaly Detection System
 
