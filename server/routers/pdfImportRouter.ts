@@ -3,6 +3,7 @@ import { z } from "zod";
 import { invokeLLM } from "../_core/llm";
 import { storagePut } from "../storage";
 import { nanoid } from "nanoid";
+import { generateExcelTemplate } from "../generateExcelTemplate";
 import { inspections, tmlReadings, inspectionFindings, nozzleEvaluations, professionalReports, componentCalculations, checklistItems } from "../../drizzle/schema";
 import { sql, eq, and } from "drizzle-orm";
 import { getDb } from "../db";
@@ -1111,6 +1112,20 @@ CRITICAL RULES:
         success: true,
         inspectionId,
         message: `Inspection imported successfully with ${input.thicknessMeasurements?.length || 0} TML readings, ${input.nozzles?.length || 0} nozzles, and ${input.tableA?.components?.length || 0} component calculations`,
+      };
+    }),
+
+  /**
+   * Download Excel template for data import
+   */
+  downloadTemplate: protectedProcedure
+    .query(async () => {
+      const buffer = generateExcelTemplate();
+      const base64 = buffer.toString('base64');
+      return {
+        data: base64,
+        filename: 'API_510_Import_Template.xlsx',
+        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       };
     }),
 });

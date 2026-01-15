@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
-import { Settings, ArrowLeft, Upload, FileText, FileSpreadsheet, CheckCircle2, AlertCircle, Eye, Loader2 } from "lucide-react";
+import { Settings, ArrowLeft, Upload, FileText, FileSpreadsheet, CheckCircle2, AlertCircle, Eye, Loader2, Download } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { APP_TITLE } from "@/const";
 import { toast } from "sonner";
@@ -13,6 +13,60 @@ import ExtractionPreview from "@/components/ExtractionPreview";
 import { Progress } from "@/components/ui/progress";
 
 type ImportStep = "upload" | "extracting" | "preview" | "success";
+
+// Download template button component
+function DownloadTemplateButton() {
+  const { data, isLoading, refetch } = trpc.pdfImport.downloadTemplate.useQuery(undefined, {
+    enabled: false, // Don't auto-fetch
+  });
+
+  const handleDownload = async () => {
+    try {
+      const result = await refetch();
+      if (result.data) {
+        // Convert base64 to blob
+        const byteCharacters = atob(result.data.data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: result.data.contentType });
+        
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = result.data.filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        toast.success('Template downloaded!');
+      }
+    } catch (error) {
+      toast.error('Failed to download template');
+    }
+  };
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="mt-4 w-full"
+      onClick={handleDownload}
+      disabled={isLoading}
+    >
+      {isLoading ? (
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      ) : (
+        <Download className="mr-2 h-4 w-4" />
+      )}
+      Download Excel Template
+    </Button>
+  );
+}
 
 export default function ImportData() {
   const [, setLocation] = useLocation();
@@ -331,6 +385,7 @@ export default function ImportData() {
                       Fast structured data import
                     </li>
                   </ul>
+                  <DownloadTemplateButton />
                 </CardContent>
               </Card>
             </div>
