@@ -106,27 +106,54 @@ export function calculateRemainingLife(
 }
 
 /**
- * Get status color based on thickness ratio
+ * Get thickness status with regulatory-compliant language
+ * Per skills.md: Use objective engineering language, not subjective terms
  */
 export function getThicknessStatus(actual: number, required: number): {
   status: 'good' | 'monitor' | 'critical' | 'failed';
   color: string;
   label: string;
+  regulatoryStatement: string;
 } {
   if (!actual || !required) {
-    return { status: 'monitor', color: 'gray', label: 'Unknown' };
+    return { 
+      status: 'monitor', 
+      color: 'gray', 
+      label: 'Insufficient Data',
+      regulatoryStatement: 'Insufficient data to determine compliance status per ASME Section VIII'
+    };
   }
   
   const ratio = actual / required;
   
   if (ratio < 1.0) {
-    return { status: 'failed', color: 'red', label: 'Below Minimum' };
+    return { 
+      status: 'failed', 
+      color: 'red', 
+      label: 'Below t_min',
+      regulatoryStatement: `Actual thickness (${actual.toFixed(4)}") is below minimum required thickness (${required.toFixed(4)}") per UG-27/UG-32. Immediate action required.`
+    };
   } else if (ratio < 1.1) {
-    return { status: 'critical', color: 'orange', label: 'Critical' };
+    return { 
+      status: 'critical', 
+      color: 'orange', 
+      label: 'Near t_min',
+      regulatoryStatement: `Actual thickness (${actual.toFixed(4)}") is within 10% of minimum required (${required.toFixed(4)}") per UG-27/UG-32. Engineering assessment recommended.`
+    };
   } else if (ratio < 1.3) {
-    return { status: 'monitor', color: 'yellow', label: 'Monitor' };
+    return { 
+      status: 'monitor', 
+      color: 'yellow', 
+      label: 'Monitor',
+      regulatoryStatement: `Actual thickness (${actual.toFixed(4)}") is within 30% of minimum required (${required.toFixed(4)}") per UG-27/UG-32. Continued monitoring required.`
+    };
   } else {
-    return { status: 'good', color: 'green', label: 'Good' };
+    return { 
+      status: 'good', 
+      color: 'green', 
+      label: 'Exceeds t_min',
+      regulatoryStatement: `Actual thickness (${actual.toFixed(4)}") exceeds minimum required thickness (${required.toFixed(4)}") per UG-27/UG-32.`
+    };
   }
 }
 

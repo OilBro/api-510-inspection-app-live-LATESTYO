@@ -353,8 +353,9 @@ describe("ASME Section VIII Validation Tests", () => {
 
       const result = calculateComponent(data);
 
-      // With zero corrosion rate, remaining life is set to 999 years (effectively unlimited)
-      expect(result.remainingLife).toBe(999);
+      // Per skills.md: Zero corrosion rate returns -1 to indicate "Insufficient data"
+      // rather than assuming unlimited life (999 years)
+      expect(result.remainingLife).toBe(-1);
     });
 
     it("should handle negative corrosion allowance (below minimum)", () => {

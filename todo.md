@@ -1809,3 +1809,19 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add drag-and-drop zone to Import Data page
 - [x] Visual feedback for drag over state
 - [x] Support both PDF and Excel files
+
+## Skills.md Compliance Audit
+- [ ] Audit calculation engines for code references (API 510, ASME VIII-1)
+- [ ] Verify assumption declarations are explicit
+- [ ] Check unit preservation throughout calculations
+- [ ] Verify missing data halts calculations
+- [ ] Confirm no auto-selection of corrosion rates
+- [ ] Review PDF reports for regulator-ready language
+- [ ] Fix any identified violations
+
+## Priority 1 Fixes (Skills.md Compliance)
+- [x] Remove default joint efficiency - require explicit input
+- [x] Remove default allowable stress - require explicit input
+- [x] Replace subjective status labels with regulatory language
+- [x] Add assumption declarations to PDF output
+- [x] Handle zero corrosion rate with "Insufficient data" message

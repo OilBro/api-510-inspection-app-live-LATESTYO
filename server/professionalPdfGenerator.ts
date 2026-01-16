@@ -851,6 +851,31 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
     doc.font('Helvetica').fontSize(9);
     doc.text(report.complianceNotes, MARGIN, doc.y, { width: CONTENT_WIDTH });
   }
+  
+  // Per skills.md: Add explicit assumption declarations to PDF output
+  doc.moveDown(2);
+  doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.text);
+  doc.text('Calculation Assumptions & Basis:', MARGIN, doc.y);
+  doc.moveDown(0.5);
+  doc.font('Helvetica').fontSize(8).fillColor(COLORS.secondary);
+  
+  const assumptions = [
+    '• All calculations are based on ASME Section VIII Division 1 (current edition). Verify applicability with current code.',
+    '• Minimum thickness calculations per UG-27 (shells) and UG-32 (heads).',
+    '• MAWP calculations assume uniform corrosion. Localized thinning requires separate FFS assessment per API 579-1.',
+    '• Remaining life calculations assume linear corrosion rate. Actual rates may vary with process conditions.',
+    '• Joint efficiencies are as specified in vessel data record. If not provided, calculations cannot be performed.',
+    '• Allowable stress values are from ASME Section II Part D at design temperature.',
+    '• Static head pressure included where applicable per API 510 Section 7.',
+    '• This report does not constitute a fitness-for-service assessment unless Section 10.0 is included.',
+  ];
+  
+  assumptions.forEach(assumption => {
+    doc.text(assumption, MARGIN, doc.y, { width: CONTENT_WIDTH });
+    doc.moveDown(0.3);
+  });
+  
+  doc.fillColor(COLORS.text); // Reset color
 }
 
 async function generateVesselData(doc: PDFKit.PDFDocument, inspection: any, logoBuffer?: Buffer) {

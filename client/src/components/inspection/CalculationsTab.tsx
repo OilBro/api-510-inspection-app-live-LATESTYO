@@ -21,11 +21,12 @@ export default function CalculationsTab({ inspectionId }: CalculationsTabProps) 
   const utils = trpc.useUtils();
 
   // Shell calculations
+  // Per skills.md: Do not default critical parameters - require explicit input
   const [shellMinThickness, setShellMinThickness] = useState({
     designPressure: "",
     insideRadius: "",
     allowableStress: "",
-    jointEfficiency: "1.0",
+    jointEfficiency: "", // No default - must be explicitly provided
     corrosionAllowance: "",
     result: "",
   });
@@ -34,7 +35,7 @@ export default function CalculationsTab({ inspectionId }: CalculationsTabProps) 
     actualThickness: "",
     insideRadius: "",
     allowableStress: "",
-    jointEfficiency: "1.0",
+    jointEfficiency: "", // No default - must be explicitly provided
     corrosionAllowance: "",
     result: "",
   });
@@ -44,7 +45,7 @@ export default function CalculationsTab({ inspectionId }: CalculationsTabProps) 
     designPressure: "",
     insideRadius: "",
     allowableStress: "",
-    jointEfficiency: "1.0",
+    jointEfficiency: "", // No default - must be explicitly provided
     corrosionAllowance: "",
     headType: "hemispherical",
     result: "",
@@ -54,7 +55,7 @@ export default function CalculationsTab({ inspectionId }: CalculationsTabProps) 
     actualThickness: "",
     insideRadius: "",
     allowableStress: "",
-    jointEfficiency: "1.0",
+    jointEfficiency: "", // No default - must be explicitly provided
     corrosionAllowance: "",
     headType: "hemispherical",
     result: "",
@@ -112,8 +113,9 @@ export default function CalculationsTab({ inspectionId }: CalculationsTabProps) 
   useEffect(() => {
     if (inspection) {
       const radius = inspection.insideDiameter ? (parseFloat(inspection.insideDiameter) / 2).toString() : "";
-      const jointEff = inspection.jointEfficiency ? String(inspection.jointEfficiency) : "1.0";
-      const allowStress = inspection.allowableStress ? String(inspection.allowableStress) : "15000";
+      // Per skills.md: Do not auto-fill critical parameters - require explicit input
+      const jointEff = inspection.jointEfficiency ? String(inspection.jointEfficiency) : "";
+      const allowStress = inspection.allowableStress ? String(inspection.allowableStress) : "";
       
       setShellMinThickness((prev) => ({
         ...prev,
@@ -150,9 +152,9 @@ export default function CalculationsTab({ inspectionId }: CalculationsTabProps) 
   // Load saved calculations
   useEffect(() => {
     if (calculations) {
-      // Use inspection values as fallback for calculations
-      const jointEff = inspection?.jointEfficiency ? String(inspection.jointEfficiency) : "1.0";
-      const allowStress = inspection?.allowableStress ? String(inspection.allowableStress) : "15000";
+      // Per skills.md: Do not auto-fill critical parameters - require explicit input
+      const jointEff = inspection?.jointEfficiency ? String(inspection.jointEfficiency) : "";
+      const allowStress = inspection?.allowableStress ? String(inspection.allowableStress) : "";
       
       // Pre-fill shell minimum thickness fields from imported data
       setShellMinThickness(prev => ({

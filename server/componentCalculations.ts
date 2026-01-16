@@ -359,17 +359,23 @@ export function calculateHeadMAWP(
 
 /**
  * Calculate remaining life and next inspection date
+ * Per skills.md: Missing data halts calculations - do not guess or auto-fill
+ * 
+ * Returns remainingLife = -1 when corrosion rate is zero/missing to indicate
+ * "Insufficient data" rather than assuming unlimited life
  */
 function calculateRemainingLife(
   actualThickness: number,
   minThickness: number,
   corrosionRate: number
-): { remainingLife: number, nextInspectionDate: Date } {
+): { remainingLife: number, nextInspectionDate: Date, insufficientData: boolean } {
   if (corrosionRate <= 0) {
-    // No corrosion detected
+    // Per skills.md: Do not assume unlimited life when corrosion rate is missing
+    // Return -1 to indicate "Insufficient corrosion data to calculate remaining life"
     return {
-      remainingLife: 999, // Effectively unlimited
-      nextInspectionDate: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000) // 10 years
+      remainingLife: -1, // Indicates insufficient data
+      nextInspectionDate: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000), // Default 10 years per API 510 max interval
+      insufficientData: true
     };
   }
   
@@ -385,7 +391,8 @@ function calculateRemainingLife(
   
   return {
     remainingLife: Math.max(remainingLife, 0),
-    nextInspectionDate: nextInspection
+    nextInspectionDate: nextInspection,
+    insufficientData: false
   };
 }
 

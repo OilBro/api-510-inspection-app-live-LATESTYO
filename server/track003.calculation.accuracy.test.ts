@@ -330,7 +330,8 @@ describe("Track 003: Calculation Accuracy Verification", () => {
 
       const result = calculateComponent(data);
 
-      expect(result.remainingLife).toBe(999);
+      // Per skills.md: Zero corrosion rate returns -1 to indicate "Insufficient data"
+      expect(result.remainingLife).toBe(-1);
     });
   });
 
