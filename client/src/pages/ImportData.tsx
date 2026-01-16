@@ -72,6 +72,7 @@ export default function ImportData() {
   const [, setLocation] = useLocation();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [parserType, setParserType] = useState<"docupipe" | "manus" | "vision" | "hybrid">("hybrid");
   const [step, setStep] = useState<ImportStep>("upload");
   const [previewData, setPreviewData] = useState<any>(null);
@@ -140,31 +141,64 @@ export default function ImportData() {
     }
   }, [extractionJobId, step, utils]);
 
+  // Validate and set file (shared by both input and drag-drop)
+  const validateAndSetFile = (file: File) => {
+    const isPDF = file.type === "application/pdf";
+    const isExcel = 
+      file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      file.type === "application/vnd.ms-excel" ||
+      file.name.endsWith(".xlsx") ||
+      file.name.endsWith(".xls");
+
+    if (!isPDF && !isExcel) {
+      toast.error("Please select a PDF or Excel file");
+      return false;
+    }
+    
+    // File size validation - 25MB limit
+    const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB exceeds 25MB limit. Please use a smaller file or split into multiple files.`);
+      return false;
+    }
+
+    setSelectedFile(file);
+    setStep("upload");
+    setPreviewData(null);
+    return true;
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const isPDF = file.type === "application/pdf";
-      const isExcel = 
-        file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-        file.type === "application/vnd.ms-excel" ||
-        file.name.endsWith(".xlsx") ||
-        file.name.endsWith(".xls");
+      validateAndSetFile(file);
+    }
+  };
 
-      if (!isPDF && !isExcel) {
-        toast.error("Please select a PDF or Excel file");
-        return;
-      }
-      
-      // File size validation - 25MB limit
-      const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
-      if (file.size > MAX_FILE_SIZE) {
-        toast.error(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB exceeds 25MB limit. Please use a smaller file or split into multiple files.`);
-        return;
-      }
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
 
-      setSelectedFile(file);
-      setStep("upload");
-      setPreviewData(null);
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      if (validateAndSetFile(file)) {
+        toast.success(`File "${file.name}" ready for import`);
+      }
     }
   };
 
@@ -397,23 +431,72 @@ export default function ImportData() {
                   Upload File
                 </CardTitle>
                 <CardDescription>
-                  Select a PDF or Excel file to extract inspection data
+                  Drag and drop a file or click to select
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="file">Select File</Label>
-                  <Input
-                    id="file"
+                {/* Drag and Drop Zone */}
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer ${
+                    isDragging
+                      ? "border-primary bg-primary/5 scale-[1.02]"
+                      : selectedFile
+                      ? "border-green-500 bg-green-50"
+                      : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50"
+                  }`}
+                  onClick={() => document.getElementById('file-input')?.click()}
+                >
+                  <input
+                    id="file-input"
                     type="file"
                     accept=".pdf,.xlsx,.xls"
                     onChange={handleFileSelect}
-                    className="cursor-pointer"
+                    className="hidden"
                   />
-                  {selectedFile && (
-                    <p className="text-sm text-muted-foreground">
-                      Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-                    </p>
+                  
+                  {isDragging ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <Upload className="h-12 w-12 text-primary animate-bounce" />
+                      <p className="text-lg font-medium text-primary">Drop file here</p>
+                    </div>
+                  ) : selectedFile ? (
+                    <div className="flex flex-col items-center gap-3">
+                      {selectedFile.name.endsWith('.pdf') ? (
+                        <FileText className="h-12 w-12 text-red-500" />
+                      ) : (
+                        <FileSpreadsheet className="h-12 w-12 text-green-600" />
+                      )}
+                      <div>
+                        <p className="text-lg font-medium text-foreground">{selectedFile.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedFile(null);
+                        }}
+                      >
+                        Remove and select different file
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3">
+                      <Upload className="h-12 w-12 text-muted-foreground" />
+                      <div>
+                        <p className="text-lg font-medium text-foreground">Drag and drop your file here</p>
+                        <p className="text-sm text-muted-foreground">or click to browse</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Supports PDF and Excel files (.pdf, .xlsx, .xls) up to 25MB
+                      </p>
+                    </div>
                   )}
                 </div>
 

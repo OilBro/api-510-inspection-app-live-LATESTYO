@@ -1804,3 +1804,8 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Create Excel template file with all sheets (Vessel Information, TML Readings, Nozzles, Inspection Details)
 - [x] Add download template button to Import Data page
 - [x] Include example data and formatting instructions
+
+## Drag-and-Drop File Upload
+- [x] Add drag-and-drop zone to Import Data page
+- [x] Visual feedback for drag over state
+- [x] Support both PDF and Excel files
