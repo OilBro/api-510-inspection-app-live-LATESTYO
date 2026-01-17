@@ -350,28 +350,81 @@ CRITICAL RULES:
         nozzleCount: extractedData.nozzleReadings?.length || 0,
       });
 
+      // Get existing TML readings for this inspection to set previous thickness values
+      const existingReadings = await db
+        .select()
+        .from(tmlReadings)
+        .where(eq(tmlReadings.inspectionId, input.targetInspectionId));
+      
+      // Create a map of CML number to existing reading for quick lookup
+      const existingReadingsMap = new Map<string, typeof existingReadings[0]>();
+      for (const reading of existingReadings) {
+        const cmlKey = (reading.cmlNumber || reading.tmlId || '').toString().toLowerCase().trim();
+        if (cmlKey) {
+          existingReadingsMap.set(cmlKey, reading);
+        }
+      }
+      
+      logger.info("[UT Upload] Found existing readings:", existingReadingsMap.size);
+
       // Add new TML readings to the inspection
+      // T-previous = existing T-current (from last report)
+      // T-current = new imported readings
       let tmlAdded = 0;
+      let tmlUpdated = 0;
       if (extractedData.thicknessMeasurements && extractedData.thicknessMeasurements.length > 0) {
         for (const measurement of extractedData.thicknessMeasurements) {
           const readings = measurement.readings || [];
+          const newThickness = measurement.minThickness?.toString() || readings[0]?.toString() || null;
+          const cmlKey = (measurement.cml || '').toString().toLowerCase().trim();
           
-          await db.execute(sql`
-            INSERT INTO tmlReadings (
-              id, inspectionId, cmlNumber, componentType, location, service,
-              tml1, tml2, tml3, tml4, tActual, currentThickness,
-              currentInspectionDate, status, tmlId, component
-            ) VALUES (
-              ${nanoid()}, ${input.targetInspectionId}, ${String(measurement.cml || 'N/A')}, 
-              ${String(measurement.component || 'Unknown')}, ${String(measurement.location || 'N/A')}, ${null},
-              ${readings[0]?.toString() || null}, ${readings[1]?.toString() || null}, 
-              ${readings[2]?.toString() || null}, ${readings[3]?.toString() || null},
-              ${measurement.minThickness?.toString() || null}, ${measurement.minThickness?.toString() || null},
-              ${extractedData.inspectionDate ? new Date(extractedData.inspectionDate) : new Date()},
-              ${'good'}, ${measurement.cml || null}, ${measurement.component || null}
-            )
-          `);
-          tmlAdded++;
+          // Check if we have an existing reading for this CML
+          const existingReading = existingReadingsMap.get(cmlKey);
+          
+          if (existingReading) {
+            // UPDATE existing reading:
+            // - Move current thickness to previous thickness
+            // - Set new current thickness from imported data
+            const previousThickness = existingReading.currentThickness || existingReading.tActual || null;
+            const previousDate = existingReading.currentInspectionDate || null;
+            
+            await db.execute(sql`
+              UPDATE tmlReadings 
+              SET 
+                previousThickness = ${previousThickness},
+                previousInspectionDate = ${previousDate},
+                currentThickness = ${newThickness},
+                tActual = ${newThickness},
+                tml1 = ${readings[0]?.toString() || null},
+                tml2 = ${readings[1]?.toString() || null},
+                tml3 = ${readings[2]?.toString() || null},
+                tml4 = ${readings[3]?.toString() || null},
+                currentInspectionDate = ${extractedData.inspectionDate ? new Date(extractedData.inspectionDate) : new Date()},
+                updatedAt = NOW()
+              WHERE id = ${existingReading.id}
+            `);
+            tmlUpdated++;
+            logger.info(`[UT Upload] Updated CML ${measurement.cml}: prev=${previousThickness}, curr=${newThickness}`);
+          } else {
+            // INSERT new reading (no previous data exists)
+            await db.execute(sql`
+              INSERT INTO tmlReadings (
+                id, inspectionId, cmlNumber, componentType, location, service,
+                tml1, tml2, tml3, tml4, tActual, currentThickness,
+                currentInspectionDate, status, tmlId, component
+              ) VALUES (
+                ${nanoid()}, ${input.targetInspectionId}, ${String(measurement.cml || 'N/A')}, 
+                ${String(measurement.component || 'Unknown')}, ${String(measurement.location || 'N/A')}, ${null},
+                ${readings[0]?.toString() || null}, ${readings[1]?.toString() || null}, 
+                ${readings[2]?.toString() || null}, ${readings[3]?.toString() || null},
+                ${newThickness}, ${newThickness},
+                ${extractedData.inspectionDate ? new Date(extractedData.inspectionDate) : new Date()},
+                ${'good'}, ${measurement.cml || null}, ${measurement.component || null}
+              )
+            `);
+            tmlAdded++;
+            logger.info(`[UT Upload] Added new CML ${measurement.cml}: curr=${newThickness}`);
+          }
         }
       }
 
@@ -418,8 +471,9 @@ CRITICAL RULES:
 
       return {
         success: true,
-        message: `Added ${tmlAdded} thickness measurements and updated ${nozzlesUpdated} nozzles`,
+        message: `Added ${tmlAdded} new readings, updated ${tmlUpdated} existing readings, and updated ${nozzlesUpdated} nozzles`,
         tmlCount: tmlAdded,
+        tmlUpdated: tmlUpdated,
         nozzleCount: nozzlesUpdated,
       };
     }),

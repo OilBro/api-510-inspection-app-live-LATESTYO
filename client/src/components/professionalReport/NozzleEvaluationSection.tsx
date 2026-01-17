@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
+import { sortByCmlNumber } from "@/lib/cmlSort";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -255,7 +256,7 @@ export default function NozzleEvaluationSection({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {nozzles.map((nozzle) => {
+              {sortByCmlNumber(nozzles.map(n => ({ ...n, cmlNumber: n.nozzleNumber }))).map((nozzle) => {
                 const actual = nozzle.actualThickness
                   ? parseFloat(nozzle.actualThickness)
                   : null;

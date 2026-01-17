@@ -1836,3 +1836,10 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 ## CML Reading Sort Order
 - [x] Sort CML readings numerically (low to high) in import preview
 - [x] Sort CML readings numerically (low to high) in app TML displays
+
+## Bug Fixes - CML Sorting & Import Logic (User Reported)
+- [x] Add CML numerical sorting to Nozzles section display
+- [x] Fix T-previous/T-current logic on UT data import:
+  - T-previous should be the T-current from the last report (existing readings)
+  - T-current should be the newly imported readings
+  - Import should move existing T-current to T-previous before setting new T-current
