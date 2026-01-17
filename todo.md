@@ -1843,3 +1843,9 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
   - T-previous should be the T-current from the last report (existing readings)
   - T-current should be the newly imported readings
   - Import should move existing T-current to T-previous before setting new T-current
+
+## Corrosion Rate Recalculation After UT Upload
+- [x] Calculate actual time between inspection dates (previous vs current)
+- [x] Recalculate corrosion rate: Cr = (T-previous - T-current) / Years
+- [x] Update TML readings with new corrosion rate after UT upload
+- [x] Recalculate remaining life based on new corrosion rate

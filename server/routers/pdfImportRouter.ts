@@ -385,8 +385,47 @@ CRITICAL RULES:
             // UPDATE existing reading:
             // - Move current thickness to previous thickness
             // - Set new current thickness from imported data
+            // - Calculate corrosion rate based on actual time between inspections
             const previousThickness = existingReading.currentThickness || existingReading.tActual || null;
             const previousDate = existingReading.currentInspectionDate || null;
+            const newDate = extractedData.inspectionDate ? new Date(extractedData.inspectionDate) : new Date();
+            
+            // Calculate corrosion rate: Cr = (T-previous - T-current) / Years
+            // Per API 510 §7.1.1: Corrosion rate shall be calculated from actual thickness measurements
+            let corrosionRate: string | null = null;
+            let remainingLife: string | null = null;
+            
+            if (previousThickness && newThickness && previousDate) {
+              const prevThick = parseFloat(previousThickness);
+              const currThick = parseFloat(newThickness);
+              const prevDateObj = new Date(previousDate);
+              
+              // Calculate years between inspections
+              const yearsBetween = (newDate.getTime() - prevDateObj.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+              
+              if (yearsBetween > 0 && prevThick > currThick) {
+                // Corrosion rate in mils per year (mpy) = (thickness loss in inches * 1000) / years
+                const thicknessLoss = prevThick - currThick;
+                const crMpy = (thicknessLoss * 1000) / yearsBetween;
+                corrosionRate = crMpy.toFixed(2);
+                
+                // Calculate remaining life if we have minimum thickness
+                // RL = (T-current - T-min) / Cr (in years)
+                // For now, use a default t-min of 0.1" if not specified
+                const tMin = 0.1; // Default minimum, should be from component calculations
+                if (currThick > tMin && crMpy > 0) {
+                  const rlYears = ((currThick - tMin) * 1000) / crMpy;
+                  remainingLife = rlYears.toFixed(1);
+                }
+                
+                logger.info(`[UT Upload] CML ${measurement.cml}: Cr=${crMpy.toFixed(2)} mpy over ${yearsBetween.toFixed(2)} years`);
+              } else if (yearsBetween > 0 && prevThick <= currThick) {
+                // No corrosion or thickness increased (measurement variation)
+                corrosionRate = '0.00';
+                remainingLife = null; // Cannot calculate if no corrosion
+                logger.info(`[UT Upload] CML ${measurement.cml}: No corrosion detected (prev=${prevThick}, curr=${currThick})`);
+              }
+            }
             
             await db.execute(sql`
               UPDATE tmlReadings 
@@ -399,12 +438,14 @@ CRITICAL RULES:
                 tml2 = ${readings[1]?.toString() || null},
                 tml3 = ${readings[2]?.toString() || null},
                 tml4 = ${readings[3]?.toString() || null},
-                currentInspectionDate = ${extractedData.inspectionDate ? new Date(extractedData.inspectionDate) : new Date()},
+                currentInspectionDate = ${newDate},
+                corrosionRate = ${corrosionRate},
+                remainingLife = ${remainingLife},
                 updatedAt = NOW()
               WHERE id = ${existingReading.id}
             `);
             tmlUpdated++;
-            logger.info(`[UT Upload] Updated CML ${measurement.cml}: prev=${previousThickness}, curr=${newThickness}`);
+            logger.info(`[UT Upload] Updated CML ${measurement.cml}: prev=${previousThickness}, curr=${newThickness}, Cr=${corrosionRate} mpy`);
           } else {
             // INSERT new reading (no previous data exists)
             await db.execute(sql`
