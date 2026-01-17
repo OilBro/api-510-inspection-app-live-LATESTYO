@@ -17,7 +17,8 @@ import {
   ChevronDown,
   ChevronUp,
   Trash2,
-  Plus
+  Plus,
+  Code2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -340,7 +341,7 @@ export default function ExtractionPreview({
 
       {/* Editable Sections */}
       <Tabs defaultValue="vessel" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="vessel">Vessel Info</TabsTrigger>
           <TabsTrigger value="report">Report Info</TabsTrigger>
           <TabsTrigger value="tml">
@@ -354,6 +355,10 @@ export default function ExtractionPreview({
             {nozzles.length > 0 && (
               <Badge variant="secondary" className="ml-1 text-xs">{nozzles.length}</Badge>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="raw">
+            <Code2 className="h-4 w-4 mr-1" />
+            Raw Data
           </TabsTrigger>
         </TabsList>
 
@@ -729,6 +734,92 @@ export default function ExtractionPreview({
                   </div>
                 </ScrollArea>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Raw Data Tab */}
+        <TabsContent value="raw" className="mt-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Code2 className="h-5 w-5" />
+                Raw Parsed Data
+              </CardTitle>
+              <CardDescription>
+                View the raw JSON data extracted from the file. Useful for debugging and verification.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[500px] w-full rounded-md border">
+                <pre className="p-4 text-xs font-mono bg-muted/30 whitespace-pre-wrap break-words">
+                  {JSON.stringify(
+                    {
+                      vesselInfo,
+                      reportInfo,
+                      tmlReadings,
+                      nozzles,
+                      checklistItems: preview.checklistItems,
+                      narratives: preview.narratives,
+                      tableA: preview.tableA,
+                    },
+                    null,
+                    2
+                  )}
+                </pre>
+              </ScrollArea>
+              <div className="mt-4 flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const data = JSON.stringify(
+                      {
+                        vesselInfo,
+                        reportInfo,
+                        tmlReadings,
+                        nozzles,
+                        checklistItems: preview.checklistItems,
+                        narratives: preview.narratives,
+                        tableA: preview.tableA,
+                      },
+                      null,
+                      2
+                    );
+                    navigator.clipboard.writeText(data);
+                  }}
+                >
+                  Copy to Clipboard
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const data = JSON.stringify(
+                      {
+                        vesselInfo,
+                        reportInfo,
+                        tmlReadings,
+                        nozzles,
+                        checklistItems: preview.checklistItems,
+                        narratives: preview.narratives,
+                        tableA: preview.tableA,
+                      },
+                      null,
+                      2
+                    );
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `extracted-data-${vesselInfo.vesselTagNumber || 'unknown'}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  Download JSON
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

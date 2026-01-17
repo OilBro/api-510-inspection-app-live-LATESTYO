@@ -1825,3 +1825,10 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Replace subjective status labels with regulatory language
 - [x] Add assumption declarations to PDF output
 - [x] Handle zero corrosion rate with "Insufficient data" message
+
+## Excel Data Extraction Preview
+- [x] Create ExcelPreview component to display extracted data (already exists)
+- [x] Show vessel information, TML readings, nozzles, inspection details (already exists)
+- [x] Add data validation indicators (missing/invalid fields) (already exists)
+- [x] Integrate preview into Import Data page after file selection (already exists)
+- [x] Add Raw Data tab to show exactly what was parsed from the file
