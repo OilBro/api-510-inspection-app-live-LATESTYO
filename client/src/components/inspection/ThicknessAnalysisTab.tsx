@@ -9,6 +9,7 @@ import { trpc } from "@/lib/trpc";
 import { Plus, Trash2, Save, Download, Upload, Info } from "lucide-react";
 import { toast } from "sonner";
 import { calculateShellMinimumThickness, calculateHeadMinimumThickness, formatThickness, getThicknessStatus } from "@/lib/thicknessCalculations";
+import { sortByCmlNumber } from "@/lib/cmlSort";
 import {
   Table,
   TableBody,
@@ -408,7 +409,7 @@ export default function ThicknessAnalysisTab({ inspectionId }: ThicknessAnalysis
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {readings.map((reading) => (
+                  {sortByCmlNumber(readings.map(r => ({ ...r, cmlNumber: r.cmlNumber || r.tmlId }))).map((reading) => (
                     <TableRow key={reading.id}>
                       <TableCell className="font-medium">{reading.tmlId}</TableCell>
                       <TableCell>{reading.component}</TableCell>

@@ -1832,3 +1832,7 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add data validation indicators (missing/invalid fields) (already exists)
 - [x] Integrate preview into Import Data page after file selection (already exists)
 - [x] Add Raw Data tab to show exactly what was parsed from the file
+
+## CML Reading Sort Order
+- [x] Sort CML readings numerically (low to high) in import preview
+- [x] Sort CML readings numerically (low to high) in app TML displays

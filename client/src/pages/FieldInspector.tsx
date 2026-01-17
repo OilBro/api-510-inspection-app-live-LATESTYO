@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { sortByCmlNumber } from "@/lib/cmlSort";
 
 interface PendingReading {
   id: string;
@@ -343,7 +344,7 @@ export default function FieldInspector() {
               <CardDescription>{pendingReadings.length} total readings captured</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {pendingReadings.slice().reverse().map(reading => (
+              {sortByCmlNumber(pendingReadings).map(reading => (
                 <div
                   key={reading.id}
                   className={`p-4 rounded-lg border ${

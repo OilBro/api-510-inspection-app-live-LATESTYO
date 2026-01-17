@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Download } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { jsPDF } from "jspdf";
+import { sortByCmlNumber } from "@/lib/cmlSort";
 import { toast } from "sonner";
 
 interface InspectionReportTabProps {
@@ -170,7 +171,7 @@ export default function InspectionReportTab({ inspection }: InspectionReportTabP
 
         doc.setFont("helvetica", "normal");
         
-        for (const reading of tmlReadings) {
+        for (const reading of sortByCmlNumber(tmlReadings.map(r => ({ ...r, cmlNumber: r.cmlNumber || r.tmlId })))) {
           if (yPos > pageHeight) {
             doc.addPage();
             yPos = 20;

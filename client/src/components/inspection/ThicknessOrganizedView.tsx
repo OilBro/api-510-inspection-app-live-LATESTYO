@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Layers, Filter, BarChart3 } from "lucide-react";
+import { sortByCmlNumber } from "@/lib/cmlSort";
 
 interface TMLReading {
   id: string;
@@ -77,10 +78,12 @@ export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedV
     Nozzle: groupedReadings["Nozzle"]?.length || 0,
   };
 
-  // Filter readings based on selection
-  const filteredReadings = filter === "all" 
-    ? readings.map(r => ({ ...r, normalizedComponent: getComponentType(r) }))
-    : (groupedReadings[filter] || []);
+  // Filter readings based on selection and sort by CML number
+  const filteredReadings = sortByCmlNumber(
+    filter === "all" 
+      ? readings.map(r => ({ ...r, normalizedComponent: getComponentType(r) }))
+      : (groupedReadings[filter] || [])
+  );
 
   const getStatusColor = (current: string | null | undefined, min: string | null | undefined) => {
     if (!current || !min) return "bg-gray-100";

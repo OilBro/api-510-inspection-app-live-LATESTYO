@@ -21,6 +21,7 @@ import {
   Code2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sortByCmlNumber } from "@/lib/cmlSort";
 
 interface VesselInfo {
   vesselTagNumber: string;
@@ -209,7 +210,7 @@ export default function ExtractionPreview({
 }: ExtractionPreviewProps) {
   const [vesselInfo, setVesselInfo] = useState<VesselInfo>(preview.vesselInfo);
   const [reportInfo, setReportInfo] = useState<ReportInfo>(preview.reportInfo);
-  const [tmlReadings, setTmlReadings] = useState<TmlReading[]>(preview.tmlReadings);
+  const [tmlReadings, setTmlReadings] = useState<TmlReading[]>(() => sortByCmlNumber(preview.tmlReadings));
   const [nozzles, setNozzles] = useState<Nozzle[]>(preview.nozzles);
   
   const [expandedSections, setExpandedSections] = useState({
