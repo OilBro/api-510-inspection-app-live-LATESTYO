@@ -21,6 +21,7 @@ import { actionPlanRouter } from "./actionPlanRouter";
 import { trendAnalysisRouter } from "./trendAnalysisRouter";
 import { hierarchyRouter } from "./hierarchyRouter";
 import { rcraComplianceRouter } from "./routers/rcraComplianceRouter";
+import { batchReprocessRouter } from "./routers/batchReprocessRouter";
 import { convertToJpeg } from "./_core/freeconvert";
 import * as fieldMappingDb from "./fieldMappingDb";
 import * as professionalReportDb from "./professionalReportDb";
@@ -65,6 +66,7 @@ export const appRouter = router({
   trendAnalysis: trendAnalysisRouter,
   hierarchy: hierarchyRouter,
   rcraCompliance: rcraComplianceRouter,
+  batchReprocess: batchReprocessRouter,
 
   images: router({
     convertToJpeg: protectedProcedure

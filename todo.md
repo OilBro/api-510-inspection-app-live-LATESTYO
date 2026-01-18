@@ -1854,3 +1854,6 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [ ] Fix T-previous showing nominal thickness instead of previous T-current
 - [ ] Ensure UT upload moves existing T-current to T-previous before setting new values
 - [ ] Verify PDF report displays correct T-previous values
+
+## Bug Fix - Batch Re-process Page
+- [x] Fix broken /batch-reprocess route

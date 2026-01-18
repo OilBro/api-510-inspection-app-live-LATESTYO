@@ -21,6 +21,7 @@ import TrendAnalysis from "./pages/TrendAnalysis";
 import API510Calculator from "./pages/API510Calculator";
 import LocationMappingSettings from "./pages/LocationMappingSettings";
 import RCRAComplianceDashboard from "./pages/RCRAComplianceDashboard";
+import BatchReprocess from "./pages/BatchReprocess";
 
 function Router() {
   return (
@@ -42,6 +43,7 @@ function Router() {
       <Route path={"/calculator"} component={API510Calculator} />
       <Route path={"/settings/location-mapping"} component={LocationMappingSettings} />
       <Route path={"/rcra-compliance/:inspectionId"} component={RCRAComplianceDashboard} />
+      <Route path={"/batch-reprocess"} component={BatchReprocess} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
