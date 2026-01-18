@@ -279,7 +279,7 @@
 - [ ] Extract Section 3.0 Inspection Results (Foundation, Shell, Heads, Appurtenances findings)
 - [ ] Extract Section 4.0 Recommendations from PDF
 - [ ] Add references to Appendices A-G
-- [ ] Improve CML matching logic to handle multi-angle readings per CML
+- [x] Improve CML matching logic to handle multi-angle readings per CML
 - [ ] Group East Head seam readings (CML 6-7) separately from spot readings
 - [ ] Group West Head seam readings (CML 16-17) separately from spot readings
 - [ ] Add East Head spot readings by clock position (12, 3, 6, 9 o'clock)
@@ -1849,3 +1849,8 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Recalculate corrosion rate: Cr = (T-previous - T-current) / Years
 - [x] Update TML readings with new corrosion rate after UT upload
 - [x] Recalculate remaining life based on new corrosion rate
+
+## Bug Fix - T-Previous Column Showing Nominal Instead of Previous T-Current
+- [ ] Fix T-previous showing nominal thickness instead of previous T-current
+- [ ] Ensure UT upload moves existing T-current to T-previous before setting new values
+- [ ] Verify PDF report displays correct T-previous values

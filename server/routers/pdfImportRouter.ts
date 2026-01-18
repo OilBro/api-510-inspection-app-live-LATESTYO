@@ -357,15 +357,27 @@ CRITICAL RULES:
         .where(eq(tmlReadings.inspectionId, input.targetInspectionId));
       
       // Create a map of CML number to existing reading for quick lookup
+      // Normalize CML keys to handle variations like "1", "01", "001", "CML-1", "CML 1", etc.
+      const normalizeCmlKey = (cml: string | null | undefined): string => {
+        if (!cml) return '';
+        const str = cml.toString().toLowerCase().trim();
+        // Remove common prefixes like "cml", "tml", "#"
+        const cleaned = str.replace(/^(cml|tml|#|no\.?|number)?[-\s]*/i, '').trim();
+        // Try to extract just the numeric part for comparison
+        const numMatch = cleaned.match(/^(\d+)/);
+        return numMatch ? numMatch[1] : cleaned;
+      };
+      
       const existingReadingsMap = new Map<string, typeof existingReadings[0]>();
       for (const reading of existingReadings) {
-        const cmlKey = (reading.cmlNumber || reading.tmlId || '').toString().toLowerCase().trim();
+        const cmlKey = normalizeCmlKey(reading.cmlNumber || reading.tmlId);
         if (cmlKey) {
           existingReadingsMap.set(cmlKey, reading);
         }
       }
       
       logger.info("[UT Upload] Found existing readings:", existingReadingsMap.size);
+      logger.info("[UT Upload] Existing CML keys:", Array.from(existingReadingsMap.keys()).slice(0, 20));
 
       // Add new TML readings to the inspection
       // T-previous = existing T-current (from last report)
@@ -376,10 +388,11 @@ CRITICAL RULES:
         for (const measurement of extractedData.thicknessMeasurements) {
           const readings = measurement.readings || [];
           const newThickness = measurement.minThickness?.toString() || readings[0]?.toString() || null;
-          const cmlKey = (measurement.cml || '').toString().toLowerCase().trim();
+          const cmlKey = normalizeCmlKey(measurement.cml);
           
           // Check if we have an existing reading for this CML
           const existingReading = existingReadingsMap.get(cmlKey);
+          logger.info(`[UT Upload] Looking up CML '${measurement.cml}' -> normalized key '${cmlKey}' -> found: ${!!existingReading}`);
           
           if (existingReading) {
             // UPDATE existing reading:

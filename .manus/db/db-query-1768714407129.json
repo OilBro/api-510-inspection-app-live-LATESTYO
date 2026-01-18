@@ -1,0 +1,230 @@
+{
+  "query": "SELECT cmlNumber, componentType, location, nominalThickness, previousThickness, tActual, currentThickness, previousInspectionDate, currentInspectionDate \nFROM tmlReadings \nWHERE inspectionId IN (SELECT id FROM inspections WHERE vesselTagNumber LIKE '%54-11-001%')\nORDER BY cmlNumber\nLIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT cmlNumber, componentType, location, nominalThickness, previousThickness, tActual, currentThickness, previousInspectionDate, currentInspectionDate \nFROM tmlReadings \nWHERE inspectionId IN (SELECT id FROM inspections WHERE vesselTagNumber LIKE '%54-11-001%')\nORDER BY cmlNumber\nLIMIT 20;",
+  "rows": [
+    {
+      "cmlNumber": "001",
+      "componentType": "head",
+      "location": "1",
+      "nominalThickness": "0.5300",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5180",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "001",
+      "componentType": "head",
+      "location": "1",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5180",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "002",
+      "componentType": "head",
+      "location": "2",
+      "nominalThickness": "0.5300",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5260",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "002",
+      "componentType": "head",
+      "location": "2",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5260",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "003",
+      "componentType": "head",
+      "location": "3",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5260",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "003",
+      "componentType": "head",
+      "location": "3",
+      "nominalThickness": "0.5300",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5260",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "004",
+      "componentType": "head",
+      "location": "4",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5150",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "004",
+      "componentType": "head",
+      "location": "4",
+      "nominalThickness": "0.5300",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5150",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "005",
+      "componentType": "head",
+      "location": "5",
+      "nominalThickness": "0.5300",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5200",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "005",
+      "componentType": "head",
+      "location": "5",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5200",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "006",
+      "componentType": "shell",
+      "location": "0",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5070",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "006",
+      "componentType": "shell",
+      "location": "0",
+      "nominalThickness": "0.8130",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5070",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "007",
+      "componentType": "shell",
+      "location": "45",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5010",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "007",
+      "componentType": "shell",
+      "location": "45",
+      "nominalThickness": "0.8130",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5010",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "008",
+      "componentType": "shell",
+      "location": "90",
+      "nominalThickness": "0.8130",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.4980",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "008",
+      "componentType": "shell",
+      "location": "90",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.4980",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "009",
+      "componentType": "shell",
+      "location": "135",
+      "nominalThickness": "0.8130",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.4930",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "009",
+      "componentType": "shell",
+      "location": "135",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.4930",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "010",
+      "componentType": "shell",
+      "location": "180",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5100",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    },
+    {
+      "cmlNumber": "010",
+      "componentType": "shell",
+      "location": "180",
+      "nominalThickness": "0.8130",
+      "previousThickness": "NULL",
+      "tActual": "NULL",
+      "currentThickness": "0.5100",
+      "previousInspectionDate": "NULL",
+      "currentInspectionDate": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "cmlNumber\tcomponentType\tlocation\tnominalThickness\tpreviousThickness\ttActual\tcurrentThickness\tpreviousInspectionDate\tcurrentInspectionDate\n001\thead\t1\t0.5300\tNULL\tNULL\t0.5180\tNULL\tNULL\n001\thead\t1\tNULL\tNULL\tNULL\t0.5180\tNULL\tNULL\n002\thead\t2\t0.5300\tNULL\tNULL\t0.5260\tNULL\tNULL\n002\thead\t2\tNULL\tNULL\tNULL\t0.5260\tNULL\tNULL\n003\thead\t3\tNULL\tNULL\tNULL\t0.5260\tNULL\tNULL\n003\thead\t3\t0.5300\tNULL\tNULL\t0.5260\tNULL\tNULL\n004\thead\t4\tNULL\tNULL\tNULL\t0.5150\tNULL\tNULL\n004\thead\t4\t0.5300\tNULL\tNULL\t0.5150\tNULL\tNULL\n005\thead\t5\t0.5300\tNULL\tNULL\t0.5200\tNULL\tNULL\n005\thead\t5\tNULL\tNULL\tNULL\t0.5200\tNULL\tNULL\n006\tshell\t0\tNULL\tNULL\tNULL\t0.5070\tNULL\tNULL\n006\tshell\t0\t0.8130\tNULL\tNULL\t0.5070\tNULL\tNULL\n007\tshell\t45\tNULL\tNULL\tNULL\t0.5010\tNULL\tNULL\n007\tshell\t45\t0.8130\tNULL\tNULL\t0.5010\tNULL\tNULL\n008\tshell\t90\t0.8130\tNULL\tNULL\t0.4980\tNULL\tNULL\n008\tshell\t90\tNULL\tNULL\tNULL\t0.4980\tNULL\tNULL\n009\tshell\t135\t0.8130\tNULL\tNULL\t0.4930\tNULL\tNULL\n009\tshell\t135\tNULL\tNULL\tNULL\t0.4930\tNULL\tNULL\n010\tshell\t180\tNULL\tNULL\tNULL\t0.5100\tNULL\tNULL\n010\tshell\t180\t0.8130\tNULL\tNULL\t0.5100\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 509
+}

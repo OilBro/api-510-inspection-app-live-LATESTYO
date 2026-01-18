@@ -1,0 +1,94 @@
+{
+  "query": "SELECT cmlNumber, nominalThickness, previousThickness, tActual, tml1 \nFROM tmlReadings \nWHERE inspectionId IN (SELECT id FROM inspections WHERE vesselTagNumber LIKE '%54-11-001%')\nAND cmlNumber IN ('3', '7', '8', '9', '1', '2')\nORDER BY CAST(cmlNumber AS UNSIGNED);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT cmlNumber, nominalThickness, previousThickness, tActual, tml1 \nFROM tmlReadings \nWHERE inspectionId IN (SELECT id FROM inspections WHERE vesselTagNumber LIKE '%54-11-001%')\nAND cmlNumber IN ('3', '7', '8', '9', '1', '2')\nORDER BY CAST(cmlNumber AS UNSIGNED);",
+  "rows": [
+    {
+      "cmlNumber": "1",
+      "nominalThickness": "NULL",
+      "previousThickness": "0.3700",
+      "tActual": "0.4880",
+      "tml1": "0.4880"
+    },
+    {
+      "cmlNumber": "1",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "0.4880",
+      "tml1": "0.4880"
+    },
+    {
+      "cmlNumber": "2",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "0.4930",
+      "tml1": "0.4930"
+    },
+    {
+      "cmlNumber": "2",
+      "nominalThickness": "NULL",
+      "previousThickness": "0.3700",
+      "tActual": "0.4930",
+      "tml1": "0.4930"
+    },
+    {
+      "cmlNumber": "3",
+      "nominalThickness": "NULL",
+      "previousThickness": "0.3700",
+      "tActual": "0.4950",
+      "tml1": "0.4950"
+    },
+    {
+      "cmlNumber": "3",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "0.4950",
+      "tml1": "0.4950"
+    },
+    {
+      "cmlNumber": "7",
+      "nominalThickness": "NULL",
+      "previousThickness": "0.3700",
+      "tActual": "0.5020",
+      "tml1": "0.5200"
+    },
+    {
+      "cmlNumber": "7",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "0.5020",
+      "tml1": "0.5200"
+    },
+    {
+      "cmlNumber": "8",
+      "nominalThickness": "NULL",
+      "previousThickness": "0.3700",
+      "tActual": "0.8010",
+      "tml1": "0.8010"
+    },
+    {
+      "cmlNumber": "8",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "0.8010",
+      "tml1": "0.8010"
+    },
+    {
+      "cmlNumber": "9",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "0.8000",
+      "tml1": "0.8010"
+    },
+    {
+      "cmlNumber": "9",
+      "nominalThickness": "NULL",
+      "previousThickness": "NULL",
+      "tActual": "0.8000",
+      "tml1": "0.8010"
+    }
+  ],
+  "messages": [],
+  "stdout": "cmlNumber\tnominalThickness\tpreviousThickness\ttActual\ttml1\n1\tNULL\t0.3700\t0.4880\t0.4880\n1\tNULL\tNULL\t0.4880\t0.4880\n2\tNULL\tNULL\t0.4930\t0.4930\n2\tNULL\t0.3700\t0.4930\t0.4930\n3\tNULL\t0.3700\t0.4950\t0.4950\n3\tNULL\tNULL\t0.4950\t0.4950\n7\tNULL\t0.3700\t0.5020\t0.5200\n7\tNULL\tNULL\t0.5020\t0.5200\n8\tNULL\t0.3700\t0.8010\t0.8010\n8\tNULL\tNULL\t0.8010\t0.8010\n9\tNULL\tNULL\t0.8000\t0.8010\n9\tNULL\tNULL\t0.8000\t0.8010\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}
