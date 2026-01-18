@@ -29,6 +29,7 @@ export default function BatchReprocess() {
   const pdfFiles = importedFiles?.filter((file: { fileType: string }) => file.fileType === 'pdf') || [];
 
   const reprocessMutation = trpc.batchReprocess.reprocessSingle.useMutation();
+  const reprocessAllMutation = trpc.batchReprocess.reprocessAll.useMutation();
 
   const toggleSelection = (inspectionId: string) => {
     const newSelection = new Set(selectedInspections);
@@ -46,6 +47,53 @@ export default function BatchReprocess() {
     } else {
       setSelectedInspections(new Set(pdfFiles.map((f: typeof pdfFiles[0]) => f.id)));
     }
+  };
+
+  const handleReprocessAll = async () => {
+    if (pdfFiles.length === 0) {
+      toast.error("No PDF files to re-process");
+      return;
+    }
+
+    setIsProcessing(true);
+    setProgress(0);
+    
+    // Initialize all files as pending
+    const results: ProcessingResult[] = pdfFiles.map((file: typeof pdfFiles[0]) => ({
+      inspectionId: file.id,
+      vesselTag: file.vesselTagNumber || "Unknown",
+      status: "processing" as const
+    }));
+    setProcessingResults(results);
+
+    try {
+      const result = await reprocessAllMutation.mutateAsync();
+      
+      // Update results based on backend response
+      setProcessingResults(prev => prev.map(r => {
+        const backendResult = result.results.find((br: { fileId: string }) => br.fileId === r.inspectionId);
+        if (backendResult) {
+          return {
+            ...r,
+            status: backendResult.success ? "success" as const : "error" as const,
+            message: backendResult.message
+          };
+        }
+        return { ...r, status: "success" as const };
+      }));
+      
+      setProgress(100);
+      toast.success(result.message);
+    } catch (error) {
+      setProcessingResults(prev => prev.map(r => ({
+        ...r,
+        status: "error" as const,
+        message: error instanceof Error ? error.message : "Unknown error"
+      })));
+      toast.error("Batch re-process failed");
+    }
+
+    setIsProcessing(false);
   };
 
   const handleBatchReprocess = async () => {
@@ -162,22 +210,41 @@ export default function BatchReprocess() {
                     Select All ({pdfFiles.length} inspections with PDF files)
                   </span>
                 </div>
-                <Button 
-                  onClick={handleBatchReprocess}
-                  disabled={isProcessing || selectedInspections.size === 0}
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Re-Process Selected ({selectedInspections.size})
-                    </>
-                  )}
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline"
+                    onClick={handleReprocessAll}
+                    disabled={isProcessing || pdfFiles.length === 0}
+                  >
+                    {isProcessing && selectedInspections.size === 0 ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Processing All...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Re-Process All ({pdfFiles.length})
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    onClick={handleBatchReprocess}
+                    disabled={isProcessing || selectedInspections.size === 0}
+                  >
+                    {isProcessing && selectedInspections.size > 0 ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Re-Process Selected ({selectedInspections.size})
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
 
               {isProcessing && (

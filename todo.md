@@ -1857,3 +1857,9 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 
 ## Bug Fix - Batch Re-process Page
 - [x] Fix broken /batch-reprocess route
+
+## Batch Re-process All Feature
+- [x] Add "Re-process All" button to batch reprocess page
+- [x] Create backend procedure to process all imported PDFs (already existed)
+- [x] Show progress indicator during batch processing
+- [x] Display summary of results after completion
