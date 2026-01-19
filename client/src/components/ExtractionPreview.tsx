@@ -342,7 +342,7 @@ export default function ExtractionPreview({
 
       {/* Editable Sections */}
       <Tabs defaultValue="vessel" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="vessel">Vessel Info</TabsTrigger>
           <TabsTrigger value="report">Report Info</TabsTrigger>
           <TabsTrigger value="tml">
@@ -355,6 +355,12 @@ export default function ExtractionPreview({
             Nozzles
             {nozzles.length > 0 && (
               <Badge variant="secondary" className="ml-1 text-xs">{nozzles.length}</Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="narratives">
+            Results & Recs
+            {(preview.narratives.inspectionResults || preview.narratives.recommendations) && (
+              <Badge variant="secondary" className="ml-1 text-xs">✓</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="raw">
@@ -734,6 +740,55 @@ export default function ExtractionPreview({
                     ))}
                   </div>
                 </ScrollArea>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Narratives Tab - Inspection Results & Recommendations */}
+        <TabsContent value="narratives" className="mt-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Inspection Results & Recommendations</CardTitle>
+              <CardDescription>Section 3.0 and 4.0 content extracted from the PDF</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Inspection Results - Section 3.0 */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Inspection Results (Section 3.0)</Label>
+                {preview.narratives.inspectionResults ? (
+                  <div className="border rounded-lg p-4 bg-muted/50 max-h-64 overflow-y-auto">
+                    <p className="text-sm whitespace-pre-wrap">{preview.narratives.inspectionResults}</p>
+                  </div>
+                ) : (
+                  <div className="border rounded-lg p-4 bg-muted/30 text-center text-muted-foreground">
+                    <p className="text-sm">No inspection results extracted from the PDF.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Recommendations - Section 4.0 */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Recommendations (Section 4.0)</Label>
+                {preview.narratives.recommendations ? (
+                  <div className="border rounded-lg p-4 bg-orange-50 border-orange-200 max-h-64 overflow-y-auto">
+                    <p className="text-sm whitespace-pre-wrap">{preview.narratives.recommendations}</p>
+                  </div>
+                ) : (
+                  <div className="border rounded-lg p-4 bg-muted/30 text-center text-muted-foreground">
+                    <p className="text-sm">No recommendations extracted from the PDF.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Executive Summary */}
+              {preview.narratives.executiveSummary && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Executive Summary</Label>
+                  <div className="border rounded-lg p-4 bg-blue-50 border-blue-200 max-h-64 overflow-y-auto">
+                    <p className="text-sm whitespace-pre-wrap">{preview.narratives.executiveSummary}</p>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>

@@ -730,7 +730,7 @@ CRITICAL RULES:
                     additionalProperties: false,
                   },
                 },
-                required: ["vesselData", "inspectionData", "thicknessMeasurements", "findings", "checklistItems", "nozzles", "tableA"],
+                required: ["vesselData", "inspectionData", "thicknessMeasurements", "findings", "checklistItems", "nozzles", "tableA", "recommendations", "inspectionResults"],
                 additionalProperties: false,
               },
             },

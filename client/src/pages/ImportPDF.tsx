@@ -233,6 +233,26 @@ export default function ImportPDF() {
                   </div>
                 )}
 
+                {/* Inspection Results */}
+                {extractedData.inspectionResults && (
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-lg">Inspection Results (Section 3.0)</h3>
+                    <div className="border rounded-lg p-4 bg-muted/50">
+                      <p className="text-sm whitespace-pre-wrap">{extractedData.inspectionResults}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Recommendations */}
+                {extractedData.recommendations && (
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-lg">Recommendations (Section 4.0)</h3>
+                    <div className="border rounded-lg p-4 bg-orange-50 border-orange-200">
+                      <p className="text-sm whitespace-pre-wrap">{extractedData.recommendations}</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Findings */}
                 {extractedData.findings && extractedData.findings.length > 0 && (
                   <div className="space-y-3">

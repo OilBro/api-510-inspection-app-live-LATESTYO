@@ -1863,3 +1863,10 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Create backend procedure to process all imported PDFs (already existed)
 - [x] Show progress indicator during batch processing
 - [x] Display summary of results after completion
+
+## Bug Fix - Recommendations Not Parsing
+- [x] Investigate why recommendations are not being parsed from PDFs
+- [x] Fix recommendations extraction and display
+- [x] Add recommendations to required fields in extraction schema
+- [x] Add Results & Recs tab to ExtractionPreview
+- [x] Add Inspection Results and Recommendations sections to ImportPDF preview
