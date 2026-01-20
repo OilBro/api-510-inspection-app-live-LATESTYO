@@ -1884,3 +1884,19 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add visual warning badge on inspection list for flagged reports
 - [x] Add warning banner on inspection detail page for flagged reports
 - [x] Add filter to show only flagged reports
+
+
+## PDF Report Fixes (From Review 01/20/2026)
+- [x] Fix CML order - sort numerically in TML table (PDF generator)
+- [x] Fix vertical text bug - added explicit width/position to prevent overflow
+- [ ] Fix missing angle data (t prev, 0°, 90°, 180°, 270°) - DATA ISSUE, not code
+- [ ] Fix vessel tag spacing issue - DATA ISSUE, not code
+- [x] Fix client showing "-" - improved fallback chain
+- [x] Fix "UNKNOWN" in Executive Summary - uses inspection data
+- [ ] Fix corrosion rate calculation - needs investigation
+- [x] Fix checklist checkmarks rendering as ['] - changed to [X]
+- [ ] Fix head table showing "-" - DATA ISSUE, needs component data
+- [ ] Fix truncated Location/Type columns - needs column width adjustment
+- [ ] Fix photo captions - DATA ISSUE, needs better captions
+- [ ] Fix "uknow" typo - DATA ISSUE in database
+- [ ] Fix duplicate In-Lieu-Of tables - needs investigation

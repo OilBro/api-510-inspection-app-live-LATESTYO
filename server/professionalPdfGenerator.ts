@@ -40,6 +40,22 @@ const COLORS = {
 // HELPER FUNCTIONS
 // ============================================================================
 
+/**
+ * Extract numeric value from CML number string for sorting
+ * Handles formats like: "1", "01", "CML-1", "CML 001", "TML-5", "A-2", etc.
+ */
+function extractCmlNumber(cmlStr: string): number {
+  if (!cmlStr) return 9999;
+  const str = cmlStr.toString().trim();
+  // Extract all digits from the string
+  const match = str.match(/\d+/);
+  if (match) {
+    return parseInt(match[0], 10);
+  }
+  // If no digits found, return high number to sort at end
+  return 9999;
+}
+
 async function addHeader(doc: PDFKit.PDFDocument, title: string, logoBuffer?: Buffer) {
   const startY = doc.y;
   
@@ -636,8 +652,12 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
   addSectionTitle(doc, '1.0 EXECUTIVE SUMMARY');
   
   // Use database summary if available, otherwise generate default text
+  // Pull vessel info from inspection record if not in report
+  const vesselId = report.vesselId || inspection?.vesselTagNumber || inspection?.vesselName || 'Not Specified';
+  const location = report.location || inspection?.location || report.clientLocation || 'Not Specified';
+  const inspDate = report.inspectionDate || inspection?.inspectionDate;
   const summaryText = report.executiveSummary || 
-    `An API Standard 510 inspection of pressure vessel ${report.vesselId || 'UNKNOWN'} located in ${report.location || 'UNKNOWN'}, was conducted on ${report.inspectionDate ? new Date(report.inspectionDate).toLocaleDateString() : 'UNKNOWN'}. This inspection was made to collect data in order to evaluate the mechanical integrity and fitness for service of the vessel. No major problems were noted. The vessel is in satisfactory mechanical condition for continued service.`;
+    `An API Standard 510 inspection of pressure vessel ${vesselId} located in ${location}, was conducted on ${inspDate ? new Date(inspDate).toLocaleDateString() : 'Not Specified'}. This inspection was made to collect data in order to evaluate the mechanical integrity and fitness for service of the vessel. No major problems were noted. The vessel is in satisfactory mechanical condition for continued service.`;
   
   addText(doc, summaryText);
   
@@ -925,7 +945,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
     ['Report No.', 'Client', 'Inspector', 'Vessel', 'Date'],
     [
       report?.reportNumber || '-',
-      report?.clientName || inspection?.clientName || '-',
+      report?.clientName || inspection?.manufacturer || 'Not Specified',
       report?.inspectorName || inspection?.inspector || '-',
       inspection?.vesselTagNumber || '-',
       report?.reportDate ? new Date(report.reportDate).toLocaleDateString() : (inspection?.inspectionDate ? new Date(inspection.inspectionDate).toLocaleDateString() : '-')
@@ -1361,7 +1381,7 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
     ['Report No.', 'Client', 'Inspector', 'Vessel', 'Date'],
     [
       report?.reportNumber || '-',
-      report?.clientName || inspection?.clientName || '-',
+      report?.clientName || inspection?.manufacturer || 'Not Specified',
       report?.inspectorName || inspection?.inspector || '-',
       inspection?.vesselTagNumber || '-',
       report?.reportDate ? new Date(report.reportDate).toLocaleDateString() : (inspection?.inspectionDate ? new Date(inspection.inspectionDate).toLocaleDateString() : '-')
@@ -1513,9 +1533,14 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
 }
 
 async function generateThicknessReadings(doc: PDFKit.PDFDocument, readings: any[], logoBuffer?: Buffer) {
-    // TML Readings count: ${readings?.length || 0}
+  // Sort readings by CML number numerically
+  const sortedReadings = [...(readings || [])].sort((a, b) => {
+    const aNum = extractCmlNumber(a.cmlNumber || a.tmlId || '');
+    const bNum = extractCmlNumber(b.cmlNumber || b.tmlId || '');
+    return aNum - bNum;
+  });
   
-  if (!readings || readings.length === 0) {
+  if (!sortedReadings || sortedReadings.length === 0) {
     await conditionalPageBreak(doc, 'THICKNESS MEASUREMENTS', logoBuffer, 150);
     addSectionTitle(doc, '8.0 ULTRASONIC THICKNESS MEASUREMENTS');
     addText(doc, 'No thickness readings recorded.');
@@ -1532,7 +1557,7 @@ async function generateThicknessReadings(doc: PDFKit.PDFDocument, readings: any[
   
   // Enhanced grid-based format with angle labels and metadata
   const headers = ['CML', 'Comp ID', 'Location', 'Type', 'Size', 'Service', 't prev', '0°', '90°', '180°', '270°', 't act*'];
-  const rows = readings.map(r => [
+  const rows = sortedReadings.map(r => [
     r.cmlNumber || r.tmlId || '-',
     r.componentType || r.component || '-',
     r.location || '-',
@@ -1554,7 +1579,11 @@ async function generateThicknessReadings(doc: PDFKit.PDFDocument, readings: any[
   // Add explanatory note about t act*
   doc.moveDown(0.5);
   doc.fontSize(9).fillColor('#666666');
-  doc.text('* t act (actual thickness) = minimum of all angle readings (0°, 90°, 180°, 270°)', { align: 'left' });
+  // Use explicit x position and width to prevent text overflow causing vertical rendering
+  doc.text('* t act (actual thickness) = minimum of all angle readings (0, 90, 180, 270 degrees)', MARGIN, doc.y, {
+    width: CONTENT_WIDTH,
+    align: 'left'
+  });
   doc.fillColor('#000000'); // Reset to black
   doc.fontSize(10); // Reset font size
 }
@@ -1570,7 +1599,8 @@ async function generateChecklist(doc: PDFKit.PDFDocument, items: any[], logoBuff
   }
   
   items.forEach((item, index) => {
-    const status = item.checked ? '[✓]' : '[ ]';
+    // Use [X] instead of checkmark for better font compatibility in PDFs
+    const status = item.checked ? '[X]' : '[ ]';
     const itemNumber = index + 1;
     addText(doc, `${itemNumber}. ${status} ${item.itemText || ''}`, { moveDown: true });
     
