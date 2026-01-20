@@ -1900,3 +1900,16 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [ ] Fix photo captions - DATA ISSUE, needs better captions
 - [ ] Fix "uknow" typo - DATA ISSUE in database
 - [ ] Fix duplicate In-Lieu-Of tables - needs investigation
+
+
+## Data Quality Fixes (January 2026)
+- [x] A) Data migration script for fixing missing angle data
+- [x] B) Improve import process to capture angle readings correctly
+- [x] C) Add manual data editor to inspection detail page
+
+## Data Quality Fixes (January 2025)
+- [ ] A) Create data migration script for fixing missing angle data (0°, 90°, 180°, 270°)
+- [ ] B) Improve PDF/Excel import to capture angle readings correctly
+- [ ] C) Add manual data editor to inspection detail page for TML readings
+- [ ] Test all three solutions
+- [ ] Save checkpoint

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
-import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare, AlertTriangle, Smartphone, Cog, RefreshCw } from "lucide-react";
+import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare, AlertTriangle, Smartphone, Cog, RefreshCw, Database } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { AnomalyStats } from "@/components/AnomalyStats";
 
@@ -202,6 +202,16 @@ export default function Home() {
               <CardTitle>Batch Re-Process PDFs</CardTitle>
               <CardDescription>
                 Re-run improved AI extraction on previously imported PDFs to update TML readings and calculations
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation("/data-migration")}>
+            <CardHeader>
+              <Database className="h-12 w-12 text-cyan-600 mb-4" />
+              <CardTitle>Data Migration</CardTitle>
+              <CardDescription>
+                Fix missing angle readings and correct TML data for existing inspections
               </CardDescription>
             </CardHeader>
           </Card>

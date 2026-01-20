@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { Plus, Trash2, Save, Download, Upload, Info } from "lucide-react";
+import { Plus, Trash2, Save, Download, Upload, Info, Pencil } from "lucide-react";
+import { TMLEditorButton } from "@/components/TMLEditor";
 import { toast } from "sonner";
 import { calculateShellMinimumThickness, calculateHeadMinimumThickness, formatThickness, getThicknessStatus } from "@/lib/thicknessCalculations";
 import { sortByCmlNumber } from "@/lib/cmlSort";
@@ -420,14 +421,35 @@ export default function ThicknessAnalysisTab({ inspectionId }: ThicknessAnalysis
                       <TableCell>{reading.corrosionRate ? `${reading.corrosionRate} mpy` : "-"}</TableCell>
                       <TableCell>{getStatusBadge(reading.status || "good")}</TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(reading.id)}
-                          disabled={deleteMutation.isPending}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <TMLEditorButton
+                            reading={{
+                              id: reading.id,
+                              cmlNumber: reading.cmlNumber || reading.tmlId || '',
+                              componentType: reading.componentType || reading.component || '',
+                              location: reading.location || '',
+                              tml1: reading.tml1 ? String(reading.tml1) : null,
+                              tml2: reading.tml2 ? String(reading.tml2) : null,
+                              tml3: reading.tml3 ? String(reading.tml3) : null,
+                              tml4: reading.tml4 ? String(reading.tml4) : null,
+                              tActual: reading.tActual ? String(reading.tActual) : null,
+                              nominalThickness: reading.nominalThickness ? String(reading.nominalThickness) : null,
+                              previousThickness: reading.previousThickness ? String(reading.previousThickness) : null,
+                              corrosionRate: reading.corrosionRate ? String(reading.corrosionRate) : null,
+                              status: (reading.status as "good" | "monitor" | "critical") || "good",
+                            }}
+                            onSaved={() => utils.tmlReadings.list.invalidate({ inspectionId })}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(reading.id)}
+                            disabled={deleteMutation.isPending}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

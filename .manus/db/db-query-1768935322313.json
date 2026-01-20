@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, vesselTagNumber, vesselName FROM inspections WHERE vesselTagNumber LIKE '%54-11-001%' OR vesselTagNumber LIKE '%54-11-0011%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, vesselTagNumber, vesselName FROM inspections WHERE vesselTagNumber LIKE '%54-11-001%' OR vesselTagNumber LIKE '%54-11-0011%' LIMIT 10;",
+  "rows": [
+    {
+      "id": "HWMA5YLYpywtYXnRSHqy9",
+      "vesselTagNumber": "54-11-001 4",
+      "vesselName": "54-11-001 4"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tvesselTagNumber\tvesselName\nHWMA5YLYpywtYXnRSHqy9\t54-11-001 4\t54-11-001 4\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

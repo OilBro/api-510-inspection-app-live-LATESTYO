@@ -469,6 +469,72 @@ export const appRouter = router({
         await db.deleteTmlReading(input.id);
         return { success: true };
       }),
+
+    // Batch update TML readings with angle data
+    updateBatch: protectedProcedure
+      .input(z.object({
+        inspectionId: z.string(),
+        updates: z.array(z.object({
+          cmlNumber: z.string(),
+          tml1: z.number().optional(),
+          tml2: z.number().optional(),
+          tml3: z.number().optional(),
+          tml4: z.number().optional(),
+          previousThickness: z.number().optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const { inspectionId, updates } = input;
+        
+        // Get existing TML readings for this inspection
+        const existingReadings = await db.getTmlReadings(inspectionId);
+        
+        let updatedCount = 0;
+        let notFoundCount = 0;
+        
+        for (const update of updates) {
+          // Find matching TML reading by CML number (normalized)
+          const normalizedCml = update.cmlNumber.replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
+          const matching = existingReadings.find(r => {
+            const existingNormalized = (r.cmlNumber || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
+            return existingNormalized === normalizedCml;
+          });
+          
+          if (matching) {
+            // Calculate tActual as minimum of tml1-4
+            const readings = [
+              update.tml1,
+              update.tml2,
+              update.tml3,
+              update.tml4,
+            ].filter((v): v is number => v !== undefined && v !== null && !isNaN(v));
+            
+            const tActual = readings.length > 0 ? Math.min(...readings) : undefined;
+            
+            // Build update object
+            const updateData: Record<string, any> = {};
+            if (update.tml1 !== undefined) updateData.tml1 = update.tml1.toString();
+            if (update.tml2 !== undefined) updateData.tml2 = update.tml2.toString();
+            if (update.tml3 !== undefined) updateData.tml3 = update.tml3.toString();
+            if (update.tml4 !== undefined) updateData.tml4 = update.tml4.toString();
+            if (tActual !== undefined) updateData.tActual = tActual.toString();
+            if (update.previousThickness !== undefined) updateData.previousThickness = update.previousThickness.toString();
+            
+            await db.updateTmlReading(matching.id, updateData);
+            updatedCount++;
+          } else {
+            notFoundCount++;
+            logger.warn(`[TML Batch Update] CML ${update.cmlNumber} not found in inspection ${inspectionId}`);
+          }
+        }
+        
+        return {
+          success: true,
+          updatedCount,
+          notFoundCount,
+          message: `Updated ${updatedCount} TML readings${notFoundCount > 0 ? `, ${notFoundCount} not found` : ''}`,
+        };
+      }),
   }),
 
   externalInspection: router({

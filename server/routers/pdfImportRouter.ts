@@ -77,8 +77,12 @@ ANALYZE THIS PDF THOROUGHLY AND EXTRACT ALL INFORMATION IN JSON FORMAT:
       "cml": "string - CML number (e.g., '1', '2', 'CML-1') - from Measurement Location column",
       "component": "string - FULL component name (e.g., 'Vessel Shell', '2 inch East Head Seam - Head Side', 'Nozzle A-1')",
       "location": "string - specific location description (e.g., 'East End, 12 o'clock')",
-      "readings": [0.000] - array of ALL thickness readings for this CML in inches - ALL angles (0°, 90°, 180°, 270° if present)",
-      "minThickness": "number - minimum of all readings",
+      "angle0": "number - thickness reading at 0° position in inches (if available)",
+      "angle90": "number - thickness reading at 90° position in inches (if available)",
+      "angle180": "number - thickness reading at 180° position in inches (if available)",
+      "angle270": "number - thickness reading at 270° position in inches (if available)",
+      "readings": [0.000] - array of ALL thickness readings for this CML in inches - ALL angles combined",
+      "minThickness": "number - minimum of all readings (t-actual)",
       "nominalThickness": "number - nominal/design thickness if available - from specification",
       "previousThickness": "number - previous inspection thickness if available - from prior inspection column"
     }
@@ -634,6 +638,10 @@ CRITICAL RULES:
                         cml: { type: "string" },
                         component: { type: "string" },
                         location: { type: "string" },
+                        angle0: { type: "number" },
+                        angle90: { type: "number" },
+                        angle180: { type: "number" },
+                        angle270: { type: "number" },
                         readings: {
                           type: "array",
                           items: { type: "number" },
@@ -825,6 +833,10 @@ CRITICAL RULES:
               cml: z.string(),
               component: z.string(),
               location: z.string().optional(),
+              angle0: z.number().optional(),
+              angle90: z.number().optional(),
+              angle180: z.number().optional(),
+              angle270: z.number().optional(),
               readings: z.array(z.number()),
               minThickness: z.number(),
               nominalThickness: z.number().optional(),
@@ -991,6 +1003,13 @@ CRITICAL RULES:
       if (input.thicknessMeasurements && input.thicknessMeasurements.length > 0) {
         for (const measurement of input.thicknessMeasurements) {
           const readings = measurement.readings || [];
+          
+          // Use explicit angle fields if available, otherwise fall back to readings array
+          const tml1 = measurement.angle0?.toString() || readings[0]?.toString() || null;
+          const tml2 = measurement.angle90?.toString() || readings[1]?.toString() || null;
+          const tml3 = measurement.angle180?.toString() || readings[2]?.toString() || null;
+          const tml4 = measurement.angle270?.toString() || readings[3]?.toString() || null;
+          
           const record = {
             id: nanoid(),
             inspectionId: inspectionId,
@@ -998,10 +1017,10 @@ CRITICAL RULES:
             componentType: String(measurement.component || 'Unknown'),
             location: String(measurement.location || 'N/A'),
             service: null as string | null,
-            tml1: readings[0]?.toString() || null,
-            tml2: readings[1]?.toString() || null,
-            tml3: readings[2]?.toString() || null,
-            tml4: readings[3]?.toString() || null,
+            tml1,
+            tml2,
+            tml3,
+            tml4,
             tActual: measurement.minThickness?.toString() || null,
             nominalThickness: measurement.nominalThickness?.toString() || null,
             previousThickness: measurement.previousThickness?.toString() || null,

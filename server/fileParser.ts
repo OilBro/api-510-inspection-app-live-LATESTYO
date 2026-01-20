@@ -260,14 +260,23 @@ function parseTmlReadingsSheet(data: any[][], result: ParsedVesselData): void {
   const tmlIdCol = headers.findIndex(h => h === 'tml id' || h.includes('tml id'));
   const locationCol = headers.findIndex(h => h === 'location' || h.includes('location'));
   const componentCol = headers.findIndex(h => h.includes('component'));
-  const tml1Col = headers.findIndex(h => h.includes('tml 1') || h === 'tml1');
-  const tml2Col = headers.findIndex(h => h.includes('tml 2') || h === 'tml2');
-  const tml3Col = headers.findIndex(h => h.includes('tml 3') || h === 'tml3');
-  const tml4Col = headers.findIndex(h => h.includes('tml 4') || h === 'tml4');
-  const tActualCol = headers.findIndex(h => h.includes('t actual') || h.includes('actual'));
-  const nominalCol = headers.findIndex(h => h.includes('nominal'));
-  const previousCol = headers.findIndex(h => h.includes('previous'));
-  const corrosionRateCol = headers.findIndex(h => h.includes('corrosion rate'));
+  
+  // Support both "TML 1/2/3/4" format and "0°/90°/180°/270°" angle format
+  let tml1Col = headers.findIndex(h => h.includes('tml 1') || h === 'tml1');
+  let tml2Col = headers.findIndex(h => h.includes('tml 2') || h === 'tml2');
+  let tml3Col = headers.findIndex(h => h.includes('tml 3') || h === 'tml3');
+  let tml4Col = headers.findIndex(h => h.includes('tml 4') || h === 'tml4');
+  
+  // If TML 1-4 columns not found, look for angle columns (0°, 90°, 180°, 270°)
+  if (tml1Col < 0) tml1Col = headers.findIndex(h => h.includes('0°') || h === '0' || h.includes('0 deg'));
+  if (tml2Col < 0) tml2Col = headers.findIndex(h => h.includes('90°') || h === '90' || h.includes('90 deg'));
+  if (tml3Col < 0) tml3Col = headers.findIndex(h => h.includes('180°') || h === '180' || h.includes('180 deg'));
+  if (tml4Col < 0) tml4Col = headers.findIndex(h => h.includes('270°') || h === '270' || h.includes('270 deg'));
+  
+  const tActualCol = headers.findIndex(h => h.includes('t actual') || h.includes('actual') || h.includes('t-actual') || h.includes('min'));
+  const nominalCol = headers.findIndex(h => h.includes('nominal') || h.includes('t-nom') || h.includes('t nom'));
+  const previousCol = headers.findIndex(h => h.includes('previous') || h.includes('t-prev') || h.includes('t prev'));
+  const corrosionRateCol = headers.findIndex(h => h.includes('corrosion rate') || h.includes('cr') || h.includes('rate'));
   const statusCol = headers.findIndex(h => h === 'status' || h.includes('status'));
   
   // Parse data rows
