@@ -188,6 +188,7 @@ export default function InspectionDetail() {
 
           <TabsContent value="results">
             <InspectionResultsTab 
+              inspectionId={id}
               inspectionResults={inspection.inspectionResults} 
               recommendations={inspection.recommendations} 
             />

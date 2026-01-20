@@ -215,6 +215,28 @@ export const appRouter = router({
         await db.deleteInspection(input.id);
         return { success: true };
       }),
+
+    // Update inspection results and recommendations
+    updateResultsAndRecommendations: protectedProcedure
+      .input(z.object({
+        id: z.string(),
+        inspectionResults: z.string().nullable().optional(),
+        recommendations: z.string().nullable().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, inspectionResults, recommendations } = input;
+        const updateData: Record<string, string | null> = {};
+        
+        if (inspectionResults !== undefined) {
+          updateData.inspectionResults = inspectionResults;
+        }
+        if (recommendations !== undefined) {
+          updateData.recommendations = recommendations;
+        }
+        
+        await db.updateInspection(id, updateData);
+        return { success: true };
+      }),
   }),
 
   calculations: router({

@@ -1,6 +1,7 @@
 import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { invokeLLM } from "../_core/llm";
+import { jsonrepair } from 'jsonrepair';
 import { storagePut } from "../storage";
 import { nanoid } from "nanoid";
 import { generateExcelTemplate } from "../generateExcelTemplate";
@@ -746,7 +747,27 @@ CRITICAL RULES:
         });
 
         const messageContent = response.choices[0].message.content;
-        const extractedData = JSON.parse(typeof messageContent === 'string' ? messageContent : "{}");
+        let extractedData;
+        try {
+          extractedData = JSON.parse(typeof messageContent === 'string' ? messageContent : "{}");
+        } catch (parseError) {
+          // Try to repair JSON using jsonrepair library
+          logger.warn("[PDF Import] JSON parse failed, attempting repair with jsonrepair...");
+          try {
+            let content = typeof messageContent === 'string' ? messageContent : "{}";
+            
+            // Remove any markdown code blocks first
+            content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+            
+            // Use jsonrepair to fix malformed JSON
+            const repaired = jsonrepair(content);
+            extractedData = JSON.parse(repaired);
+            logger.info("[PDF Import] JSON repair successful with jsonrepair");
+          } catch (repairError) {
+            logger.error("[PDF Import] JSON repair failed:", repairError);
+            throw parseError;
+          }
+        }
 
         logger.info("[PDF Import] Extraction complete:", {
           vesselTag: extractedData.vesselData?.vesselTagNumber,
@@ -755,6 +776,10 @@ CRITICAL RULES:
           checklistCount: extractedData.checklistItems?.length || 0,
           nozzleCount: extractedData.nozzles?.length || 0,
           tableACount: extractedData.tableA?.components?.length || 0,
+          hasRecommendations: !!extractedData.recommendations,
+          recommendationsLength: extractedData.recommendations?.length || 0,
+          hasInspectionResults: !!extractedData.inspectionResults,
+          inspectionResultsLength: extractedData.inspectionResults?.length || 0,
         });
 
         // Log nozzle details for debugging
@@ -916,6 +941,8 @@ CRITICAL RULES:
 
       logger.info("[PDF Import] Starting save for vessel:", input.vesselData.vesselTagNumber);
       logger.info("[PDF Import] Nozzles to save:", input.nozzles?.length || 0);
+      logger.info("[PDF Import] Recommendations:", input.recommendations ? `HAS DATA (${input.recommendations.length} chars)` : "NULL/EMPTY");
+      logger.info("[PDF Import] Inspection Results:", input.inspectionResults ? `HAS DATA (${input.inspectionResults.length} chars)` : "NULL/EMPTY");
 
       // Delete existing inspection with same vessel tag to prevent duplicates
       const existingInspections = await db

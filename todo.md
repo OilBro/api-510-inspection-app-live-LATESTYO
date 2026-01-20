@@ -1919,3 +1919,17 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add side-by-side comparison view showing original vs. edited values
 - [x] Add visual diff highlighting for changed fields
 - [x] Show comparison before save confirmation
+
+
+## Bug Fix: Recommendations Not Showing After Import (January 2026)
+- [ ] Investigate why extracted recommendations don't display after PDF import confirmation
+- [ ] Check PDF import router for recommendations extraction and storage
+- [ ] Check database schema for recommendations field
+- [ ] Check inspection display components for recommendations rendering
+- [ ] Fix the data flow issue
+
+
+## Manual Recommendations Editor (January 2026)
+- [x] Add backend procedure to update recommendations and inspection results
+- [x] Create editable recommendations UI in Results tab
+- [x] Allow pasting text directly without re-importing PDF
