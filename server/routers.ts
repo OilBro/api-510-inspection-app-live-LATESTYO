@@ -237,6 +237,144 @@ export const appRouter = router({
         await db.updateInspection(id, updateData);
         return { success: true };
       }),
+
+    // Extract recommendations and results from uploaded PDF
+    extractResultsFromPDF: protectedProcedure
+      .input(z.object({
+        pdfUrl: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { invokeLLM } = await import("./_core/llm");
+        const { jsonrepair } = await import('jsonrepair');
+        
+        try {
+          logger.info("[Extract Results] Starting extraction from PDF", { url: input.pdfUrl });
+          
+          // Use LLM to extract Section 3.0 and 4.0 from the PDF
+          const response = await invokeLLM({
+            messages: [
+              {
+                role: "system",
+                content: `You are an expert at extracting inspection findings and recommendations from API 510 pressure vessel inspection reports.
+
+You understand that different inspectors have varying report styles:
+- Some use formal numbered sections (3.0, 3.1, 3.2, 4.0, 4.1)
+- Some use informal narratives or prose
+- Some use bullet points or checklists
+- Some use tables for findings
+- Some focus heavily on technical measurements
+- Some emphasize visual observations
+- Some combine findings and recommendations together
+- Section headers may vary: "Inspection Results", "Findings", "Observations", "Inspection Summary", "Results of Inspection"
+- Recommendation headers may vary: "Recommendations", "Action Items", "Suggested Repairs", "Next Steps", "Conclusions and Recommendations"
+
+Your task is to extract:
+1. INSPECTION RESULTS - All findings about the vessel condition including:
+   - Foundation/support condition
+   - Shell condition (corrosion, pitting, erosion, cracking)
+   - Head condition (East/West heads)
+   - Nozzle and appurtenance condition
+   - Internal/external coating condition
+   - Weld condition
+   - Any thickness measurement observations
+   - Visual inspection findings
+
+2. RECOMMENDATIONS - All recommendations including:
+   - Repair recommendations
+   - Replacement recommendations
+   - Monitoring recommendations
+   - Next inspection date/interval
+   - Maintenance items
+   - Fitness-for-service notes
+   - Pressure test requirements
+   - Any action items
+
+Return the extracted text preserving the original formatting, numbering, and structure as much as possible.
+If content is found but not under standard section numbers, still extract it.
+If a section is truly not found in the document, return an empty string for that field.
+
+Return JSON in this exact format:
+{
+  "inspectionResults": "<full text of inspection findings/results>",
+  "recommendations": "<full text of recommendations/action items>"
+}`
+              },
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "file_url" as const,
+                    file_url: {
+                      url: input.pdfUrl,
+                      mime_type: "application/pdf" as const
+                    }
+                  },
+                  {
+                    type: "text" as const,
+                    text: "Extract Section 3.0 (Inspection Results) and Section 4.0 (Recommendations) from this API 510 inspection report PDF. Return the complete text of each section."
+                  }
+                ]
+              }
+            ],
+            response_format: {
+              type: "json_schema",
+              json_schema: {
+                name: "extracted_sections",
+                strict: true,
+                schema: {
+                  type: "object",
+                  properties: {
+                    inspectionResults: {
+                      type: "string",
+                      description: "Full text of Section 3.0 - Inspection Results"
+                    },
+                    recommendations: {
+                      type: "string",
+                      description: "Full text of Section 4.0 - Recommendations"
+                    }
+                  },
+                  required: ["inspectionResults", "recommendations"],
+                  additionalProperties: false
+                }
+              }
+            }
+          });
+
+          const messageContent = response.choices[0].message.content;
+          let extractedData;
+          
+          try {
+            extractedData = JSON.parse(typeof messageContent === 'string' ? messageContent : "{}");
+          } catch (parseError) {
+            logger.warn("[Extract Results] JSON parse failed, attempting repair...");
+            try {
+              let content = typeof messageContent === 'string' ? messageContent : "{}";
+              content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+              const repaired = jsonrepair(content);
+              extractedData = JSON.parse(repaired);
+            } catch (repairError) {
+              logger.error("[Extract Results] JSON repair failed", repairError);
+              throw new Error("Failed to parse extraction results");
+            }
+          }
+
+          logger.info("[Extract Results] Extraction complete", {
+            hasResults: !!extractedData.inspectionResults,
+            resultsLength: extractedData.inspectionResults?.length || 0,
+            hasRecommendations: !!extractedData.recommendations,
+            recommendationsLength: extractedData.recommendations?.length || 0
+          });
+
+          return {
+            success: true,
+            inspectionResults: extractedData.inspectionResults || "",
+            recommendations: extractedData.recommendations || ""
+          };
+        } catch (error) {
+          logger.error("[Extract Results] Extraction failed", error);
+          throw new Error(`Failed to extract from PDF: ${error instanceof Error ? error.message : "Unknown error"}`);
+        }
+      }),
   }),
 
   calculations: router({

@@ -1933,3 +1933,10 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add backend procedure to update recommendations and inspection results
 - [x] Create editable recommendations UI in Results tab
 - [x] Allow pasting text directly without re-importing PDF
+
+
+## Auto-Extract Recommendations from PDF (January 2026)
+- [x] Create backend procedure to extract Section 3.0 and 4.0 from uploaded PDF
+- [x] Add PDF upload button to Results tab
+- [x] Use AI to identify and extract inspection results and recommendations (handles varying inspector styles)
+- [x] Auto-populate editor fields with extracted text
