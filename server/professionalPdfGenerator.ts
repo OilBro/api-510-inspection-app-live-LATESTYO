@@ -492,13 +492,13 @@ export async function generateProfessionalPDF(data: ProfessionalReportData): Pro
   
   if (config.inspectionFindings !== false) {
     logger.info('[PDF DEBUG] Generating findings...');
-    await generateInspectionFindings(doc, findings, logoBuffer);
+    await generateInspectionFindings(doc, findings, logoBuffer, inspection);
     logger.info('[PDF DEBUG] Page count after findings:', doc.bufferedPageRange().count);
   }
   
   if (config.recommendations !== false) {
     logger.info('[PDF DEBUG] Generating recommendations...');
-    await generateRecommendationsSection(doc, recommendations, logoBuffer);
+    await generateRecommendationsSection(doc, recommendations, logoBuffer, inspection);
     logger.info('[PDF DEBUG] Page count after recommendations:', doc.bufferedPageRange().count);
   }
   
@@ -1305,57 +1305,91 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   doc.text('Where MAWP = P-(SH*.433*SG)', MARGIN, doc.y);
 }
 
-async function generateInspectionFindings(doc: PDFKit.PDFDocument, findings: any[], logoBuffer?: Buffer) {
+async function generateInspectionFindings(doc: PDFKit.PDFDocument, findings: any[], logoBuffer?: Buffer, inspection?: any) {
   await conditionalPageBreak(doc, 'INSPECTION FINDINGS', logoBuffer, 200);
   
   addSectionTitle(doc, '4.0 INSPECTION FINDINGS');
   
-  if (!findings || findings.length === 0) {
-    addText(doc, 'No findings reported.');
-    return;
+  // First, include the text-based inspection results from the inspection record (Section 3.0)
+  const inspectionResults = inspection?.inspectionResults;
+  if (inspectionResults && inspectionResults.trim()) {
+    addSubsectionTitle(doc, 'Inspection Results (Section 3.0)');
+    // Split by newlines and render each paragraph
+    const paragraphs = inspectionResults.split('\n').filter((p: string) => p.trim());
+    paragraphs.forEach((para: string) => {
+      addText(doc, para.trim());
+      doc.moveDown(0.5);
+    });
+    doc.moveDown(1);
   }
   
-  findings.forEach((finding, index) => {
-    if (index > 0) doc.moveDown(1);
-    
-    addSubsectionTitle(doc, `Finding ${index + 1}: ${finding.findingType || 'General'}`);
-    addText(doc, `Section: ${finding.section || '-'}`);
-    addText(doc, `Severity: ${finding.severity || '-'}`, { bold: true });
-    addText(doc, `Location: ${finding.location || '-'}`);
-    addText(doc, `Description: ${finding.description || '-'}`);
-    
-    if (finding.measurements) {
-      addText(doc, `Measurements: ${finding.measurements}`);
+  // Then include structured findings from the professional report
+  if (findings && findings.length > 0) {
+    if (inspectionResults && inspectionResults.trim()) {
+      addSubsectionTitle(doc, 'Additional Findings');
     }
     
-    checkPageBreak(doc, 80);
-  });
+    findings.forEach((finding, index) => {
+      if (index > 0) doc.moveDown(1);
+      
+      addSubsectionTitle(doc, `Finding ${index + 1}: ${finding.findingType || 'General'}`);
+      addText(doc, `Section: ${finding.section || '-'}`);
+      addText(doc, `Severity: ${finding.severity || '-'}`, { bold: true });
+      addText(doc, `Location: ${finding.location || '-'}`);
+      addText(doc, `Description: ${finding.description || '-'}`);
+      
+      if (finding.measurements) {
+        addText(doc, `Measurements: ${finding.measurements}`);
+      }
+      
+      checkPageBreak(doc, 80);
+    });
+  } else if (!inspectionResults || !inspectionResults.trim()) {
+    addText(doc, 'No findings reported.');
+  }
 }
 
-async function generateRecommendationsSection(doc: PDFKit.PDFDocument, recommendations: any[], logoBuffer?: Buffer) {
+async function generateRecommendationsSection(doc: PDFKit.PDFDocument, recommendations: any[], logoBuffer?: Buffer, inspection?: any) {
   await conditionalPageBreak(doc, 'RECOMMENDATIONS', logoBuffer, 200);
   
   addSectionTitle(doc, '5.0 RECOMMENDATIONS');
   
-  if (!recommendations || recommendations.length === 0) {
-    addText(doc, 'No recommendations at this time.');
-    return;
+  // First, include the text-based recommendations from the inspection record (Section 4.0)
+  const inspectionRecommendations = inspection?.recommendations;
+  if (inspectionRecommendations && inspectionRecommendations.trim()) {
+    addSubsectionTitle(doc, 'Inspection Recommendations (Section 4.0)');
+    // Split by newlines and render each paragraph
+    const paragraphs = inspectionRecommendations.split('\n').filter((p: string) => p.trim());
+    paragraphs.forEach((para: string) => {
+      addText(doc, para.trim());
+      doc.moveDown(0.5);
+    });
+    doc.moveDown(1);
   }
   
-  recommendations.forEach((rec, index) => {
-    if (index > 0) doc.moveDown(1);
-    
-    addText(doc, `${index + 1}. ${rec.recommendation || ''}`, { bold: true });
-    addText(doc, `Priority: ${rec.priority || '-'}`);
-    if (rec.dueDate) {
-      addText(doc, `Due Date: ${new Date(rec.dueDate).toLocaleDateString('en-US')}`);
-    }
-    if (rec.notes) {
-      addText(doc, `Notes: ${rec.notes}`);
+  // Then include structured recommendations from the professional report
+  if (recommendations && recommendations.length > 0) {
+    if (inspectionRecommendations && inspectionRecommendations.trim()) {
+      addSubsectionTitle(doc, 'Additional Recommendations');
     }
     
-    checkPageBreak(doc, 60);
-  });
+    recommendations.forEach((rec, index) => {
+      if (index > 0) doc.moveDown(1);
+      
+      addText(doc, `${index + 1}. ${rec.recommendation || ''}`, { bold: true });
+      addText(doc, `Priority: ${rec.priority || '-'}`);
+      if (rec.dueDate) {
+        addText(doc, `Due Date: ${new Date(rec.dueDate).toLocaleDateString('en-US')}`);
+      }
+      if (rec.notes) {
+        addText(doc, `Notes: ${rec.notes}`);
+      }
+      
+      checkPageBreak(doc, 60);
+    });
+  } else if (!inspectionRecommendations || !inspectionRecommendations.trim()) {
+    addText(doc, 'No recommendations at this time.');
+  }
 }
 
 async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: string, logoBuffer?: Buffer, report?: any, inspection?: any) {

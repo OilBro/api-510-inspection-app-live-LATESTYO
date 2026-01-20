@@ -1940,3 +1940,15 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add PDF upload button to Results tab
 - [x] Use AI to identify and extract inspection results and recommendations (handles varying inspector styles)
 - [x] Auto-populate editor fields with extracted text
+
+
+## UI/Report Fixes (January 2026)
+- [ ] Remove nested tabs in Professional Report - show all content on one screen
+- [ ] Fix PDF report generation to capture all inspection data
+- [ ] Make component section numbers editable with auto-recalculation
+
+
+## Current Fixes (January 2026)
+- [x] Make component section numbers editable (added edit button with pencil icon)
+- [x] Consolidate duplicate Recommendations sections - PDF now includes both sources
+- [x] Fix generated PDF report to include all data including recommendations

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Download, Plus, Trash2, Upload, FileText, Mail, Calculator, CheckSquare, FileSpreadsheet, TrendingUp, AlertTriangle } from "lucide-react";
+import { Loader2, Download, Plus, Trash2, Upload, FileText, Mail, Calculator, CheckSquare, FileSpreadsheet, TrendingUp, AlertTriangle, Pencil } from "lucide-react";
 import { DataQualityIndicator, CorrosionRateDisplay } from "@/components/DataQualityIndicator";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -713,6 +713,7 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
   const [dialogOpen, setDialogOpen] = useState(false);
   const [componentType, setComponentType] = useState<"shell" | "head">("shell");
   const [recalculating, setRecalculating] = useState(false);
+  const [editingCalc, setEditingCalc] = useState<any>(null);
   const utils = trpc.useUtils();
 
   const { data: calculations, isLoading } = trpc.professionalReport.componentCalculations.list.useQuery({
@@ -734,6 +735,17 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
     onSuccess: () => {
       utils.professionalReport.componentCalculations.list.invalidate();
       toast.success("Component calculation deleted");
+    },
+  });
+
+  const updateCalculation = trpc.professionalReport.componentCalculations.update.useMutation({
+    onSuccess: () => {
+      utils.professionalReport.componentCalculations.list.invalidate();
+      toast.success("Component calculation updated");
+      setEditingCalc(null);
+    },
+    onError: (error) => {
+      toast.error(`Failed to update calculation: ${error.message}`);
     },
   });
 
@@ -969,13 +981,22 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
                         </CardDescription>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => deleteCalculation.mutate({ calcId: calc.id })}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEditingCalc(calc)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteCalculation.mutate({ calcId: calc.id })}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1059,7 +1080,256 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
           </CardContent>
         </Card>
       )}
+
+      {/* Edit Component Dialog */}
+      <Dialog open={!!editingCalc} onOpenChange={(open) => !open && setEditingCalc(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Component: {editingCalc?.componentName}</DialogTitle>
+            <DialogDescription>
+              Update the component values. Calculations will be recalculated automatically.
+            </DialogDescription>
+          </DialogHeader>
+          {editingCalc && (
+            <ComponentEditForm
+              calculation={editingCalc}
+              onSave={(data) => {
+                updateCalculation.mutate({ calcId: editingCalc.id, data });
+              }}
+              onCancel={() => setEditingCalc(null)}
+              isSaving={updateCalculation.isPending}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+// Component Edit Form
+function ComponentEditForm({ 
+  calculation, 
+  onSave, 
+  onCancel,
+  isSaving 
+}: { 
+  calculation: any; 
+  onSave: (data: any) => void; 
+  onCancel: () => void;
+  isSaving: boolean;
+}) {
+  const [formData, setFormData] = useState({
+    componentName: calculation.componentName || '',
+    materialCode: calculation.materialCode || '',
+    materialName: calculation.materialName || '',
+    designTemp: calculation.designTemp || '',
+    designMAWP: calculation.designMAWP || '',
+    staticHead: calculation.staticHead || '0',
+    specificGravity: calculation.specificGravity || '1.0',
+    insideDiameter: calculation.insideDiameter || '',
+    nominalThickness: calculation.nominalThickness || '',
+    allowableStress: calculation.allowableStress || '',
+    jointEfficiency: calculation.jointEfficiency || '1.0',
+    headType: calculation.headType || 'torispherical',
+    crownRadius: calculation.crownRadius || '',
+    knuckleRadius: calculation.knuckleRadius || '',
+    previousThickness: calculation.previousThickness || '',
+    actualThickness: calculation.actualThickness || '',
+    timeSpan: calculation.timeSpan || '',
+    nextInspectionYears: calculation.nextInspectionYears || '5',
+  });
+
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="edit-componentName">Component Name</Label>
+          <Input
+            id="edit-componentName"
+            value={formData.componentName}
+            onChange={(e) => handleChange('componentName', e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="edit-materialCode">Material Code</Label>
+          <Input
+            id="edit-materialCode"
+            value={formData.materialCode}
+            onChange={(e) => handleChange('materialCode', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="edit-designTemp">Design Temp (°F)</Label>
+          <Input
+            id="edit-designTemp"
+            value={formData.designTemp}
+            onChange={(e) => handleChange('designTemp', e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="edit-designMAWP">Design MAWP (psi)</Label>
+          <Input
+            id="edit-designMAWP"
+            value={formData.designMAWP}
+            onChange={(e) => handleChange('designMAWP', e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="edit-insideDiameter">Inside Diameter (in)</Label>
+          <Input
+            id="edit-insideDiameter"
+            value={formData.insideDiameter}
+            onChange={(e) => handleChange('insideDiameter', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="edit-nominalThickness">Nominal Thickness (in)</Label>
+          <Input
+            id="edit-nominalThickness"
+            value={formData.nominalThickness}
+            onChange={(e) => handleChange('nominalThickness', e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="edit-actualThickness">Actual Thickness (in)</Label>
+          <Input
+            id="edit-actualThickness"
+            value={formData.actualThickness}
+            onChange={(e) => handleChange('actualThickness', e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="edit-previousThickness">Previous Thickness (in)</Label>
+          <Input
+            id="edit-previousThickness"
+            value={formData.previousThickness}
+            onChange={(e) => handleChange('previousThickness', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="edit-allowableStress">Allowable Stress (psi)</Label>
+          <Input
+            id="edit-allowableStress"
+            value={formData.allowableStress}
+            onChange={(e) => handleChange('allowableStress', e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="edit-jointEfficiency">Joint Efficiency</Label>
+          <Input
+            id="edit-jointEfficiency"
+            value={formData.jointEfficiency}
+            onChange={(e) => handleChange('jointEfficiency', e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="edit-timeSpan">Time Span (years)</Label>
+          <Input
+            id="edit-timeSpan"
+            value={formData.timeSpan}
+            onChange={(e) => handleChange('timeSpan', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="edit-staticHead">Static Head (psi)</Label>
+          <Input
+            id="edit-staticHead"
+            value={formData.staticHead}
+            onChange={(e) => handleChange('staticHead', e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="edit-specificGravity">Specific Gravity</Label>
+          <Input
+            id="edit-specificGravity"
+            value={formData.specificGravity}
+            onChange={(e) => handleChange('specificGravity', e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="edit-nextInspectionYears">Next Inspection (years)</Label>
+          <Input
+            id="edit-nextInspectionYears"
+            value={formData.nextInspectionYears}
+            onChange={(e) => handleChange('nextInspectionYears', e.target.value)}
+          />
+        </div>
+      </div>
+
+      {calculation.componentType === 'head' && (
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="edit-headType">Head Type</Label>
+            <Select
+              value={formData.headType}
+              onValueChange={(value) => handleChange('headType', value)}
+            >
+              <SelectTrigger id="edit-headType">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="elliptical">Elliptical (2:1)</SelectItem>
+                <SelectItem value="hemispherical">Hemispherical</SelectItem>
+                <SelectItem value="torispherical">Torispherical</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-crownRadius">Crown Radius (in)</Label>
+            <Input
+              id="edit-crownRadius"
+              value={formData.crownRadius}
+              onChange={(e) => handleChange('crownRadius', e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-knuckleRadius">Knuckle Radius (in)</Label>
+            <Input
+              id="edit-knuckleRadius"
+              value={formData.knuckleRadius}
+              onChange={(e) => handleChange('knuckleRadius', e.target.value)}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-end gap-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isSaving}>
+          {isSaving ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            'Save & Recalculate'
+          )}
+        </Button>
+      </div>
+    </form>
   );
 }
 
