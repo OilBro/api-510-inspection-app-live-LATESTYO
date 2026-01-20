@@ -74,6 +74,9 @@ export const inspections = mysqlTable("inspections", {
   inspectionResults: text("inspectionResults"), // Section 3.0 from PDF
   recommendations: text("recommendations"), // Section 4.0 from PDF
   
+  // Extraction quality tracking
+  extractionQuality: varchar("extractionQuality", { length: 50 }).default("complete"), // complete, missing_recommendations, missing_results, missing_both, needs_review
+  
   // Metadata
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),

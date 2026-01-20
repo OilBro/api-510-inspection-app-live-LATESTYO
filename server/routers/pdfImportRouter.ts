@@ -969,6 +969,15 @@ CRITICAL RULES:
         knuckleRadius: input.vesselData.knuckleRadius?.toString() || null,
         inspectionResults: input.inspectionResults || null,
         recommendations: input.recommendations || null,
+        // Determine extraction quality based on what was extracted
+        extractionQuality: (() => {
+          const hasResults = !!(input.inspectionResults && input.inspectionResults.trim().length > 10);
+          const hasRecommendations = !!(input.recommendations && input.recommendations.trim().length > 10);
+          if (!hasResults && !hasRecommendations) return 'missing_both';
+          if (!hasResults) return 'missing_results';
+          if (!hasRecommendations) return 'missing_recommendations';
+          return 'complete';
+        })(),
         status: "completed",
         inspectionDate: new Date(input.inspectionData.inspectionDate),
         completedAt: new Date(input.inspectionData.inspectionDate),

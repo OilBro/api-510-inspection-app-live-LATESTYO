@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { Link, useParams, useLocation } from "wouter";
-import { Settings, ArrowLeft, FileText, Calculator, BarChart3, Eye, Upload, AlertCircle, RefreshCw, Layers, ClipboardList, Shield } from "lucide-react";
+import { Settings, ArrowLeft, FileText, Calculator, BarChart3, Eye, Upload, AlertCircle, RefreshCw, Layers, ClipboardList, Shield, AlertTriangle } from "lucide-react";
 import { APP_TITLE } from "@/const";
 import VesselDataTab from "@/components/inspection/VesselDataTab";
 import ProfessionalReportTab from "@/components/inspection/ProfessionalReportTab";
@@ -117,6 +117,35 @@ export default function InspectionDetail() {
           </div>
         </div>
       </header>
+
+      {/* Extraction Quality Warning Banner */}
+      {inspection.extractionQuality && inspection.extractionQuality !== 'complete' && (
+        <div className="bg-amber-50 border-b border-amber-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0" />
+              <div className="flex-1">
+                <span className="text-sm font-medium text-amber-800">
+                  Incomplete AI Extraction: {' '}
+                  {inspection.extractionQuality === 'missing_both' && 'Both Inspection Results (Section 3.0) and Recommendations (Section 4.0) were not extracted.'}
+                  {inspection.extractionQuality === 'missing_recommendations' && 'Recommendations (Section 4.0) were not extracted from the PDF.'}
+                  {inspection.extractionQuality === 'missing_results' && 'Inspection Results (Section 3.0) were not extracted from the PDF.'}
+                  {inspection.extractionQuality === 'needs_review' && 'This inspection needs manual review.'}
+                </span>
+                <span className="text-sm text-amber-700 ml-2">
+                  Consider re-importing the PDF or manually entering the missing data.
+                </span>
+              </div>
+              <Button variant="outline" size="sm" className="border-amber-300 text-amber-700 hover:bg-amber-100" asChild>
+                <Link href="/import">
+                  <Upload className="h-4 w-4 mr-1" />
+                  Re-import
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Validation Warnings */}

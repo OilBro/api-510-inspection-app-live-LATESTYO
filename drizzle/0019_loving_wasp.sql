@@ -1,0 +1,1 @@
+ALTER TABLE `inspections` ADD `extractionQuality` varchar(50) DEFAULT 'complete';

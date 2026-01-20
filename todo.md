@@ -1870,3 +1870,17 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add recommendations to required fields in extraction schema
 - [x] Add Results & Recs tab to ExtractionPreview
 - [x] Add Inspection Results and Recommendations sections to ImportPDF preview
+
+## Extraction Quality Flagging
+- [ ] Add extractionQuality field to inspections table (missing_recommendations, missing_results, complete)
+- [ ] Set extraction quality flag during PDF import based on extracted content
+- [ ] Add visual warning badge on inspection cards for flagged reports
+- [ ] Add filter option on My Inspections page to show only flagged reports
+- [ ] Show warning banner on inspection detail page for incomplete extractions
+
+## Extraction Quality Flagging (Completed)
+- [x] Add extractionQuality field to inspections table
+- [x] Set extraction quality during PDF import based on what was extracted
+- [x] Add visual warning badge on inspection list for flagged reports
+- [x] Add warning banner on inspection detail page for flagged reports
+- [x] Add filter to show only flagged reports

@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE inspections ADD COLUMN extractionQuality VARCHAR(50) DEFAULT 'complete';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute ALTER TABLE inspections ADD COLUMN extractionQuality VARCHAR(50) DEFAULT 'complete';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 487
+}

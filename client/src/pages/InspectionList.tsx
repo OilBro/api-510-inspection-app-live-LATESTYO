@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
-import { Settings, Plus, ArrowLeft, FileText, Calendar, Trash2, Download, CheckSquare, Square, Loader2 } from "lucide-react";
+import { Settings, Plus, ArrowLeft, FileText, Calendar, Trash2, Download, CheckSquare, Square, Loader2, AlertTriangle, Filter } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,20 @@ export default function InspectionList() {
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("full");
   const [generatingBatch, setGeneratingBatch] = useState(false);
+  const [showOnlyFlagged, setShowOnlyFlagged] = useState(false);
+
+  // Helper to check if extraction quality needs review
+  const needsReview = (quality: string | null | undefined) => {
+    return quality && quality !== 'complete';
+  };
+
+  // Filter inspections based on flag filter
+  const filteredInspections = inspections?.filter(i => 
+    !showOnlyFlagged || needsReview(i.extractionQuality)
+  );
+
+  // Count flagged inspections
+  const flaggedCount = inspections?.filter(i => needsReview(i.extractionQuality)).length || 0;
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this inspection?")) {
@@ -117,6 +131,25 @@ export default function InspectionList() {
           </Button>
         </div>
 
+        {/* Filter Controls */}
+        {flaggedCount > 0 && (
+          <div className="flex items-center gap-4 mb-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+            <AlertTriangle className="h-5 w-5 text-amber-600" />
+            <span className="text-sm text-amber-800">
+              {flaggedCount} inspection{flaggedCount !== 1 ? 's' : ''} with incomplete AI extraction
+            </span>
+            <Button
+              variant={showOnlyFlagged ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowOnlyFlagged(!showOnlyFlagged)}
+              className={showOnlyFlagged ? "" : "border-amber-300 text-amber-700 hover:bg-amber-100"}
+            >
+              <Filter className="h-4 w-4 mr-1" />
+              {showOnlyFlagged ? "Show All" : "Show Only Flagged"}
+            </Button>
+          </div>
+        )}
+
         {/* Batch Selection Controls */}
         <div className="flex items-center justify-between mb-6 p-4 bg-white rounded-lg border">
           <div className="flex items-center gap-4">
@@ -151,7 +184,7 @@ export default function InspectionList() {
           </div>
         ) : inspections && inspections.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {inspections.map((inspection) => (
+            {filteredInspections?.map((inspection) => (
               <Card 
                 key={inspection.id} 
                 className={`hover:shadow-lg transition-shadow relative ${
@@ -179,9 +212,19 @@ export default function InspectionList() {
                         {inspection.vesselName || "No description"}
                       </CardDescription>
                     </div>
-                    <Badge className={getStatusColor(inspection.status || "draft")}>
-                      {inspection.status || "draft"}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge className={getStatusColor(inspection.status || "draft")}>
+                        {inspection.status || "draft"}
+                      </Badge>
+                      {needsReview(inspection.extractionQuality) && (
+                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-xs">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          {inspection.extractionQuality === 'missing_both' ? 'Missing Data' :
+                           inspection.extractionQuality === 'missing_recommendations' ? 'No Recs' :
+                           inspection.extractionQuality === 'missing_results' ? 'No Results' : 'Review'}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
