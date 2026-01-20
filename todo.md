@@ -1913,3 +1913,9 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [ ] C) Add manual data editor to inspection detail page for TML readings
 - [ ] Test all three solutions
 - [ ] Save checkpoint
+
+
+## TML Editor Enhancement (January 2026)
+- [x] Add side-by-side comparison view showing original vs. edited values
+- [x] Add visual diff highlighting for changed fields
+- [x] Show comparison before save confirmation
