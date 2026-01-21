@@ -1018,3 +1018,125 @@ export const professionalReportRouter = router({
     }),
 });
 
+
+// ============================================================================
+// Vessel Drawings Router
+// ============================================================================
+
+export const drawingsRouter = router({
+  // List drawings for a report
+  list: protectedProcedure
+    .input(z.object({ reportId: z.string() }))
+    .query(async ({ input }) => {
+      const { getVesselDrawings } = await import('./professionalReportDb');
+      return await getVesselDrawings(input.reportId);
+    }),
+
+  // List drawings by inspection ID
+  listByInspection: protectedProcedure
+    .input(z.object({ inspectionId: z.string() }))
+    .query(async ({ input }) => {
+      const { getVesselDrawingsByInspection } = await import('./professionalReportDb');
+      return await getVesselDrawingsByInspection(input.inspectionId);
+    }),
+
+  // Create a new drawing
+  create: protectedProcedure
+    .input(z.object({
+      reportId: z.string(),
+      inspectionId: z.string().optional(),
+      title: z.string(),
+      description: z.string().optional(),
+      drawingNumber: z.string().optional(),
+      revision: z.string().optional(),
+      category: z.enum(['pid', 'fabrication', 'isometric', 'general_arrangement', 'detail', 'nameplate', 'nozzle_schedule', 'other']).default('other'),
+      fileUrl: z.string(),
+      fileName: z.string().optional(),
+      fileType: z.string().optional(),
+      fileSize: z.number().optional(),
+      sequenceNumber: z.number().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { createVesselDrawing } = await import('./professionalReportDb');
+      const id = nanoid();
+      await createVesselDrawing({
+        id,
+        ...input,
+        uploadedBy: ctx.user.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      return { id };
+    }),
+
+  // Update a drawing
+  update: protectedProcedure
+    .input(z.object({
+      id: z.string(),
+      title: z.string().optional(),
+      description: z.string().optional(),
+      drawingNumber: z.string().optional(),
+      revision: z.string().optional(),
+      category: z.enum(['pid', 'fabrication', 'isometric', 'general_arrangement', 'detail', 'nameplate', 'nozzle_schedule', 'other']).optional(),
+      sequenceNumber: z.number().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const { updateVesselDrawing } = await import('./professionalReportDb');
+      const { id, ...data } = input;
+      await updateVesselDrawing(id, data);
+      return { success: true };
+    }),
+
+  // Delete a drawing
+  delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input }) => {
+      const { deleteVesselDrawing } = await import('./professionalReportDb');
+      await deleteVesselDrawing(input.id);
+      return { success: true };
+    }),
+
+  // Upload a drawing file
+  upload: protectedProcedure
+    .input(z.object({
+      reportId: z.string(),
+      inspectionId: z.string().optional(),
+      title: z.string(),
+      description: z.string().optional(),
+      drawingNumber: z.string().optional(),
+      revision: z.string().optional(),
+      category: z.enum(['pid', 'fabrication', 'isometric', 'general_arrangement', 'detail', 'nameplate', 'nozzle_schedule', 'other']).default('other'),
+      fileData: z.string(), // Base64 encoded file data
+      fileName: z.string(),
+      fileType: z.string(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { createVesselDrawing } = await import('./professionalReportDb');
+      
+      // Decode base64 and upload to S3
+      const buffer = Buffer.from(input.fileData, 'base64');
+      const fileKey = `drawings/${input.reportId}/${nanoid()}-${input.fileName}`;
+      const { url } = await storagePut(fileKey, buffer, input.fileType);
+      
+      const id = nanoid();
+      await createVesselDrawing({
+        id,
+        reportId: input.reportId,
+        inspectionId: input.inspectionId,
+        title: input.title,
+        description: input.description,
+        drawingNumber: input.drawingNumber,
+        revision: input.revision,
+        category: input.category,
+        fileUrl: url,
+        fileName: input.fileName,
+        fileType: input.fileType,
+        fileSize: buffer.length,
+        uploadedBy: ctx.user.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      
+      return { id, url };
+    }),
+});

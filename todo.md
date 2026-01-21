@@ -1952,3 +1952,21 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Make component section numbers editable (added edit button with pencil icon)
 - [x] Consolidate duplicate Recommendations sections - PDF now includes both sources
 - [x] Fix generated PDF report to include all data including recommendations
+
+
+## Drawings Section Feature (January 2026)
+- [ ] Create database schema for drawings table (id, inspectionId, reportId, title, description, category, fileUrl, fileType, uploadedAt)
+- [ ] Create backend procedures for drawings CRUD (list, create, update, delete)
+- [ ] Create DrawingsSection UI component with upload functionality
+- [ ] Add drawing categories (P&ID, Fabrication Drawing, Isometric, General Arrangement, Detail Drawing, Other)
+- [ ] Add Drawings section to Professional Report tab
+- [ ] Include drawings in PDF report generation
+- [ ] Test upload and PDF generation with drawings
+
+
+## Drawings Section Feature (January 2026)
+- [x] Create database schema for drawings table (vesselDrawings)
+- [x] Create backend CRUD procedures for drawings (drawingsRouter)
+- [x] Create Drawings UI component with upload functionality (DrawingsSection.tsx)
+- [x] Add Drawings section to PDF report generation (Section 5.0)
+- [x] Support categories: P&ID, Fabrication, Isometric, General Arrangement, Detail, Nameplate, Nozzle Schedule, Other

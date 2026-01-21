@@ -971,3 +971,49 @@ export const rcraCorrectiveActions = mysqlTable("rcraCorrectiveActions", {
 });
 export type RcraCorrectiveAction = typeof rcraCorrectiveActions.$inferSelect;
 export type InsertRcraCorrectiveAction = typeof rcraCorrectiveActions.$inferInsert;
+
+
+/**
+ * Vessel Drawings - Technical drawings for inspection reports
+ * Includes P&IDs, fabrication drawings, isometrics, etc.
+ */
+export const vesselDrawings = mysqlTable("vesselDrawings", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  reportId: varchar("reportId", { length: 64 }).notNull(),
+  inspectionId: varchar("inspectionId", { length: 64 }),
+  
+  // Drawing details
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  drawingNumber: varchar("drawingNumber", { length: 100 }), // e.g., "DWG-001", "P&ID-123"
+  revision: varchar("revision", { length: 20 }), // e.g., "Rev A", "Rev 2"
+  
+  // Category for organization
+  category: mysqlEnum("category", [
+    "pid",                  // P&ID (Piping and Instrumentation Diagram)
+    "fabrication",          // Fabrication Drawing
+    "isometric",            // Isometric Drawing
+    "general_arrangement",  // General Arrangement
+    "detail",               // Detail Drawing
+    "nameplate",            // Nameplate/Data Plate
+    "nozzle_schedule",      // Nozzle Schedule
+    "other"                 // Other
+  ]).default("other"),
+  
+  // File information
+  fileUrl: text("fileUrl").notNull(),
+  fileName: varchar("fileName", { length: 255 }),
+  fileType: varchar("fileType", { length: 50 }), // pdf, png, jpg, dwg, etc.
+  fileSize: int("fileSize"), // in bytes
+  
+  // Display order
+  sequenceNumber: int("sequenceNumber").default(0),
+  
+  // Metadata
+  uploadedBy: int("uploadedBy"),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+});
+
+export type VesselDrawing = typeof vesselDrawings.$inferSelect;
+export type InsertVesselDrawing = typeof vesselDrawings.$inferInsert;

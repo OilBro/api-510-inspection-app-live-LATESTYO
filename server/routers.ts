@@ -9,7 +9,7 @@ import { nanoid } from "nanoid";
 import { parseExcelFile, parsePDFFile } from "./fileParser";
 import { storagePut } from "./storage";
 import { fieldMappingRouter, unmatchedDataRouter } from "./fieldMappingRouters";
-import { professionalReportRouter } from "./professionalReportRouters";
+import { professionalReportRouter, drawingsRouter } from "./professionalReportRouters";
 import { nozzleRouter } from "./nozzleRouters";
 import { reportComparisonRouter } from "./routers/reportComparisonRouter";
 import { pdfImportRouter } from "./routers/pdfImportRouter";
@@ -67,6 +67,7 @@ export const appRouter = router({
   hierarchy: hierarchyRouter,
   rcraCompliance: rcraComplianceRouter,
   batchReprocess: batchReprocessRouter,
+  drawings: drawingsRouter,
 
   images: router({
     convertToJpeg: protectedProcedure

@@ -747,3 +747,62 @@ export async function deleteInLieuOfAssessment(id: string) {
   
   await db.delete(inLieuOfAssessments).where(eq(inLieuOfAssessments.id, id));
 }
+
+
+// ============================================================================
+// Vessel Drawings CRUD
+// ============================================================================
+
+import { vesselDrawings, InsertVesselDrawing } from "../drizzle/schema";
+
+export async function createVesselDrawing(data: InsertVesselDrawing) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(vesselDrawings).values(data);
+  return data.id;
+}
+
+export async function getVesselDrawings(reportId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(vesselDrawings)
+    .where(eq(vesselDrawings.reportId, reportId))
+    .orderBy(vesselDrawings.sequenceNumber);
+}
+
+export async function getVesselDrawingsByInspection(inspectionId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(vesselDrawings)
+    .where(eq(vesselDrawings.inspectionId, inspectionId))
+    .orderBy(vesselDrawings.sequenceNumber);
+}
+
+export async function updateVesselDrawing(
+  drawingId: string,
+  data: Partial<InsertVesselDrawing>
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(vesselDrawings)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(vesselDrawings.id, drawingId));
+}
+
+export async function deleteVesselDrawing(drawingId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .delete(vesselDrawings)
+    .where(eq(vesselDrawings.id, drawingId));
+}

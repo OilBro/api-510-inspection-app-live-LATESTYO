@@ -12,6 +12,7 @@ import {
   getRecommendations,
   getInspectionPhotos,
   getChecklistItems,
+  getVesselDrawings,
 } from "./professionalReportDb";
 import { logger } from "./_core/logger";
 import { getInspection, getTmlReadings, getDb } from "./db";
@@ -529,6 +530,14 @@ export async function generateProfessionalPDF(data: ProfessionalReportData): Pro
     logger.info('[PDF DEBUG] Generating In-Lieu-Of qualification...');
     await generateInLieuOfQualification(doc, inspectionId, logoBuffer);
     logger.info('[PDF DEBUG] Page count after In-Lieu-Of:', doc.bufferedPageRange().count);
+  }
+  
+  // Generate drawings section
+  const drawings = await getVesselDrawings(reportId);
+  if (drawings && drawings.length > 0) {
+    logger.info('[PDF DEBUG] Generating drawings...');
+    await generateDrawings(doc, drawings, logoBuffer);
+    logger.info('[PDF DEBUG] Page count after drawings:', doc.bufferedPageRange().count);
   }
   
   if (config.photos !== false) {
@@ -1874,3 +1883,128 @@ async function generateInLieuOfQualification(doc: PDFKit.PDFDocument, inspection
   }
 }
 
+
+// ============================================================================
+// DRAWINGS SECTION
+// ============================================================================
+
+const DRAWING_CATEGORY_NAMES: {[key: string]: string} = {
+  pid: 'P&ID (Piping & Instrumentation)',
+  fabrication: 'Fabrication Drawing',
+  isometric: 'Isometric Drawing',
+  general_arrangement: 'General Arrangement',
+  detail: 'Detail Drawing',
+  nameplate: 'Nameplate / Data Plate',
+  nozzle_schedule: 'Nozzle Schedule',
+  other: 'Other Drawings',
+};
+
+async function generateDrawings(doc: PDFKit.PDFDocument, drawings: any[], logoBuffer?: Buffer) {
+  await conditionalPageBreak(doc, 'VESSEL DRAWINGS', logoBuffer, 300);
+  addSectionTitle(doc, '5.0 VESSEL DRAWINGS');
+  
+  if (!drawings || drawings.length === 0) {
+    addText(doc, 'No drawings attached.');
+    return;
+  }
+  
+  // Group drawings by category
+  const drawingsByCategory: {[key: string]: any[]} = {};
+  const categoryOrder = ['pid', 'fabrication', 'isometric', 'general_arrangement', 'detail', 'nameplate', 'nozzle_schedule', 'other'];
+  
+  drawings.forEach(drawing => {
+    const category = drawing.category || 'other';
+    if (!drawingsByCategory[category]) {
+      drawingsByCategory[category] = [];
+    }
+    drawingsByCategory[category].push(drawing);
+  });
+  
+  // Render drawings grouped by category
+  let drawingCounter = 1;
+  let subsectionCounter = 1;
+  
+  for (const categoryKey of categoryOrder) {
+    if (!drawingsByCategory[categoryKey] || drawingsByCategory[categoryKey].length === 0) continue;
+    
+    // Add category header
+    addSubsectionTitle(doc, `5.${subsectionCounter} ${DRAWING_CATEGORY_NAMES[categoryKey] || categoryKey}`);
+    doc.moveDown(0.5);
+    subsectionCounter++;
+    
+    for (const drawing of drawingsByCategory[categoryKey]) {
+      // Check if we need a new page
+      if (doc.y > PAGE_HEIGHT - 400) {
+        doc.addPage();
+        await addHeader(doc, 'VESSEL DRAWINGS', logoBuffer);
+      }
+      
+      // Drawing title with number and revision
+      let titleText = `Drawing ${drawingCounter}: ${drawing.title}`;
+      if (drawing.drawingNumber) {
+        titleText += ` (${drawing.drawingNumber}`;
+        if (drawing.revision) {
+          titleText += ` ${drawing.revision}`;
+        }
+        titleText += ')';
+      }
+      
+      doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.text);
+      doc.text(titleText, MARGIN, doc.y, { width: CONTENT_WIDTH });
+      doc.moveDown(0.3);
+      
+      // Description if present
+      if (drawing.description) {
+        doc.font('Helvetica').fontSize(9).fillColor(COLORS.secondary);
+        doc.text(drawing.description, MARGIN, doc.y, { width: CONTENT_WIDTH });
+        doc.moveDown(0.3);
+      }
+      
+      // Try to embed the drawing if it's an image
+      if (drawing.fileUrl && (drawing.fileType?.includes('image') || 
+          drawing.fileName?.match(/\.(png|jpg|jpeg|gif)$/i))) {
+        try {
+          const response = await fetch(drawing.fileUrl);
+          if (response.ok) {
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            
+            // Calculate dimensions to fit on page
+            const maxWidth = CONTENT_WIDTH;
+            const maxHeight = 400;
+            
+            // Add image
+            doc.image(buffer, MARGIN, doc.y, {
+              fit: [maxWidth, maxHeight],
+              align: 'center',
+            });
+            
+            // Move down after image
+            doc.y += maxHeight + 20;
+          } else {
+            doc.font('Helvetica').fontSize(9).fillColor(COLORS.secondary);
+            doc.text(`[Drawing file: ${drawing.fileName || 'See attached'}]`, MARGIN, doc.y);
+          }
+        } catch (err) {
+          logger.error('[PDF] Error loading drawing:', err);
+          doc.font('Helvetica').fontSize(9).fillColor(COLORS.secondary);
+          doc.text(`[Drawing file: ${drawing.fileName || 'See attached'}]`, MARGIN, doc.y);
+        }
+      } else if (drawing.fileType?.includes('pdf')) {
+        // For PDF files, add a reference
+        doc.font('Helvetica').fontSize(9).fillColor(COLORS.secondary);
+        doc.text(`[PDF Drawing: ${drawing.fileName || drawing.title} - See attached document]`, MARGIN, doc.y);
+      } else {
+        // For other file types, add a reference
+        doc.font('Helvetica').fontSize(9).fillColor(COLORS.secondary);
+        doc.text(`[Drawing file: ${drawing.fileName || 'See attached'}]`, MARGIN, doc.y);
+      }
+      
+      doc.moveDown(1);
+      drawingCounter++;
+    }
+    
+    // Add spacing between categories
+    doc.moveDown(0.5);
+  }
+}

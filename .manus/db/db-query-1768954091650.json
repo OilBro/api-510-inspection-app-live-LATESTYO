@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `vesselDrawings` (\n  `id` varchar(64) NOT NULL,\n  `reportId` varchar(64) NOT NULL,\n  `inspectionId` varchar(64),\n  `title` varchar(255) NOT NULL,\n  `description` text,\n  `drawingNumber` varchar(100),\n  `revision` varchar(20),\n  `category` enum('pid','fabrication','isometric','general_arrangement','detail','nameplate','nozzle_schedule','other') DEFAULT 'other',\n  `fileUrl` text NOT NULL,\n  `fileName` varchar(255),\n  `fileType` varchar(50),\n  `fileSize` int,\n  `sequenceNumber` int DEFAULT 0,\n  `uploadedBy` int,\n  `createdAt` timestamp DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute CREATE TABLE IF NOT EXISTS `vesselDrawings` (\n  `id` varchar(64) NOT NULL,\n  `reportId` varchar(64) NOT NULL,\n  `inspectionId` varchar(64),\n  `title` varchar(255) NOT NULL,\n  `description` text,\n  `drawingNumber` varchar(100),\n  `revision` varchar(20),\n  `category` enum('pid','fabrication','isometric','general_arrangement','detail','nameplate','nozzle_schedule','other') DEFAULT 'other',\n  `fileUrl` text NOT NULL,\n  `fileName` varchar(255),\n  `fileType` varchar(50),\n  `fileSize` int,\n  `sequenceNumber` int DEFAULT 0,\n  `uploadedBy` int,\n  `createdAt` timestamp DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 219
+}
