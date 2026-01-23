@@ -5,6 +5,7 @@
  */
 
 import PDFDocument from "pdfkit";
+import { PDFDocument as PDFLib } from "pdf-lib";
 import {
   getProfessionalReport,
   getComponentCalculations,
@@ -532,12 +533,29 @@ export async function generateProfessionalPDF(data: ProfessionalReportData): Pro
     logger.info('[PDF DEBUG] Page count after In-Lieu-Of:', doc.bufferedPageRange().count);
   }
   
-  // Generate drawings section
+  // Generate drawings section (collect PDF drawings for later merging)
   const drawings = await getVesselDrawings(reportId);
+  const pdfDrawings: { url: string; title: string }[] = [];
+  
   if (drawings && drawings.length > 0) {
     logger.info('[PDF DEBUG] Generating drawings...');
-    await generateDrawings(doc, drawings, logoBuffer);
+    // Separate PDF drawings from image drawings
+    const imageDrawings = drawings.filter((d: any) => 
+      !d.fileType?.includes('pdf') && 
+      (d.fileType?.includes('image') || d.fileName?.match(/\.(png|jpg|jpeg|gif)$/i))
+    );
+    
+    // Collect PDF drawings for merging later
+    drawings.forEach((d: any) => {
+      if (d.fileType?.includes('pdf') && d.fileUrl) {
+        pdfDrawings.push({ url: d.fileUrl, title: d.title || d.fileName || 'Drawing' });
+      }
+    });
+    
+    // Generate section with image drawings and references to PDF drawings
+    await generateDrawings(doc, drawings, logoBuffer, pdfDrawings.length > 0);
     logger.info('[PDF DEBUG] Page count after drawings:', doc.bufferedPageRange().count);
+    logger.info('[PDF DEBUG] PDF drawings to merge:', pdfDrawings.length);
   }
   
   if (config.photos !== false) {
@@ -546,10 +564,27 @@ export async function generateProfessionalPDF(data: ProfessionalReportData): Pro
     logger.info('[PDF DEBUG] Final page count:', doc.bufferedPageRange().count);
   }
   
-  // Finalize
+  // Finalize the main PDF
   doc.end();
   
-  return pdfPromise;
+  // Get the main PDF buffer
+  const mainPdfBuffer = await pdfPromise;
+  
+  // If there are PDF drawings to merge, merge them now
+  if (pdfDrawings.length > 0) {
+    logger.info('[PDF] Merging', pdfDrawings.length, 'PDF drawings into report...');
+    try {
+      const mergedPdf = await mergePdfDrawings(mainPdfBuffer, pdfDrawings);
+      logger.info('[PDF] Successfully merged PDF drawings');
+      return mergedPdf;
+    } catch (err) {
+      logger.error('[PDF] Failed to merge PDF drawings:', err);
+      // Return main PDF without merged drawings if merge fails
+      return mainPdfBuffer;
+    }
+  }
+  
+  return mainPdfBuffer;
 }
 
 // ============================================================================
@@ -1899,7 +1934,7 @@ const DRAWING_CATEGORY_NAMES: {[key: string]: string} = {
   other: 'Other Drawings',
 };
 
-async function generateDrawings(doc: PDFKit.PDFDocument, drawings: any[], logoBuffer?: Buffer) {
+async function generateDrawings(doc: PDFKit.PDFDocument, drawings: any[], logoBuffer?: Buffer, hasPdfDrawings: boolean = false) {
   await conditionalPageBreak(doc, 'VESSEL DRAWINGS', logoBuffer, 300);
   addSectionTitle(doc, '5.0 VESSEL DRAWINGS');
   
@@ -1991,9 +2026,9 @@ async function generateDrawings(doc: PDFKit.PDFDocument, drawings: any[], logoBu
           doc.text(`[Drawing file: ${drawing.fileName || 'See attached'}]`, MARGIN, doc.y);
         }
       } else if (drawing.fileType?.includes('pdf')) {
-        // For PDF files, add a reference
-        doc.font('Helvetica').fontSize(9).fillColor(COLORS.secondary);
-        doc.text(`[PDF Drawing: ${drawing.fileName || drawing.title} - See attached document]`, MARGIN, doc.y);
+        // For PDF files, note that they will be appended to the report
+        doc.font('Helvetica').fontSize(9).fillColor(COLORS.primary);
+        doc.text(`✓ PDF Drawing: ${drawing.fileName || drawing.title} - Appended at end of report`, MARGIN, doc.y);
       } else {
         // For other file types, add a reference
         doc.font('Helvetica').fontSize(9).fillColor(COLORS.secondary);
@@ -2007,4 +2042,62 @@ async function generateDrawings(doc: PDFKit.PDFDocument, drawings: any[], logoBu
     // Add spacing between categories
     doc.moveDown(0.5);
   }
+}
+
+
+// ============================================================================
+// PDF MERGING FUNCTIONS
+// ============================================================================
+
+/**
+ * Merge PDF drawings into the main report PDF
+ * @param mainPdfBuffer - The main report PDF buffer
+ * @param pdfDrawings - Array of PDF drawing URLs and titles to merge
+ * @returns Merged PDF buffer
+ */
+async function mergePdfDrawings(
+  mainPdfBuffer: Buffer,
+  pdfDrawings: { url: string; title: string }[]
+): Promise<Buffer> {
+  // Load the main PDF
+  const mainPdf = await PDFLib.load(mainPdfBuffer);
+  
+  // Process each PDF drawing
+  for (const drawing of pdfDrawings) {
+    try {
+      logger.info('[PDF Merge] Fetching drawing:', drawing.title, 'from', drawing.url);
+      
+      // Fetch the PDF drawing
+      const response = await fetch(drawing.url);
+      if (!response.ok) {
+        logger.error('[PDF Merge] Failed to fetch drawing:', drawing.title, response.status);
+        continue;
+      }
+      
+      const arrayBuffer = await response.arrayBuffer();
+      const drawingPdfBytes = new Uint8Array(arrayBuffer);
+      
+      // Load the drawing PDF
+      const drawingPdf = await PDFLib.load(drawingPdfBytes, { ignoreEncryption: true });
+      
+      // Copy all pages from the drawing PDF to the main PDF
+      const pageCount = drawingPdf.getPageCount();
+      logger.info('[PDF Merge] Drawing has', pageCount, 'pages');
+      
+      const copiedPages = await mainPdf.copyPages(drawingPdf, drawingPdf.getPageIndices());
+      
+      for (const page of copiedPages) {
+        mainPdf.addPage(page);
+      }
+      
+      logger.info('[PDF Merge] Successfully merged drawing:', drawing.title);
+    } catch (err) {
+      logger.error('[PDF Merge] Error merging drawing:', drawing.title, err);
+      // Continue with other drawings even if one fails
+    }
+  }
+  
+  // Save the merged PDF
+  const mergedPdfBytes = await mainPdf.save();
+  return Buffer.from(mergedPdfBytes);
 }

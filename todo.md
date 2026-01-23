@@ -1970,3 +1970,10 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Create Drawings UI component with upload functionality (DrawingsSection.tsx)
 - [x] Add Drawings section to PDF report generation (Section 5.0)
 - [x] Support categories: P&ID, Fabrication, Isometric, General Arrangement, Detail, Nameplate, Nozzle Schedule, Other
+
+
+## PDF Drawing Merge Feature (January 2026)
+- [x] Install pdf-lib for PDF merging capability
+- [x] Update PDF generator to merge PDF drawings into final report
+- [x] Maintain full quality of original drawings
+- [x] Test with uploaded PDF drawings
