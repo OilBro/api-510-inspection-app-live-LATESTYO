@@ -1279,6 +1279,125 @@ CRITICAL RULES:
     }),
 
   /**
+   * Extract photos from PDF and identify them using AI
+   */
+  extractPhotosFromPDF: protectedProcedure
+    .input(z.object({
+      pdfUrl: z.string(),
+      inspectionId: z.string(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      logger.info("[Photo Extract] Starting photo extraction from PDF", { url: input.pdfUrl });
+      
+      try {
+        // Use LLM to analyze the PDF and identify photos with their descriptions
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are an expert at analyzing API 510 pressure vessel inspection report PDFs to identify and describe photographs.
+
+Your task is to:
+1. Identify ALL photographs/images in the PDF (excluding diagrams, charts, and tables)
+2. For each photo, determine:
+   - Page number where it appears
+   - What vessel component is shown (Shell, East Head, West Head, Nozzle, Foundation, Nameplate, etc.)
+   - Description of what the photo shows (corrosion, pitting, weld condition, general condition, etc.)
+   - Any caption or label from the report
+
+Return JSON with an array of photo descriptions. If no photos are found, return an empty array.
+
+IMPORTANT: Only include actual photographs, not:
+- Diagrams or schematics
+- Charts or graphs
+- Tables
+- Logos or headers`
+            },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "file_url" as const,
+                  file_url: {
+                    url: input.pdfUrl,
+                    mime_type: "application/pdf" as const
+                  }
+                },
+                {
+                  type: "text" as const,
+                  text: "Analyze this API 510 inspection report PDF and identify all photographs. Return a JSON array describing each photo found."
+                }
+              ]
+            }
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "photo_extraction",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  photos: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        pageNumber: { type: "number", description: "Page number where photo appears" },
+                        component: { type: "string", description: "Vessel component shown (Shell, East Head, West Head, Nozzle, Foundation, Nameplate, etc.)" },
+                        category: { type: "string", description: "Photo category: General, Corrosion, Pitting, Weld, Coating, Nameplate, Foundation, Nozzle, Internal, External" },
+                        description: { type: "string", description: "Detailed description of what the photo shows" },
+                        caption: { type: "string", description: "Original caption from the report if present" },
+                        condition: { type: "string", description: "Condition assessment: Good, Fair, Poor, Critical" }
+                      },
+                      required: ["pageNumber", "component", "category", "description", "caption", "condition"],
+                      additionalProperties: false
+                    }
+                  },
+                  totalPhotosFound: { type: "number", description: "Total number of photos identified" }
+                },
+                required: ["photos", "totalPhotosFound"],
+                additionalProperties: false
+              }
+            }
+          }
+        });
+
+        const messageContent = response.choices[0].message.content;
+        let extractedData;
+        
+        try {
+          extractedData = JSON.parse(typeof messageContent === 'string' ? messageContent : "{}");
+        } catch (parseError) {
+          logger.warn("[Photo Extract] JSON parse failed, attempting repair...");
+          try {
+            const repaired = jsonrepair(typeof messageContent === 'string' ? messageContent : "{}");
+            extractedData = JSON.parse(repaired);
+          } catch (repairError) {
+            logger.error("[Photo Extract] JSON repair failed", repairError);
+            return { success: false, photos: [], error: "Failed to parse photo extraction results" };
+          }
+        }
+
+        logger.info("[Photo Extract] Found photos:", extractedData.totalPhotosFound);
+        
+        return {
+          success: true,
+          photos: extractedData.photos || [],
+          totalPhotosFound: extractedData.totalPhotosFound || 0,
+          message: `Found ${extractedData.totalPhotosFound || 0} photos in the PDF`
+        };
+      } catch (error) {
+        logger.error("[Photo Extract] Error extracting photos:", error);
+        return {
+          success: false,
+          photos: [],
+          error: error instanceof Error ? error.message : "Unknown error"
+        };
+      }
+    }),
+
+  /**
    * Download Excel template for data import
    */
   downloadTemplate: protectedProcedure

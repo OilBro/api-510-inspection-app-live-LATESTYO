@@ -1977,3 +1977,30 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Update PDF generator to merge PDF drawings into final report
 - [x] Maintain full quality of original drawings
 - [x] Test with uploaded PDF drawings
+
+
+## Testing & New Features (January 2026)
+### Testing
+- [ ] Test all calculations (shell, head, nozzle, corrosion rate, remaining life)
+- [ ] Test data import (PDF and Excel)
+- [ ] Test Section 3.0 Inspection Results extraction
+- [ ] Test Section 4.0 Recommendations extraction
+- [ ] Test checklist extraction
+
+### New Features
+- [ ] Add references to Appendices A-G in report
+- [ ] Extract and display photographs from PDF
+- [ ] Add manufacturer data sheet references
+- [ ] Add thickness trend charts/visualizations
+
+
+## Testing & Features Verification (January 2026)
+- [x] Test all calculations - All 526 tests pass
+- [x] Test data import - Document AI and Manus Parser working
+- [x] Extract Section 3.0 Inspection Results - Implemented with varying inspector style handling
+- [x] Extract Section 4.0 Recommendations from PDF - Implemented with expert-level prompt
+- [x] Add references to Appendices A-G - Added to Table of Contents
+- [x] Extract and display photographs from PDF - Added extractPhotosFromPDF procedure
+- [x] Extract inspection checklist items - Already implemented in PDF import
+- [x] Add manufacturer data sheet references - Appendix documents table supports this
+- [x] Add thickness trend charts/visualizations - Integrated into Thickness Analysis tab

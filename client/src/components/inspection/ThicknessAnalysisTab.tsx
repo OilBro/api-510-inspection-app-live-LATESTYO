@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { Plus, Trash2, Save, Download, Upload, Info, Pencil } from "lucide-react";
 import { TMLEditorButton } from "@/components/TMLEditor";
+import { ThicknessTrendChart } from "@/components/charts/ThicknessTrendChart";
 import { toast } from "sonner";
 import { calculateShellMinimumThickness, calculateHeadMinimumThickness, formatThickness, getThicknessStatus } from "@/lib/thicknessCalculations";
 import { sortByCmlNumber } from "@/lib/cmlSort";
@@ -464,6 +465,42 @@ export default function ThicknessAnalysisTab({ inspectionId }: ThicknessAnalysis
           )}
         </CardContent>
       </Card>
+
+      {/* Thickness Trend Visualization */}
+      {readings && readings.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Thickness Trend Visualization</CardTitle>
+            <CardDescription>Visual comparison of thickness measurements across all TML locations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Group readings by component and show trend chart for each */}
+              {Object.entries(
+                readings.reduce((acc, r) => {
+                  const comp = r.component || 'Unknown';
+                  if (!acc[comp]) acc[comp] = [];
+                  acc[comp].push(r);
+                  return acc;
+                }, {} as Record<string, typeof readings>)
+              ).map(([component, compReadings]) => (
+                <ThicknessTrendChart
+                  key={component}
+                  componentName={component}
+                  dataPoints={compReadings.map(r => ({
+                    inspectionDate: r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                    thickness: parseFloat(r.currentThickness || r.tActual || '0'),
+                    corrosionRate: r.corrosionRate ? parseFloat(r.corrosionRate) : 0,
+                    remainingLife: 0, // Calculated in chart component
+                  }))}
+                  minimumThickness={0.1} // Default minimum, actual calculated in chart
+                  nominalThickness={compReadings[0]?.nominalThickness ? parseFloat(compReadings[0].nominalThickness) : undefined}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {readings && readings.length > 0 && (
         <Card>

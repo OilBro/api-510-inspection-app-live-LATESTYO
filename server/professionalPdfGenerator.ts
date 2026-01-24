@@ -681,6 +681,15 @@ async function generateTableOfContents(doc: PDFKit.PDFDocument, logoBuffer?: Buf
     '9.0 PHOTOGRAPHS',
     '10.0 FITNESS-FOR-SERVICE ASSESSMENT',
     '11.0 IN-LIEU-OF INTERNAL INSPECTION QUALIFICATION',
+    '',
+    'APPENDICES',
+    'Appendix A - Vessel Drawings',
+    'Appendix B - Manufacturer Data Sheet',
+    'Appendix C - Thickness Trend Analysis',
+    'Appendix D - Previous Inspection Reports',
+    'Appendix E - NDE Reports',
+    'Appendix F - Repair Documentation',
+    'Appendix G - Supporting Documentation',
   ];
   
   doc.font('Helvetica-Bold').fontSize(11).fillColor(COLORS.text);
