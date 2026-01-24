@@ -52,13 +52,29 @@ export default function InspectionResultsTab({
         // Update the edited values with extracted content
         if (data.inspectionResults) {
           setEditedResults(data.inspectionResults);
-          setIsEditingResults(true);
         }
         if (data.recommendations) {
           setEditedRecommendations(data.recommendations);
-          setIsEditingRecommendations(true);
         }
-        toast.success("Successfully extracted content from PDF! Review and save the changes.");
+        
+        // Auto-save the extracted data to the database
+        updateMutation.mutate({
+          id: inspectionId,
+          inspectionResults: data.inspectionResults || null,
+          recommendations: data.recommendations || null,
+        }, {
+          onSuccess: () => {
+            toast.success("Successfully extracted and saved content from PDF!");
+            // Refresh the inspection data to show the saved content
+            utils.inspections.get.invalidate({ id: inspectionId });
+          },
+          onError: () => {
+            // If auto-save fails, let user manually save
+            setIsEditingResults(!!data.inspectionResults);
+            setIsEditingRecommendations(!!data.recommendations);
+            toast.warning("Extracted content - please click Save to store it.");
+          }
+        });
       } else {
         toast.warning("No Section 3.0 or 4.0 content found in the PDF");
       }

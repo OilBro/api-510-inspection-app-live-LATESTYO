@@ -943,6 +943,14 @@ CRITICAL RULES:
       logger.info("[PDF Import] Nozzles to save:", input.nozzles?.length || 0);
       logger.info("[PDF Import] Recommendations:", input.recommendations ? `HAS DATA (${input.recommendations.length} chars)` : "NULL/EMPTY");
       logger.info("[PDF Import] Inspection Results:", input.inspectionResults ? `HAS DATA (${input.inspectionResults.length} chars)` : "NULL/EMPTY");
+      
+      // Debug: Log first 200 chars of each if present
+      if (input.recommendations) {
+        logger.info("[PDF Import] Recommendations preview:", input.recommendations.substring(0, 200));
+      }
+      if (input.inspectionResults) {
+        logger.info("[PDF Import] Inspection Results preview:", input.inspectionResults.substring(0, 200));
+      }
 
       // Delete existing inspection with same vessel tag to prevent duplicates
       const existingInspections = await db

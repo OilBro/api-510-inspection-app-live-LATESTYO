@@ -2004,3 +2004,10 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Extract inspection checklist items - Already implemented in PDF import
 - [x] Add manufacturer data sheet references - Appendix documents table supports this
 - [x] Add thickness trend charts/visualizations - Integrated into Thickness Analysis tab
+
+
+## Bug Fix: Section 3.0/4.0 Not Displaying (January 2026)
+- [x] Investigate why extracted Section 3.0 and 4.0 data not showing in app
+- [x] Check if data is being saved to database after extraction - Found: data was extracted but not auto-saved
+- [x] Fix display in Results & Recommendations tab - Added auto-save after extraction
+- [x] Fix inclusion in generated PDF report - Already working, just needs data in database

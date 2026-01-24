@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, vesselTagNumber, LEFT(inspectionResults, 100) as results_preview, LEFT(recommendations, 100) as recommendations_preview FROM inspections LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, vesselTagNumber, LEFT(inspectionResults, 100) as results_preview, LEFT(recommendations, 100) as recommendations_preview FROM inspections LIMIT 10;",
+  "rows": [
+    {
+      "id": "0D81s8-CdiqBY_xm-Q6ZZ",
+      "vesselTagNumber": "TEST-ANOMALY-001",
+      "results_preview": "NULL",
+      "recommendations_preview": "NULL"
+    },
+    {
+      "id": "2x-R4Iie0X6cNOdCzX8sN",
+      "vesselTagNumber": "54-11-067 a",
+      "results_preview": "NULL",
+      "recommendations_preview": "NULL"
+    },
+    {
+      "id": "6sgU-Ii2pASKEkbHdjVER",
+      "vesselTagNumber": "TEST-ANOMALY-001",
+      "results_preview": "NULL",
+      "recommendations_preview": "NULL"
+    },
+    {
+      "id": "7roxrEXFBmNXoJgXAWo29",
+      "vesselTagNumber": "TEST-ANOMALY-001",
+      "results_preview": "NULL",
+      "recommendations_preview": "NULL"
+    },
+    {
+      "id": "8LVUawuq5yVzH6TvyBm0n",
+      "vesselTagNumber": "TEST-001",
+      "results_preview": "NULL",
+      "recommendations_preview": "NULL"
+    },
+    {
+      "id": "9pbZAVYoerUrOoDiyQYcZ",
+      "vesselTagNumber": "TEST-ANOMALY-001",
+      "results_preview": "NULL",
+      "recommendations_preview": "NULL"
+    },
+    {
+      "id": "A5tuKe2v_osvemMVjaxbR",
+      "vesselTagNumber": "TEST-003",
+      "results_preview": "NULL",
+      "recommendations_preview": "NULL"
+    },
+    {
+      "id": "adwtHQcQrn0Hl-_AwkPfR",
+      "vesselTagNumber": "TEST-ANOMALY-001",
+      "results_preview": "NULL",
+      "recommendations_preview": "NULL"
+    },
+    {
+      "id": "AeeUsVAd9WHgjgdGLOHZj",
+      "vesselTagNumber": "TEST-004",
+      "results_preview": "NULL",
+      "recommendations_preview": "NULL"
+    },
+    {
+      "id": "ApVZrbdh3dCTHkAWk6-36",
+      "vesselTagNumber": "TEST-ANOMALY-001",
+      "results_preview": "NULL",
+      "recommendations_preview": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tvesselTagNumber\tresults_preview\trecommendations_preview\n0D81s8-CdiqBY_xm-Q6ZZ\tTEST-ANOMALY-001\tNULL\tNULL\n2x-R4Iie0X6cNOdCzX8sN\t54-11-067 a\tNULL\tNULL\n6sgU-Ii2pASKEkbHdjVER\tTEST-ANOMALY-001\tNULL\tNULL\n7roxrEXFBmNXoJgXAWo29\tTEST-ANOMALY-001\tNULL\tNULL\n8LVUawuq5yVzH6TvyBm0n\tTEST-001\tNULL\tNULL\n9pbZAVYoerUrOoDiyQYcZ\tTEST-ANOMALY-001\tNULL\tNULL\nA5tuKe2v_osvemMVjaxbR\tTEST-003\tNULL\tNULL\nadwtHQcQrn0Hl-_AwkPfR\tTEST-ANOMALY-001\tNULL\tNULL\nAeeUsVAd9WHgjgdGLOHZj\tTEST-004\tNULL\tNULL\nApVZrbdh3dCTHkAWk6-36\tTEST-ANOMALY-001\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 358
+}
