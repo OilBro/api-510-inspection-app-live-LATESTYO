@@ -2019,3 +2019,7 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Verify saveExtractedData procedure handles inspectionResults and recommendations fields
 - [x] Check if fields are being filtered out before save (FOUND: confirmExtraction was missing narratives)
 - [x] Test and verify fix end-to-end
+
+
+## Enhancement: PDF Import Success Message with Report Link (January 2026)
+- [x] Add direct link to view newly generated report in PDF import success message

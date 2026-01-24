@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
-import { Settings, ArrowLeft, Upload, FileText, FileSpreadsheet, CheckCircle2, AlertCircle, Eye, Loader2, Download } from "lucide-react";
+import { Settings, ArrowLeft, Upload, FileText, FileSpreadsheet, CheckCircle2, AlertCircle, Eye, Loader2, Download, FileCheck } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { APP_TITLE } from "@/const";
 import { toast } from "sonner";
@@ -566,13 +566,20 @@ export default function ImportData() {
                     ? "A new inspection record has been created with the extracted data."
                     : "The existing inspection record has been updated with the new data."}
                 </p>
-                <div className="flex gap-4 mt-4">
-                  <Button asChild>
-                    <Link href={`/inspection/${savedInspectionId}`}>
-                      View Inspection
+                <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                  <Button asChild className="bg-green-600 hover:bg-green-700">
+                    <Link href={`/inspection/${savedInspectionId}/report`}>
+                      <FileCheck className="mr-2 h-4 w-4" />
+                      View Report
                     </Link>
                   </Button>
-                  <Button variant="outline" onClick={handleReset}>
+                  <Button asChild variant="outline">
+                    <Link href={`/inspection/${savedInspectionId}`}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      View Inspection Details
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" onClick={handleReset}>
                     Import Another
                   </Button>
                 </div>
