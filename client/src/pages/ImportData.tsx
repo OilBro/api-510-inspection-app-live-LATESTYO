@@ -259,6 +259,7 @@ export default function ImportData() {
         reportInfo: data.reportInfo,
         tmlReadings: data.tmlReadings,
         nozzles: data.nozzles,
+        narratives: data.narratives,
       });
 
       if (result.success) {

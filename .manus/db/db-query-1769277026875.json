@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, vesselTagNumber, inspectionResults, recommendations, extractionQuality FROM inspections ORDER BY createdAt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, vesselTagNumber, inspectionResults, recommendations, extractionQuality FROM inspections ORDER BY createdAt DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "g5qZNGtq_32v_9rwLjqSH",
+      "vesselTagNumber": "54-11-005",
+      "inspectionResults": "NULL",
+      "recommendations": "NULL",
+      "extractionQuality": "complete"
+    },
+    {
+      "id": "i6RZjoYlOE2We0lsBBqnC",
+      "vesselTagNumber": "TEST-005",
+      "inspectionResults": "NULL",
+      "recommendations": "NULL",
+      "extractionQuality": "complete"
+    },
+    {
+      "id": "GM6dGw_t0kyE1yrG3z857",
+      "vesselTagNumber": "TEST-ANOMALY-001",
+      "inspectionResults": "NULL",
+      "recommendations": "NULL",
+      "extractionQuality": "complete"
+    },
+    {
+      "id": "cko17X09tiJaQ8B9uBhyy",
+      "vesselTagNumber": "TEST-004",
+      "inspectionResults": "NULL",
+      "recommendations": "NULL",
+      "extractionQuality": "complete"
+    },
+    {
+      "id": "2mL_4CRKsit2E8KN9MZbw",
+      "vesselTagNumber": "TEST-003",
+      "inspectionResults": "NULL",
+      "recommendations": "NULL",
+      "extractionQuality": "complete"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tvesselTagNumber\tinspectionResults\trecommendations\textractionQuality\ng5qZNGtq_32v_9rwLjqSH\t54-11-005\tNULL\tNULL\tcomplete\ni6RZjoYlOE2We0lsBBqnC\tTEST-005\tNULL\tNULL\tcomplete\nGM6dGw_t0kyE1yrG3z857\tTEST-ANOMALY-001\tNULL\tNULL\tcomplete\ncko17X09tiJaQ8B9uBhyy\tTEST-004\tNULL\tNULL\tcomplete\n2mL_4CRKsit2E8KN9MZbw\tTEST-003\tNULL\tNULL\tcomplete\n",
+  "stderr": "",
+  "execution_time_ms": 363
+}

@@ -2011,3 +2011,11 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Check if data is being saved to database after extraction - Found: data was extracted but not auto-saved
 - [x] Fix display in Results & Recommendations tab - Added auto-save after extraction
 - [x] Fix inclusion in generated PDF report - Already working, just needs data in database
+
+
+## Bug Fix: Section 3.0/4.0 Not Persisting After Confirm Save (January 2026)
+- [x] Fix Section 3.0/4.0 data not persisting when user clicks Confirm Save
+- [x] Trace data flow from extraction → saveMutation → database
+- [x] Verify saveExtractedData procedure handles inspectionResults and recommendations fields
+- [x] Check if fields are being filtered out before save (FOUND: confirmExtraction was missing narratives)
+- [x] Test and verify fix end-to-end

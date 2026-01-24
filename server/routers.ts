@@ -1114,6 +1114,11 @@ Return JSON in this exact format:
           acceptable: z.boolean().optional(),
           notes: z.string().optional(),
         })),
+        narratives: z.object({
+          executiveSummary: z.string().optional(),
+          inspectionResults: z.string().optional(),
+          recommendations: z.string().optional(),
+        }).optional(),
         inspectionId: z.string().optional(), // Optional: append to existing
       }))
       .mutation(async ({ ctx, input }) => {
@@ -1215,6 +1220,16 @@ Return JSON in this exact format:
           if (ri.inspectionType) inspection.inspectionType = ri.inspectionType.substring(0, 100);
           if (ri.inspectorName) inspection.inspectorName = ri.inspectorName.substring(0, 255);
           if (ri.clientName) inspection.clientName = ri.clientName.substring(0, 255);
+
+          // Update narratives (Section 3.0 and 4.0)
+          if (input.narratives) {
+            if (input.narratives.inspectionResults) {
+              inspection.inspectionResults = input.narratives.inspectionResults;
+            }
+            if (input.narratives.recommendations) {
+              inspection.recommendations = input.narratives.recommendations;
+            }
+          }
 
           // Save inspection
           if (isNewInspection) {
