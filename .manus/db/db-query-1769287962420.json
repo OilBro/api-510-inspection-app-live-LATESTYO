@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE vesselDrawings MODIFY COLUMN category ENUM(\n  'fabrication', 'isometric', 'general_arrangement', 'detail', 'nameplate', 'nozzle_schedule', 'drawing_other',\n  'pid', 'pfd', 'pid_markup',\n  'u1_form', 'u1a_form', 'u2_form', 'mdr', 'partial_data_report',\n  'api_inspector_cert', 'nde_tech_cert', 'ut_calibration', 'thickness_gauge_cal', 'pressure_gauge_cal', 'other_calibration', 'other_cert',\n  'other'\n) DEFAULT 'other';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute ALTER TABLE vesselDrawings MODIFY COLUMN category ENUM(\n  'fabrication', 'isometric', 'general_arrangement', 'detail', 'nameplate', 'nozzle_schedule', 'drawing_other',\n  'pid', 'pfd', 'pid_markup',\n  'u1_form', 'u1a_form', 'u2_form', 'mdr', 'partial_data_report',\n  'api_inspector_cert', 'nde_tech_cert', 'ut_calibration', 'thickness_gauge_cal', 'pressure_gauge_cal', 'other_calibration', 'other_cert',\n  'other'\n) DEFAULT 'other';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1038
+}

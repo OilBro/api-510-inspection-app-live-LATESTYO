@@ -2023,3 +2023,13 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 
 ## Enhancement: PDF Import Success Message with Report Link (January 2026)
 - [x] Add direct link to view newly generated report in PDF import success message
+
+
+## Enhancement: Convert Drawings to Uploads Section (January 2026)
+- [x] Rename Drawings section to Uploads section
+- [x] Add subsection: Inspection Drawings
+- [x] Add subsection: P&IDs
+- [x] Add subsection: U-1
+- [x] Add subsection: Certs & Calibrations (API Inspector Certs, NDE Tech Certs, Machine Calibrations)
+- [x] Update database schema for new upload categories
+- [x] Update UI to display subsections with upload capability

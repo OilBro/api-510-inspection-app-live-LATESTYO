@@ -18,7 +18,7 @@ import PhotosSection from "../professionalReport/PhotosSection";
 import ChecklistSection from "../professionalReport/ChecklistSection";
 import FfsAssessmentSection from "../professionalReport/FfsAssessmentSection";
 import InLieuOfSection from "../professionalReport/InLieuOfSection";
-import DrawingsSection from "../professionalReport/DrawingsSection";
+import UploadsSection from "../professionalReport/UploadsSection";
 import NozzleEvaluationSection from "../professionalReport/NozzleEvaluationSection";
 import { ReportTemplateDialog, ReportSectionConfig } from "./ReportTemplateDialog";
 import {
@@ -298,7 +298,7 @@ export default function ProfessionalReportTab({ inspectionId }: ProfessionalRepo
           <TabsTrigger value="findings">Findings</TabsTrigger>
           <TabsTrigger value="comparison">Comparison</TabsTrigger>
           <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
-          <TabsTrigger value="drawings">Drawings</TabsTrigger>
+          <TabsTrigger value="uploads">Uploads</TabsTrigger>
           <TabsTrigger value="photos">Photos</TabsTrigger>
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="ffs">FFS Assessment</TabsTrigger>
@@ -610,9 +610,9 @@ export default function ProfessionalReportTab({ inspectionId }: ProfessionalRepo
           <RecommendationsSection reportId={report.id} />
         </TabsContent>
 
-        {/* Drawings Tab */}
-        <TabsContent value="drawings">
-          <DrawingsSection reportId={report.id} inspectionId={inspectionId} />
+        {/* Uploads Tab */}
+        <TabsContent value="uploads">
+          <UploadsSection reportId={report.id} inspectionId={inspectionId} />
         </TabsContent>
 
         {/* Photos Tab */}

@@ -1049,7 +1049,18 @@ export const drawingsRouter = router({
       description: z.string().optional(),
       drawingNumber: z.string().optional(),
       revision: z.string().optional(),
-      category: z.enum(['pid', 'fabrication', 'isometric', 'general_arrangement', 'detail', 'nameplate', 'nozzle_schedule', 'other']).default('other'),
+      category: z.enum([
+        // Inspection Drawings
+        'fabrication', 'isometric', 'general_arrangement', 'detail', 'nameplate', 'nozzle_schedule', 'drawing_other',
+        // P&IDs
+        'pid', 'pfd', 'pid_markup',
+        // U-1 Forms
+        'u1_form', 'u1a_form', 'u2_form', 'mdr', 'partial_data_report',
+        // Certs & Calibrations
+        'api_inspector_cert', 'nde_tech_cert', 'ut_calibration', 'thickness_gauge_cal', 'pressure_gauge_cal', 'other_calibration', 'other_cert',
+        // Legacy
+        'other'
+      ]).default('other'),
       fileUrl: z.string(),
       fileName: z.string().optional(),
       fileType: z.string().optional(),
@@ -1077,7 +1088,13 @@ export const drawingsRouter = router({
       description: z.string().optional(),
       drawingNumber: z.string().optional(),
       revision: z.string().optional(),
-      category: z.enum(['pid', 'fabrication', 'isometric', 'general_arrangement', 'detail', 'nameplate', 'nozzle_schedule', 'other']).optional(),
+      category: z.enum([
+        'fabrication', 'isometric', 'general_arrangement', 'detail', 'nameplate', 'nozzle_schedule', 'drawing_other',
+        'pid', 'pfd', 'pid_markup',
+        'u1_form', 'u1a_form', 'u2_form', 'mdr', 'partial_data_report',
+        'api_inspector_cert', 'nde_tech_cert', 'ut_calibration', 'thickness_gauge_cal', 'pressure_gauge_cal', 'other_calibration', 'other_cert',
+        'other'
+      ]).optional(),
       sequenceNumber: z.number().optional(),
     }))
     .mutation(async ({ input }) => {
@@ -1105,7 +1122,13 @@ export const drawingsRouter = router({
       description: z.string().optional(),
       drawingNumber: z.string().optional(),
       revision: z.string().optional(),
-      category: z.enum(['pid', 'fabrication', 'isometric', 'general_arrangement', 'detail', 'nameplate', 'nozzle_schedule', 'other']).default('other'),
+      category: z.enum([
+        'fabrication', 'isometric', 'general_arrangement', 'detail', 'nameplate', 'nozzle_schedule', 'drawing_other',
+        'pid', 'pfd', 'pid_markup',
+        'u1_form', 'u1a_form', 'u2_form', 'mdr', 'partial_data_report',
+        'api_inspector_cert', 'nde_tech_cert', 'ut_calibration', 'thickness_gauge_cal', 'pressure_gauge_cal', 'other_calibration', 'other_cert',
+        'other'
+      ]).default('other'),
       fileData: z.string(), // Base64 encoded file data
       fileName: z.string(),
       fileType: z.string(),

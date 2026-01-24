@@ -988,16 +988,36 @@ export const vesselDrawings = mysqlTable("vesselDrawings", {
   drawingNumber: varchar("drawingNumber", { length: 100 }), // e.g., "DWG-001", "P&ID-123"
   revision: varchar("revision", { length: 20 }), // e.g., "Rev A", "Rev 2"
   
-  // Category for organization
+  // Category for organization - supports all document types
   category: mysqlEnum("category", [
-    "pid",                  // P&ID (Piping and Instrumentation Diagram)
+    // Inspection Drawings
     "fabrication",          // Fabrication Drawing
     "isometric",            // Isometric Drawing
     "general_arrangement",  // General Arrangement
     "detail",               // Detail Drawing
     "nameplate",            // Nameplate/Data Plate
     "nozzle_schedule",      // Nozzle Schedule
-    "other"                 // Other
+    "drawing_other",        // Other Drawing
+    // P&IDs
+    "pid",                  // P&ID (Piping and Instrumentation Diagram)
+    "pfd",                  // Process Flow Diagram
+    "pid_markup",           // P&ID Markup/Redline
+    // U-1 Forms & Data Reports
+    "u1_form",              // U-1 Form
+    "u1a_form",             // U-1A Form
+    "u2_form",              // U-2 Form
+    "mdr",                  // Manufacturer's Data Report
+    "partial_data_report",  // Partial Data Report
+    // Certifications & Calibrations
+    "api_inspector_cert",   // API Inspector Certification
+    "nde_tech_cert",        // NDE Technician Certification
+    "ut_calibration",       // UT Equipment Calibration
+    "thickness_gauge_cal",  // Thickness Gauge Calibration
+    "pressure_gauge_cal",   // Pressure Gauge Calibration
+    "other_calibration",    // Other Calibration Record
+    "other_cert",           // Other Certification
+    // Legacy
+    "other"                 // Other (legacy)
   ]).default("other"),
   
   // File information
