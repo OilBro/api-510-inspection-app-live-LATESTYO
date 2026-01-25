@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { logger } from "./_core/logger";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
@@ -116,6 +116,17 @@ export async function getInspections(userId: number) {
   if (!db) return [];
   
   const result = await db.select().from(inspections).where(eq(inspections.userId, userId));
+  return result;
+}
+
+/**
+ * Get all inspections across all users - for admin access
+ */
+export async function getAllInspections() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(inspections).orderBy(desc(inspections.createdAt));
   return result;
 }
 

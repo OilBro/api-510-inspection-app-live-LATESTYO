@@ -2033,3 +2033,11 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add subsection: Certs & Calibrations (API Inspector Certs, NDE Tech Certs, Machine Calibrations)
 - [x] Update database schema for new upload categories
 - [x] Update UI to display subsections with upload capability
+
+
+## Feature: Admin Access to All User Reports (January 2026)
+- [x] Update inspection list query to show all reports for admin users
+- [x] Add user attribution column to inspection list for admin view
+- [x] Update inspection detail access to allow admin to view any report
+- [ ] Add filter by user option for admin view (future enhancement)
+- [x] Test admin can see reports created by other users

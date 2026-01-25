@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
-import { Settings, Plus, ArrowLeft, FileText, Calendar, Trash2, Download, CheckSquare, Square, Loader2, AlertTriangle, Filter } from "lucide-react";
+import { Settings, Plus, ArrowLeft, FileText, Calendar, Trash2, Download, CheckSquare, Square, Loader2, AlertTriangle, Filter, User } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -120,8 +120,14 @@ export default function InspectionList() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">My Inspections</h2>
-            <p className="text-gray-600">Manage all your pressure vessel inspection records</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              {user?.role === 'admin' ? 'All Inspections' : 'My Inspections'}
+            </h2>
+            <p className="text-gray-600">
+              {user?.role === 'admin' 
+                ? 'View and manage all inspection records across all users'
+                : 'Manage all your pressure vessel inspection records'}
+            </p>
           </div>
           <Button asChild>
             <Link href="/inspections/new">
@@ -245,6 +251,13 @@ export default function InspectionList() {
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-2 text-gray-400" />
                         <span>Updated {new Date(inspection.updatedAt).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                    {/* Show user attribution for admin view */}
+                    {user?.role === 'admin' && (inspection as any).userId !== user.id && (
+                      <div className="flex items-center">
+                        <User className="h-4 w-4 mr-2 text-blue-400" />
+                        <span className="text-blue-600">User #{(inspection as any).userId}</span>
                       </div>
                     )}
                   </div>

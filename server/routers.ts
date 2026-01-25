@@ -109,7 +109,8 @@ export const appRouter = router({
         throw new Error('Inspection not found');
       }
       
-      if (inspection.userId !== ctx.user.id) {
+      // Admin can access any inspection, regular users only their own
+      if (ctx.user.role !== 'admin' && inspection.userId !== ctx.user.id) {
         throw new Error('Unauthorized');
       }
       
@@ -129,17 +130,31 @@ export const appRouter = router({
       };
     }),
 
-  // Get all inspections for the current user
+  // Get all inspections - admin sees all, regular users see only their own
   list: protectedProcedure.query(async ({ ctx }) => {
       const db = await import('./db');
+      
+      // Admin users can see all inspections
+      if (ctx.user.role === 'admin') {
+        return await db.getAllInspections();
+      }
+      
+      // Regular users only see their own inspections
       return await db.getUserInspections(ctx.user.id);
     }),
 
-    // Get a single inspection by ID
+    // Get a single inspection by ID - admin can access any, users only their own
     get: protectedProcedure
       .input(z.object({ id: z.string() }))
-      .query(async ({ input }) => {
-        return await db.getInspection(input.id);
+      .query(async ({ input, ctx }) => {
+        const inspection = await db.getInspection(input.id);
+        
+        // Admin can access any inspection, regular users only their own
+        if (ctx.user.role !== 'admin' && inspection && inspection.userId !== ctx.user.id) {
+          throw new Error('Unauthorized');
+        }
+        
+        return inspection;
       }),
 
     // Create a new inspection
@@ -1154,7 +1169,7 @@ Return JSON in this exact format:
 
           if (input.inspectionId) {
             inspection = await db.getInspection(input.inspectionId);
-            if (!inspection || inspection.userId !== ctx.user.id) {
+            if (!inspection || (ctx.user.role !== 'admin' && inspection.userId !== ctx.user.id)) {
               throw new Error('Inspection not found or unauthorized');
             }
           } else {
@@ -1365,8 +1380,8 @@ Return JSON in this exact format:
             if (!inspection) {
               throw new Error(`Inspection ${input.inspectionId} not found`);
             }
-            // Verify ownership
-            if (inspection.userId !== ctx.user.id) {
+            // Verify ownership - admin can modify any inspection
+            if (ctx.user.role !== 'admin' && inspection.userId !== ctx.user.id) {
               throw new Error("Unauthorized: Cannot modify another user's inspection");
             }
             logger.info(`[Multi-Source Import] Appending to existing inspection: ${input.inspectionId}`);

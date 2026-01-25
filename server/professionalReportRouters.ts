@@ -711,8 +711,8 @@ export const professionalReportRouter = router({
         throw new Error('Inspection not found');
       }
       
-      // Verify ownership
-      if (inspection.userId !== ctx.user.id) {
+      // Verify ownership - admin can access any inspection
+      if (ctx.user.role !== 'admin' && inspection.userId !== ctx.user.id) {
         throw new Error('Unauthorized');
       }
       
