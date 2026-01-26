@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Download, Plus, Trash2, Upload, FileText, Mail, Calculator, CheckSquare, FileSpreadsheet, TrendingUp, AlertTriangle, Pencil } from "lucide-react";
+import { Loader2, Download, Plus, Trash2, Upload, FileText, Mail, Calculator, CheckSquare, FileSpreadsheet, TrendingUp, AlertTriangle, Pencil, Printer } from "lucide-react";
 import { DataQualityIndicator, CorrosionRateDisplay } from "@/components/DataQualityIndicator";
 import { CalculationReportCard } from "./CalculationReportCard";
 import { Badge } from "@/components/ui/badge";
@@ -811,6 +811,218 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
     toast.success("Template downloaded");
   };
 
+  const handlePrintCalculationReport = () => {
+    if (!calculations || calculations.length === 0) {
+      toast.error("No calculations to print");
+      return;
+    }
+
+    // Generate PDF content for regulatory-compliant calculation report
+    const vesselId = inspection?.vesselTagNumber || inspection?.vesselName || "Unknown Vessel";
+    const inspectionDate = inspection?.inspectionDate 
+      ? new Date(inspection.inspectionDate).toLocaleDateString() 
+      : new Date().toLocaleDateString();
+    const reportDate = new Date().toLocaleDateString();
+
+    // Build HTML content for printing
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Calculation Report - ${vesselId}</title>
+  <style>
+    @page { size: letter; margin: 0.75in; }
+    body { font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.4; color: #333; }
+    .header { text-align: center; border-bottom: 2px solid #1e40af; padding-bottom: 15px; margin-bottom: 20px; }
+    .header h1 { color: #1e40af; margin: 0 0 5px 0; font-size: 18pt; }
+    .header h2 { color: #374151; margin: 0; font-size: 12pt; font-weight: normal; }
+    .meta-info { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 9pt; }
+    .meta-info div { flex: 1; }
+    .component { page-break-inside: avoid; border: 1px solid #d1d5db; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+    .component-header { background: #f3f4f6; margin: -15px -15px 15px -15px; padding: 10px 15px; border-radius: 8px 8px 0 0; border-bottom: 1px solid #d1d5db; }
+    .component-header h3 { margin: 0; color: #1f2937; font-size: 12pt; }
+    .component-header .type { color: #6b7280; font-size: 9pt; }
+    .section { margin-bottom: 15px; }
+    .section-title { font-weight: bold; color: #1e40af; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px; margin-bottom: 8px; font-size: 10pt; }
+    .data-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .data-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #e5e7eb; }
+    .data-label { color: #6b7280; font-size: 9pt; }
+    .data-value { font-weight: 500; text-align: right; }
+    .formula-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 10px; margin: 8px 0; font-family: 'Courier New', monospace; font-size: 9pt; }
+    .formula-title { font-weight: bold; color: #475569; margin-bottom: 5px; }
+    .formula-step { margin: 3px 0; }
+    .result-box { background: #ecfdf5; border: 1px solid #10b981; border-radius: 4px; padding: 10px; margin-top: 10px; }
+    .result-box.warning { background: #fef3c7; border-color: #f59e0b; }
+    .result-box.danger { background: #fee2e2; border-color: #ef4444; }
+    .result-title { font-weight: bold; color: #059669; }
+    .result-box.warning .result-title { color: #d97706; }
+    .result-box.danger .result-title { color: #dc2626; }
+    .assumptions { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 4px; padding: 10px; margin: 10px 0; }
+    .assumptions-title { font-weight: bold; color: #92400e; margin-bottom: 5px; }
+    .assumptions ul { margin: 0; padding-left: 20px; }
+    .code-ref { color: #6366f1; font-style: italic; font-size: 8pt; }
+    .certification { border: 2px solid #1e40af; border-radius: 8px; padding: 15px; margin-top: 30px; page-break-inside: avoid; }
+    .certification-title { font-weight: bold; color: #1e40af; font-size: 11pt; margin-bottom: 10px; }
+    .signature-line { border-bottom: 1px solid #333; width: 250px; margin: 30px 0 5px 0; }
+    .signature-label { font-size: 9pt; color: #6b7280; }
+    @media print { .no-print { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>MECHANICAL INTEGRITY CALCULATION REPORT</h1>
+    <h2>API 510 Pressure Vessel Inspection</h2>
+  </div>
+  
+  <div class="meta-info">
+    <div><strong>Vessel ID:</strong> ${vesselId}</div>
+    <div><strong>Inspection Date:</strong> ${inspectionDate}</div>
+    <div><strong>Report Date:</strong> ${reportDate}</div>
+  </div>
+
+  ${calculations.map(calc => {
+    const tAct = parseFloat(calc.actualThickness || '0');
+    const tMin = parseFloat(calc.minimumThickness || '0');
+    const cr = parseFloat(calc.corrosionRate || '0');
+    const rl = parseFloat(calc.remainingLife || '0');
+    const mawp = parseFloat(calc.calculatedMAWP || '0');
+    const designMawp = parseFloat(calc.designMAWP || '0');
+    const isBelowMin = tAct < tMin;
+    const isLowLife = rl < 2;
+    
+    return `
+    <div class="component">
+      <div class="component-header">
+        <h3>${calc.componentName}</h3>
+        <span class="type">${calc.componentType === 'shell' ? 'Shell Evaluation per ASME VIII-1 UG-27' : 'Head Evaluation per ASME VIII-1 UG-32'}</span>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">1. DESIGN DATA</div>
+        <div class="data-grid">
+          <div class="data-item"><span class="data-label">Design MAWP:</span><span class="data-value">${calc.designMAWP || '-'} psi</span></div>
+          <div class="data-item"><span class="data-label">Design Temperature:</span><span class="data-value">${calc.designTemp || '-'} °F</span></div>
+          <div class="data-item"><span class="data-label">Material:</span><span class="data-value">${calc.materialName || calc.materialCode || '-'}</span></div>
+          <div class="data-item"><span class="data-label">Allowable Stress (S):</span><span class="data-value">${calc.allowableStress || '-'} psi</span></div>
+          <div class="data-item"><span class="data-label">Joint Efficiency (E):</span><span class="data-value">${calc.jointEfficiency || '-'}</span></div>
+          <div class="data-item"><span class="data-label">Inside Diameter:</span><span class="data-value">${calc.insideDiameter || '-'} in</span></div>
+        </div>
+        <p class="code-ref">Source: Manufacturer's Data Report (U-1), ASME Section II Part D</p>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">2. THICKNESS DATA</div>
+        <div class="data-grid">
+          <div class="data-item"><span class="data-label">Nominal Thickness:</span><span class="data-value">${calc.nominalThickness || '-'} in</span></div>
+          <div class="data-item"><span class="data-label">Previous Thickness:</span><span class="data-value">${calc.previousThickness || '-'} in</span></div>
+          <div class="data-item"><span class="data-label">Current Thickness (t_act):</span><span class="data-value">${calc.actualThickness || '-'} in</span></div>
+          <div class="data-item"><span class="data-label">Time Between Readings:</span><span class="data-value">${calc.timeSpan || '-'} years</span></div>
+        </div>
+        <p class="code-ref">Source: UT Thickness Measurements per API 510 §7.1</p>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">3. MINIMUM THICKNESS CALCULATION</div>
+        <div class="formula-box">
+          <div class="formula-title">Formula: ${calc.componentType === 'shell' ? 't_min = PR / (SE - 0.6P)' : 't_min = PLM / (2SE - 0.2P)'}</div>
+          <div class="formula-step">Where:</div>
+          <div class="formula-step">  P = Design Pressure = ${calc.designMAWP || '-'} psi</div>
+          <div class="formula-step">  R = Inside Radius = ${calc.insideDiameter ? (parseFloat(calc.insideDiameter) / 2).toFixed(3) : '-'} in</div>
+          <div class="formula-step">  S = Allowable Stress = ${calc.allowableStress || '-'} psi</div>
+          <div class="formula-step">  E = Joint Efficiency = ${calc.jointEfficiency || '-'}</div>
+          <div class="formula-step" style="margin-top: 8px; font-weight: bold;">Result: t_min = ${calc.minimumThickness || '-'} in</div>
+        </div>
+        <p class="code-ref">Reference: ASME Section VIII Division 1, ${calc.componentType === 'shell' ? 'UG-27' : 'UG-32'}</p>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">4. CORROSION RATE CALCULATION</div>
+        <div class="formula-box">
+          <div class="formula-title">Formula: Cr = (t_prev - t_act) / Years</div>
+          <div class="formula-step">Cr = (${calc.previousThickness || '-'} - ${calc.actualThickness || '-'}) / ${calc.timeSpan || '-'}</div>
+          <div class="formula-step" style="margin-top: 8px; font-weight: bold;">Result: Cr = ${calc.corrosionRate || '-'} in/yr</div>
+          ${calc.governingRateType && calc.governingRateType !== 'nominal' ? `<div class="formula-step" style="color: #d97706;">Governing Rate: ${calc.governingRateType === 'long_term' ? 'Long-Term' : 'Short-Term'} ${calc.governingRateReason ? '- ' + calc.governingRateReason : ''}</div>` : ''}
+        </div>
+        <p class="code-ref">Reference: API 510 §7.1.1</p>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">5. REMAINING LIFE CALCULATION</div>
+        <div class="formula-box">
+          <div class="formula-title">Formula: RL = (t_act - t_min) / Cr</div>
+          <div class="formula-step">Corrosion Allowance: Ca = t_act - t_min = ${calc.actualThickness || '-'} - ${calc.minimumThickness || '-'} = ${calc.corrosionAllowance || (tAct - tMin).toFixed(4)} in</div>
+          <div class="formula-step">RL = ${calc.corrosionAllowance || (tAct - tMin).toFixed(4)} / ${calc.corrosionRate || '-'}</div>
+          <div class="formula-step" style="margin-top: 8px; font-weight: bold;">Result: RL = ${calc.remainingLife || '-'} years</div>
+        </div>
+        <p class="code-ref">Reference: API 510 §7.1.1</p>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">6. MAWP CALCULATION</div>
+        <div class="formula-box">
+          <div class="formula-title">Formula: ${calc.componentType === 'shell' ? 'MAWP = (SE × t_act) / (R + 0.6 × t_act)' : 'MAWP = (2SE × t_act) / (LM + 0.2 × t_act)'}</div>
+          <div class="formula-step" style="margin-top: 8px; font-weight: bold;">Result: MAWP = ${calc.calculatedMAWP || '-'} psi</div>
+          ${mawp >= designMawp ? '<div class="formula-step" style="color: #059669;">✓ Calculated MAWP exceeds Design MAWP</div>' : '<div class="formula-step" style="color: #dc2626;">⚠ Calculated MAWP is below Design MAWP - DERATE REQUIRED</div>'}
+        </div>
+        <p class="code-ref">Reference: ASME Section VIII Division 1, ${calc.componentType === 'shell' ? 'UG-27' : 'UG-32'}</p>
+      </div>
+      
+      <div class="assumptions">
+        <div class="assumptions-title">ASSUMPTIONS</div>
+        <ul>
+          <li>Uniform corrosion assumed unless otherwise noted</li>
+          <li>No localized pitting or stress corrosion cracking observed</li>
+          <li>Material properties per ASME Section II Part D at design temperature</li>
+          <li>Weld joint efficiency per original construction records</li>
+          ${calc.dataQualityNotes ? `<li>${calc.dataQualityNotes}</li>` : ''}
+        </ul>
+      </div>
+      
+      <div class="result-box ${isBelowMin ? 'danger' : isLowLife ? 'warning' : ''}">
+        <div class="result-title">EVALUATION SUMMARY</div>
+        <div class="data-grid" style="margin-top: 8px;">
+          <div class="data-item"><span class="data-label">Current Thickness:</span><span class="data-value">${calc.actualThickness || '-'} in</span></div>
+          <div class="data-item"><span class="data-label">Minimum Required:</span><span class="data-value">${calc.minimumThickness || '-'} in</span></div>
+          <div class="data-item"><span class="data-label">Calculated MAWP:</span><span class="data-value">${calc.calculatedMAWP || '-'} psi</span></div>
+          <div class="data-item"><span class="data-label">Remaining Life:</span><span class="data-value">${calc.remainingLife || '-'} years</span></div>
+        </div>
+        <p style="margin-top: 10px; font-weight: bold;">
+          ${isBelowMin ? '⚠ COMPONENT IS BELOW MINIMUM THICKNESS - IMMEDIATE ACTION REQUIRED' : 
+            isLowLife ? '⚠ REMAINING LIFE IS LOW - SCHEDULE REPAIR OR REPLACEMENT' : 
+            '✓ Component is acceptable for continued service'}
+        </p>
+      </div>
+    </div>
+    `;
+  }).join('')}
+  
+  <div class="certification">
+    <div class="certification-title">REPORT CERTIFICATION</div>
+    <p>I hereby certify that the calculations presented in this report have been performed in accordance with the applicable codes and standards referenced herein. All input data has been verified against available records and field measurements.</p>
+    <p><strong>Applicable Codes:</strong> API 510 (Pressure Vessel Inspection Code), ASME Section VIII Division 1</p>
+    <div class="signature-line"></div>
+    <div class="signature-label">API 510 Authorized Inspector / Date</div>
+    <div class="signature-line" style="margin-top: 20px;"></div>
+    <div class="signature-label">Reviewed By / Date</div>
+  </div>
+</body>
+</html>
+    `;
+
+    // Open print dialog
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+      toast.success("Print dialog opened");
+    } else {
+      toast.error("Could not open print window. Please allow popups.");
+    }
+  };
+
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -901,6 +1113,16 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
             <FileText className="h-4 w-4" />
             {detailedView ? "Summary View" : "Detailed Report"}
           </Button>
+          {detailedView && calculations && calculations.length > 0 && (
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              onClick={() => handlePrintCalculationReport()}
+            >
+              <Printer className="h-4 w-4" />
+              Print Report
+            </Button>
+          )}
           <Button variant="outline" className="gap-2" onClick={() => handleExportTemplate()}>
             <Download className="h-4 w-4" />
             Export Template

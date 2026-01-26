@@ -2078,3 +2078,9 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add code references (API 510 §7.1.1, ASME VIII-1 UG-27)
 - [x] Add source documentation for input parameters
 - [x] Add "Detailed Report" toggle to view regulatory-compliant calculation cards
+
+
+## Print Calculation Report Feature (January 2026)
+- [x] Add "Print Calculation Report" button to export detailed calculation cards to PDF
+- [x] Create PDF generation function for regulatory-compliant calculation reports
+- [x] Include all calculation details, code references, assumptions, and certification in PDF
