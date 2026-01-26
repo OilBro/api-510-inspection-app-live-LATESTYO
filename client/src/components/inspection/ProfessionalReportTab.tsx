@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Download, Plus, Trash2, Upload, FileText, Mail, Calculator, CheckSquare, FileSpreadsheet, TrendingUp, AlertTriangle, Pencil } from "lucide-react";
 import { DataQualityIndicator, CorrosionRateDisplay } from "@/components/DataQualityIndicator";
+import { CalculationReportCard } from "./CalculationReportCard";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import FindingsSection from "../professionalReport/FindingsSection";
@@ -721,11 +722,15 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
   const [componentType, setComponentType] = useState<"shell" | "head">("shell");
   const [recalculating, setRecalculating] = useState(false);
   const [editingCalc, setEditingCalc] = useState<any>(null);
+  const [detailedView, setDetailedView] = useState(false);
   const utils = trpc.useUtils();
 
   const { data: calculations, isLoading } = trpc.professionalReport.componentCalculations.list.useQuery({
     reportId,
   });
+
+  // Get inspection data for vessel identification in detailed reports
+  const { data: inspection } = trpc.inspections.get.useQuery({ id: inspectionId });
 
   const createCalculation = trpc.professionalReport.componentCalculations.create.useMutation({
     onSuccess: () => {
@@ -887,7 +892,15 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
             Shell and head evaluations per ASME Section VIII
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button 
+            variant={detailedView ? "default" : "outline"} 
+            className="gap-2" 
+            onClick={() => setDetailedView(!detailedView)}
+          >
+            <FileText className="h-4 w-4" />
+            {detailedView ? "Summary View" : "Detailed Report"}
+          </Button>
           <Button variant="outline" className="gap-2" onClick={() => handleExportTemplate()}>
             <Download className="h-4 w-4" />
             Export Template
@@ -940,7 +953,6 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
           </Dialog>
         </div>
       </div>
-
       {calculations && calculations.length > 0 ? (
         <div className="grid gap-4">
           {calculations.map((calc) => {
@@ -950,6 +962,24 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
             const govType = (calc.governingRateType || 'nominal') as 'long_term' | 'short_term' | 'nominal';
             const dataStatus = (calc.dataQualityStatus || 'good') as 'good' | 'anomaly' | 'growth_error' | 'below_minimum' | 'confirmed';
             
+            // Render detailed regulatory-compliant report card
+            if (detailedView) {
+              return (
+                <CalculationReportCard
+                  key={calc.id}
+                  calculation={{
+                    ...calc,
+                    componentType: calc.componentType as "shell" | "head",
+                  }}
+                  vesselId={inspection?.vesselTagNumber || inspection?.vesselName || undefined}
+                  inspectorName={undefined}
+                  inspectionDate={inspection?.inspectionDate ? new Date(inspection.inspectionDate).toLocaleDateString() : undefined}
+                  onEdit={() => setEditingCalc(calc)}
+                  onDelete={() => deleteCalculation.mutate({ calcId: calc.id })}
+                />
+              );
+            }
+                        // Render summary card (original view)
             return (
               <Card key={calc.id} className={dataStatus === 'below_minimum' ? 'border-red-500 border-2' : ''}>
                 <CardHeader>

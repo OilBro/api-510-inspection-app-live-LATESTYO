@@ -2041,3 +2041,40 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Update inspection detail access to allow admin to view any report
 - [ ] Add filter by user option for admin view (future enhancement)
 - [x] Test admin can see reports created by other users
+
+
+## Regulatory Compliance Audit & Report Updates (January 2026)
+
+### Audit Against regulatory-inspection-engineering Skill
+- [ ] Audit calculation implementations for code references (API 510 §7.1.1, ASME VIII-1 UG-27)
+- [ ] Check if assumptions are explicitly declared in calculations
+- [ ] Verify units are preserved at every calculation step
+- [ ] Check for intermediate value output in compliance decisions
+- [ ] Audit for prohibited behaviors (auto-selection, interpolation, averaging)
+
+### Update Calculation Reports to Match Skill Templates
+- [ ] Update Remaining Life calculation report format
+- [ ] Update MAWP recalculation report format
+- [ ] Add vessel identification section to reports
+- [ ] Add design data with sources section
+- [ ] Add explicit assumptions section
+- [ ] Add compliance determination section
+- [ ] Add report certification section
+- [ ] Add intermediate values appendix
+
+### Add Audit Trail Features
+- [ ] Add code references to all calculation outputs
+- [ ] Add timestamp logging for data changes
+- [ ] Ensure locked calculation engine (no runtime modification)
+
+
+## Regulatory Compliance Audit (January 2026)
+- [x] Audit current calculation implementations against skill requirements
+- [x] Document compliance gaps (see COMPLIANCE_AUDIT_REPORT.md)
+- [x] Create CalculationReportCard component with regulatory-compliant format
+- [x] Add step-by-step calculation output with intermediate values
+- [x] Add explicit assumptions section to calculation reports
+- [x] Add report certification section
+- [x] Add code references (API 510 §7.1.1, ASME VIII-1 UG-27)
+- [x] Add source documentation for input parameters
+- [x] Add "Detailed Report" toggle to view regulatory-compliant calculation cards
