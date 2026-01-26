@@ -149,6 +149,26 @@ CRITICAL INSTRUCTIONS:
    - Extract EVERY row from thickness tables, even if they span 5+ pages
    - Do NOT stop at the first page of a table
 
+8. CIRCUMFERENTIAL SLICE-ANGLE READINGS: Many UT inspection reports use a grid format where:
+   - ROWS represent "slices" or locations along the vessel (e.g., "2' from East Head", "4'", "6'", "8'", "10'", "12'", "14'", "16'")
+   - COLUMNS represent angular positions around the circumference: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°
+   - Each cell contains a thickness reading at that slice+angle combination
+   
+   For these tables, create SEPARATE TML readings for each cell:
+   - cmlNumber: Use format "SLICE-ANGLE" (e.g., "2-0", "2-45", "2-90" for 2' slice at 0°, 45°, 90°)
+   - location: Include the row description (e.g., "2' from East Head Seam - Shell side")
+   - angle: The column header angle (e.g., "0°", "45°", "90°")
+   - component: "Shell" for shell readings
+   
+   Example: A reading of 0.662 at row "2' from East Head" and column "45°" becomes:
+   { cmlNumber: "2-45", location: "2' from East Head Seam", angle: "45°", currentThickness: 0.662, component: "Shell" }
+
+9. NOZZLE ANGULAR READINGS: Nozzle readings often have 4 positions: 0°, 90°, 180°, 270°
+   - Create separate TML readings for each angle
+   - cmlNumber: Use format "N1-0", "N1-90", "N1-180", "N1-270" for nozzle N1
+   - Include nozzle size and tmin from the table
+   - component: "Nozzle"
+
 2. HEADS: Most pressure vessels have TWO heads (one at each end). Look for:
    - North Head / South Head (common naming)
    - East Head / West Head (alternative naming)
@@ -232,7 +252,8 @@ CRITICAL INSTRUCTIONS:
       "component": "string (Shell/East Head/West Head/Nozzle - be specific about which head)",
       "readingType": "string (nozzle/seam/spot/general)",
       "nozzleSize": "string (e.g. 24\", 3\", 2\", 1\" - only for nozzles)",
-      "angle": "string (e.g. 0°, 90°, 180°, 270° for multi-angle readings)",
+      "angle": "string (e.g. 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315° for circumferential readings)",
+      "sliceLocation": "string (e.g. 2', 4', 6' - distance from head seam for shell slice readings)",
       "nominalThickness": "number",
       "previousThickness": "number",
       "currentThickness": "number",
@@ -347,6 +368,7 @@ CRITICAL INSTRUCTIONS:
                   readingType: { type: "string" },
                   nozzleSize: { type: "string" },
                   angle: { type: "string" },
+                  sliceLocation: { type: "string" },
                   nominalThickness: { type: "number" },
                   previousThickness: { type: "number" },
                   currentThickness: { type: "number" },

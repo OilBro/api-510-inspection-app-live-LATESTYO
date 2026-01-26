@@ -2084,3 +2084,14 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add "Print Calculation Report" button to export detailed calculation cards to PDF
 - [x] Create PDF generation function for regulatory-compliant calculation reports
 - [x] Include all calculation details, code references, assumptions, and certification in PDF
+
+
+## CML/TML Naming Convention Support (January 2026)
+- [x] Fix field mapping save functionality (now persists to database via locationMappings table)
+- [x] Implement CML pattern recognition for slice-angle format (e.g., 1-0, 1-45, 1-90, 1-135, etc.)
+- [x] Support simple CML numbers (1, 2, 3) and slice-angle format (2-45, 2-90, etc.)
+- [x] Recognize shell slice readings at 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°
+- [x] Recognize piping readings at 0°, 90°, 180°, 270°
+- [x] Update PDF parser to correctly parse and group circumferential readings
+- [x] Enhanced LLM prompt with instructions for slice-angle format extraction
+- [ ] Test with user's 54-11-067UTINFO2016.pdf file (ready for user testing)

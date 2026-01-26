@@ -22,6 +22,7 @@ import { trendAnalysisRouter } from "./trendAnalysisRouter";
 import { hierarchyRouter } from "./hierarchyRouter";
 import { rcraComplianceRouter } from "./routers/rcraComplianceRouter";
 import { batchReprocessRouter } from "./routers/batchReprocessRouter";
+import { locationMappingRouter } from "./locationMappingRouter";
 import { convertToJpeg } from "./_core/freeconvert";
 import * as fieldMappingDb from "./fieldMappingDb";
 import * as professionalReportDb from "./professionalReportDb";
@@ -68,6 +69,7 @@ export const appRouter = router({
   rcraCompliance: rcraComplianceRouter,
   batchReprocess: batchReprocessRouter,
   drawings: drawingsRouter,
+  locationMappings: locationMappingRouter,
 
   images: router({
     convertToJpeg: protectedProcedure

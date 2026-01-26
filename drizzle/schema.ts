@@ -1037,3 +1037,100 @@ export const vesselDrawings = mysqlTable("vesselDrawings", {
 
 export type VesselDrawing = typeof vesselDrawings.$inferSelect;
 export type InsertVesselDrawing = typeof vesselDrawings.$inferInsert;
+
+
+/**
+ * Location Mappings - CML/TML location pattern to component type mappings
+ * Used to correctly categorize thickness readings by component (Shell, Head, Nozzle)
+ * Supports both simple patterns (1, 2, 3) and slice-angle format (1-0, 1-45, 1-90)
+ */
+export const locationMappings = mysqlTable("locationMappings", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  userId: int("userId").notNull(),
+  
+  // Scope - applies to all vessels or specific vessel
+  vesselTagNumber: varchar("vesselTagNumber", { length: 255 }), // null = default for all vessels
+  
+  // Pattern matching
+  locationPattern: varchar("locationPattern", { length: 255 }).notNull(), // e.g., "7", "8-12", "N1", "1-0", "1-45"
+  patternType: mysqlEnum("patternType", [
+    "single",        // Single CML number: "7"
+    "range",         // Range of CMLs: "8-12"
+    "prefix",        // Prefix match: "N" for nozzles
+    "slice_angle",   // Slice with angle: "1-0", "1-45", "1-90"
+    "text"           // Text pattern: "South Head"
+  ]).default("single"),
+  
+  // Component mapping
+  componentType: mysqlEnum("componentType", [
+    "shell",
+    "north_head",
+    "south_head",
+    "east_head",
+    "west_head",
+    "nozzle",
+    "manway",
+    "other"
+  ]).notNull(),
+  
+  // Angular position support for circumferential readings
+  // Shell: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°
+  // Nozzle: 0°, 90°, 180°, 270°
+  angularPositions: json("angularPositions"), // Array of supported angles: [0, 45, 90, 135, 180, 225, 270, 315]
+  
+  // Description
+  description: text("description"),
+  
+  // Priority for matching (higher = checked first)
+  priority: int("priority").default(0),
+  
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+});
+
+export type LocationMapping = typeof locationMappings.$inferSelect;
+export type InsertLocationMapping = typeof locationMappings.$inferInsert;
+
+/**
+ * CML Angular Readings - Individual readings at specific angular positions
+ * Supports the slice-angle format (e.g., CML 10 at 45° = "10-45")
+ */
+export const cmlAngularReadings = mysqlTable("cmlAngularReadings", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  inspectionId: varchar("inspectionId", { length: 64 }).notNull(),
+  tmlReadingId: varchar("tmlReadingId", { length: 64 }), // Link to parent TML reading if applicable
+  
+  // CML identification
+  cmlNumber: varchar("cmlNumber", { length: 50 }).notNull(), // Base CML number: "10", "N1"
+  angularPosition: int("angularPosition").notNull(), // Degrees: 0, 45, 90, 135, 180, 225, 270, 315
+  fullCmlId: varchar("fullCmlId", { length: 100 }).notNull(), // Combined: "10-45", "N1-90"
+  
+  // Component type (resolved from location mapping)
+  componentType: varchar("componentType", { length: 50 }), // shell, head, nozzle
+  componentDescription: text("componentDescription"), // e.g., "2' from East Head Seam"
+  
+  // Thickness reading
+  thickness: decimal("thickness", { precision: 10, scale: 4 }),
+  previousThickness: decimal("previousThickness", { precision: 10, scale: 4 }),
+  nominalThickness: decimal("nominalThickness", { precision: 10, scale: 4 }),
+  minimumThickness: decimal("minimumThickness", { precision: 10, scale: 4 }),
+  
+  // Calculated values
+  corrosionRate: decimal("corrosionRate", { precision: 10, scale: 6 }),
+  remainingLife: decimal("remainingLife", { precision: 10, scale: 2 }),
+  
+  // Measurement metadata
+  measurementDate: timestamp("measurementDate"),
+  technicianName: varchar("technicianName", { length: 255 }),
+  instrumentSerial: varchar("instrumentSerial", { length: 100 }),
+  
+  // Data quality
+  dataQualityStatus: mysqlEnum("dataQualityStatus", ["good", "anomaly", "growth_error", "below_minimum", "confirmed"]).default("good"),
+  notes: text("notes"),
+  
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+});
+
+export type CmlAngularReading = typeof cmlAngularReadings.$inferSelect;
+export type InsertCmlAngularReading = typeof cmlAngularReadings.$inferInsert;
