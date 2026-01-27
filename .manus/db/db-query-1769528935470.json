@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, vesselTagNumber, headType, crownRadius, knuckleRadius FROM inspections WHERE vesselTagNumber LIKE '%54-11-067%' OR vesselTagNumber LIKE '%067%' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, vesselTagNumber, headType, crownRadius, knuckleRadius FROM inspections WHERE vesselTagNumber LIKE '%54-11-067%' OR vesselTagNumber LIKE '%067%' LIMIT 5;",
+  "rows": [
+    {
+      "id": "-8ojKNeewbF4bgoOgZlTP",
+      "vesselTagNumber": "54-11-067",
+      "headType": "2:1 Ellipsoidal",
+      "crownRadius": "NULL",
+      "knuckleRadius": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tvesselTagNumber\theadType\tcrownRadius\tknuckleRadius\n-8ojKNeewbF4bgoOgZlTP\t54-11-067\t2:1 Ellipsoidal\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 166
+}
