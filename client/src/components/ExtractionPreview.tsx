@@ -114,7 +114,7 @@ interface ExtractionPreviewProps {
   preview: PreviewData;
   summary: ExtractionSummary;
   parserUsed: string;
-  onConfirm: (data: { vesselInfo: VesselInfo; reportInfo: ReportInfo; tmlReadings: TmlReading[]; nozzles: Nozzle[]; narratives: { executiveSummary: string; inspectionResults: string; recommendations: string } }) => void;
+  onConfirm: (data: { vesselInfo: VesselInfo; reportInfo: ReportInfo; tmlReadings: TmlReading[]; nozzles: Nozzle[]; narratives: { executiveSummary: string; inspectionResults: string; recommendations: string }; checklistItems: any[] }) => void;
   onCancel: () => void;
   isConfirming: boolean;
 }
@@ -292,6 +292,7 @@ export default function ExtractionPreview({
       tmlReadings,
       nozzles,
       narratives: preview.narratives,
+      checklistItems: preview.checklistItems || [],
     });
   };
 

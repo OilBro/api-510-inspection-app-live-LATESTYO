@@ -1136,6 +1136,16 @@ Return JSON in this exact format:
           inspectionResults: z.string().optional(),
           recommendations: z.string().optional(),
         }).optional(),
+        checklistItems: z.array(z.object({
+          id: z.string(),
+          category: z.string(),
+          itemNumber: z.string().optional(),
+          itemText: z.string(),
+          checked: z.boolean(),
+          notes: z.string().optional(),
+          checkedBy: z.string().optional(),
+          checkedDate: z.string().optional(),
+        })).optional(),
         inspectionId: z.string().optional(), // Optional: append to existing
       }))
       .mutation(async ({ ctx, input }) => {
@@ -1294,12 +1304,55 @@ Return JSON in this exact format:
             });
           }
 
-          logger.info(`[Confirm Extraction] Saved inspection ${inspection.id} with ${input.tmlReadings.length} TML readings and ${input.nozzles.length} nozzles`);
+          // Save checklist items if provided
+          let checklistItemsCreated = 0;
+          if (input.checklistItems && input.checklistItems.length > 0) {
+            // Get or create professional report for this inspection
+            let report = await professionalReportDb.getProfessionalReportByInspection(inspection.id);
+            if (!report) {
+              const reportId = nanoid();
+              await professionalReportDb.createProfessionalReport({
+                id: reportId,
+                inspectionId: inspection.id,
+                userId: ctx.user.id,
+                reportNumber: input.reportInfo?.reportNumber || null,
+              });
+              report = await professionalReportDb.getProfessionalReport(reportId);
+            }
+
+            if (!report) {
+              logger.warn('[Confirm Extraction] Could not create professional report for checklist items');
+            } else {
+              // Save each checklist item
+              for (const item of input.checklistItems) {
+                try {
+                  await professionalReportDb.createChecklistItem({
+                    id: nanoid(),
+                    reportId: report.id,
+                    category: item.category.substring(0, 100),
+                    itemNumber: item.itemNumber?.substring(0, 50),
+                    itemText: item.itemText.substring(0, 500),
+                    checked: item.checked,
+                    notes: item.notes?.substring(0, 1000),
+                    checkedBy: item.checkedBy?.substring(0, 100),
+                    checkedDate: item.checkedDate ? new Date(item.checkedDate) : undefined,
+                  });
+                  checklistItemsCreated++;
+                } catch (err) {
+                  logger.warn(`[Confirm Extraction] Failed to save checklist item: ${err}`);
+                }
+              }
+              logger.info(`[Confirm Extraction] Saved ${checklistItemsCreated} checklist items`);
+            }
+          }
+
+          logger.info(`[Confirm Extraction] Saved inspection ${inspection.id} with ${input.tmlReadings.length} TML readings, ${input.nozzles.length} nozzles, and ${checklistItemsCreated} checklist items`);
 
           return {
             success: true,
             inspectionId: inspection.id,
             isNewInspection,
+            checklistItemsCreated,
             message: isNewInspection 
               ? 'New inspection created successfully' 
               : 'Data added to existing inspection',

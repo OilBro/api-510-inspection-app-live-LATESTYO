@@ -260,6 +260,7 @@ export default function ImportData() {
         tmlReadings: data.tmlReadings,
         nozzles: data.nozzles,
         narratives: data.narratives,
+        checklistItems: data.checklistItems || [],
       });
 
       if (result.success) {

@@ -2116,3 +2116,13 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Preserve original CML numbers when applying new readings
 - [x] Added uploadUTResultsWithLocationMatching procedure
 - [ ] Test with user's 067utreadingsjh.pdf file (ready for user testing)
+
+
+## Enhancement: Import Checklist Items in Import Data Option (January 2026)
+- [x] Update Import Data to extract checklist items like PDF AI Import does
+- [x] Include checkmarks (checked/unchecked status) for each checklist item
+- [x] Include any comments associated with checklist items
+- [x] Added checklistItems to confirmExtraction input schema
+- [x] Added checklist saving logic to confirmExtraction procedure
+- [x] Updated ExtractionPreview and ImportData to pass checklistItems
+- [ ] Test with user's PDF files to verify checklist extraction (ready for user testing)
