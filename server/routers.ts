@@ -1348,6 +1348,37 @@ Return JSON in this exact format:
 
           logger.info(`[Confirm Extraction] Saved inspection ${inspection.id} with ${input.tmlReadings.length} TML readings, ${input.nozzles.length} nozzles, and ${checklistItemsCreated} checklist items`);
 
+          // Auto-generate component calculations for the professional report
+          // This ensures calculations appear immediately after import
+          let report = await professionalReportDb.getProfessionalReportByInspection(inspection.id);
+          if (!report) {
+            // Create professional report if it doesn't exist
+            const reportId = nanoid();
+            await professionalReportDb.createProfessionalReport({
+              id: reportId,
+              inspectionId: inspection.id,
+              userId: ctx.user.id,
+              reportNumber: input.reportInfo?.reportNumber || `RPT-${Date.now()}`,
+              reportDate: input.reportInfo?.reportDate ? new Date(input.reportInfo.reportDate) : new Date(),
+              inspectorName: input.reportInfo?.inspectorName || ctx.user.name || "",
+              employerName: "OilPro Consulting LLC",
+              clientName: input.reportInfo?.clientName || inspection.clientName || "",
+            });
+            report = await professionalReportDb.getProfessionalReportByInspection(inspection.id);
+            logger.info(`[Confirm Extraction] Auto-created professional report ${reportId}`);
+          }
+          
+          // Generate component calculations (Shell, East Head, West Head)
+          if (report) {
+            try {
+              await professionalReportDb.generateDefaultCalculationsForInspection(inspection.id, report.id);
+              logger.info(`[Confirm Extraction] Auto-generated component calculations for report ${report.id}`);
+            } catch (calcError) {
+              logger.error(`[Confirm Extraction] Failed to generate component calculations:`, calcError);
+              // Don't fail the whole import if calculations fail
+            }
+          }
+
           return {
             success: true,
             inspectionId: inspection.id,
