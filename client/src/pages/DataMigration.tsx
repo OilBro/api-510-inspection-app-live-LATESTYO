@@ -142,14 +142,49 @@ export default function DataMigration() {
       return;
     }
 
-    const rows: AngleDataRow[] = tmlReadings.map((tml: any) => ({
-      cmlNumber: tml.cmlNumber || "",
-      angle0: tml.tml1?.toString() || "",
-      angle90: tml.tml2?.toString() || "",
-      angle180: tml.tml3?.toString() || "",
-      angle270: tml.tml4?.toString() || "",
-      tPrevious: tml.previousThickness?.toString() || "",
-    }));
+    // Helper function to extract numeric value from CML number for sorting
+    // Handles formats like: "1", "10", "1-45", "N1", "N1-90", "2'", "2' East Head"
+    const extractNumericValue = (cmlNumber: string): number => {
+      if (!cmlNumber) return Infinity;
+      // Remove common prefixes like N, CML, TML
+      const cleaned = cmlNumber.replace(/^(N|CML|TML|cml|tml|n)/i, '');
+      // Extract the first number (including decimals)
+      const match = cleaned.match(/^([\d.]+)/);
+      if (match) {
+        return parseFloat(match[1]);
+      }
+      // If no number found, return Infinity to sort to end
+      return Infinity;
+    };
+
+    // Extract secondary sort value (angle portion like -45, -90, etc.)
+    const extractAngleValue = (cmlNumber: string): number => {
+      const match = cmlNumber.match(/-(\d+)/);
+      if (match) {
+        return parseInt(match[1], 10);
+      }
+      return 0;
+    };
+
+    const rows: AngleDataRow[] = tmlReadings
+      .map((tml: any) => ({
+        cmlNumber: tml.cmlNumber || "",
+        angle0: tml.tml1?.toString() || "",
+        angle90: tml.tml2?.toString() || "",
+        angle180: tml.tml3?.toString() || "",
+        angle270: tml.tml4?.toString() || "",
+        tPrevious: tml.previousThickness?.toString() || "",
+      }))
+      // Sort by numeric value first, then by angle value
+      .sort((a, b) => {
+        const numA = extractNumericValue(a.cmlNumber);
+        const numB = extractNumericValue(b.cmlNumber);
+        if (numA !== numB) return numA - numB;
+        // If same base number, sort by angle
+        const angleA = extractAngleValue(a.cmlNumber);
+        const angleB = extractAngleValue(b.cmlNumber);
+        return angleA - angleB;
+      });
 
     setAngleData(rows);
     toast.success(`Loaded ${rows.length} TML readings`);

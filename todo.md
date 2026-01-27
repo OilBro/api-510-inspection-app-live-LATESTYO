@@ -2126,3 +2126,9 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Added checklist saving logic to confirmExtraction procedure
 - [x] Updated ExtractionPreview and ImportData to pass checklistItems
 - [ ] Test with user's PDF files to verify checklist extraction (ready for user testing)
+
+
+## Bug Fix: CML Ordering in Data Migration Tool (January 2026)
+- [x] Fix CML display order in Data Migration Tool to be numerical
+- [x] Sort CMLs by extracting numeric portion for proper ordering (e.g., 1, 2, 3... not 1, 10, 11, 2, 3)
+- [x] Added secondary sort by angle value for slice-angle format (e.g., 1-0, 1-45, 1-90)
