@@ -2095,3 +2095,15 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Update PDF parser to correctly parse and group circumferential readings
 - [x] Enhanced LLM prompt with instructions for slice-angle format extraction
 - [ ] Test with user's 54-11-067UTINFO2016.pdf file (ready for user testing)
+
+
+## Bug Fix: Location Mapping Save Error (January 2026)
+- [ ] Fix locationPattern column too short for long comma-separated patterns
+- [ ] Restructure mapping storage to handle multiple CML patterns per component
+- [ ] Test saving location mappings with user's pattern format
+
+
+## Bug Fix: Extract ALL 8 Angular Readings Per Slice (January 2026)
+- [x] Fix PDF parser to extract all 8 CMLs per slice (2-0, 2-45, 2-90, 2-135, 2-180, 2-225, 2-270, 2-315)
+- [x] Updated LLM prompt with MANDATORY instructions to extract every cell as separate TML
+- [ ] Test with 54-11-067UTINFO2016.pdf - should get ~80 shell CMLs + head + nozzle readings (ready for user testing)

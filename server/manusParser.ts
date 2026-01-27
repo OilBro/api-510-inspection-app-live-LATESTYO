@@ -149,25 +149,51 @@ CRITICAL INSTRUCTIONS:
    - Extract EVERY row from thickness tables, even if they span 5+ pages
    - Do NOT stop at the first page of a table
 
-8. CIRCUMFERENTIAL SLICE-ANGLE READINGS: Many UT inspection reports use a grid format where:
+8. CIRCUMFERENTIAL SLICE-ANGLE READINGS - CRITICAL: Many UT inspection reports use a GRID FORMAT where:
    - ROWS represent "slices" or locations along the vessel (e.g., "2' from East Head", "4'", "6'", "8'", "10'", "12'", "14'", "16'")
-   - COLUMNS represent angular positions around the circumference: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°
+   - COLUMNS represent angular positions around the circumference: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315° (8 columns)
    - Each cell contains a thickness reading at that slice+angle combination
    
-   For these tables, create SEPARATE TML readings for each cell:
-   - cmlNumber: Use format "SLICE-ANGLE" (e.g., "2-0", "2-45", "2-90" for 2' slice at 0°, 45°, 90°)
-   - location: Include the row description (e.g., "2' from East Head Seam - Shell side")
-   - angle: The column header angle (e.g., "0°", "45°", "90°")
-   - component: "Shell" for shell readings
+   **MANDATORY: You MUST create 8 SEPARATE TML readings for EACH ROW in the grid table.**
+   For a table with 10 rows and 8 columns, you MUST extract 80 TML readings.
    
-   Example: A reading of 0.662 at row "2' from East Head" and column "45°" becomes:
-   { cmlNumber: "2-45", location: "2' from East Head Seam", angle: "45°", currentThickness: 0.662, component: "Shell" }
+   For EACH cell in the grid:
+   - cmlNumber: Use format "SLICE-ANGLE" where SLICE is the row number (e.g., "2-0", "2-45", "2-90", "2-135", "2-180", "2-225", "2-270", "2-315" for the 2' slice)
+   - location: Include the row description (e.g., "2' from East Head Seam - Shell side")
+   - angle: The column header angle (e.g., "0°", "45°", "90°", "135°", "180°", "225°", "270°", "315°")
+   - component: "Shell" for shell readings
+   - currentThickness: The numeric value in that cell
+   
+   EXAMPLE: For a row labeled "2' from East Head" with readings [0.66, 0.658, 0.66, 0.659, 0.658, 0.659, 0.671, 0.659] across 8 columns:
+   You MUST create these 8 TML readings:
+   { cmlNumber: "2-0", location: "2' from East Head Seam", angle: "0°", currentThickness: 0.66, component: "Shell" }
+   { cmlNumber: "2-45", location: "2' from East Head Seam", angle: "45°", currentThickness: 0.658, component: "Shell" }
+   { cmlNumber: "2-90", location: "2' from East Head Seam", angle: "90°", currentThickness: 0.66, component: "Shell" }
+   { cmlNumber: "2-135", location: "2' from East Head Seam", angle: "135°", currentThickness: 0.659, component: "Shell" }
+   { cmlNumber: "2-180", location: "2' from East Head Seam", angle: "180°", currentThickness: 0.658, component: "Shell" }
+   { cmlNumber: "2-225", location: "2' from East Head Seam", angle: "225°", currentThickness: 0.659, component: "Shell" }
+   { cmlNumber: "2-270", location: "2' from East Head Seam", angle: "270°", currentThickness: 0.671, component: "Shell" }
+   { cmlNumber: "2-315", location: "2' from East Head Seam", angle: "315°", currentThickness: 0.659, component: "Shell" }
+   
+   DO NOT summarize or combine readings. Extract EVERY SINGLE CELL as a separate TML reading.
 
-9. NOZZLE ANGULAR READINGS: Nozzle readings often have 4 positions: 0°, 90°, 180°, 270°
-   - Create separate TML readings for each angle
+9. NOZZLE ANGULAR READINGS - CRITICAL: Nozzle readings often have 4 positions: 0°, 90°, 180°, 270°
+   **MANDATORY: You MUST create 4 SEPARATE TML readings for EACH NOZZLE.**
+   For 12 nozzles with 4 angles each, you MUST extract 48 TML readings.
+   
+   For EACH nozzle and EACH angle:
    - cmlNumber: Use format "N1-0", "N1-90", "N1-180", "N1-270" for nozzle N1
-   - Include nozzle size and tmin from the table
+   - location: Nozzle description (e.g., "N1 Manway")
+   - nozzleSize: Size from table (e.g., "24", "3", "2", "1")
+   - minimumRequired: tmin value from table
    - component: "Nozzle"
+   - currentThickness: The reading value for that angle
+   
+   EXAMPLE: For nozzle "N1 Manway 24" with readings [0.574, 0.576, 0.578, 0.578] and tmin 0.375:
+   { cmlNumber: "N1-0", location: "N1 Manway", nozzleSize: "24", angle: "0°", currentThickness: 0.574, minimumRequired: 0.375, component: "Nozzle" }
+   { cmlNumber: "N1-90", location: "N1 Manway", nozzleSize: "24", angle: "90°", currentThickness: 0.576, minimumRequired: 0.375, component: "Nozzle" }
+   { cmlNumber: "N1-180", location: "N1 Manway", nozzleSize: "24", angle: "180°", currentThickness: 0.578, minimumRequired: 0.375, component: "Nozzle" }
+   { cmlNumber: "N1-270", location: "N1 Manway", nozzleSize: "24", angle: "270°", currentThickness: 0.578, minimumRequired: 0.375, component: "Nozzle" }
 
 2. HEADS: Most pressure vessels have TWO heads (one at each end). Look for:
    - North Head / South Head (common naming)
