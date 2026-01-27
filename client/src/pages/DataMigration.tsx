@@ -7,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Upload, Save, AlertTriangle, CheckCircle2, Database } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowLeft, Upload, Save, AlertTriangle, CheckCircle2, Database, Edit3, CheckSquare, Square } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 
@@ -25,6 +27,12 @@ export default function DataMigration() {
   const [angleData, setAngleData] = useState<AngleDataRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [csvContent, setCsvContent] = useState("");
+  
+  // Bulk edit state
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [bulkEditField, setBulkEditField] = useState<keyof AngleDataRow>("angle0");
+  const [bulkEditValue, setBulkEditValue] = useState("");
 
   // Get list of inspections
   const { data: inspections, isLoading: loadingInspections } = trpc.inspections.list.useQuery();
@@ -69,6 +77,7 @@ export default function DataMigration() {
     }
     
     setAngleData(rows);
+    setSelectedRows(new Set()); // Clear selection when new data is loaded
   };
 
   // Handle file upload
@@ -103,6 +112,58 @@ export default function DataMigration() {
   // Remove a row
   const removeRow = (index: number) => {
     setAngleData(angleData.filter((_, i) => i !== index));
+    // Also remove from selection
+    const newSelected = new Set(selectedRows);
+    newSelected.delete(index);
+    // Adjust indices for rows after the removed one
+    const adjusted = new Set<number>();
+    newSelected.forEach(i => {
+      if (i > index) {
+        adjusted.add(i - 1);
+      } else {
+        adjusted.add(i);
+      }
+    });
+    setSelectedRows(adjusted);
+  };
+
+  // Toggle row selection
+  const toggleRowSelection = (index: number) => {
+    const newSelected = new Set(selectedRows);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedRows(newSelected);
+  };
+
+  // Select all rows
+  const selectAllRows = () => {
+    const allIndices = new Set(angleData.map((_, i) => i));
+    setSelectedRows(allIndices);
+  };
+
+  // Deselect all rows
+  const deselectAllRows = () => {
+    setSelectedRows(new Set());
+  };
+
+  // Apply bulk edit
+  const applyBulkEdit = () => {
+    if (selectedRows.size === 0) {
+      toast.error("No rows selected");
+      return;
+    }
+
+    const newData = [...angleData];
+    selectedRows.forEach(index => {
+      newData[index] = { ...newData[index], [bulkEditField]: bulkEditValue };
+    });
+    setAngleData(newData);
+    setBulkEditOpen(false);
+    setBulkEditValue("");
+    toast.success(`Updated ${selectedRows.size} rows`);
   };
 
   // Apply the angle data to TML readings
@@ -187,6 +248,7 @@ export default function DataMigration() {
       });
 
     setAngleData(rows);
+    setSelectedRows(new Set()); // Clear selection when new data is loaded
     toast.success(`Loaded ${rows.length} TML readings`);
   };
 
@@ -206,6 +268,15 @@ export default function DataMigration() {
   };
 
   const stats = getMissingDataCount();
+
+  // Field options for bulk edit
+  const fieldOptions = [
+    { value: "angle0", label: "0°" },
+    { value: "angle90", label: "90°" },
+    { value: "angle180", label: "180°" },
+    { value: "angle270", label: "270°" },
+    { value: "tPrevious", label: "T-Previous" },
+  ];
 
   return (
     <div className="container mx-auto py-6 max-w-6xl">
@@ -317,12 +388,58 @@ export default function DataMigration() {
             </div>
           </div>
 
+          {/* Bulk Edit Controls */}
+          {angleData.length > 0 && (
+            <div className="flex gap-2 mb-4 items-center flex-wrap">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={selectAllRows}
+                className="gap-1"
+              >
+                <CheckSquare className="h-4 w-4" />
+                Select All
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={deselectAllRows}
+                className="gap-1"
+              >
+                <Square className="h-4 w-4" />
+                Deselect All
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setBulkEditOpen(true)}
+                disabled={selectedRows.size === 0}
+                className="gap-1"
+              >
+                <Edit3 className="h-4 w-4" />
+                Bulk Edit ({selectedRows.size} selected)
+              </Button>
+            </div>
+          )}
+
           {/* Data Table */}
           {angleData.length > 0 && (
             <div className="border rounded-lg overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={selectedRows.size === angleData.length && angleData.length > 0}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            selectAllRows();
+                          } else {
+                            deselectAllRows();
+                          }
+                        }}
+                      />
+                    </TableHead>
                     <TableHead className="w-24">CML #</TableHead>
                     <TableHead className="w-24">0°</TableHead>
                     <TableHead className="w-24">90°</TableHead>
@@ -334,7 +451,16 @@ export default function DataMigration() {
                 </TableHeader>
                 <TableBody>
                   {angleData.map((row, index) => (
-                    <TableRow key={index}>
+                    <TableRow 
+                      key={index}
+                      className={selectedRows.has(index) ? "bg-blue-50 dark:bg-blue-950" : ""}
+                    >
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedRows.has(index)}
+                          onCheckedChange={() => toggleRowSelection(index)}
+                        />
+                      </TableCell>
                       <TableCell>
                         <Input
                           value={row.cmlNumber}
@@ -433,6 +559,7 @@ export default function DataMigration() {
               onClick={() => {
                 setAngleData([]);
                 setCsvContent("");
+                setSelectedRows(new Set());
               }}
             >
               Clear All
@@ -470,6 +597,51 @@ export default function DataMigration() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Bulk Edit Dialog */}
+      <Dialog open={bulkEditOpen} onOpenChange={setBulkEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bulk Edit {selectedRows.size} CMLs</DialogTitle>
+            <DialogDescription>
+              Apply the same value to all selected rows. This will overwrite existing values.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Field to Update</Label>
+              <Select value={bulkEditField} onValueChange={(v) => setBulkEditField(v as keyof AngleDataRow)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {fieldOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>New Value</Label>
+              <Input
+                value={bulkEditValue}
+                onChange={(e) => setBulkEditValue(e.target.value)}
+                placeholder="Enter value (e.g., 0.500)"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={applyBulkEdit}>
+              Apply to {selectedRows.size} Rows
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -2132,3 +2132,22 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Fix CML display order in Data Migration Tool to be numerical
 - [x] Sort CMLs by extracting numeric portion for proper ordering (e.g., 1, 2, 3... not 1, 10, 11, 2, 3)
 - [x] Added secondary sort by angle value for slice-angle format (e.g., 1-0, 1-45, 1-90)
+
+
+## Feature: Bulk Edit in Data Migration Tool (January 2026)
+- [ ] Add checkbox column for selecting multiple CMLs
+- [ ] Add "Select All" / "Deselect All" buttons
+- [ ] Add "Bulk Edit" button that opens a dialog
+- [ ] Dialog allows setting value for any column (0°, 90°, 180°, 270°, t_previous)
+- [ ] Apply selected value to all checked CMLs
+- [ ] Show count of selected CMLs in UI
+
+## Data Migration Tool - Bulk Edit Feature
+- [x] Add checkbox selection for multiple CMLs in the data table
+- [x] Add "Select All" and "Deselect All" buttons
+- [x] Add "Bulk Edit" button that opens a dialog
+- [x] Implement bulk edit dialog with field selector (0°, 90°, 180°, 270°, T-Previous)
+- [x] Apply bulk edit value to all selected rows
+- [x] Highlight selected rows with blue background
+- [x] Clear selection when new data is loaded
+- [x] Maintain selection state when rows are removed (adjust indices)
