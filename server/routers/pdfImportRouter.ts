@@ -1418,5 +1418,295 @@ IMPORTANT: Only include actual photographs, not:
         contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       };
     }),
+
+  /**
+   * Upload UT Results with Location-Based Matching
+   * Uses LOCATION-BASED MATCHING to match new readings to existing CMLs
+   * This is critical because CML numbers may change between reports, but locations remain the same
+   */
+  uploadUTResultsWithLocationMatching: protectedProcedure
+    .input(z.object({
+      targetInspectionId: z.string(),
+      pdfUrl: z.string(),
+      fileName: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      logger.info("[Upload UT Results] Starting upload", {
+        inspectionId: input.targetInspectionId,
+        fileName: input.fileName,
+      });
+
+      // 1. Verify the inspection exists and belongs to user (or user is admin)
+      const [inspection] = await db
+        .select()
+        .from(inspections)
+        .where(eq(inspections.id, input.targetInspectionId));
+
+      if (!inspection) {
+        throw new Error("Inspection not found");
+      }
+
+      const isAdmin = ctx.user?.role === 'admin';
+      if (!isAdmin && inspection.userId !== ctx.user?.id) {
+        throw new Error("You don't have permission to update this inspection");
+      }
+
+      // 2. Get existing TML readings for this inspection
+      const existingTMLs = await db
+        .select()
+        .from(tmlReadings)
+        .where(eq(tmlReadings.inspectionId, input.targetInspectionId));
+
+      logger.info("[Upload UT Results] Found existing TMLs", { count: existingTMLs.length });
+
+      // 3. Extract new readings from the uploaded PDF using LLM
+      const extractionPrompt = `You are extracting ultrasonic thickness (UT) measurement data from a PDF.
+
+EXTRACT ALL THICKNESS READINGS in this exact JSON format:
+{
+  "inspectionDate": "YYYY-MM-DD - date of inspection if found",
+  "technician": "string - technician name if found",
+  "readings": [
+    {
+      "cmlNumber": "string - CML number from the report",
+      "location": "string - FULL location description (e.g., '2\"', '4\"', 'East Head 12 O\'Clock', '2\" East Head Seam - Head Side')",
+      "component": "string - component type (Shell, East Head, West Head, Nozzle, etc.)",
+      "angularReadings": {
+        "0": "number or null - reading at 0 degrees",
+        "45": "number or null - reading at 45 degrees",
+        "90": "number or null - reading at 90 degrees",
+        "135": "number or null - reading at 135 degrees",
+        "180": "number or null - reading at 180 degrees",
+        "224": "number or null - reading at 224 degrees",
+        "270": "number or null - reading at 270 degrees",
+        "315": "number or null - reading at 315 degrees"
+      },
+      "singleReading": "number or null - for head readings that have only one value",
+      "tmin": "number or null - minimum required thickness if shown"
+    }
+  ]
+}
+
+CRITICAL RULES:
+1. The LOCATION field is the most important - it must match exactly what's in the 'Desc.' or 'Description' column
+2. For shell readings with 8 angular positions (0, 45, 90, 135, 180, 224, 270, 315), extract ALL readings
+3. For nozzle readings with 4 angular positions (0, 90, 180, 270), extract ALL readings
+4. For head readings (East Head 12 O'Clock, etc.), use singleReading
+5. Extract EVERY row from the table - do not skip any
+6. Location examples: "2'", "4'", "6'", "East Head 12 O'Clock", "2\" East Head Seam - Shell Side"`;
+
+      const response = await invokeLLM({
+        messages: [
+          { role: "system", content: extractionPrompt },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Extract all thickness readings from this UT report PDF:" },
+              { type: "file_url", file_url: { url: input.pdfUrl, mime_type: "application/pdf" } }
+            ]
+          }
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "ut_readings",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                inspectionDate: { type: ["string", "null"] },
+                technician: { type: ["string", "null"] },
+                readings: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      cmlNumber: { type: "string" },
+                      location: { type: "string" },
+                      component: { type: "string" },
+                      angularReadings: {
+                        type: ["object", "null"],
+                        properties: {
+                          "0": { type: ["number", "null"] },
+                          "45": { type: ["number", "null"] },
+                          "90": { type: ["number", "null"] },
+                          "135": { type: ["number", "null"] },
+                          "180": { type: ["number", "null"] },
+                          "224": { type: ["number", "null"] },
+                          "270": { type: ["number", "null"] },
+                          "315": { type: ["number", "null"] }
+                        },
+                        additionalProperties: false
+                      },
+                      singleReading: { type: ["number", "null"] },
+                      tmin: { type: ["number", "null"] }
+                    },
+                    required: ["cmlNumber", "location", "component"],
+                    additionalProperties: false
+                  }
+                }
+              },
+              required: ["readings"],
+              additionalProperties: false
+            }
+          }
+        }
+      });
+
+      const messageContent = response.choices[0].message.content;
+      let extractedData: { readings: Array<{ cmlNumber: string; location: string; component: string; angularReadings?: Record<string, number | null> | null; singleReading?: number | null; tmin?: number | null }> };
+      
+      try {
+        extractedData = JSON.parse(typeof messageContent === 'string' ? messageContent : "{}");
+      } catch (parseError) {
+        logger.warn("[Upload UT Results] JSON parse failed, attempting repair...");
+        try {
+          const repaired = jsonrepair(typeof messageContent === 'string' ? messageContent : "{}");
+          extractedData = JSON.parse(repaired);
+        } catch (repairError) {
+          throw new Error("Failed to parse extracted UT data");
+        }
+      }
+
+      const newReadings = extractedData.readings || [];
+      logger.info("[Upload UT Results] Extracted readings", { count: newReadings.length });
+
+      // 4. Match new readings to existing CMLs by LOCATION
+      const { matchReadingsByLocation } = await import("../locationMatcher");
+
+      // Prepare existing CMLs for matching
+      const existingForMatching = existingTMLs.map(tml => ({
+        id: tml.id,
+        cmlNumber: tml.cmlNumber || '',
+        location: tml.location || tml.componentType || '',
+        component: tml.componentType || '',
+        angularPosition: tml.angle ? parseInt(tml.angle.replace('°', ''), 10) : undefined,
+        currentThickness: tml.tActual ? parseFloat(String(tml.tActual)) : (tml.currentThickness ? parseFloat(String(tml.currentThickness)) : undefined),
+      }));
+
+      // Prepare new readings for matching - expand angular readings into individual TMLs
+      interface ExpandedReading {
+        cmlNumber: string;
+        location: string;
+        component: string;
+        angularPosition?: number;
+        thickness: number;
+        tmin?: number;
+      }
+      const expandedNewReadings: ExpandedReading[] = [];
+
+      for (const reading of newReadings) {
+        // Handle single readings (head readings)
+        if (reading.singleReading !== null && reading.singleReading !== undefined) {
+          expandedNewReadings.push({
+            cmlNumber: reading.cmlNumber || '',
+            location: reading.location || '',
+            component: reading.component || '',
+            thickness: reading.singleReading,
+            tmin: reading.tmin || undefined,
+          });
+        }
+
+        // Handle angular readings
+        if (reading.angularReadings) {
+          const angles = ['0', '45', '90', '135', '180', '224', '270', '315'];
+          for (const angle of angles) {
+            const value = reading.angularReadings[angle];
+            if (value !== null && value !== undefined) {
+              expandedNewReadings.push({
+                cmlNumber: reading.cmlNumber || '',
+                location: reading.location || '',
+                component: reading.component || '',
+                angularPosition: parseInt(angle, 10),
+                thickness: value,
+                tmin: reading.tmin || undefined,
+              });
+            }
+          }
+        }
+      }
+
+      logger.info("[Upload UT Results] Expanded to individual readings", { count: expandedNewReadings.length });
+
+      // Perform location-based matching
+      const matchResult = matchReadingsByLocation(existingForMatching, expandedNewReadings, {
+        minConfidence: 0.6,
+        allowFuzzyMatch: true,
+      });
+
+      logger.info("[Upload UT Results] Matching results", {
+        matched: matchResult.matched.length,
+        unmatched: matchResult.unmatched.length,
+        matchRate: (matchResult.summary.matchRate * 100).toFixed(1) + '%',
+      });
+
+      // 5. Update matched CMLs with new readings
+      let updatedCount = 0;
+      let createdCount = 0;
+
+      for (const match of matchResult.matched) {
+        // Update existing TML with new reading
+        // Move current thickness to previous thickness
+        const existingTML = existingTMLs.find(t => t.id === match.existingCmlId);
+        const previousThickness = existingTML?.currentThickness;
+
+        await db
+          .update(tmlReadings)
+          .set({
+            previousThickness: previousThickness ? String(previousThickness) : null,
+            currentThickness: String(match.newReading.thickness),
+            tActual: String(match.newReading.thickness),
+            updatedAt: new Date(),
+          })
+          .where(eq(tmlReadings.id, match.existingCmlId));
+
+        updatedCount++;
+      }
+
+      // 6. Create new TMLs for unmatched readings (optional - add as new CMLs)
+      for (const unmatched of matchResult.unmatched) {
+        const reading = unmatched.reading;
+        
+        // Create a new TML record
+        const newTmlId = nanoid();
+        await db.insert(tmlReadings).values({
+          id: newTmlId,
+          inspectionId: input.targetInspectionId,
+          cmlNumber: reading.cmlNumber || `NEW-${createdCount + 1}`,
+          location: reading.location,
+          componentType: reading.component || 'Unknown',
+          angle: reading.angularPosition !== undefined ? `${reading.angularPosition}°` : null,
+          tActual: String(reading.thickness),
+          currentThickness: String(reading.thickness),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        createdCount++;
+      }
+
+      logger.info("[Upload UT Results] Complete", {
+        updatedCount,
+        createdCount,
+        totalProcessed: updatedCount + createdCount,
+      });
+
+      return {
+        success: true,
+        message: `Updated ${updatedCount} existing CMLs and created ${createdCount} new CMLs`,
+        summary: {
+          extractedReadings: newReadings.length,
+          expandedReadings: expandedNewReadings.length,
+          matchedByLocation: matchResult.matched.length,
+          unmatchedNewCMLs: matchResult.unmatched.length,
+          updatedCMLs: updatedCount,
+          createdCMLs: createdCount,
+          matchRate: matchResult.summary.matchRate,
+        },
+      };
+    }),
 });
 

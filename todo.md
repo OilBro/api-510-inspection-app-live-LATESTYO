@@ -2107,3 +2107,12 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Fix PDF parser to extract all 8 CMLs per slice (2-0, 2-45, 2-90, 2-135, 2-180, 2-225, 2-270, 2-315)
 - [x] Updated LLM prompt with MANDATORY instructions to extract every cell as separate TML
 - [ ] Test with 54-11-067UTINFO2016.pdf - should get ~80 shell CMLs + head + nozzle readings (ready for user testing)
+
+
+## Feature: Location-Based Matching for UT Data Uploads (January 2026)
+- [x] Match new UT readings to existing CMLs by location/description instead of CML number
+- [x] Create location matching algorithm with fuzzy matching (locationMatcher.ts)
+- [x] Support slice-angle format matching (e.g., 2' at 45°)
+- [x] Preserve original CML numbers when applying new readings
+- [x] Added uploadUTResultsWithLocationMatching procedure
+- [ ] Test with user's 067utreadingsjh.pdf file (ready for user testing)
