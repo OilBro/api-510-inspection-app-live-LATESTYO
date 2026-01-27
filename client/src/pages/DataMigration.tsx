@@ -228,14 +228,22 @@ export default function DataMigration() {
     };
 
     const rows: AngleDataRow[] = tmlReadings
-      .map((tml: any) => ({
-        cmlNumber: tml.cmlNumber || "",
-        angle0: tml.tml1?.toString() || "",
-        angle90: tml.tml2?.toString() || "",
-        angle180: tml.tml3?.toString() || "",
-        angle270: tml.tml4?.toString() || "",
-        tPrevious: tml.previousThickness?.toString() || "",
-      }))
+      .map((tml: any) => {
+        // Use tml1-4 if available, otherwise fall back to currentThickness or tActual
+        // This handles data imported from PDFs where readings are stored in currentThickness
+        const hasAngleData = tml.tml1 || tml.tml2 || tml.tml3 || tml.tml4;
+        const fallbackThickness = tml.currentThickness || tml.tActual || "";
+        
+        return {
+          cmlNumber: tml.cmlNumber || "",
+          // If angle-specific data exists, use it; otherwise use fallback for angle0 only
+          angle0: tml.tml1?.toString() || (hasAngleData ? "" : fallbackThickness?.toString() || ""),
+          angle90: tml.tml2?.toString() || "",
+          angle180: tml.tml3?.toString() || "",
+          angle270: tml.tml4?.toString() || "",
+          tPrevious: tml.previousThickness?.toString() || "",
+        };
+      })
       // Sort by numeric value first, then by angle value
       .sort((a, b) => {
         const numA = extractNumericValue(a.cmlNumber);

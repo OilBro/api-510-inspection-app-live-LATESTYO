@@ -2151,3 +2151,10 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Highlight selected rows with blue background
 - [x] Clear selection when new data is loaded
 - [x] Maintain selection state when rows are removed (adjust indices)
+
+## Bug Fix: Data Migration Loading All Readings as .500
+- [x] Investigate why Data Migration tool loads all readings as .500 for vessel 54-11-001
+- [x] Check the data loading logic in DataMigration.tsx - found it was using tml1-4 fields which are NULL
+- [x] Verify the backend is returning correct TML reading values - currentThickness has the actual values
+- [x] Fix the data transformation to use currentThickness/tActual as fallback when tml1-4 are empty
+- [x] Test that correct readings are displayed after fix (all 569 tests pass)
