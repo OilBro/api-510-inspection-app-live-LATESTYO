@@ -2188,3 +2188,17 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add "Recalculate All" button that triggers corrosion rate and remaining life recalculation
 - [x] Connect recalculation to the existing professionalReport.recalculate procedure
 - [x] Test that modified rows are highlighted and recalculation works correctly (all 569 tests pass)
+
+
+## Section 3 Verification - Critical Fixes (January 28, 2026)
+
+### Critical Issues (Must Fix)
+- [x] C1: Add thin-wall formula applicability limits (t ≤ 0.5R and P limits per UG-27)
+- [x] C2: Add denominator validation for R - 0.4t > 0 in longitudinal stress MAWP
+- [x] C3: Correct P/(SE) limits - use 0.385 for circumferential, 1.25 for longitudinal
+
+### Recommended Enhancements
+- [x] E1: Add RL ≤ 4 years internal inspection flag per API 510
+- [ ] E2: Document corrosion rate MAX selection as locked default for audit defensibility
+- [ ] E3: Add static head applicability guidance (bottom heads and lower shell only)
+- [ ] E4: Add flat head (UG-34) and conical (UG-32(g)) validation completeness

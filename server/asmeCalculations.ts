@@ -271,27 +271,25 @@ export function calculateShellThickness(
     throw new Error(`Invalid inputs: P=${P}, S=${S}, E=${E}, R=${R}`);
   }
   
-  // Validate P/(SE) ratio
+  // Validate P/(SE) ratio per UG-27 applicability limits
+  // UG-27(c)(1) circumferential: P ≤ 0.385SE
+  // UG-27(c)(2) longitudinal: P ≤ 1.25SE
   const P_SE_ratio = P / (S * E);
-  if (P_SE_ratio > 1.5) {
-    throw new Error(`Pressure to stress ratio too high: P/(SE) = ${P_SE_ratio.toFixed(4)} > 1.5`);
-  }
-  if (P_SE_ratio > 1.0) {
+  
+  // Check circumferential stress applicability limit (stricter)
+  if (P_SE_ratio > 0.385) {
     warnings.push({
       field: 'P/(SE)',
-      message: 'Pressure to stress ratio is very high, approaching material limits',
+      message: `P/(SE) = ${P_SE_ratio.toFixed(4)} exceeds UG-27(c)(1) limit of 0.385. Thick-wall analysis may be required.`,
       severity: 'critical',
       value: P_SE_ratio,
-      expectedRange: '< 1.0'
+      expectedRange: '≤ 0.385 for thin-wall formula applicability'
     });
-  } else if (P_SE_ratio > 0.5) {
-    warnings.push({
-      field: 'P/(SE)',
-      message: 'Pressure to stress ratio is elevated',
-      severity: 'warning',
-      value: P_SE_ratio,
-      expectedRange: '< 0.5'
-    });
+  }
+  
+  // Check longitudinal stress applicability limit
+  if (P_SE_ratio > 1.25) {
+    throw new Error(`P/(SE) = ${P_SE_ratio.toFixed(4)} exceeds UG-27(c)(2) limit of 1.25. Thick-wall analysis required per ASME.`);
   }
 
   // Circumferential stress (longitudinal joints) - UG-27(c)(1)
@@ -309,6 +307,18 @@ export function calculateShellThickness(
 
   // Governing thickness is the larger value
   const t_min = Math.max(t_min_circ, t_min_long);
+  
+  // UG-27 thin-wall applicability check: t ≤ 0.5R
+  // This check uses the calculated t_min as a proxy
+  if (t_min > 0.5 * R) {
+    warnings.push({
+      field: 't/R',
+      message: `Calculated t_min/R = ${(t_min / R).toFixed(4)} exceeds 0.5. Thick-wall analysis per UG-27 Note may be required.`,
+      severity: 'critical',
+      value: t_min / R,
+      expectedRange: '≤ 0.5 for thin-wall formula applicability'
+    });
+  }
   const governingCondition =
     t_min_circ >= t_min_long ? "Circumferential Stress" : "Longitudinal Stress";
 
@@ -333,8 +343,21 @@ export function calculateShellThickness(
 
     // MAWP from longitudinal stress: P = 2SEt / (R - 0.4t)
     const denom_mawp_long = R - 0.4 * t;
-    MAWP_long =
-      denom_mawp_long > 0 ? (2 * S * E * t) / denom_mawp_long : MAWP_circ;
+    
+    // C2 Fix: Validate R - 0.4t denominator per verification report
+    if (denom_mawp_long <= 0) {
+      warnings.push({
+        field: 'R-0.4t',
+        message: `Denominator R - 0.4t = ${denom_mawp_long.toFixed(4)} ≤ 0. Thickness exceeds thin-wall formula applicability (t > 2.5R).`,
+        severity: 'critical',
+        value: denom_mawp_long,
+        expectedRange: '> 0 for valid MAWP calculation'
+      });
+      // Use circumferential MAWP as fallback when longitudinal formula is invalid
+      MAWP_long = MAWP_circ;
+    } else {
+      MAWP_long = (2 * S * E * t) / denom_mawp_long;
+    }
 
     // Governing MAWP is the lower value
     MAWP = Math.min(MAWP_circ, MAWP_long);
@@ -434,7 +457,7 @@ export function calculateShellThickness(
     if (Cr !== undefined && Cr > 0 && Ca !== undefined) {
       RL = Ca / Cr;
       
-      // Remaining life validation
+      // Remaining life validation per API 510
       if (RL < 1) {
         warnings.push({
           field: 'RL',
@@ -450,6 +473,15 @@ export function calculateShellThickness(
           severity: 'critical',
           value: RL,
           expectedRange: '>= 2 years'
+        });
+      } else if (RL <= 4) {
+        // E1 Enhancement: API 510 logic gate for internal inspection requirement
+        warnings.push({
+          field: 'RL',
+          message: 'Remaining life ≤ 4 years: Internal inspection required per API 510',
+          severity: 'critical',
+          value: RL,
+          expectedRange: '> 4 years to avoid mandatory internal inspection'
         });
       }
     } else if (Ca !== undefined && Ca > 0) {

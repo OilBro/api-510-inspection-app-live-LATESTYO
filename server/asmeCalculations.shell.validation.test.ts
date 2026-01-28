@@ -48,7 +48,7 @@ describe("Shell Thickness Validation", () => {
       expect(result.warnings.filter(w => w.field === "P/(SE)").length).toBe(0);
     });
     
-    it("should warn for moderate P/(SE) ratio (> 0.5)", () => {
+    it("should critically warn for P/(SE) > 0.385 (UG-27(c)(1) limit)", () => {
       const result = calculateShellThickness({
         P: 8600,
         S: 20000,
@@ -57,13 +57,14 @@ describe("Shell Thickness Validation", () => {
       });
       
       const P_SE_ratio = 8600 / (20000 * 0.85);
-      expect(P_SE_ratio).toBeGreaterThan(0.5);
+      expect(P_SE_ratio).toBeGreaterThan(0.385);
       const warning = result.warnings.find(w => w.field === "P/(SE)");
       expect(warning).toBeDefined();
-      expect(warning?.severity).toBe("warning");
+      expect(warning?.severity).toBe("critical");
+      expect(warning?.message).toContain("UG-27(c)(1)");
     });
     
-    it("should critically warn for high P/(SE) ratio (> 1.0)", () => {
+    it("should critically warn for P/(SE) > 1.0 (approaching longitudinal limit)", () => {
       const result = calculateShellThickness({
         P: 17500,
         S: 20000,
@@ -77,7 +78,7 @@ describe("Shell Thickness Validation", () => {
       expect(warning).toBeDefined();
     });
     
-    it("should error for P/(SE) > 1.5", () => {
+    it("should error for P/(SE) > 1.25 (UG-27(c)(2) limit)", () => {
       expect(() => {
         calculateShellThickness({
           P: 26000,
@@ -85,7 +86,7 @@ describe("Shell Thickness Validation", () => {
           E: 0.85,
           D: 60
         });
-      }).toThrow("Pressure to stress ratio");
+      }).toThrow("UG-27(c)(2) limit of 1.25");
     });
   });
   
