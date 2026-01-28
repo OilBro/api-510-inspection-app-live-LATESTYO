@@ -200,11 +200,14 @@ export default function DataMigration() {
 
     setIsLoading(true);
     try {
-      // Map angle data to TML reading updates
+      // Map angle data to TML reading updates including location, size, and componentType
       const updates = angleData
         .filter(row => row.cmlNumber)
         .map(row => ({
           cmlNumber: row.cmlNumber,
+          location: row.location || undefined,
+          size: row.size || undefined,
+          componentType: row.compId || undefined,
           tml1: row.angle0 ? parseFloat(row.angle0) : undefined,
           tml2: row.angle90 ? parseFloat(row.angle90) : undefined,
           tml3: row.angle180 ? parseFloat(row.angle180) : undefined,
@@ -317,6 +320,7 @@ export default function DataMigration() {
 
   // Field options for bulk edit (only editable fields)
   const fieldOptions = [
+    { value: "compId", label: "Comp ID" },
     { value: "location", label: "Location" },
     { value: "size", label: "Size" },
     { value: "tPrevious", label: "t prev" },
@@ -324,6 +328,16 @@ export default function DataMigration() {
     { value: "angle90", label: "90°" },
     { value: "angle180", label: "180°" },
     { value: "angle270", label: "270°" },
+  ];
+
+  // Component type options for Comp ID bulk edit
+  const compIdOptions = [
+    "Vessel Shell",
+    "East Head",
+    "West Head",
+    "North Head",
+    "South Head",
+    "Nozzle",
   ];
 
   return (
@@ -518,8 +532,23 @@ export default function DataMigration() {
                       <TableCell className="font-mono text-sm">
                         {row.cmlNumber || "-"}
                       </TableCell>
-                      <TableCell className="text-sm truncate max-w-24" title={row.compId}>
-                        {row.compId || "-"}
+                      <TableCell>
+                        <Select
+                          value={row.compId || ""}
+                          onValueChange={(value) => updateRow(index, "compId", value)}
+                        >
+                          <SelectTrigger className="h-8 w-28">
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Vessel Shell">Shell</SelectItem>
+                            <SelectItem value="East Head">East Head</SelectItem>
+                            <SelectItem value="West Head">West Head</SelectItem>
+                            <SelectItem value="North Head">North Head</SelectItem>
+                            <SelectItem value="South Head">South Head</SelectItem>
+                            <SelectItem value="Nozzle">Nozzle</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>
                         <Input

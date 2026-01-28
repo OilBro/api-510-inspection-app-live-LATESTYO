@@ -2175,3 +2175,9 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Change Size column from read-only to editable input field
 - [x] Add Location and Size to bulk edit field options
 - [x] Test that edits are properly saved
+
+## Data Migration Tool - Save to Database and Comp ID Dropdown
+- [x] Add backend procedure to update TML reading location, size, and componentType
+- [x] Add Comp ID dropdown with Shell/East Head/West Head/Nozzle options
+- [x] Update Apply button to save Location, Size, and Comp ID changes to database
+- [x] Test that changes persist correctly in the database (all 569 tests pass)

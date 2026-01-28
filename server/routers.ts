@@ -654,6 +654,9 @@ Return JSON in this exact format:
         inspectionId: z.string(),
         updates: z.array(z.object({
           cmlNumber: z.string(),
+          location: z.string().optional(),
+          size: z.string().optional(),
+          componentType: z.string().optional(),
           tml1: z.number().optional(),
           tml2: z.number().optional(),
           tml3: z.number().optional(),
@@ -691,6 +694,11 @@ Return JSON in this exact format:
             
             // Build update object
             const updateData: Record<string, any> = {};
+            // Location, size, and component type updates
+            if (update.location !== undefined) updateData.location = update.location;
+            if (update.size !== undefined) updateData.nozzleSize = update.size;
+            if (update.componentType !== undefined) updateData.componentType = update.componentType;
+            // Thickness readings
             if (update.tml1 !== undefined) updateData.tml1 = update.tml1.toString();
             if (update.tml2 !== undefined) updateData.tml2 = update.tml2.toString();
             if (update.tml3 !== undefined) updateData.tml3 = update.tml3.toString();
