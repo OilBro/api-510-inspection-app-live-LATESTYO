@@ -317,6 +317,8 @@ export default function DataMigration() {
 
   // Field options for bulk edit (only editable fields)
   const fieldOptions = [
+    { value: "location", label: "Location" },
+    { value: "size", label: "Size" },
     { value: "tPrevious", label: "t prev" },
     { value: "angle0", label: "0°" },
     { value: "angle90", label: "90°" },
@@ -519,14 +521,24 @@ export default function DataMigration() {
                       <TableCell className="text-sm truncate max-w-24" title={row.compId}>
                         {row.compId || "-"}
                       </TableCell>
-                      <TableCell className="text-sm">
-                        {row.location || "-"}
+                      <TableCell>
+                        <Input
+                          value={row.location}
+                          onChange={(e) => updateRow(index, "location", e.target.value)}
+                          placeholder="7-0"
+                          className="h-8 w-20"
+                        />
                       </TableCell>
                       <TableCell className="text-sm">
                         {row.type || "-"}
                       </TableCell>
-                      <TableCell className="text-sm">
-                        {row.size || "-"}
+                      <TableCell>
+                        <Input
+                          value={row.size}
+                          onChange={(e) => updateRow(index, "size", e.target.value)}
+                          placeholder="24 in"
+                          className="h-8 w-16"
+                        />
                       </TableCell>
                       <TableCell className="text-sm truncate max-w-24" title={row.service}>
                         {row.service || "-"}

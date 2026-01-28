@@ -2169,3 +2169,9 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Update AngleDataRow interface with new fields
 - [x] Update loadExistingData function to populate new fields from TML readings
 - [x] Test that all columns display correctly
+
+## Data Migration Tool - Make Location and Size Editable
+- [x] Change Location column from read-only to editable input field
+- [x] Change Size column from read-only to editable input field
+- [x] Add Location and Size to bulk edit field options
+- [x] Test that edits are properly saved
