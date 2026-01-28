@@ -2235,3 +2235,77 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add explicit code references to all calculation outputs
 - [x] Ensure all intermediate values are output for audit trail
 - [ ] Add assumptions declaration for each calculation type
+
+## Section 6 Nozzle Calculations Verification - Critical Fixes (January 28, 2026) ✅ COMPLETE
+
+### CRITICAL: ASME UG-37 Reinforcement Calculations - IMPLEMENTED
+- [x] Implement ASME UG-37 area of reinforcement calculations for nozzle openings
+- [x] Calculate A_required = d × t_r × F (area removed by opening)
+- [x] Calculate A_available from shell excess, nozzle wall excess, and weld metal
+- [x] Add reinforcement as third governing criterion in minimumRequired calculation
+- [x] Add 'reinforcement' to governingCriterion enum in database schema
+
+### Manufacturing Tolerance Enhancement - IMPLEMENTED
+- [x] Add user-overridable manufacturing tolerance field (default 12.5%)
+- [x] Document that 12.5% applies to ASME B36.10M/B36.19M seamless/welded pipe
+- [x] Allow tolerance override for fusion-welded or specialty pipe with different tolerances
+
+### Nozzle-Specific Corrosion Rates - IMPLEMENTED
+- [x] Add nozzle-specific long-term (LT) corrosion rate field to nozzleEvaluations table
+- [x] Add nozzle-specific short-term (ST) corrosion rate field to nozzleEvaluations table
+- [x] Allow nozzle corrosion rates to differ from shell rates per API 510
+
+### Pipe Schedule Database Enhancement
+- [ ] Cross-reference pipeSchedules table with ASME B36.10M (carbon steel)
+- [ ] Cross-reference pipeSchedules table with ASME B36.19M (stainless steel)
+- [ ] Add schedules 5S, 10S, 40S, 80S for stainless steel pipe
+- [ ] Add schedules up to 160 for high-pressure applications
+
+### Future Enhancement: Nozzle-to-Shell Weld Evaluation
+- [ ] Plan UW-16 nozzle attachment weld evaluation module
+- [ ] Capture weld dimensions (fillet leg lengths, penetration depth)
+- [ ] Include weld area in UG-37 reinforcement calculation
+
+
+## Section 2 TML Readings Verification - Critical Fixes (January 28, 2026) ✅ COMPLETE
+
+### CRITICAL: Missing Required Fields in Schema - IMPLEMENTED
+- [x] Add `tRequired` field (decimal(10,4), inches) - minimum required thickness per ASME
+- [x] Add `retirementThickness` field (decimal(10,4), inches) - t_required with CA=0
+- [x] Add `remainingLife` field (decimal(10,2), years) - calculated per API 510 §7.1.1
+- [x] Add `nextInspectionDate` field (timestamp) - calculated next inspection date
+- [x] Add `nextInspectionInterval` field (decimal(10,2), years) - MIN(RL/2, 10)
+
+### CRITICAL: Corrosion Rate Compliance - IMPLEMENTED
+- [x] Store corrosion rate in inches/year as primary unit (not mpy)
+- [x] Add `corrosionRateType` enum field: LT, ST, USER, GOVERNING
+- [x] Add `corrosionRateMpy` computed display field (corrosionRate × 1000)
+- [ ] Add logic gates for negative rates (growth_error flag, halt calculation) - FUTURE
+- [ ] Add logic gates for zero rates and missing previous data - FUTURE
+
+### Audit Trail Fields (Required for Compliance) - IMPLEMENTED
+- [x] Add `measurementMethod` enum field: UT, RT, VISUAL, PROFILE, OTHER
+- [x] Add `technicianId` field (varchar(64)) - person who took reading
+- [x] Add `technicianName` field (varchar(255)) - name for report
+- [x] Add `equipmentId` field (varchar(64)) - UT gauge or equipment ID
+- [x] Add `calibrationDate` field (timestamp) - equipment calibration date
+- [x] Add `dataQualityStatus` enum: good, anomaly, growth_error, below_minimum, confirmed
+- [x] Add `reviewedBy` field (varchar(64)) - reviewer ID if anomaly reviewed
+- [x] Add `reviewDate` field (timestamp) - date of review
+
+### 8-Angle TML Support - IMPLEMENTED
+- [x] Add `tml5` field (decimal(10,4)) - reading at 45° position
+- [x] Add `tml6` field (decimal(10,4)) - reading at 135° position
+- [x] Add `tml7` field (decimal(10,4)) - reading at 225° position
+- [x] Add `tml8` field (decimal(10,4)) - reading at 315° position
+- [ ] Update tActual calculation to include tml5-tml8 in MIN()
+
+### Status Threshold Configuration
+- [ ] Add `statusThreshold` field (decimal(4,2), default 1.10)
+- [ ] Document as "Owner/User Alert Threshold" (not code requirement)
+- [ ] Make threshold configurable per facility (range 1.0 to 1.5)
+
+### Metal Loss Fields
+- [ ] Add `metalLoss` computed field (t_nom - t_actual)
+- [ ] Add `metalLossPercent` computed field ((metalLoss / t_nom) × 100)
+

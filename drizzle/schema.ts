@@ -232,24 +232,64 @@ export const tmlReadings = mysqlTable("tmlReadings", {
   nozzleSize: varchar("nozzleSize", { length: 20 }), // "24\"", "3\"", "2\"", "1\"" (for nozzles only)
   angle: varchar("angle", { length: 20 }), // "0°", "90°", "180°", "270°" (for multi-angle readings)
   
-  // Multiple readings at same location
-  tml1: decimal("tml1", { precision: 10, scale: 4 }),
-  tml2: decimal("tml2", { precision: 10, scale: 4 }),
-  tml3: decimal("tml3", { precision: 10, scale: 4 }),
-  tml4: decimal("tml4", { precision: 10, scale: 4 }),
-  tActual: decimal("tActual", { precision: 10, scale: 4 }), // Minimum of tml1-4
+  // Standard 4-point readings at same location
+  tml1: decimal("tml1", { precision: 10, scale: 4 }), // 0° position
+  tml2: decimal("tml2", { precision: 10, scale: 4 }), // 90° position
+  tml3: decimal("tml3", { precision: 10, scale: 4 }), // 180° position
+  tml4: decimal("tml4", { precision: 10, scale: 4 }), // 270° position
+  
+  // Extended 8-point readings for high-criticality locations
+  tml5: decimal("tml5", { precision: 10, scale: 4 }), // 45° position
+  tml6: decimal("tml6", { precision: 10, scale: 4 }), // 135° position
+  tml7: decimal("tml7", { precision: 10, scale: 4 }), // 225° position
+  tml8: decimal("tml8", { precision: 10, scale: 4 }), // 315° position
+  
+  // Governing thickness (computed as MIN of all tml readings)
+  tActual: decimal("tActual", { precision: 10, scale: 4 }), // Minimum of tml1-8
+  
+  // CRITICAL: Required thickness per ASME (API 510 §7.1.1 compliance)
+  tRequired: decimal("tRequired", { precision: 10, scale: 4 }), // Minimum required per UG-27/UG-32
+  retirementThickness: decimal("retirementThickness", { precision: 10, scale: 4 }), // t_required with CA=0
   
   // Historical and reference data
   nominalThickness: decimal("nominalThickness", { precision: 10, scale: 4 }),
   previousThickness: decimal("previousThickness", { precision: 10, scale: 4 }),
   previousInspectionDate: timestamp("previousInspectionDate"),
   currentInspectionDate: timestamp("currentInspectionDate"),
+  originalInstallDate: timestamp("originalInstallDate"), // For long-term rate calculation
   
-  // Calculated values
+  // Corrosion rate fields - stored in INCHES/YEAR per API 510
+  shortTermRate: decimal("shortTermRate", { precision: 10, scale: 6 }), // (t_prev - t_actual) / years, in/yr
+  longTermRate: decimal("longTermRate", { precision: 10, scale: 6 }), // (t_nom - t_actual) / total_years, in/yr
+  corrosionRate: decimal("corrosionRate", { precision: 10, scale: 6 }), // Governing rate in/yr (MAX of ST, LT)
+  corrosionRateType: mysqlEnum("corrosionRateType", ["LT", "ST", "USER", "GOVERNING"]), // Rate type declaration
+  corrosionRateMpy: decimal("corrosionRateMpy", { precision: 10, scale: 3 }), // Display value: corrosionRate × 1000
+  
+  // Remaining life and inspection interval (API 510 §7.1.1)
+  remainingLife: decimal("remainingLife", { precision: 10, scale: 2 }), // (t_actual - t_required) / CR, years
+  nextInspectionInterval: decimal("nextInspectionInterval", { precision: 10, scale: 2 }), // MIN(RL/2, 10), years
+  nextInspectionDate: timestamp("nextInspectionDate"), // Calculated next inspection date
+  
+  // Metal loss fields
   loss: decimal("loss", { precision: 10, scale: 4 }), // nominal - tActual (in inches)
   lossPercent: decimal("lossPercent", { precision: 10, scale: 2 }),
-  corrosionRate: decimal("corrosionRate", { precision: 10, scale: 2 }), // mils per year
+  
+  // Status with configurable threshold
   status: mysqlEnum("status", ["good", "monitor", "critical"]).default("good").notNull(),
+  statusThreshold: decimal("statusThreshold", { precision: 4, scale: 2 }).default("1.10"), // Owner/User alert threshold
+  
+  // AUDIT TRAIL FIELDS (Required for regulatory compliance)
+  measurementMethod: mysqlEnum("measurementMethod", ["UT", "RT", "VISUAL", "PROFILE", "OTHER"]), // NDT method
+  technicianId: varchar("technicianId", { length: 64 }), // ID of person who took reading
+  technicianName: varchar("technicianName", { length: 255 }), // Name for report
+  equipmentId: varchar("equipmentId", { length: 64 }), // UT gauge or equipment ID
+  calibrationDate: timestamp("calibrationDate"), // Equipment calibration date
+  
+  // Data quality tracking
+  dataQualityStatus: mysqlEnum("dataQualityStatus", ["good", "anomaly", "growth_error", "below_minimum", "confirmed"]).default("good"),
+  reviewedBy: varchar("reviewedBy", { length: 64 }), // Reviewer ID if anomaly reviewed
+  reviewDate: timestamp("reviewDate"), // Date of review
+  notes: text("notes"), // Inspector notes
   
   // Legacy fields for backward compatibility (will be deprecated)
   tmlId: varchar("tmlId", { length: 255 }), // Old field, use cmlNumber instead
@@ -732,13 +772,21 @@ export const nozzleEvaluations = mysqlTable("nozzleEvaluations", {
   nozzleNumber: varchar("nozzleNumber", { length: 50 }).notNull(), // e.g., "N1", "N2", "MW-1"
   nozzleDescription: text("nozzleDescription"), // e.g., "Inlet", "Outlet", "Manway", "Drain"
   location: varchar("location", { length: 100 }), // e.g., "Shell", "Top Head", "Bottom Head"
+  service: varchar("service", { length: 100 }), // e.g., "Inlet", "Outlet", "Drain", "Relief"
   
   // Pipe specifications
   nominalSize: varchar("nominalSize", { length: 20 }).notNull(),
   schedule: varchar("schedule", { length: 20 }),
+  pipeOutsideDiameter: decimal("pipeOutsideDiameter", { precision: 10, scale: 4 }), // OD from pipe schedule
+  
+  // Manufacturing tolerance - USER OVERRIDABLE (default 12.5% per ASME B36.10M)
+  manufacturingTolerance: decimal("manufacturingTolerance", { precision: 5, scale: 4 }).default("0.125"),
+  toleranceOverridden: boolean("toleranceOverridden").default(false), // Track if user changed default
   
   // Actual measurements (inches)
   actualThickness: decimal("actualThickness", { precision: 10, scale: 4 }),
+  previousThickness: decimal("previousThickness", { precision: 10, scale: 4 }), // For corrosion rate
+  nominalThickness: decimal("nominalThickness", { precision: 10, scale: 4 }), // Original thickness
   
   // Calculated values (inches)
   pipeNominalThickness: decimal("pipeNominalThickness", { precision: 10, scale: 4 }),
@@ -746,9 +794,32 @@ export const nozzleEvaluations = mysqlTable("nozzleEvaluations", {
   shellHeadRequiredThickness: decimal("shellHeadRequiredThickness", { precision: 10, scale: 4 }),
   minimumRequired: decimal("minimumRequired", { precision: 10, scale: 4 }),
   
+  // UG-37 Reinforcement calculation results
+  reinforcementRequired: decimal("reinforcementRequired", { precision: 10, scale: 4 }), // A (sq in)
+  reinforcementAvailable: decimal("reinforcementAvailable", { precision: 10, scale: 4 }), // Aavail (sq in)
+  reinforcementAdequate: boolean("reinforcementAdequate").default(true),
+  reinforcementMargin: decimal("reinforcementMargin", { precision: 10, scale: 2 }), // % margin
+  
+  // Nozzle-specific corrosion rates (separate from shell) - stored in in/yr
+  shortTermCorrosionRate: decimal("shortTermCorrosionRate", { precision: 10, scale: 6 }), // in/yr
+  longTermCorrosionRate: decimal("longTermCorrosionRate", { precision: 10, scale: 6 }), // in/yr
+  corrosionRate: decimal("corrosionRate", { precision: 10, scale: 6 }), // Governing rate in/yr
+  corrosionRateType: mysqlEnum("corrosionRateType", ["LT", "ST", "USER", "GOVERNING"]),
+  
+  // Remaining life per API 510
+  remainingLife: decimal("remainingLife", { precision: 10, scale: 2 }), // years
+  nextInspectionDate: timestamp("nextInspectionDate"),
+  
+  // Inspection dates for rate calculation
+  currentInspectionDate: timestamp("currentInspectionDate"),
+  previousInspectionDate: timestamp("previousInspectionDate"),
+  originalInstallDate: timestamp("originalInstallDate"),
+  
   // Assessment
   acceptable: boolean("acceptable").default(true),
+  governingCriterion: mysqlEnum("governingCriterion", ["pipe_schedule", "shell_head_required", "reinforcement"]),
   notes: text("notes"),
+  calculationNotes: text("calculationNotes"), // Detailed calculation audit trail
   
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
