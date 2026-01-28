@@ -600,6 +600,19 @@ export function calculateHemisphericalHead(
     throw new Error(`Invalid inputs: P=${P}, S=${S}, E=${E}, D=${D}`);
   }
 
+  // UG-32(f) Scope Limitations - Pressure Limit
+  // Per ASME Section VIII Div 1: P ≤ 0.665SE for hemispherical heads
+  const P_limit_hemi = 0.665 * S * E;
+  if (P > P_limit_hemi) {
+    warnings.push({
+      field: 'P',
+      message: `Pressure exceeds UG-32(f) scope: P = ${P.toFixed(1)} psi > 0.665SE = ${P_limit_hemi.toFixed(1)} psi. Thick-wall analysis may be required.`,
+      severity: 'critical',
+      value: P,
+      expectedRange: `≤ ${P_limit_hemi.toFixed(1)} psi per UG-32(f)`
+    });
+  }
+
   // Validate pressure to stress ratio
   const P_SE_ratio = P / (S * E);
   if (P_SE_ratio > 0.9) {
@@ -627,6 +640,19 @@ export function calculateHemisphericalHead(
     );
   }
   const t_min = (P * L) / denom;
+
+  // UG-32(f) Scope Limitations - Thickness Limit
+  // Per ASME Section VIII Div 1: t ≤ 0.356L for hemispherical heads
+  const t_limit_hemi = 0.356 * L;
+  if (t_min > t_limit_hemi) {
+    warnings.push({
+      field: 't_min',
+      message: `Calculated t_min exceeds UG-32(f) scope: t_min = ${t_min.toFixed(4)}" > 0.356L = ${t_limit_hemi.toFixed(4)}". Thick-wall analysis may be required.`,
+      severity: 'critical',
+      value: t_min,
+      expectedRange: `≤ ${t_limit_hemi.toFixed(4)}" per UG-32(f)`
+    });
+  }
 
   // Calculate MAWP and remaining life
   let MAWP = P;
@@ -827,7 +853,19 @@ export function calculateEllipsoidalHead(
     });
   }
 
-  // Minimum thickness: t = PD / (2SE - 0.2P)
+  // K-factor for ellipsoidal heads
+  // For 2:1 ellipsoidal heads, K = 1.0 (standard)
+  // For non-standard heads, K = (1/6) × [2 + (D/2h)²] per Appendix 1-4(c)
+  // Default to 2:1 ratio (h = D/4) giving K = 1.0
+  const h = D / 4; // 2:1 ellipsoidal: major axis = D, minor axis = D/2, h = D/4
+  const K = (1 / 6) * (2 + Math.pow(D / (2 * h), 2)); // K = 1.0 for 2:1
+  
+  // Note: For non-standard ellipsoidal heads, user should provide head height (h)
+  // and use K = (1/6) × [2 + (D/2h)²] per Appendix 1-4(c)
+  defaultsUsed.push('K-factor = 1.0 (standard 2:1 ellipsoidal)');
+
+  // Minimum thickness: t = PD / (2SE - 0.2P) for K=1.0
+  // General formula: t = PDK / (2SE - 0.2P) per Appendix 1-4
   const denom = 2 * S * E - 0.2 * P;
   try {
     warnings.push(...validateDenominator(denom, "(2SE - 0.2P)"));
@@ -836,7 +874,22 @@ export function calculateEllipsoidalHead(
       `Denominator validation failed: ${error instanceof Error ? error.message : String(error)}`
     );
   }
-  const t_min = (P * D) / denom;
+  const t_min = (P * D * K) / denom;
+
+  // UG-32(d) Scope Limitations - t/L ratio check
+  // Per ASME Section VIII Div 1: t/L ≥ 0.002 for standard formula
+  // For ellipsoidal heads, L = D (inside diameter)
+  const L_ellip = D;
+  const t_L_ratio = t_min / L_ellip;
+  if (t_L_ratio < 0.002) {
+    warnings.push({
+      field: 't/L',
+      message: `t/L ratio = ${t_L_ratio.toFixed(6)} is below 0.002. Per Appendix 1-4(f), additional checks may be required.`,
+      severity: 'warning',
+      value: t_L_ratio,
+      expectedRange: '≥ 0.002 for standard UG-32(d) formula'
+    });
+  }
 
   // Calculate MAWP and remaining life
   let MAWP = P;
@@ -1000,16 +1053,27 @@ export function calculateEllipsoidalHead(
 }
 
 /**
- * Calculate torispherical (ASME F&D) head thickness per ASME UG-32(e)
+ * Calculate torispherical (ASME F&D) head thickness per ASME UG-32(e) & Appendix 1-4(d)
+ *
+ * CRITICAL CORRECTION (January 2026 Verification):
+ * Standard ASME F&D head is defined with:
+ *   L = Do (OUTSIDE diameter), NOT D (inside diameter)
+ *   r = 0.06 × Do (based on outside diameter)
  *
  * Formula: t = PLM / (2SE - 0.2P)
  *
  * Where:
- * L = inside crown radius (typically L = D for standard F&D)
- * r = inside knuckle radius (typically r = 0.06D for standard F&D)
- * M = factor = 0.25 * (3 + sqrt(L/r))
+ * L = inside crown radius
+ * r = inside knuckle radius
+ * M = factor = 0.25 × (3 + √(L/r)) per Appendix 1-4(d)
  *
- * For standard ASME F&D: L = D, r = 0.06D, M ≈ 1.77
+ * UG-32(e) specific formula applies ONLY to heads with r = 0.06 × Do (6% heads)
+ * For non-standard geometries, use Appendix 1-4(d) general formula
+ *
+ * Scope Limitations:
+ *   - t/L ≥ 0.002
+ *   - r ≥ 0.06 × Do
+ *   - L ≤ Do
  *
  * MAWP: P = 2SEt / (LM + 0.2t)
  */
@@ -1022,18 +1086,32 @@ export function calculateTorisphericalHead(
   const warnings: ValidationWarning[] = [];
   const defaultsUsed: string[] = [];
 
-  // Default to standard ASME F&D dimensions if not provided
+  // CORRECTED: Standard ASME F&D dimensions based on OUTSIDE diameter (Do)
+  // Do = D + 2t (approximate, use D + 0.5" as conservative estimate for initial calc)
+  // For standard F&D: L = Do, r = 0.06 × Do
   let L = inputs.L;
   let r = inputs.r;
 
+  // Calculate approximate outside diameter for standard F&D defaults
+  const Do_approx = D + 0.5; // Conservative estimate before t_min is known
+
   if (L === undefined || L <= 0) {
-    L = D; // Crown radius = D for standard F&D
-    defaultsUsed.push("L (crown radius)");
+    // CORRECTED: L = Do (outside diameter) for standard F&D per UG-32(e)
+    L = Do_approx;
+    defaultsUsed.push(`L (crown radius) = Do ≈ ${L.toFixed(3)}" per UG-32(e) standard F&D`);
+    warnings.push({
+      field: 'L',
+      message: `Using standard F&D: L = Do ≈ ${L.toFixed(3)}". For precise calculations, provide actual crown radius.`,
+      severity: 'warning',
+      value: L,
+      expectedRange: 'User-provided or L = Do per UG-32(e)'
+    });
   }
 
   if (r === undefined || r <= 0) {
-    r = 0.06 * D; // Knuckle radius = 0.06D for standard F&D
-    defaultsUsed.push("r (knuckle radius)");
+    // CORRECTED: r = 0.06 × Do (outside diameter) for standard F&D per UG-32(e)
+    r = 0.06 * Do_approx;
+    defaultsUsed.push(`r (knuckle radius) = 0.06 × Do ≈ ${r.toFixed(4)}" per UG-32(e) standard F&D`);
   }
 
   // Validate inputs
@@ -1092,6 +1170,42 @@ export function calculateTorisphericalHead(
     );
   }
   const t_min = (P * L * M) / denom;
+
+  // UG-32(e) / Appendix 1-4 Scope Limitations
+  // Verify t/L ≥ 0.002
+  const t_L_ratio_tori = t_min / L;
+  if (t_L_ratio_tori < 0.002) {
+    warnings.push({
+      field: 't/L',
+      message: `t/L ratio = ${t_L_ratio_tori.toFixed(6)} is below 0.002. Per Appendix 1-4(f), additional checks may be required.`,
+      severity: 'warning',
+      value: t_L_ratio_tori,
+      expectedRange: '≥ 0.002 for standard UG-32(e) formula'
+    });
+  }
+
+  // Verify r ≥ 0.06 × Do (6% knuckle requirement)
+  const r_min_required = 0.06 * Do_approx;
+  if (r < r_min_required * 0.99) { // Allow 1% tolerance
+    warnings.push({
+      field: 'r',
+      message: `Knuckle radius r = ${r.toFixed(4)}" is less than 0.06×Do = ${r_min_required.toFixed(4)}". UG-32(e) formula may not apply. Use Appendix 1-4(d) for non-standard heads.`,
+      severity: 'critical',
+      value: r,
+      expectedRange: `≥ ${r_min_required.toFixed(4)}" per UG-32(e)`
+    });
+  }
+
+  // Verify L ≤ Do (crown radius limitation)
+  if (L > Do_approx * 1.01) { // Allow 1% tolerance
+    warnings.push({
+      field: 'L',
+      message: `Crown radius L = ${L.toFixed(3)}" exceeds Do ≈ ${Do_approx.toFixed(3)}". UG-32(e) standard F&D formula may not apply.`,
+      severity: 'critical',
+      value: L,
+      expectedRange: `≤ ${Do_approx.toFixed(3)}" per UG-32(e)`
+    });
+  }
 
   // Calculate MAWP and remaining life
   let MAWP = P;
@@ -1257,11 +1371,22 @@ export function calculateTorisphericalHead(
 /**
  * Calculate flat head thickness per ASME UG-34
  *
- * Formula: t = d * sqrt(CP/SE)
+ * Formula: t = d × √(CP/SE)
  *
  * Where:
  * d = diameter or short span (inches)
  * C = factor depending on attachment method (0.10 to 0.33)
+ *
+ * UG-34 C-Factor Reference (January 2026 Verification):
+ * For precise C-factor selection, refer to UG-34 figures:
+ *   - Figure UG-34(a): Integral flat heads - C = 0.10 to 0.17
+ *   - Figure UG-34(b): Welded flat heads - C = 0.17 to 0.33
+ *   - Figure UG-34(c): Bolted flat heads - C = 0.25 to 0.33
+ *   - Figure UG-34(d): Threaded flat heads - C = 0.30
+ *   - Figure UG-34(e): Lap-joint flat heads - C = 0.33
+ *   - Figure UG-34(f): Blind flanges - C = 0.25 to 0.30
+ *
+ * Default C = 0.33 is conservative for most configurations.
  */
 export function calculateFlatHead(
   inputs: CalculationInputs
@@ -1279,7 +1404,14 @@ export function calculateFlatHead(
     defaultsUsed.push("d (diameter)");
   }
   if (inputs.C === undefined) {
-    defaultsUsed.push("C (attachment factor)");
+    defaultsUsed.push("C (attachment factor) = 0.33 (conservative default per UG-34)");
+    warnings.push({
+      field: 'C',
+      message: 'Using conservative C = 0.33. For precise calculations, select C-factor from UG-34 figures based on actual attachment configuration.',
+      severity: 'warning',
+      value: C,
+      expectedRange: 'Select from UG-34 figures (a) through (f)'
+    });
   }
 
   // Validate inputs
@@ -1287,20 +1419,20 @@ export function calculateFlatHead(
     throw new Error(`Invalid inputs: P=${P}, S=${S}, E=${E}, d=${d}, C=${C}`);
   }
 
-  // Validate C factor (typical range 0.10 to 0.33)
+  // Validate C factor (typical range 0.10 to 0.33 per UG-34)
   if (C > 0.5) {
     throw new Error(
-      `C factor too high: ${C.toFixed(3)} > 0.5. Check attachment method.`
+      `C factor too high: ${C.toFixed(3)} > 0.5. Check attachment method per UG-34 figures.`
     );
   }
   if (C < 0.1 || C > 0.33) {
     warnings.push({
       field: "C",
       message:
-        "C factor is outside typical range (0.10 to 0.33), verify attachment method",
+        "C factor is outside typical UG-34 range (0.10 to 0.33). Verify attachment method against UG-34 figures.",
       severity: "warning",
       value: C,
-      expectedRange: "0.10 to 0.33",
+      expectedRange: "0.10 to 0.33 per UG-34 figures",
     });
   }
 
@@ -1462,11 +1594,15 @@ export function calculateFlatHead(
 /**
  * Calculate conical section thickness per ASME UG-32(g)
  *
- * Formula: t = PD / (2cos(α)(SE - 0.6P))
+ * CRITICAL CORRECTION (January 2026 Verification):
+ * UG-32(g) formula is ONLY valid for α ≤ 30° (half-apex angle)
+ * For α > 30°, Appendix 1-5(g) rules must be used
+ *
+ * Formula: t = PD / [2 × cos(α) × (SE - 0.6P)]
  *
  * Where α = one-half of the included (apex) angle
  *
- * MAWP: P = 2SEt*cos(α) / (D + 1.2t*cos(α))
+ * MAWP: P = 2SEt×cos(α) / (D + 1.2t×cos(α))
  */
 export function calculateConicalSection(
   inputs: CalculationInputs
@@ -1498,22 +1634,27 @@ export function calculateConicalSection(
       `Half-angle must be less than 90°: α = ${alphaDeg}°. Check if this is half-angle or full apex angle.`
     );
   }
+
+  // CRITICAL: UG-32(g) Scope Limitation - α ≤ 30°
+  // Per ASME Section VIII Div 1: This formula is only valid for half-apex angles ≤ 30°
+  // For angles > 30°, Appendix 1-5(g) must be used
+  if (alphaDeg > 30) {
+    warnings.push({
+      field: 'α',
+      message: `CRITICAL: Half-apex angle α = ${alphaDeg}° exceeds UG-32(g) limit of 30°. This formula is NOT valid. Use Appendix 1-5(g) for conical sections with α > 30°.`,
+      severity: 'critical',
+      value: alphaDeg,
+      expectedRange: '≤ 30° per UG-32(g)'
+    });
+  }
+
   if (alphaDeg < 10) {
     warnings.push({
       field: "α",
       message: "Half-angle is very shallow, verify design intent",
       severity: "warning",
       value: alphaDeg,
-      expectedRange: "10° to 60°",
-    });
-  }
-  if (alphaDeg > 60) {
-    warnings.push({
-      field: "α",
-      message: "Half-angle is steep, may result in high stresses",
-      severity: "warning",
-      value: alphaDeg,
-      expectedRange: "10° to 60°",
+      expectedRange: "10° to 30°",
     });
   }
 

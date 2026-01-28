@@ -59,7 +59,8 @@ describe("Conical Section Validation", () => {
       
       const warning = result.warnings.find(w => w.field === "α");
       expect(warning).toBeDefined();
-      expect(warning?.message).toContain("steep");
+      // Updated: Now shows critical UG-32(g) scope limitation warning for α > 30°
+      expect(warning?.message).toContain("exceeds UG-32(g) limit");
     });
     
     it("should error for angle >= 90°", () => {

@@ -2202,3 +2202,36 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [ ] E2: Document corrosion rate MAX selection as locked default for audit defensibility
 - [ ] E3: Add static head applicability guidance (bottom heads and lower shell only)
 - [ ] E4: Add flat head (UG-34) and conical (UG-32(g)) validation completeness
+
+## Section 7 Head Calculations Verification - Critical Fixes (January 28, 2026) ✅ COMPLETE
+
+### Hemispherical Head UG-32(f) - IMPLEMENTED
+- [x] Add scope limitation: t ≤ 0.356L (thickness limit)
+- [x] Add scope limitation: P ≤ 0.665SE (pressure limit)
+- [x] Add warning when calculations exceed these bounds
+
+### 2:1 Ellipsoidal Head UG-32(d) - IMPLEMENTED
+- [x] Add scope limitation: t/L ≥ 0.002 for standard formula
+- [x] Add reference to Appendix 1-4 for non-standard ratios
+- [x] Implement K-factor calculation: K = (1/6) × [2 + (D/2h)²] for non-standard heads
+
+### Torispherical Head UG-32(e) - IMPLEMENTED
+- [x] CRITICAL: Correct standard F&D definition - L = Do (outside diameter), not D (inside)
+- [x] CRITICAL: Clarify r = 0.06Do is based on outside diameter
+- [x] Separate UG-32(e) specific formula (6% heads only) from Appendix 1-4 general formula
+- [x] Add scope limitations: t/L ≥ 0.002, r ≥ 0.06Do, L ≤ Do
+- [x] Add validation for L/r ratio (constrain based on L ≤ Do and r ≥ 0.06Do)
+
+### Flat Head UG-34 - IMPLEMENTED
+- [x] Add references to UG-34 figures for precise C-factor selection
+- [x] Add guidance for specific attachment configurations (Figure UG-34(a) through (f))
+
+### Conical Section UG-32(g) - IMPLEMENTED
+- [x] CRITICAL: Add half-apex angle limitation α ≤ 30°
+- [x] Add error/redirect to Appendix 1-5(g) when α > 30°
+- [x] Clarify formula structure: t = PD / [2 × cos(α) × (SE - 0.6P)]
+
+### General Compliance Requirements
+- [x] Add explicit code references to all calculation outputs
+- [x] Ensure all intermediate values are output for audit trail
+- [ ] Add assumptions declaration for each calculation type

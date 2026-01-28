@@ -30,7 +30,8 @@ describe("Flat Head Validation", () => {
         // C not provided, should use default
       });
       
-      expect(result.defaultsUsed).toContain("C (attachment factor)");
+      // Updated: Now includes UG-34 reference in default message
+      expect(result.defaultsUsed).toContain("C (attachment factor) = 0.33 (conservative default per UG-34)");
       expect(result.formula).toContain("C = 0.33");
     });
     
@@ -361,7 +362,8 @@ describe("Flat Head Validation", () => {
       
       expect(result.defaultsUsed.length).toBeGreaterThanOrEqual(2);
       expect(result.defaultsUsed).toContain("d (diameter)");
-      expect(result.defaultsUsed).toContain("C (attachment factor)");
+      // Updated: Now includes UG-34 reference in default message
+      expect(result.defaultsUsed).toContain("C (attachment factor) = 0.33 (conservative default per UG-34)");
     });
   });
 });
