@@ -2309,3 +2309,59 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [ ] Add `metalLoss` computed field (t_nom - t_actual)
 - [ ] Add `metalLossPercent` computed field ((metalLoss / t_nom) × 100)
 
+
+## TML Calculation Engine Implementation (January 28, 2026)
+
+### Governing Thickness Calculation
+- [ ] Implement calculateGoverningThickness() - MIN(tml1...tml8)
+- [ ] Add validation for no valid readings (halt calculation)
+- [ ] Ensure tActual is computed, not user-entered
+
+### Corrosion Rate Calculation
+- [ ] Implement calculateCorrosionRates() per API 510
+- [ ] Calculate short-term rate: (t_prev - t_actual) / years
+- [ ] Calculate long-term rate: (t_nom - t_actual) / total_years
+- [ ] Implement MAX(ST, LT) for governing rate selection
+- [ ] Add negative rate detection (growth_error flag)
+- [ ] Add data quality status tracking
+
+### Remaining Life Calculation
+- [ ] Implement calculateRemainingLife() per API 510 §7.1.1
+- [ ] Formula: (t_actual - t_required) / corrosionRate
+- [ ] Handle zero/negative remaining life (critical status)
+- [ ] Include formula and reference in output
+
+### Next Inspection Interval
+- [ ] Implement calculateNextInspection() per API 510
+- [ ] Formula: MIN(remainingLife / 2, 10 years)
+- [ ] Determine inspection type (Internal if RL <= 4 years)
+- [ ] Calculate next inspection date
+
+### Status Determination
+- [ ] Implement determineStatus() with configurable threshold
+- [ ] Default threshold: 1.10 (alert at 110% of t_required)
+- [ ] Status levels: critical, alert, acceptable, unknown
+
+## Report Templates (January 28, 2026)
+
+### MAWP Recalculation Report Template
+- [ ] Create MAWP recalculation report with vessel identification
+- [ ] Include original design data section
+- [ ] Include material properties with ASME Section II Part D reference
+- [ ] Include current thickness data section
+- [ ] Include MAWP calculation per UG-27(c)(1): MAWP = (S × E × t) / (R + 0.6 × t)
+- [ ] Include comparison to original MAWP with reduction percentage
+- [ ] Include operating pressure assessment and compliance determination
+- [ ] Include assumptions and recommendations sections
+- [ ] Include report certification with prepared by/reviewed by
+- [ ] Include appendix with intermediate calculation values
+
+### Remaining Life Calculation Report Template
+- [ ] Create remaining life report with vessel identification
+- [ ] Include design data section (pressure, temperature, material, CA)
+- [ ] Include thickness data section (nominal, current, location)
+- [ ] Include required thickness calculation per UG-27
+- [ ] Include corrosion rate section with LT/ST/User type
+- [ ] Include remaining life calculation per API 510 §7.1.1
+- [ ] Include compliance determination with next inspection date
+- [ ] Include report certification section
