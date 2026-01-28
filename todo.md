@@ -2365,3 +2365,29 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [ ] Include remaining life calculation per API 510 §7.1.1
 - [ ] Include compliance determination with next inspection date
 - [ ] Include report certification section
+
+## Gold-Standard Regulatory Improvements Integration (January 28, 2026)
+
+### ASME Section II Part D Material Database
+- [ ] Create asmeMaterialDatabase.ts with temperature-based allowable stress lookup
+- [ ] Include SA-516 Gr 70, SA-516 Gr 60, SA-285 Gr C, SA-240 Type 304, SA-240 Type 316L, SA-106 Gr B, SA-312 TP304
+- [ ] Implement linear interpolation between tabulated temperature values
+- [ ] Add database version tracking for audit traceability (ASME-BPVC-2023)
+
+### Automated Allowable Stress Lookup
+- [ ] Remove manual allowableStress input field from UI
+- [ ] Auto-lookup stress based on materialSpec and designTemperature
+- [ ] Display looked-up value with database reference in calculation reports
+
+### Comprehensive Audit Trail Service
+- [ ] Create auditService.ts for immutable change logging
+- [ ] Track all CREATE, UPDATE, DELETE operations on inspections and components
+- [ ] Record user, timestamp, old value, new value, and justification
+- [ ] Add audit_log table to database schema
+
+### Locked Calculation Engine Enhancements
+- [ ] Ensure all formulas are non-editable and version-controlled
+- [ ] Add explicit code references to all calculation outputs
+- [ ] Include all intermediate values in calculation reports
+- [ ] Document all assumptions in calculation results
+

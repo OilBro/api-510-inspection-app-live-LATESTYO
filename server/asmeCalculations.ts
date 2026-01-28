@@ -11,6 +11,7 @@
  */
 
 import { logger } from "./_core/logger";
+import { getAllowableStressNormalized, getDatabaseInfo, type AllowableStressResult } from "./asmeMaterialDatabase";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -40,8 +41,12 @@ export interface ValidationWarning {
 export interface CalculationInputs {
   // Design parameters
   P: number; // Design pressure (psi)
-  S: number; // Maximum allowable stress at design temperature (psi)
+  S: number; // Maximum allowable stress at design temperature (psi) - can be auto-looked up if materialSpec and designTemperature provided
   E: number; // Joint efficiency (0.0 - 1.0)
+  
+  // Material specification for automatic stress lookup (optional)
+  materialSpec?: string; // ASME material specification (e.g., "SA-516 Gr 70")
+  designTemperature?: number; // Design temperature (°F) for stress lookup
 
   // Geometry
   D: number; // Inside diameter (inches)
@@ -110,6 +115,17 @@ export interface CalculationResults {
   // Validation metadata (Track 001)
   warnings: ValidationWarning[]; // Validation warnings for edge cases
   defaultsUsed: string[]; // Parameters that used default values
+  
+  // Material database lookup info (if used)
+  materialLookup?: {
+    materialSpec: string; // Material specification used
+    designTemperature: number; // Temperature used for lookup (°F)
+    allowableStress: number; // Looked-up stress value (psi)
+    lookupStatus: 'ok' | 'ok_interpolated' | 'error'; // Lookup status
+    lookupMessage: string; // Status message
+    databaseVersion: string; // ASME database version
+    tableReference: string; // Table reference (e.g., "Table 1A")
+  };
 }
 
 // ============================================================================
