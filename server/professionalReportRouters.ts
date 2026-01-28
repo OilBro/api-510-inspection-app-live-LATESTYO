@@ -768,19 +768,21 @@ export const professionalReportRouter = router({
           .map((t: any) => parseFloat(t.nominalThickness))
           .filter((v: number) => !isNaN(v));
         
+        // API 510 COMPLIANCE: Use MINIMUM thickness (not average) for conservative calculations
+        // This ensures the calculation reflects the worst-case (thinnest) location
         const avgCurrent = currentThicknesses.length > 0 ? 
-          (currentThicknesses.reduce((a: number, b: number) => a + b, 0) / currentThicknesses.length).toFixed(4) : undefined;
+          Math.min(...currentThicknesses).toFixed(4) : undefined;
         const avgPrevious = previousThicknesses.length > 0 ? 
-          (previousThicknesses.reduce((a: number, b: number) => a + b, 0) / previousThicknesses.length).toFixed(4) : undefined;
+          Math.min(...previousThicknesses).toFixed(4) : undefined;
         const avgNominal = nominalThicknesses.length > 0 ? 
-          (nominalThicknesses.reduce((a: number, b: number) => a + b, 0) / nominalThicknesses.length).toFixed(4) : undefined;
+          Math.min(...nominalThicknesses).toFixed(4) : undefined;
         
         // Calculate minimum thickness
         const P = parseFloat(inspection.designPressure || '0');
         const insideDiameter = parseFloat(inspection.insideDiameter || '0');
-        // Correct radius calculation: R = (D/2) - nominal thickness (per API 510 / user's Excel formula)
-        const nominalThick = avgNominal ? parseFloat(avgNominal) : 0;
-        const R = insideDiameter > 0 ? (insideDiameter / 2) - nominalThick : 0;
+        // Radius calculation: R = D/2 (inside radius)
+        // Note: For corroded vessels, some engineers use R = (D/2) - t_nom, but standard practice is R = D/2
+        const R = insideDiameter > 0 ? insideDiameter / 2 : 0;
         // Use allowable stress from inspection data (SA-612 at 125°F = 20,000 psi)
         const S = parseFloat(inspection.allowableStress || '20000');
         // Use joint efficiency from inspection data (E=1.0 for full RT, E=0.85 for spot RT)

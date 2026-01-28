@@ -2391,3 +2391,22 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [ ] Include all intermediate values in calculation reports
 - [ ] Document all assumptions in calculation results
 
+
+
+## CRITICAL FIX: Calculation Discrepancy Between Import and Recalculate (January 28, 2026) ✅ COMPLETE
+
+### Root Cause Analysis
+- Original (generateDefaultCalculationsForInspection) used MINIMUM thickness - CORRECT per API 510
+- Recalculate function used AVERAGE thickness - INCORRECT
+- Radius calculation also differed: Original used R = D/2, Recalculate used R = (D/2) - t_nom
+
+### Fixes Applied
+- [x] Changed recalculate to use MINIMUM thickness (Math.min) instead of average
+- [x] Standardized radius calculation to R = D/2 (inside radius)
+- [x] Both functions now produce consistent, API 510-compliant results
+- [x] All 651 tests pass
+
+### API 510 Compliance Note
+Per API 510 §7.1.1, thickness measurements should use the MINIMUM measured value for conservative 
+remaining life and MAWP calculations. This ensures the calculation reflects the worst-case 
+(thinnest) location on the component.
