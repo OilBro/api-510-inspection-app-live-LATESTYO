@@ -2181,3 +2181,10 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Add Comp ID dropdown with Shell/East Head/West Head/Nozzle options
 - [x] Update Apply button to save Location, Size, and Comp ID changes to database
 - [x] Test that changes persist correctly in the database (all 569 tests pass)
+
+## Data Migration Tool - Recalculate All and Modified Row Highlighting
+- [x] Add dirty state tracking to detect which rows have been modified since loading
+- [x] Add visual highlighting (yellow/amber background) for modified rows
+- [x] Add "Recalculate All" button that triggers corrosion rate and remaining life recalculation
+- [x] Connect recalculation to the existing professionalReport.recalculate procedure
+- [x] Test that modified rows are highlighted and recalculation works correctly (all 569 tests pass)

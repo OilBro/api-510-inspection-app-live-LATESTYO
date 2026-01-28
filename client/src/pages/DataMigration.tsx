@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Upload, Save, AlertTriangle, CheckCircle2, Database, Edit3, CheckSquare, Square } from "lucide-react";
+import { ArrowLeft, Upload, Save, AlertTriangle, CheckCircle2, Database, Edit3, CheckSquare, Square, RefreshCw } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 
@@ -39,6 +39,11 @@ export default function DataMigration() {
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [bulkEditField, setBulkEditField] = useState<keyof AngleDataRow>("angle0");
   const [bulkEditValue, setBulkEditValue] = useState("");
+  
+  // Dirty state tracking - stores original values to detect modifications
+  const [originalData, setOriginalData] = useState<AngleDataRow[]>([]);
+  const [modifiedRows, setModifiedRows] = useState<Set<number>>(new Set());
+  const [isRecalculating, setIsRecalculating] = useState(false);
 
   // Get list of inspections
   const { data: inspections, isLoading: loadingInspections } = trpc.inspections.list.useQuery();
@@ -54,9 +59,24 @@ export default function DataMigration() {
     onSuccess: () => {
       toast.success("Angle data updated successfully!");
       refetchTml();
+      // Reset modified tracking after successful save
+      setModifiedRows(new Set());
+      setOriginalData(JSON.parse(JSON.stringify(angleData)));
     },
     onError: (error: { message: string }) => {
       toast.error(`Failed to update: ${error.message}`);
+    },
+  });
+
+  // Mutation to recalculate corrosion rates and remaining life
+  const recalculateMutation = trpc.professionalReport.recalculate.useMutation({
+    onSuccess: () => {
+      toast.success("Calculations updated! Corrosion rates and remaining life recalculated.");
+      setIsRecalculating(false);
+    },
+    onError: (error: { message: string }) => {
+      toast.error(`Recalculation failed: ${error.message}`);
+      setIsRecalculating(false);
     },
   });
 
@@ -106,11 +126,39 @@ export default function DataMigration() {
     reader.readAsText(file);
   };
 
-  // Update a single row value
+  // Update a row and track modifications
   const updateRow = (index: number, field: keyof AngleDataRow, value: string) => {
     const newData = [...angleData];
     newData[index] = { ...newData[index], [field]: value };
     setAngleData(newData);
+    
+    // Track this row as modified if it differs from original
+    if (originalData.length > index) {
+      const original = originalData[index];
+      const current = newData[index];
+      const isModified = 
+        original.compId !== current.compId ||
+        original.location !== current.location ||
+        original.size !== current.size ||
+        original.tPrevious !== current.tPrevious ||
+        original.angle0 !== current.angle0 ||
+        original.angle90 !== current.angle90 ||
+        original.angle180 !== current.angle180 ||
+        original.angle270 !== current.angle270;
+      
+      const newModified = new Set(modifiedRows);
+      if (isModified) {
+        newModified.add(index);
+      } else {
+        newModified.delete(index);
+      }
+      setModifiedRows(newModified);
+    } else {
+      // New row, always mark as modified
+      const newModified = new Set(modifiedRows);
+      newModified.add(index);
+      setModifiedRows(newModified);
+    }
   };
 
   // Add a new empty row
@@ -182,10 +230,16 @@ export default function DataMigration() {
     }
 
     const newData = [...angleData];
+    const newModified = new Set(modifiedRows);
+    
     selectedRows.forEach(index => {
       newData[index] = { ...newData[index], [bulkEditField]: bulkEditValue };
+      // Mark all bulk-edited rows as modified
+      newModified.add(index);
     });
+    
     setAngleData(newData);
+    setModifiedRows(newModified);
     setBulkEditOpen(false);
     setBulkEditValue("");
     toast.success(`Updated ${selectedRows.size} rows`);
@@ -297,6 +351,8 @@ export default function DataMigration() {
       });
 
     setAngleData(rows);
+    setOriginalData(JSON.parse(JSON.stringify(rows))); // Deep copy for comparison
+    setModifiedRows(new Set()); // Reset modified tracking
     setSelectedRows(new Set()); // Clear selection when new data is loaded
     toast.success(`Loaded ${rows.length} TML readings`);
   };
@@ -521,7 +577,13 @@ export default function DataMigration() {
                   {angleData.map((row, index) => (
                     <TableRow 
                       key={index}
-                      className={selectedRows.has(index) ? "bg-blue-50 dark:bg-blue-950" : ""}
+                      className={
+                        modifiedRows.has(index) 
+                          ? "bg-amber-50 dark:bg-amber-950 border-l-4 border-l-amber-500" 
+                          : selectedRows.has(index) 
+                            ? "bg-blue-50 dark:bg-blue-950" 
+                            : ""
+                      }
                     >
                       <TableCell>
                         <Checkbox
@@ -651,7 +713,7 @@ export default function DataMigration() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap items-center">
             <Button
               onClick={applyAngleData}
               disabled={!selectedInspection || angleData.length === 0 || isLoading}
@@ -661,15 +723,38 @@ export default function DataMigration() {
               {isLoading ? "Applying..." : "Apply Angle Data"}
             </Button>
             <Button
+              variant="secondary"
+              onClick={() => {
+                if (!selectedInspection) {
+                  toast.error("Please select an inspection first");
+                  return;
+                }
+                setIsRecalculating(true);
+                recalculateMutation.mutate({ inspectionId: selectedInspection });
+              }}
+              disabled={!selectedInspection || isRecalculating}
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRecalculating ? 'animate-spin' : ''}`} />
+              {isRecalculating ? "Recalculating..." : "Recalculate All"}
+            </Button>
+            <Button
               variant="outline"
               onClick={() => {
                 setAngleData([]);
                 setCsvContent("");
                 setSelectedRows(new Set());
+                setModifiedRows(new Set());
+                setOriginalData([]);
               }}
             >
               Clear All
             </Button>
+            {modifiedRows.size > 0 && (
+              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">
+                {modifiedRows.size} row{modifiedRows.size !== 1 ? 's' : ''} modified
+              </Badge>
+            )}
           </div>
         </CardContent>
       </Card>
