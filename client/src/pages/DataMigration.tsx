@@ -15,11 +15,17 @@ import { toast } from "sonner";
 
 interface AngleDataRow {
   cmlNumber: string;
+  compId: string;      // Component ID (componentType)
+  location: string;    // Physical location
+  type: string;        // Reading type
+  size: string;        // Nozzle size
+  service: string;     // Service description
+  tPrevious: string;
   angle0: string;
   angle90: string;
   angle180: string;
   angle270: string;
-  tPrevious: string;
+  tActual: string;     // Minimum of all readings
 }
 
 export default function DataMigration() {
@@ -67,11 +73,17 @@ export default function DataMigration() {
       if (cells.length >= 2) {
         rows.push({
           cmlNumber: cells[0] || "",
-          angle0: cells[1] || "",
-          angle90: cells[2] || "",
-          angle180: cells[3] || "",
-          angle270: cells[4] || "",
-          tPrevious: cells[5] || "",
+          compId: cells[1] || "",
+          location: cells[2] || "",
+          type: cells[3] || "",
+          size: cells[4] || "",
+          service: cells[5] || "",
+          tPrevious: cells[6] || "",
+          angle0: cells[7] || "",
+          angle90: cells[8] || "",
+          angle180: cells[9] || "",
+          angle270: cells[10] || "",
+          tActual: cells[11] || "",
         });
       }
     }
@@ -105,7 +117,20 @@ export default function DataMigration() {
   const addRow = () => {
     setAngleData([
       ...angleData,
-      { cmlNumber: "", angle0: "", angle90: "", angle180: "", angle270: "", tPrevious: "" },
+      { 
+        cmlNumber: "", 
+        compId: "", 
+        location: "", 
+        type: "", 
+        size: "", 
+        service: "", 
+        tPrevious: "", 
+        angle0: "", 
+        angle90: "", 
+        angle180: "", 
+        angle270: "", 
+        tActual: "" 
+      },
     ]);
   };
 
@@ -234,14 +259,27 @@ export default function DataMigration() {
         const hasAngleData = tml.tml1 || tml.tml2 || tml.tml3 || tml.tml4;
         const fallbackThickness = tml.currentThickness || tml.tActual || "";
         
+        // Calculate tActual as minimum of all available readings
+        const readings = [tml.tml1, tml.tml2, tml.tml3, tml.tml4, tml.currentThickness, tml.tActual]
+          .filter(v => v !== null && v !== undefined && v !== "")
+          .map(v => parseFloat(String(v)))
+          .filter(v => !isNaN(v));
+        const calculatedTActual = readings.length > 0 ? Math.min(...readings) : null;
+        
         return {
           cmlNumber: tml.cmlNumber || "",
+          compId: tml.componentType || tml.component || "",
+          location: tml.location || "",
+          type: tml.readingType || "",
+          size: tml.nozzleSize || "",
+          service: tml.service || "",
+          tPrevious: tml.previousThickness?.toString() || "",
           // If angle-specific data exists, use it; otherwise use fallback for angle0 only
           angle0: tml.tml1?.toString() || (hasAngleData ? "" : fallbackThickness?.toString() || ""),
           angle90: tml.tml2?.toString() || "",
           angle180: tml.tml3?.toString() || "",
           angle270: tml.tml4?.toString() || "",
-          tPrevious: tml.previousThickness?.toString() || "",
+          tActual: tml.tActual?.toString() || calculatedTActual?.toFixed(4) || fallbackThickness?.toString() || "",
         };
       })
       // Sort by numeric value first, then by angle value
@@ -277,13 +315,13 @@ export default function DataMigration() {
 
   const stats = getMissingDataCount();
 
-  // Field options for bulk edit
+  // Field options for bulk edit (only editable fields)
   const fieldOptions = [
+    { value: "tPrevious", label: "t prev" },
     { value: "angle0", label: "0°" },
     { value: "angle90", label: "90°" },
     { value: "angle180", label: "180°" },
     { value: "angle270", label: "270°" },
-    { value: "tPrevious", label: "T-Previous" },
   ];
 
   return (
@@ -448,12 +486,18 @@ export default function DataMigration() {
                         }}
                       />
                     </TableHead>
-                    <TableHead className="w-24">CML #</TableHead>
-                    <TableHead className="w-24">0°</TableHead>
-                    <TableHead className="w-24">90°</TableHead>
-                    <TableHead className="w-24">180°</TableHead>
-                    <TableHead className="w-24">270°</TableHead>
-                    <TableHead className="w-24">T-Previous</TableHead>
+                    <TableHead className="w-16">CML</TableHead>
+                    <TableHead className="w-24">Comp ID</TableHead>
+                    <TableHead className="w-20">Location</TableHead>
+                    <TableHead className="w-20">Type</TableHead>
+                    <TableHead className="w-16">Size</TableHead>
+                    <TableHead className="w-24">Service</TableHead>
+                    <TableHead className="w-20">t prev</TableHead>
+                    <TableHead className="w-20">0°</TableHead>
+                    <TableHead className="w-20">90°</TableHead>
+                    <TableHead className="w-20">180°</TableHead>
+                    <TableHead className="w-20">270°</TableHead>
+                    <TableHead className="w-20">t act*</TableHead>
                     <TableHead className="w-16">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -469,12 +513,30 @@ export default function DataMigration() {
                           onCheckedChange={() => toggleRowSelection(index)}
                         />
                       </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {row.cmlNumber || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm truncate max-w-24" title={row.compId}>
+                        {row.compId || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {row.location || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {row.type || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {row.size || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm truncate max-w-24" title={row.service}>
+                        {row.service || "-"}
+                      </TableCell>
                       <TableCell>
                         <Input
-                          value={row.cmlNumber}
-                          onChange={(e) => updateRow(index, "cmlNumber", e.target.value)}
-                          placeholder="CML-1"
-                          className="h-8"
+                          value={row.tPrevious}
+                          onChange={(e) => updateRow(index, "tPrevious", e.target.value)}
+                          placeholder="0.520"
+                          className="h-8 w-20"
                         />
                       </TableCell>
                       <TableCell>
@@ -482,7 +544,7 @@ export default function DataMigration() {
                           value={row.angle0}
                           onChange={(e) => updateRow(index, "angle0", e.target.value)}
                           placeholder="0.500"
-                          className="h-8"
+                          className="h-8 w-20"
                         />
                       </TableCell>
                       <TableCell>
@@ -490,7 +552,7 @@ export default function DataMigration() {
                           value={row.angle90}
                           onChange={(e) => updateRow(index, "angle90", e.target.value)}
                           placeholder="0.500"
-                          className="h-8"
+                          className="h-8 w-20"
                         />
                       </TableCell>
                       <TableCell>
@@ -498,7 +560,7 @@ export default function DataMigration() {
                           value={row.angle180}
                           onChange={(e) => updateRow(index, "angle180", e.target.value)}
                           placeholder="0.500"
-                          className="h-8"
+                          className="h-8 w-20"
                         />
                       </TableCell>
                       <TableCell>
@@ -506,16 +568,11 @@ export default function DataMigration() {
                           value={row.angle270}
                           onChange={(e) => updateRow(index, "angle270", e.target.value)}
                           placeholder="0.500"
-                          className="h-8"
+                          className="h-8 w-20"
                         />
                       </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.tPrevious}
-                          onChange={(e) => updateRow(index, "tPrevious", e.target.value)}
-                          placeholder="0.520"
-                          className="h-8"
-                        />
+                      <TableCell className="font-mono text-sm font-semibold text-blue-600">
+                        {row.tActual || "-"}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -537,8 +594,8 @@ export default function DataMigration() {
           {angleData.length === 0 && (
             <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
               <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>Upload a CSV file or click "Add Row Manually" to enter data</p>
-              <p className="text-sm mt-1">CSV format: CML Number, 0°, 90°, 180°, 270°, T-Previous</p>
+              <p>Upload a CSV file or click "Load Existing Data" to load from database</p>
+              <p className="text-sm mt-1">CSV format: CML, Comp ID, Location, Type, Size, Service, t prev, 0°, 90°, 180°, 270°, t act*</p>
             </div>
           )}
         </CardContent>
@@ -588,10 +645,10 @@ export default function DataMigration() {
           <Button
             variant="outline"
             onClick={() => {
-              const template = `CML Number,0°,90°,180°,270°,T-Previous
-1,0.500,0.498,0.502,0.499,0.520
-2,0.485,0.490,0.488,0.492,0.510
-3,0.475,0.478,0.480,0.476,0.505`;
+              const template = `CML,Comp ID,Location,Type,Size,Service,t prev,0°,90°,180°,270°,t act*
+001,Vessel Shell,7-0,spot,,,.520,0.500,0.498,0.502,0.499,0.498
+002,Vessel Shell,7-45,spot,,,.510,0.485,0.490,0.488,0.492,0.485
+003,East Head,1,general,,,.505,0.475,0.478,0.480,0.476,0.475`;
               const blob = new Blob([template], { type: "text/csv" });
               const url = URL.createObjectURL(blob);
               const a = document.createElement("a");

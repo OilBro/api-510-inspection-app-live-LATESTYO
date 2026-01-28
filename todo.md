@@ -2158,3 +2158,14 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 - [x] Verify the backend is returning correct TML reading values - currentThickness has the actual values
 - [x] Fix the data transformation to use currentThickness/tActual as fallback when tml1-4 are empty
 - [x] Test that correct readings are displayed after fix (all 569 tests pass)
+
+## Data Migration Tool - Add Additional Columns
+- [x] Add Comp ID column to data table
+- [x] Add Location column to data table
+- [x] Add Type column to data table
+- [x] Add Size column to data table
+- [x] Add Service column to data table
+- [x] Add t act* column to data table
+- [x] Update AngleDataRow interface with new fields
+- [x] Update loadExistingData function to populate new fields from TML readings
+- [x] Test that all columns display correctly
