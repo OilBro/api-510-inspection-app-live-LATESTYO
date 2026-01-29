@@ -2563,3 +2563,10 @@ remaining life and MAWP calculations. This ensures the calculation reflects the 
 - [x] Fix SA-515 Grade 70 material stress lookup (added to ASME database: 18,800 psi at 500°F)
 - [x] Fix component type mismatch (verified: performFullCalculation correctly returns componentType)
 - [x] Verify torispherical head calculation uses correct formula (37 tests passing)
+
+
+## Bug Fix: Calculate t_required Button Ignores Head Type (Jan 29, 2026)
+- [x] Fix "Calculate t_required" button to use correct head formula based on selection
+- [x] Added separate mutation hooks for Ellipsoidal, Torispherical, and Hemispherical heads
+- [x] Now correctly calculates 0.2231" for hemispherical (was always showing 0.4484" torispherical)
+- [x] All 682 tests passing

@@ -45,6 +45,9 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
   // Calculation mutations
   const fullCalculationMutation = trpc.calculationEngine.performFullCalculation.useMutation();
   const tRequiredShellMutation = trpc.calculationEngine.calculateTRequiredShell.useMutation();
+  const tRequiredEllipsoidalMutation = trpc.calculationEngine.calculateTRequiredEllipsoidalHead.useMutation();
+  const tRequiredTorisphericalMutation = trpc.calculationEngine.calculateTRequiredTorisphericalHead.useMutation();
+  const tRequiredHemisphericalMutation = trpc.calculationEngine.calculateTRequiredHemisphericalHead.useMutation();
   const mawpShellMutation = trpc.calculationEngine.calculateMAWPShell.useMutation();
   
   // Get allowable stress for the material
@@ -219,11 +222,33 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     }
     
     try {
-      const result = await tRequiredShellMutation.mutateAsync(input);
+      let result;
+      
+      // Use the correct calculation based on component type and head type
+      if (inputs.componentType === 'Head') {
+        // For heads, use the appropriate head formula based on head type selection
+        switch (inputs.headType) {
+          case 'Hemispherical':
+            result = await tRequiredHemisphericalMutation.mutateAsync(input);
+            break;
+          case 'Torispherical':
+            result = await tRequiredTorisphericalMutation.mutateAsync(input);
+            break;
+          case '2:1 Ellipsoidal':
+          default:
+            result = await tRequiredEllipsoidalMutation.mutateAsync(input);
+            break;
+        }
+      } else {
+        // For shells, use the shell formula
+        result = await tRequiredShellMutation.mutateAsync(input);
+      }
+      
       setShellResult(result);
       
       if (result.success) {
-        toast.success(`t_required calculated: ${result.resultValue?.toFixed(4)}" per ${result.codeReference}`);
+        const componentDesc = inputs.componentType === 'Head' ? `${inputs.headType} Head` : 'Shell';
+        toast.success(`t_required for ${componentDesc}: ${result.resultValue?.toFixed(4)}" per ${result.codeReference}`);
       } else {
         toast.error("Calculation failed - check warnings");
       }
