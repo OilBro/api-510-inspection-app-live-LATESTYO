@@ -409,14 +409,29 @@ export function calculateTRequiredTorisphericalHead(input: CalculationInput): Ca
   if (!input.designPressure || input.designPressure <= 0) {
     return createErrorResult('t_required_head_torispherical', 'Design pressure must be > 0', calculatedAt);
   }
-  if (!input.crownRadius || input.crownRadius <= 0) {
-    return createErrorResult('t_required_head_torispherical', 'Crown radius (L) must be > 0', calculatedAt);
-  }
-  if (!input.knuckleRadius || input.knuckleRadius <= 0) {
-    return createErrorResult('t_required_head_torispherical', 'Knuckle radius (r) must be > 0', calculatedAt);
+  if (!input.insideDiameter || input.insideDiameter <= 0) {
+    return createErrorResult('t_required_head_torispherical', 'Inside diameter must be > 0', calculatedAt);
   }
   if (!input.jointEfficiency || input.jointEfficiency <= 0 || input.jointEfficiency > 1) {
     return createErrorResult('t_required_head_torispherical', 'Joint efficiency must be between 0 and 1', calculatedAt);
+  }
+  
+  // Apply default values for crown radius (L) and knuckle radius (r) if not provided
+  // Per ASME VIII-1 UG-32(e), common defaults are L=D (crown radius = inside diameter)
+  // and r=0.06D (knuckle radius = 6% of inside diameter, minimum per code)
+  let crownRadius = input.crownRadius;
+  let knuckleRadius = input.knuckleRadius;
+  
+  if (!crownRadius || crownRadius <= 0) {
+    crownRadius = input.insideDiameter; // Default L = D
+    warnings.push(`Crown radius (L) not provided - using default L = D = ${crownRadius.toFixed(2)}"`);
+    assumptions.push('Crown radius (L) defaulted to inside diameter (D)');
+  }
+  
+  if (!knuckleRadius || knuckleRadius <= 0) {
+    knuckleRadius = 0.06 * input.insideDiameter; // Default r = 0.06D (6% of D, minimum per code)
+    warnings.push(`Knuckle radius (r) not provided - using default r = 0.06D = ${knuckleRadius.toFixed(2)}"`);
+    assumptions.push('Knuckle radius (r) defaulted to 6% of inside diameter (0.06D)');
   }
   
   // Get allowable stress
@@ -444,8 +459,8 @@ export function calculateTRequiredTorisphericalHead(input: CalculationInput): Ca
   }
   
   const P = input.designPressure;
-  const L = input.crownRadius;
-  const r = input.knuckleRadius;
+  const L = crownRadius;  // Use local variable with default applied
+  const r = knuckleRadius;  // Use local variable with default applied
   const S = allowableStress;
   const E = input.jointEfficiency;
   

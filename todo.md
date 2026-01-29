@@ -2570,3 +2570,10 @@ remaining life and MAWP calculations. This ensures the calculation reflects the 
 - [x] Added separate mutation hooks for Ellipsoidal, Torispherical, and Hemispherical heads
 - [x] Now correctly calculates 0.2231" for hemispherical (was always showing 0.4484" torispherical)
 - [x] All 682 tests passing
+
+
+## Bug Fix: Full Calculation Suite t_min Shows Dash/Blank (Jan 29, 2026)
+- [x] t_min showing "-" (null) in Full Calculation Suite for vessel 54-11-005
+- [x] Root cause: torispherical head calculation required crownRadius and knuckleRadius but they weren't provided
+- [x] Fix: Added default values L=D (crown radius) and r=0.06D (knuckle radius) per ASME VIII-1 UG-32(e)
+- [x] All 682 tests passing
