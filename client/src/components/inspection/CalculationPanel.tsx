@@ -84,6 +84,8 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     nominalThickness: '',
     yearBuilt: '',
     currentYear: new Date().getFullYear().toString(),
+    crownRadius: '', // L parameter for torispherical heads (optional, defaults to D)
+    knuckleRadius: '', // r parameter for torispherical heads (optional, defaults to 0.06D)
   });
   
   // Calculation results
@@ -206,6 +208,9 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
       liquidHeight: vesselOrientation === 'vertical' && inspection.insideDiameter 
         ? parseFloat(inspection.insideDiameter) 
         : undefined,
+      // Crown and knuckle radius for torispherical heads (optional)
+      crownRadius: inputs.crownRadius ? parseFloat(inputs.crownRadius) : undefined,
+      knuckleRadius: inputs.knuckleRadius ? parseFloat(inputs.knuckleRadius) : undefined,
     };
   };
   
@@ -550,6 +555,34 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                   </SelectContent>
                 </Select>
               </div>
+            )}
+            
+            {/* Crown and Knuckle Radius for Torispherical Heads */}
+            {inputs.componentType === 'Head' && inputs.headType === 'Torispherical' && (
+              <>
+                <div className="space-y-2">
+                  <Label>Crown Radius L (in)</Label>
+                  <Input
+                    type="number"
+                    step="0.001"
+                    placeholder={inspection?.insideDiameter ? `Default: ${inspection.insideDiameter}" (L=D)` : 'Default: L=D'}
+                    value={inputs.crownRadius}
+                    onChange={(e) => setInputs({ ...inputs, crownRadius: e.target.value })}
+                  />
+                  <p className="text-xs text-gray-500">Per ASME VIII-1 UG-32(e), defaults to inside diameter (L=D)</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Knuckle Radius r (in)</Label>
+                  <Input
+                    type="number"
+                    step="0.001"
+                    placeholder={inspection?.insideDiameter ? `Default: ${(parseFloat(String(inspection.insideDiameter)) * 0.06).toFixed(3)}" (r=0.06D)` : 'Default: r=0.06D'}
+                    value={inputs.knuckleRadius}
+                    onChange={(e) => setInputs({ ...inputs, knuckleRadius: e.target.value })}
+                  />
+                  <p className="text-xs text-gray-500">Per ASME VIII-1 UG-32(e), defaults to 6% of diameter (r=0.06D)</p>
+                </div>
+              </>
             )}
             
             <div className="space-y-2">
