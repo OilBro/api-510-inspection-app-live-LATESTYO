@@ -2551,3 +2551,9 @@ remaining life and MAWP calculations. This ensures the calculation reflects the 
 - [x] Added TML reading selector to choose specific CML for calculation
 - [x] Auto-populates t_actual, t_previous, t_nominal from selected reading
 - [x] Auto-detects Shell vs Head component type for correct formula selection
+
+
+## Bug Fix: Static Head Calculation for Horizontal Vessels (Jan 29, 2026)
+- [x] Fix static head = 0 for horizontal vessel heads (was incorrectly adding ~30 psi)
+- [x] Add vesselOrientation parameter to CalculationInput interface
+- [x] Update tests to verify horizontal vessel static head = 0 (682 tests passing)

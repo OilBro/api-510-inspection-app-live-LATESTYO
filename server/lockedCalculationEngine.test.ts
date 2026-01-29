@@ -131,7 +131,9 @@ describe('Shell Calculations (ASME VIII-1 UG-27)', () => {
       expect(result.resultValue).toBeCloseTo(0.1808, 3);
     });
 
-    it('should include static head pressure for horizontal vessels', () => {
+    it('should have static head = 0 for horizontal vessels', () => {
+      // CRITICAL: Horizontal vessels have NO static head pressure on heads
+      // Static head only applies to vertical vessels where liquid column creates pressure
       const input: CalculationInput = {
         insideDiameter: 130.25,
         designPressure: 225,
@@ -141,16 +143,66 @@ describe('Shell Calculations (ASME VIII-1 UG-27)', () => {
         nominalThickness: 0.75,
         currentThickness: 0.493,
         corrosionAllowance: 0.125,
+        vesselOrientation: 'horizontal', // HORIZONTAL vessel
         specificGravity: 0.73,
-        liquidHeight: 130.25, // Full diameter for horizontal vessel
+        liquidHeight: 130.25,
       };
 
       const result = calculateTRequiredShell(input);
       
       expect(result.success).toBe(true);
-      // Static head should be included
-      expect(result.intermediateValues['P_static_head']).toBeGreaterThan(0);
-      expect(result.intermediateValues['P_total']).toBeGreaterThan(225);
+      // Static head should be ZERO for horizontal vessels
+      expect(result.intermediateValues['P_static_head']).toBe(0);
+      expect(result.intermediateValues['P_total']).toBe(225); // No static head added
+      expect(result.assumptions).toContain('Static head = 0 psi (horizontal vessel orientation)');
+    });
+
+    it('should include static head pressure for vertical vessels', () => {
+      // Vertical vessels DO have static head from liquid column
+      const input: CalculationInput = {
+        insideDiameter: 48,
+        designPressure: 150,
+        designTemperature: 100,
+        materialSpec: 'SA-516 Gr 70',
+        jointEfficiency: 1.0,
+        nominalThickness: 0.5,
+        currentThickness: 0.45,
+        corrosionAllowance: 0.125,
+        vesselOrientation: 'vertical', // VERTICAL vessel
+        specificGravity: 1.0, // Water
+        liquidHeight: 120, // 10 feet of liquid
+      };
+
+      const result = calculateTRequiredShell(input);
+      
+      expect(result.success).toBe(true);
+      // Static head should be included for vertical vessels
+      // Static head = SG × 62.4 × h / 144 = 1.0 × 62.4 × 120 / 144 = 52 psi
+      expect(result.intermediateValues['P_static_head']).toBeCloseTo(52, 0);
+      expect(result.intermediateValues['P_total']).toBeGreaterThan(150);
+      expect(result.assumptions.some(a => a.includes('vertical'))).toBe(true);
+    });
+
+    it('should warn when vessel orientation not specified but static head params provided', () => {
+      const input: CalculationInput = {
+        insideDiameter: 48,
+        designPressure: 150,
+        designTemperature: 100,
+        materialSpec: 'SA-516 Gr 70',
+        jointEfficiency: 1.0,
+        nominalThickness: 0.5,
+        currentThickness: 0.45,
+        corrosionAllowance: 0.125,
+        // vesselOrientation NOT specified
+        specificGravity: 1.0,
+        liquidHeight: 120,
+      };
+
+      const result = calculateTRequiredShell(input);
+      
+      expect(result.success).toBe(true);
+      // Should warn about missing orientation
+      expect(result.warnings).toContain('Vessel orientation not specified - assuming vertical for static head calculation');
     });
 
     it('should warn when current thickness is below t_required', () => {

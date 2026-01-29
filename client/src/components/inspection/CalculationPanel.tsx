@@ -177,6 +177,12 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     // Get allowable stress from ASME database or inspection
     const allowableStress = stressData?.stress || parseFloat(String(inspection.allowableStress || 20000));
     
+    // Determine vessel orientation from inspection data
+    // Default to horizontal as most process vessels are horizontal
+    const vesselConfig = inspection.vesselConfiguration?.toLowerCase() || '';
+    const vesselOrientation: 'horizontal' | 'vertical' = 
+      vesselConfig.includes('vertical') ? 'vertical' : 'horizontal';
+    
     return {
       insideDiameter,
       designPressure,
@@ -191,8 +197,12 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
       headType: inputs.headType,
       yearBuilt: yearBuilt > 0 ? yearBuilt : undefined,
       currentYear,
+      vesselOrientation, // CRITICAL: Horizontal vessels have static head = 0
       specificGravity: inspection.specificGravity ? parseFloat(String(inspection.specificGravity)) : undefined,
-      liquidHeight: inspection.insideDiameter ? parseFloat(inspection.insideDiameter) : undefined,
+      // Only include liquid height for vertical vessels
+      liquidHeight: vesselOrientation === 'vertical' && inspection.insideDiameter 
+        ? parseFloat(inspection.insideDiameter) 
+        : undefined,
     };
   };
   

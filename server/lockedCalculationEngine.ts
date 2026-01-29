@@ -61,9 +61,10 @@ export interface CalculationInput {
   previousInspectionDate?: Date;
   currentInspectionDate?: Date;
   
-  // Static head (for horizontal vessels)
+  // Vessel orientation and static head
+  vesselOrientation?: 'horizontal' | 'vertical';
   specificGravity?: number;
-  liquidHeight?: number;       // inches
+  liquidHeight?: number;       // inches (only applies to vertical vessels or bottom of horizontal shells)
 }
 
 /**
@@ -194,14 +195,28 @@ export function calculateTRequiredShell(input: CalculationInput): CalculationRes
   const R = input.insideRadius || (input.insideDiameter / 2);
   
   // Calculate static head pressure if applicable
+  // IMPORTANT: For horizontal vessels, static head = 0 for heads and minimal for shells
+  // Static head only applies to vertical vessels where liquid column creates pressure
   let totalPressure = input.designPressure;
   let staticHeadPressure = 0;
   
-  if (input.specificGravity && input.liquidHeight) {
+  if (input.vesselOrientation === 'horizontal') {
+    // For horizontal vessels, static head is zero or negligible
+    // The liquid level is at the same elevation as the shell/head centerline
+    staticHeadPressure = 0;
+    assumptions.push('Static head = 0 psi (horizontal vessel orientation)');
+  } else if (input.specificGravity && input.liquidHeight && input.vesselOrientation === 'vertical') {
     // Static head = ρgh = (SG × 62.4 lb/ft³) × h / 144 in²/ft²
+    // Only applies to vertical vessels where liquid column creates hydrostatic pressure
     staticHeadPressure = (input.specificGravity * 62.4 * input.liquidHeight) / 144;
     totalPressure = input.designPressure + staticHeadPressure;
-    assumptions.push(`Static head pressure included: ${staticHeadPressure.toFixed(2)} psi`);
+    assumptions.push(`Static head pressure included: ${staticHeadPressure.toFixed(2)} psi (vertical vessel)`);
+  } else if (input.specificGravity && input.liquidHeight && !input.vesselOrientation) {
+    // If orientation not specified but static head parameters provided, warn and assume vertical
+    staticHeadPressure = (input.specificGravity * 62.4 * input.liquidHeight) / 144;
+    totalPressure = input.designPressure + staticHeadPressure;
+    warnings.push('Vessel orientation not specified - assuming vertical for static head calculation');
+    assumptions.push(`Static head pressure included: ${staticHeadPressure.toFixed(2)} psi (assumed vertical)`);
   }
   
   const P = totalPressure;
