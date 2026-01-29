@@ -22,6 +22,7 @@ import { trendAnalysisRouter } from "./trendAnalysisRouter";
 import { hierarchyRouter } from "./hierarchyRouter";
 import { rcraComplianceRouter } from "./routers/rcraComplianceRouter";
 import { batchReprocessRouter } from "./routers/batchReprocessRouter";
+import { calculationEngineRouter } from "./routers/calculationEngineRouter";
 import { locationMappingRouter } from "./locationMappingRouter";
 import { convertToJpeg } from "./_core/freeconvert";
 import * as fieldMappingDb from "./fieldMappingDb";
@@ -61,6 +62,7 @@ export const appRouter = router({
   system: systemRouter,
   pdfImport: pdfImportRouter,
   materialStress: materialStressRouter,
+  calculationEngine: calculationEngineRouter,
   validationWarnings: validationWarningsRouter,
   anomalies: anomalyRouter,
   actionPlans: actionPlanRouter,

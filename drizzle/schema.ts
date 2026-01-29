@@ -1205,3 +1205,257 @@ export const cmlAngularReadings = mysqlTable("cmlAngularReadings", {
 
 export type CmlAngularReading = typeof cmlAngularReadings.$inferSelect;
 export type InsertCmlAngularReading = typeof cmlAngularReadings.$inferInsert;
+
+
+/**
+ * ============================================================================
+ * GOLD-STANDARD REGULATORY INSPECTION ENGINEERING IMPROVEMENTS
+ * Per SPEC-20260128-R2 - Enhanced Specification for Vessel Data & Component Management
+ * ============================================================================
+ */
+
+/**
+ * Vessels Table - Master record for each unique pressure vessel
+ * This table serves as the parent record for all component-level data
+ */
+export const vessels = mysqlTable("vessels", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  userId: int("userId").notNull(),
+  
+  // Vessel identification
+  vesselTagNumber: varchar("vesselTagNumber", { length: 255 }).notNull(),
+  vesselName: text("vesselName"),
+  manufacturer: text("manufacturer"),
+  serialNumber: varchar("serialNumber", { length: 255 }),
+  yearBuilt: int("yearBuilt"),
+  nbNumber: varchar("nbNumber", { length: 255 }),
+  
+  // Construction code reference
+  constructionCode: varchar("constructionCode", { length: 255 }).notNull(), // e.g., "ASME VIII Div 1, 2019"
+  
+  // Metadata
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Vessel = typeof vessels.$inferSelect;
+export type InsertVessel = typeof vessels.$inferInsert;
+
+/**
+ * Components Table - Core operational table for vessel components
+ * Each record represents a distinct, inspectable part (shell course, head, nozzle)
+ * Per SPEC-20260128-R2 Section 2.2
+ */
+export const components = mysqlTable("components", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  vesselId: varchar("vesselId", { length: 64 }).notNull(), // FK to vessels
+  inspectionId: varchar("inspectionId", { length: 64 }), // FK to inspections (optional)
+  
+  // Component identification
+  componentType: mysqlEnum("componentType", ["Shell", "Head", "Nozzle"]).notNull(),
+  componentName: varchar("componentName", { length: 255 }).notNull(), // e.g., "Shell Course 1", "East Head"
+  
+  // Design & Material - ASME Section II Part D lookup required
+  materialSpec: varchar("materialSpec", { length: 255 }).notNull(), // e.g., "SA-516 Gr 70"
+  designPressure: decimal("designPressure", { precision: 10, scale: 2 }).notNull(), // psi
+  designTemperature: decimal("designTemperature", { precision: 10, scale: 2 }).notNull(), // °F
+  jointEfficiency: decimal("jointEfficiency", { precision: 4, scale: 3 }).notNull(), // 0.0 - 1.0
+  nominalThickness: decimal("nominalThickness", { precision: 10, scale: 4 }).notNull(), // inches
+  corrosionAllowance: decimal("corrosionAllowance", { precision: 10, scale: 4 }).notNull(), // inches
+  
+  // Geometry
+  insideDiameter: decimal("insideDiameter", { precision: 10, scale: 4 }).notNull(), // inches
+  
+  // Head-specific geometry (nullable for shells)
+  headType: mysqlEnum("headType", ["2:1 Ellipsoidal", "Torispherical", "Hemispherical", "Flat"]),
+  headGeometry: json("headGeometry"), // {"crownRadius": 96, "knuckleRadius": 6}
+  
+  // Inspection Data
+  currentThickness: decimal("currentThickness", { precision: 10, scale: 4 }).notNull(), // inches
+  currentThicknessDate: date("currentThicknessDate").notNull(),
+  previousThickness: decimal("previousThickness", { precision: 10, scale: 4 }), // inches
+  previousThicknessDate: date("previousThicknessDate"),
+  
+  // Calculated Values (Read-Only - populated by locked calculation engine)
+  tRequired: decimal("tRequired", { precision: 10, scale: 4 }), // inches - without CA
+  mawp: decimal("mawp", { precision: 10, scale: 2 }), // psig
+  remainingLife: decimal("remainingLife", { precision: 10, scale: 2 }), // years
+  corrosionRateLT: decimal("corrosionRateLT", { precision: 10, scale: 5 }), // in/yr - Long-Term
+  corrosionRateST: decimal("corrosionRateST", { precision: 10, scale: 5 }), // in/yr - Short-Term
+  governingCorrosionRate: decimal("governingCorrosionRate", { precision: 10, scale: 5 }), // in/yr
+  governingRateType: mysqlEnum("governingRateType", ["LT", "ST", "USER"]),
+  nextInspectionDate: date("nextInspectionDate"),
+  
+  // Calculation traceability
+  calculationTimestamp: timestamp("calculationTimestamp"),
+  calculationVersion: varchar("calculationVersion", { length: 50 }), // e.g., "CALC-ENGINE-1.0"
+  materialDatabaseVersion: varchar("materialDatabaseVersion", { length: 50 }), // e.g., "ASME-BPVC-2023"
+  calculationIntermediates: json("calculationIntermediates"), // Full calculation trace
+  
+  // Data quality
+  dataQualityStatus: mysqlEnum("dataQualityStatus", ["complete", "missing_data", "calculation_halted"]).default("complete"),
+  dataQualityNotes: text("dataQualityNotes"),
+  
+  // Metadata
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Component = typeof components.$inferSelect;
+export type InsertComponent = typeof components.$inferInsert;
+
+/**
+ * Audit Log Table - Immutable audit trail for all critical data changes
+ * Per SPEC-20260128-R2 Section 2.3
+ * This table provides complete, defensible audit trail for EPA, OSHA, and AI review
+ */
+export const auditLog = mysqlTable("auditLog", {
+  id: int("id").autoincrement().primaryKey(), // Auto-incrementing for immutability
+  
+  // Event identification
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  userId: varchar("userId", { length: 255 }).notNull(),
+  userName: varchar("userName", { length: 255 }),
+  
+  // Record identification
+  tableName: varchar("tableName", { length: 255 }).notNull(), // e.g., "components", "vessels"
+  recordId: varchar("recordId", { length: 64 }).notNull(),
+  
+  // Change details
+  fieldName: varchar("fieldName", { length: 255 }).notNull(),
+  oldValue: text("oldValue"),
+  newValue: text("newValue"),
+  
+  // Action type
+  actionType: mysqlEnum("actionType", ["CREATE", "UPDATE", "DELETE"]).notNull(),
+  
+  // Justification (required for certain changes)
+  justification: text("justification"),
+  
+  // Additional context
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  userAgent: text("userAgent"),
+  sessionId: varchar("sessionId", { length: 255 }),
+  
+  // Calculation-specific audit fields
+  calculationVersion: varchar("calculationVersion", { length: 50 }),
+  codeReference: varchar("codeReference", { length: 255 }), // e.g., "API 510 §7.1.1"
+});
+
+export type AuditLogEntry = typeof auditLog.$inferSelect;
+export type InsertAuditLogEntry = typeof auditLog.$inferInsert;
+
+/**
+ * ASME Material Properties Table - Version-controlled material database
+ * Per ASME Section II Part D - This is a LOCKED, read-only reference table
+ * Direct user input of allowable stress is PROHIBITED
+ */
+export const asmeMaterialProperties = mysqlTable("asmeMaterialProperties", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Material identification
+  materialSpec: varchar("materialSpec", { length: 255 }).notNull(), // e.g., "SA-516 Gr 70"
+  specNumber: varchar("specNumber", { length: 50 }).notNull(), // e.g., "SA-516"
+  grade: varchar("grade", { length: 50 }), // e.g., "70"
+  productForm: varchar("productForm", { length: 100 }), // e.g., "Plate", "Seamless Pipe"
+  
+  // Mechanical properties
+  minTensileStrength: int("minTensileStrength"), // psi
+  minYieldStrength: int("minYieldStrength"), // psi
+  
+  // Temperature range
+  minTemperature: int("minTemperature"), // °F
+  maxTemperature: int("maxTemperature"), // °F
+  
+  // ASME reference
+  tableReference: varchar("tableReference", { length: 50 }), // e.g., "Table 1A"
+  
+  // Database version for traceability
+  databaseVersion: varchar("databaseVersion", { length: 50 }).notNull(), // e.g., "ASME-BPVC-2023"
+  effectiveDate: date("effectiveDate").notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AsmeMaterialProperty = typeof asmeMaterialProperties.$inferSelect;
+export type InsertAsmeMaterialProperty = typeof asmeMaterialProperties.$inferInsert;
+
+/**
+ * ASME Allowable Stress Table - Temperature-dependent stress values
+ * Per ASME Section II Part D Table 1A
+ * Linear interpolation is performed between tabulated values
+ */
+export const asmeAllowableStress = mysqlTable("asmeAllowableStress", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Material reference
+  materialSpec: varchar("materialSpec", { length: 255 }).notNull(),
+  
+  // Temperature and stress
+  temperatureF: int("temperatureF").notNull(), // °F
+  allowableStress: int("allowableStress").notNull(), // psi
+  
+  // ASME reference
+  tableReference: varchar("tableReference", { length: 50 }).notNull(),
+  databaseVersion: varchar("databaseVersion", { length: 50 }).notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AsmeAllowableStressEntry = typeof asmeAllowableStress.$inferSelect;
+export type InsertAsmeAllowableStressEntry = typeof asmeAllowableStress.$inferInsert;
+
+/**
+ * Calculation Results Table - Stores complete calculation results with full traceability
+ * All calculations are performed by the locked calculation engine
+ */
+export const calculationResults = mysqlTable("calculationResults", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  componentId: varchar("componentId", { length: 64 }).notNull(), // FK to components
+  inspectionId: varchar("inspectionId", { length: 64 }), // FK to inspections
+  
+  // Calculation type
+  calculationType: mysqlEnum("calculationType", [
+    "t_required_shell",
+    "t_required_head_ellipsoidal",
+    "t_required_head_torispherical",
+    "t_required_head_hemispherical",
+    "mawp_shell",
+    "mawp_head",
+    "corrosion_rate_lt",
+    "corrosion_rate_st",
+    "remaining_life",
+    "next_inspection"
+  ]).notNull(),
+  
+  // Input parameters (JSON for full traceability)
+  inputParameters: json("inputParameters").notNull(),
+  
+  // Output values
+  resultValue: decimal("resultValue", { precision: 15, scale: 6 }).notNull(),
+  resultUnit: varchar("resultUnit", { length: 50 }).notNull(), // e.g., "inches", "psi", "years"
+  
+  // Intermediate values (for audit trail)
+  intermediateValues: json("intermediateValues").notNull(),
+  
+  // Code references
+  codeReference: varchar("codeReference", { length: 255 }).notNull(), // e.g., "ASME VIII-1 UG-27"
+  formulaUsed: text("formulaUsed").notNull(), // Human-readable formula
+  
+  // Assumptions and warnings
+  assumptions: json("assumptions"),
+  warnings: json("warnings"),
+  
+  // Traceability
+  calculationEngineVersion: varchar("calculationEngineVersion", { length: 50 }).notNull(),
+  materialDatabaseVersion: varchar("materialDatabaseVersion", { length: 50 }).notNull(),
+  calculatedAt: timestamp("calculatedAt").defaultNow().notNull(),
+  calculatedBy: int("calculatedBy"), // userId who triggered calculation
+  
+  // Validation status
+  validationStatus: mysqlEnum("validationStatus", ["valid", "warning", "error"]).default("valid"),
+  validationNotes: text("validationNotes"),
+});
+
+export type CalculationResult = typeof calculationResults.$inferSelect;
+export type InsertCalculationResult = typeof calculationResults.$inferInsert;

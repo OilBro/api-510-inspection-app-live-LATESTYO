@@ -2410,3 +2410,117 @@ MAWP = Pcalc - Static Head = 242.96 - 2.18 = 240.78 psi
 Per API 510 §7.1.1, thickness measurements should use the MINIMUM measured value for conservative 
 remaining life and MAWP calculations. This ensures the calculation reflects the worst-case 
 (thinnest) location on the component.
+
+## Gold-Standard Regulatory Inspection Engineering Improvements (Jan 28, 2026)
+
+### Database Schema Enhancements
+- [ ] Create `components` table for component-centric data model (shells, heads, nozzles)
+- [ ] Create `audit_log` table for immutable change tracking
+- [ ] Add component-specific fields (componentType, componentName, headGeometry)
+- [ ] Add calculated value fields (t_required, mawp, remainingLife, corrosionRate_LT, corrosionRate_ST)
+
+### ASME Material Database
+- [ ] Implement ASME Section II Part D material properties database
+- [ ] Add automatic allowable stress lookup by material and temperature
+- [ ] Include temperature interpolation per ASME methodology
+- [ ] Remove direct user input of allowable stress (use lookup only)
+
+### Locked Calculation Engine
+- [ ] Implement locked calculation engine (no runtime modification)
+- [ ] Add shell t_required calculation per ASME VIII-1 UG-27
+- [ ] Add ellipsoidal head t_required calculation per ASME VIII-1 UG-32(d)
+- [ ] Add torispherical head t_required calculation per ASME VIII-1 UG-32(e)
+- [ ] Add hemispherical head t_required calculation per ASME VIII-1 UG-32(f)
+- [ ] Add MAWP calculation per ASME VIII-1 UG-27
+- [ ] Add Long-Term corrosion rate calculation per API 510
+- [ ] Add Short-Term corrosion rate calculation per API 510
+- [ ] Add remaining life calculation per API 510 §7.1.1
+- [ ] Add next inspection date calculation per API 510 interval rules
+- [ ] Include full traceability with intermediate values and code references
+
+### Audit Trail Service
+- [ ] Implement audit service for tracking all data changes
+- [ ] Log CREATE, UPDATE, DELETE operations with timestamps
+- [ ] Record user ID, old value, new value, and justification
+- [ ] Ensure audit log is immutable (append-only)
+
+### Report Generation
+- [ ] Generate traceable calculation reports with code references
+- [ ] Include all input parameters, formulas, and intermediate values
+- [ ] Document assumptions and warnings
+- [ ] Add database version traceability
+
+### Frontend Updates
+- [ ] Update UI to use component-centric model
+- [ ] Remove direct allowable stress input (use material lookup)
+- [ ] Add component management interface
+- [ ] Display audit trail for data changes
+- [ ] Show calculation traceability in reports
+
+### Verification
+- [ ] Write comprehensive test suite for calculation engine
+- [ ] Validate against hand-calculated examples
+- [ ] Test material database lookups
+- [ ] Verify audit trail functionality
+
+
+## Gold-Standard Regulatory Inspection Engineering Improvements (Jan 2026)
+
+### Database Schema Enhancements
+- [x] Add components table for component-centric data model
+- [x] Add audit_log table for immutable change tracking
+- [x] Add ASME material properties table
+- [x] Add ASME allowable stress table
+- [x] Add calculation results table with full traceability
+
+### ASME Material Database (server/asmeMaterialDatabase.ts)
+- [x] Version-controlled database (ASME-BPVC-2023)
+- [x] Automatic stress lookup with linear interpolation
+- [x] Material specification normalization
+- [x] Support for SA-516, SA-285, SA-240, SA-106, SA-312, SA-53, SA-105
+- [x] Temperature range validation
+
+### Locked Calculation Engine (server/lockedCalculationEngine.ts)
+- [x] Non-modifiable calculation module
+- [x] Shell t_required per ASME VIII-1 UG-27(c)(1)
+- [x] Ellipsoidal head t_required per ASME VIII-1 UG-32(d)
+- [x] Torispherical head t_required per ASME VIII-1 UG-32(e)
+- [x] Hemispherical head t_required per ASME VIII-1 UG-32(f)
+- [x] MAWP calculation per ASME VIII-1 UG-27
+- [x] Long-term corrosion rate per API 510 §7.1.1
+- [x] Short-term corrosion rate per API 510 §7.1.1
+- [x] Remaining life calculation per API 510
+- [x] Next inspection interval per API 510
+- [x] Static head pressure inclusion for horizontal vessels
+- [x] Full intermediate value traceability
+
+### Audit Trail Service (server/auditService.ts)
+- [x] Immutable audit log entries
+- [x] CREATE/UPDATE/DELETE action tracking
+- [x] Calculation event logging with code references
+- [x] Data import event logging
+- [x] Corrosion rate selection logging
+- [x] User identification and justification tracking
+
+### tRPC Router (server/routers/calculationEngineRouter.ts)
+- [x] Material database info endpoint
+- [x] Material validation endpoint
+- [x] Allowable stress lookup endpoint
+- [x] Shell t_required calculation endpoint
+- [x] Head t_required calculation endpoints (ellipsoidal, torispherical, hemispherical)
+- [x] MAWP calculation endpoint
+- [x] Corrosion rate calculation endpoints (LT, ST)
+- [x] Remaining life calculation endpoint
+- [x] Next inspection interval endpoint
+- [x] Full calculation suite endpoint
+
+### Verification Tests (server/lockedCalculationEngine.test.ts)
+- [x] ASME Material Database tests (9 tests)
+- [x] Shell Calculations tests (6 tests)
+- [x] Head Calculations tests (4 tests)
+- [x] Corrosion Rate Calculations tests (3 tests)
+- [x] Remaining Life Calculations tests (3 tests)
+- [x] Inspection Interval Calculations tests (5 tests)
+- [x] Full Calculation Suite tests (3 tests)
+- [x] Engine Information tests (2 tests)
+- [x] All 35 tests passing

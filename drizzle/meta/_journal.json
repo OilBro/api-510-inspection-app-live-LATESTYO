@@ -176,6 +176,13 @@
       "when": 1769635539280,
       "tag": "0024_crazy_toro",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1769662133635,
+      "tag": "0025_milky_sleeper",
+      "breakpoints": true
     }
   ]
 }

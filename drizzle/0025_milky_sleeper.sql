@@ -1,0 +1,122 @@
+CREATE TABLE `asmeAllowableStress` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`materialSpec` varchar(255) NOT NULL,
+	`temperatureF` int NOT NULL,
+	`allowableStress` int NOT NULL,
+	`tableReference` varchar(50) NOT NULL,
+	`databaseVersion` varchar(50) NOT NULL,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `asmeAllowableStress_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `asmeMaterialProperties` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`materialSpec` varchar(255) NOT NULL,
+	`specNumber` varchar(50) NOT NULL,
+	`grade` varchar(50),
+	`productForm` varchar(100),
+	`minTensileStrength` int,
+	`minYieldStrength` int,
+	`minTemperature` int,
+	`maxTemperature` int,
+	`tableReference` varchar(50),
+	`databaseVersion` varchar(50) NOT NULL,
+	`effectiveDate` date NOT NULL,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `asmeMaterialProperties_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `auditLog` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`timestamp` timestamp NOT NULL DEFAULT (now()),
+	`userId` varchar(255) NOT NULL,
+	`userName` varchar(255),
+	`tableName` varchar(255) NOT NULL,
+	`recordId` varchar(64) NOT NULL,
+	`fieldName` varchar(255) NOT NULL,
+	`oldValue` text,
+	`newValue` text,
+	`actionType` enum('CREATE','UPDATE','DELETE') NOT NULL,
+	`justification` text,
+	`ipAddress` varchar(45),
+	`userAgent` text,
+	`sessionId` varchar(255),
+	`calculationVersion` varchar(50),
+	`codeReference` varchar(255),
+	CONSTRAINT `auditLog_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `calculationResults` (
+	`id` varchar(64) NOT NULL,
+	`componentId` varchar(64) NOT NULL,
+	`inspectionId` varchar(64),
+	`calculationType` enum('t_required_shell','t_required_head_ellipsoidal','t_required_head_torispherical','t_required_head_hemispherical','mawp_shell','mawp_head','corrosion_rate_lt','corrosion_rate_st','remaining_life','next_inspection') NOT NULL,
+	`inputParameters` json NOT NULL,
+	`resultValue` decimal(15,6) NOT NULL,
+	`resultUnit` varchar(50) NOT NULL,
+	`intermediateValues` json NOT NULL,
+	`codeReference` varchar(255) NOT NULL,
+	`formulaUsed` text NOT NULL,
+	`assumptions` json,
+	`warnings` json,
+	`calculationEngineVersion` varchar(50) NOT NULL,
+	`materialDatabaseVersion` varchar(50) NOT NULL,
+	`calculatedAt` timestamp NOT NULL DEFAULT (now()),
+	`calculatedBy` int,
+	`validationStatus` enum('valid','warning','error') DEFAULT 'valid',
+	`validationNotes` text,
+	CONSTRAINT `calculationResults_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `components` (
+	`id` varchar(64) NOT NULL,
+	`vesselId` varchar(64) NOT NULL,
+	`inspectionId` varchar(64),
+	`componentType` enum('Shell','Head','Nozzle') NOT NULL,
+	`componentName` varchar(255) NOT NULL,
+	`materialSpec` varchar(255) NOT NULL,
+	`designPressure` decimal(10,2) NOT NULL,
+	`designTemperature` decimal(10,2) NOT NULL,
+	`jointEfficiency` decimal(4,3) NOT NULL,
+	`nominalThickness` decimal(10,4) NOT NULL,
+	`corrosionAllowance` decimal(10,4) NOT NULL,
+	`insideDiameter` decimal(10,4) NOT NULL,
+	`headType` enum('2:1 Ellipsoidal','Torispherical','Hemispherical','Flat'),
+	`headGeometry` json,
+	`currentThickness` decimal(10,4) NOT NULL,
+	`currentThicknessDate` date NOT NULL,
+	`previousThickness` decimal(10,4),
+	`previousThicknessDate` date,
+	`tRequired` decimal(10,4),
+	`mawp` decimal(10,2),
+	`remainingLife` decimal(10,2),
+	`corrosionRateLT` decimal(10,5),
+	`corrosionRateST` decimal(10,5),
+	`governingCorrosionRate` decimal(10,5),
+	`governingRateType` enum('LT','ST','USER'),
+	`nextInspectionDate` date,
+	`calculationTimestamp` timestamp,
+	`calculationVersion` varchar(50),
+	`materialDatabaseVersion` varchar(50),
+	`calculationIntermediates` json,
+	`dataQualityStatus` enum('complete','missing_data','calculation_halted') DEFAULT 'complete',
+	`dataQualityNotes` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `components_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `vessels` (
+	`id` varchar(64) NOT NULL,
+	`userId` int NOT NULL,
+	`vesselTagNumber` varchar(255) NOT NULL,
+	`vesselName` text,
+	`manufacturer` text,
+	`serialNumber` varchar(255),
+	`yearBuilt` int,
+	`nbNumber` varchar(255),
+	`constructionCode` varchar(255) NOT NULL,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `vessels_id` PRIMARY KEY(`id`)
+);
