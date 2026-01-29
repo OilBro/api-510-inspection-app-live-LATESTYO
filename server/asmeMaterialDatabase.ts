@@ -48,6 +48,39 @@ export interface AllowableStressResult {
  * Note: Values are interpolated linearly between temperature points
  */
 const ALLOWABLE_STRESS_TABLE_1A: Record<string, Record<number, number>> = {
+  // SA-515 Grade 70 - Carbon Steel Plate for Pressure Vessels (Older spec, similar to SA-516)
+  // Per ASME Section II Part D, Table 1A
+  "SA-515 Gr 70": {
+    [-20]: 18800,
+    100: 18800,
+    200: 18800,
+    300: 18800,
+    400: 18800,
+    500: 18800,
+    600: 18800,
+    650: 18800,
+    700: 18800,
+    750: 18300,
+    800: 16500,
+    850: 13900,
+    900: 10800,
+  },
+  // SA-515 Grade 60 - Carbon Steel Plate for Pressure Vessels
+  "SA-515 Gr 60": {
+    [-20]: 16100,
+    100: 16100,
+    200: 16100,
+    300: 16100,
+    400: 16100,
+    500: 16100,
+    600: 16100,
+    650: 16100,
+    700: 16100,
+    750: 15700,
+    800: 14100,
+    850: 11900,
+    900: 9200,
+  },
   // SA-516 Grade 70 - Carbon Steel Plate for Pressure Vessels
   "SA-516 Gr 70": {
     [-20]: 20000,
@@ -226,6 +259,24 @@ const ALLOWABLE_STRESS_TABLE_1A: Record<string, Record<number, number>> = {
  * Material Properties Reference Data
  */
 const MATERIAL_PROPERTIES: Record<string, MaterialProperties> = {
+  "SA-515 Gr 70": {
+    specNumber: "SA-515",
+    grade: "70",
+    productForm: "Plate",
+    minTensileStrength: 70000,
+    minYieldStrength: 38000,
+    maxTemperature: 900,
+    tableReference: "Table 1A"
+  },
+  "SA-515 Gr 60": {
+    specNumber: "SA-515",
+    grade: "60",
+    productForm: "Plate",
+    minTensileStrength: 60000,
+    minYieldStrength: 32000,
+    maxTemperature: 900,
+    tableReference: "Table 1A"
+  },
   "SA-516 Gr 70": {
     specNumber: "SA-516",
     grade: "70",

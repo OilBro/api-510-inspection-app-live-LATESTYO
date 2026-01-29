@@ -2557,3 +2557,9 @@ remaining life and MAWP calculations. This ensures the calculation reflects the 
 - [x] Fix static head = 0 for horizontal vessel heads (was incorrectly adding ~30 psi)
 - [x] Add vesselOrientation parameter to CalculationInput interface
 - [x] Update tests to verify horizontal vessel static head = 0 (682 tests passing)
+
+
+## Bug Fix: Calculation Errors for 54-11-005 (Jan 29, 2026)
+- [x] Fix SA-515 Grade 70 material stress lookup (added to ASME database: 18,800 psi at 500°F)
+- [x] Fix component type mismatch (verified: performFullCalculation correctly returns componentType)
+- [x] Verify torispherical head calculation uses correct formula (37 tests passing)
