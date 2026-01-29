@@ -2524,3 +2524,11 @@ remaining life and MAWP calculations. This ensures the calculation reflects the 
 - [x] Full Calculation Suite tests (3 tests)
 - [x] Engine Information tests (2 tests)
 - [x] All 35 tests passing
+
+
+## Connect Locked Calculation Engine to UI (Jan 2026)
+- [x] Review current Thickness Analysis tab implementation
+- [x] Replace old calculation functions with new tRPC endpoints
+- [x] Add ASME material database integration for stress lookup
+- [x] Display calculation traceability (code references, intermediate values)
+- [x] Test calculations and verify audit trail logging (680 tests passing)

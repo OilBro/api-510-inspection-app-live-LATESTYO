@@ -11,6 +11,7 @@ import VesselDataTab from "@/components/inspection/VesselDataTab";
 import ProfessionalReportTab from "@/components/inspection/ProfessionalReportTab";
 import InspectionResultsTab from "@/components/inspection/InspectionResultsTab";
 import ThicknessOrganizedView from "@/components/inspection/ThicknessOrganizedView";
+import CalculationPanel from "@/components/inspection/CalculationPanel";
 import { ValidationWarnings } from "@/components/ValidationWarnings";
 import { AnomalyPanel } from "@/components/inspection/AnomalyPanel";
 import { toast } from "sonner";
@@ -159,7 +160,7 @@ export default function InspectionDetail() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="vessel-data">
               <FileText className="h-4 w-4 mr-2" />
               Vessel Data
@@ -167,6 +168,10 @@ export default function InspectionDetail() {
             <TabsTrigger value="thickness">
               <Layers className="h-4 w-4 mr-2" />
               Thickness Analysis
+            </TabsTrigger>
+            <TabsTrigger value="calculations">
+              <Calculator className="h-4 w-4 mr-2" />
+              Calculations
             </TabsTrigger>
             <TabsTrigger value="results">
               <ClipboardList className="h-4 w-4 mr-2" />
@@ -184,6 +189,10 @@ export default function InspectionDetail() {
 
           <TabsContent value="thickness">
             <ThicknessOrganizedView readings={tmlReadings || []} />
+          </TabsContent>
+
+          <TabsContent value="calculations">
+            <CalculationPanel inspectionId={id} />
           </TabsContent>
 
           <TabsContent value="results">
