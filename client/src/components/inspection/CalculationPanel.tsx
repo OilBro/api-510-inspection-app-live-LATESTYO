@@ -3,9 +3,11 @@
  * 
  * Displays calculation results from the locked calculation engine with full traceability.
  * Shows intermediate values, code references, and audit information.
+ * 
+ * FIXED: Now pulls data directly from TML readings database instead of manual inputs.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { trpc } from "@/lib/trpc";
-import { Calculator, ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Info, FileText, RefreshCw } from "lucide-react";
+import { Calculator, ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Info, FileText, RefreshCw, Database } from "lucide-react";
 import { toast } from "sonner";
 
 interface CalculationPanelProps {
@@ -35,6 +37,7 @@ interface CalculationResult {
 
 export default function CalculationPanel({ inspectionId }: CalculationPanelProps) {
   const { data: inspection } = trpc.inspections.get.useQuery({ id: inspectionId });
+  const { data: tmlReadings } = trpc.tmlReadings.list.useQuery({ inspectionId });
   const { data: engineInfo } = trpc.calculationEngine.getEngineInfo.useQuery();
   const { data: materialDbInfo } = trpc.calculationEngine.getMaterialDatabaseInfo.useQuery();
   const { data: availableMaterials } = trpc.calculationEngine.listMaterials.useQuery();
@@ -52,7 +55,24 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     { enabled: !!materialSpec }
   );
   
+  // Group TML readings by component type
+  const componentGroups = useMemo(() => {
+    if (!tmlReadings) return {};
+    const groups: Record<string, typeof tmlReadings> = {};
+    for (const reading of tmlReadings) {
+      const type = reading.componentType || 'Unknown';
+      if (!groups[type]) groups[type] = [];
+      groups[type].push(reading);
+    }
+    return groups;
+  }, [tmlReadings]);
+  
+  // Get unique component types
+  const componentTypes = useMemo(() => Object.keys(componentGroups), [componentGroups]);
+  
   // Local state for calculation inputs
+  const [selectedComponent, setSelectedComponent] = useState<string>('');
+  const [selectedReadingId, setSelectedReadingId] = useState<string>('');
   const [inputs, setInputs] = useState({
     componentType: 'Shell' as 'Shell' | 'Head',
     headType: '2:1 Ellipsoidal' as '2:1 Ellipsoidal' | 'Torispherical' | 'Hemispherical',
@@ -69,6 +89,13 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
   const [fullResult, setFullResult] = useState<any>(null);
   const [showIntermediateValues, setShowIntermediateValues] = useState(false);
   
+  // Auto-select first component type when data loads
+  useEffect(() => {
+    if (componentTypes.length > 0 && !selectedComponent) {
+      setSelectedComponent(componentTypes[0]);
+    }
+  }, [componentTypes, selectedComponent]);
+  
   // Update inputs from inspection data
   useEffect(() => {
     if (inspection) {
@@ -78,6 +105,61 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
       }));
     }
   }, [inspection]);
+  
+  // Auto-populate inputs when a TML reading is selected
+  useEffect(() => {
+    if (selectedReadingId && tmlReadings) {
+      const reading = tmlReadings.find(r => r.id === selectedReadingId);
+      if (reading) {
+        // Determine component type from componentType field
+        const compType = reading.componentType?.toLowerCase() || '';
+        const isHead = compType.includes('head');
+        const isShell = compType.includes('shell');
+        
+        // Determine head type from inspection or reading
+        let headType: '2:1 Ellipsoidal' | 'Torispherical' | 'Hemispherical' = '2:1 Ellipsoidal';
+        if (inspection?.headType) {
+          const inspHeadType = inspection.headType.toLowerCase();
+          if (inspHeadType.includes('hemispher')) headType = 'Hemispherical';
+          else if (inspHeadType.includes('torisp')) headType = 'Torispherical';
+          else headType = '2:1 Ellipsoidal';
+        }
+        
+        setInputs(prev => ({
+          ...prev,
+          componentType: isHead ? 'Head' : 'Shell',
+          headType: headType,
+          currentThickness: reading.tActual?.toString() || '',
+          previousThickness: reading.previousThickness?.toString() || '',
+          nominalThickness: reading.nominalThickness?.toString() || '',
+        }));
+        
+        toast.info(`Loaded data from CML ${reading.cmlNumber} - ${reading.location}`);
+      }
+    }
+  }, [selectedReadingId, tmlReadings, inspection]);
+  
+  // Get readings for selected component
+  const selectedComponentReadings = useMemo(() => {
+    return componentGroups[selectedComponent] || [];
+  }, [componentGroups, selectedComponent]);
+  
+  // Get minimum thickness for selected component (governing thickness)
+  const governingReading = useMemo(() => {
+    if (selectedComponentReadings.length === 0) return null;
+    return selectedComponentReadings.reduce((min, reading) => {
+      const current = parseFloat(reading.tActual || '999');
+      const minVal = parseFloat(min?.tActual || '999');
+      return current < minVal ? reading : min;
+    }, selectedComponentReadings[0]);
+  }, [selectedComponentReadings]);
+  
+  // Auto-select governing reading when component changes
+  useEffect(() => {
+    if (governingReading && governingReading.id !== selectedReadingId) {
+      setSelectedReadingId(governingReading.id);
+    }
+  }, [governingReading, selectedReadingId]);
   
   const buildCalculationInput = () => {
     if (!inspection) return null;
@@ -121,6 +203,11 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
       return;
     }
     
+    if (!input.currentThickness || input.currentThickness <= 0) {
+      toast.error("Please select a TML reading with valid thickness data");
+      return;
+    }
+    
     try {
       const result = await tRequiredShellMutation.mutateAsync(input);
       setShellResult(result);
@@ -140,6 +227,11 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     const input = buildCalculationInput();
     if (!input) {
       toast.error("Missing inspection data");
+      return;
+    }
+    
+    if (!input.currentThickness || input.currentThickness <= 0) {
+      toast.error("Please select a TML reading with valid thickness data");
       return;
     }
     
@@ -165,6 +257,11 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
       return;
     }
     
+    if (!input.currentThickness || input.currentThickness <= 0) {
+      toast.error("Please select a TML reading with valid thickness data");
+      return;
+    }
+    
     try {
       const result = await fullCalculationMutation.mutateAsync({
         componentType: inputs.componentType,
@@ -187,9 +284,11 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     switch (status) {
       case 'ok':
       case 'acceptable':
+      case 'valid':
         return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />Acceptable</Badge>;
       case 'warning':
       case 'monitor':
+      case 'marginal':
         return <Badge className="bg-yellow-100 text-yellow-800"><AlertTriangle className="w-3 h-3 mr-1" />Monitor</Badge>;
       case 'error':
       case 'unacceptable':
@@ -263,11 +362,123 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
         </Alert>
       )}
       
+      {/* TML Reading Selection - NEW */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Select TML Reading
+          </CardTitle>
+          <CardDescription>
+            Select a component and TML reading to auto-populate calculation inputs from the database
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Component Type Selector */}
+            <div className="space-y-2">
+              <Label>Component</Label>
+              <Select
+                value={selectedComponent}
+                onValueChange={(value) => {
+                  setSelectedComponent(value);
+                  setSelectedReadingId(''); // Reset reading selection
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select component..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {componentTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type} ({componentGroups[type]?.length || 0} readings)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* TML Reading Selector */}
+            <div className="space-y-2">
+              <Label>TML Reading (CML)</Label>
+              <Select
+                value={selectedReadingId}
+                onValueChange={setSelectedReadingId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select reading..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedComponentReadings.map((reading) => {
+                    const isGoverning = reading.id === governingReading?.id;
+                    return (
+                      <SelectItem key={reading.id} value={reading.id}>
+                        CML {reading.cmlNumber} - {reading.location}: {reading.tActual}" 
+                        {isGoverning && ' (MIN)'}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              {governingReading && (
+                <p className="text-xs text-gray-500">
+                  Governing thickness for {selectedComponent}: {governingReading.tActual}" at CML {governingReading.cmlNumber}
+                </p>
+              )}
+            </div>
+          </div>
+          
+          {/* Selected Reading Summary */}
+          {selectedReadingId && tmlReadings && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+              {(() => {
+                const reading = tmlReadings.find(r => r.id === selectedReadingId);
+                if (!reading) return null;
+                return (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">CML Number:</span>
+                      <span className="ml-2 font-semibold">{reading.cmlNumber}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Location:</span>
+                      <span className="ml-2 font-semibold">{reading.location}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Component:</span>
+                      <span className="ml-2 font-semibold">{reading.componentType}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">t_actual:</span>
+                      <span className="ml-2 font-bold text-blue-700">{reading.tActual}"</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">t_previous:</span>
+                      <span className="ml-2 font-semibold">{reading.previousThickness || 'N/A'}"</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">t_nominal:</span>
+                      <span className="ml-2 font-semibold">{reading.nominalThickness || 'N/A'}"</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Status:</span>
+                      <span className="ml-2">{getStatusBadge(reading.status || 'good')}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
       {/* Calculation Inputs */}
       <Card>
         <CardHeader>
           <CardTitle>Calculation Inputs</CardTitle>
-          <CardDescription>Enter thickness measurements for calculation</CardDescription>
+          <CardDescription>
+            Values auto-populated from selected TML reading. Override manually if needed.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -314,6 +525,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                 placeholder="0.4500"
                 value={inputs.currentThickness}
                 onChange={(e) => setInputs({ ...inputs, currentThickness: e.target.value })}
+                className={inputs.currentThickness ? 'border-green-300 bg-green-50' : ''}
               />
             </div>
             
@@ -505,93 +717,61 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                     </Button>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-4">
-                    <div className="space-y-4">
-                      {shellResult?.intermediateValues && (
-                        <div className="p-4 border rounded-lg bg-gray-50">
-                          <h4 className="font-semibold mb-2">t_required Intermediate Values</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                            {Object.entries(shellResult.intermediateValues).map(([key, value]) => (
-                              <div key={key} className="p-2 bg-white rounded border">
-                                <span className="text-gray-600">{key}:</span>
-                                <span className="ml-2 font-mono">{typeof value === 'number' ? value.toFixed(4) : value}</span>
-                              </div>
-                            ))}
+                    {shellResult?.intermediateValues && (
+                      <div className="p-4 border rounded-lg mb-4">
+                        <h4 className="font-semibold mb-2">t_required Calculation</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                          {Object.entries(shellResult.intermediateValues).map(([key, value]) => (
+                            <div key={key} className="flex justify-between p-2 bg-gray-50 rounded">
+                              <span className="text-gray-600">{key}:</span>
+                              <span className="font-mono">{typeof value === 'number' ? value.toFixed(4) : value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {fullResult?.tRequired?.intermediateValues && (
+                      <div className="p-4 border rounded-lg mb-4">
+                        <h4 className="font-semibold mb-2">Full Calculation - t_required</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                          {Object.entries(fullResult.tRequired.intermediateValues).map(([key, value]) => (
+                            <div key={key} className="flex justify-between p-2 bg-gray-50 rounded">
+                              <span className="text-gray-600">{key}:</span>
+                              <span className="font-mono">{typeof value === 'number' ? (value as number).toFixed(4) : String(value)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {fullResult && (
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-semibold mb-2">Audit Information</h4>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="flex justify-between p-2 bg-gray-50 rounded">
+                            <span className="text-gray-600">Engine Version:</span>
+                            <span className="font-mono">{fullResult.calculationEngineVersion}</span>
+                          </div>
+                          <div className="flex justify-between p-2 bg-gray-50 rounded">
+                            <span className="text-gray-600">Material DB:</span>
+                            <span className="font-mono">{fullResult.materialDatabaseVersion}</span>
+                          </div>
+                          <div className="flex justify-between p-2 bg-gray-50 rounded">
+                            <span className="text-gray-600">Calculated At:</span>
+                            <span className="font-mono">{fullResult.calculatedAt}</span>
+                          </div>
+                          <div className="flex justify-between p-2 bg-gray-50 rounded">
+                            <span className="text-gray-600">Component Type:</span>
+                            <span className="font-mono">{fullResult.componentType}</span>
                           </div>
                         </div>
-                      )}
-                      
-                      {mawpResult?.intermediateValues && (
-                        <div className="p-4 border rounded-lg bg-gray-50">
-                          <h4 className="font-semibold mb-2">MAWP Intermediate Values</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                            {Object.entries(mawpResult.intermediateValues).map(([key, value]) => (
-                              <div key={key} className="p-2 bg-white rounded border">
-                                <span className="text-gray-600">{key}:</span>
-                                <span className="ml-2 font-mono">{typeof value === 'number' ? value.toFixed(4) : value}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {fullResult?.tRequired?.intermediateValues && (
-                        <div className="p-4 border rounded-lg bg-gray-50">
-                          <h4 className="font-semibold mb-2">Full Calculation Intermediate Values</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                            {Object.entries(fullResult.tRequired.intermediateValues).map(([key, value]) => (
-                              <div key={key} className="p-2 bg-white rounded border">
-                                <span className="text-gray-600">{key}:</span>
-                                <span className="ml-2 font-mono">{typeof value === 'number' ? (value as number).toFixed(4) : String(value)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      
-                      <Alert>
-                        <Info className="h-4 w-4" />
-                        <AlertTitle>Audit Trail</AlertTitle>
-                        <AlertDescription>
-                          All calculations are logged to the audit trail with user identification, timestamps, 
-                          code references, and intermediate values for regulatory defensibility.
-                        </AlertDescription>
-                      </Alert>
-                    </div>
+                      </div>
+                    )}
                   </CollapsibleContent>
                 </Collapsible>
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Warnings */}
-      {(shellResult?.warnings?.length || mawpResult?.warnings?.length || fullResult?.tRequired?.warnings?.length) && (
-        <Card className="border-yellow-200 bg-yellow-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-800">
-              <AlertTriangle className="h-5 w-5" />
-              Calculation Warnings
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {shellResult?.warnings?.map((w, i) => (
-                <Alert key={`shell-${i}`} className="border-yellow-200 bg-white">
-                  <AlertDescription>{w}</AlertDescription>
-                </Alert>
-              ))}
-              {mawpResult?.warnings?.map((w, i) => (
-                <Alert key={`mawp-${i}`} className="border-yellow-200 bg-white">
-                  <AlertDescription>{w}</AlertDescription>
-                </Alert>
-              ))}
-              {fullResult?.tRequired?.warnings?.map((w: string, i: number) => (
-                <Alert key={`full-${i}`} className="border-yellow-200 bg-white">
-                  <AlertDescription>{w}</AlertDescription>
-                </Alert>
-              ))}
-            </div>
           </CardContent>
         </Card>
       )}

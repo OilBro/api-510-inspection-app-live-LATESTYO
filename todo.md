@@ -2532,3 +2532,22 @@ remaining life and MAWP calculations. This ensures the calculation reflects the 
 - [x] Add ASME material database integration for stress lookup
 - [x] Display calculation traceability (code references, intermediate values)
 - [x] Test calculations and verify audit trail logging (680 tests passing)
+
+
+## Bug Fix: Data Migration Not Working (Jan 2026)
+- [ ] Investigate TML readings data flow to calculation engine
+- [ ] Fix component type changes not being applied (shell to head)
+- [ ] Fix thickness readings not migrating to calculations
+- [ ] Test with vessel 54-11-001
+
+
+## Bug Fix: Data Migration Not Working (Jan 29, 2026)
+- [x] Investigated TML readings to calculation data flow
+- [x] Fixed component type not changing when updated
+- [x] Ensured TML reading updates propagate to calculations
+- [x] Tested with vessel 54-11-001 (680 tests passing)
+- [x] CalculationPanel now pulls data directly from TML readings database
+- [x] Added component selector dropdown to choose South Head, North Head, Vessel Shell, or Nozzle
+- [x] Added TML reading selector to choose specific CML for calculation
+- [x] Auto-populates t_actual, t_previous, t_nominal from selected reading
+- [x] Auto-detects Shell vs Head component type for correct formula selection
