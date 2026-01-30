@@ -31,6 +31,16 @@ import {
 } from "../asmeMaterialDatabase";
 import { logCalculation, type AuditContext } from "../auditService";
 import { nanoid } from "nanoid";
+import {
+  validateComponentData,
+  validateInspectorCertification,
+  validateReportForFinalization,
+  hashCalculationInputs,
+  createCalculationAuditRecord,
+  generateComplianceDeterminationBasis,
+  hashReportContent,
+  APP_VERSION,
+} from "../validationService";
 
 // Input schema for calculation requests
 const calculationInputSchema = z.object({
@@ -481,5 +491,120 @@ export const calculationEngineRouter = router({
       }
       
       return result;
+    }),
+
+  /**
+   * Validate component calculation data
+   */
+  validateComponentData: protectedProcedure
+    .input(z.object({
+      actualThickness: z.number().optional(),
+      nominalThickness: z.number().optional(),
+      minimumThickness: z.number().optional(),
+      corrosionRate: z.number().optional(),
+      jointEfficiency: z.number().optional(),
+      allowableStress: z.number().optional(),
+    }))
+    .query(({ input }) => {
+      return validateComponentData({
+        actualThickness: input.actualThickness?.toString(),
+        nominalThickness: input.nominalThickness?.toString(),
+        minimumThickness: input.minimumThickness?.toString(),
+        corrosionRate: input.corrosionRate?.toString(),
+        jointEfficiency: input.jointEfficiency?.toString(),
+        allowableStress: input.allowableStress?.toString(),
+      });
+    }),
+
+  /**
+   * Validate inspector certification
+   */
+  validateInspectorCertification: protectedProcedure
+    .input(z.object({
+      inspectorCertExpiry: z.string().optional(),
+      reportDate: z.string().optional(),
+    }))
+    .query(({ input }) => {
+      return validateInspectorCertification({
+        inspectorCertExpiry: input.inspectorCertExpiry,
+        reportDate: input.reportDate,
+      });
+    }),
+
+  /**
+   * Validate report for finalization
+   */
+  validateReportForFinalization: protectedProcedure
+    .input(z.object({
+      inspectorName: z.string().optional(),
+      inspectorCertification: z.string().optional(),
+      inspectorCertExpiry: z.string().optional(),
+      reportDate: z.string().optional(),
+      api510Compliant: z.boolean().optional(),
+      nonComplianceDetails: z.string().optional(),
+    }))
+    .query(({ input }) => {
+      return validateReportForFinalization(input);
+    }),
+
+  /**
+   * Generate calculation audit record
+   */
+  generateAuditRecord: protectedProcedure
+    .input(z.object({
+      P: z.number(),
+      R: z.number().optional(),
+      D: z.number().optional(),
+      S: z.number(),
+      E: z.number(),
+      t: z.number(),
+      L: z.number().optional(),
+      r: z.number().optional(),
+      vesselOrientation: z.string().optional(),
+      componentType: z.string().optional(),
+      headType: z.string().optional(),
+      codeReference: z.string(),
+      intermediateValues: z.record(z.string(), z.union([z.number(), z.string()])),
+    }))
+    .mutation(({ input, ctx }) => {
+      const { codeReference, intermediateValues, ...calcInputs } = input;
+      // Convert intermediateValues to the correct type
+      const typedIntermediates: Record<string, number | string> = {};
+      for (const [key, value] of Object.entries(intermediateValues)) {
+        typedIntermediates[key] = value;
+      }
+      return createCalculationAuditRecord(
+        calcInputs,
+        codeReference,
+        typedIntermediates,
+        ctx.user ? String(ctx.user.id) : 'anonymous'
+      );
+    }),
+
+  /**
+   * Hash report content for signature verification
+   */
+  hashReportContent: protectedProcedure
+    .input(z.object({
+      reportContent: z.string(),
+    }))
+    .mutation(({ input }) => {
+      return {
+        hash: hashReportContent(input.reportContent),
+        timestamp: new Date().toISOString(),
+        version: APP_VERSION,
+      };
+    }),
+
+  /**
+   * Get application version for audit trail
+   */
+  getAppVersion: protectedProcedure
+    .query(() => {
+      return {
+        version: APP_VERSION,
+        engineInfo: getEngineInfo(),
+        materialDbInfo: getDatabaseInfo(),
+      };
     }),
 });

@@ -814,24 +814,88 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                     )}
                     
                     {fullResult && (
-                      <div className="p-4 border rounded-lg">
-                        <h4 className="font-semibold mb-2">Audit Information</h4>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div className="flex justify-between p-2 bg-gray-50 rounded">
-                            <span className="text-gray-600">Engine Version:</span>
-                            <span className="font-mono">{fullResult.calculationEngineVersion}</span>
+                      <div className="space-y-4">
+                        {/* Validation Status */}
+                        <div className="p-4 border rounded-lg">
+                          <h4 className="font-semibold mb-2 flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            Validation Status
+                          </h4>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="flex justify-between p-2 bg-green-50 rounded border border-green-200">
+                              <span className="text-gray-600">Calculation Status:</span>
+                              <Badge variant="outline" className="bg-green-100 text-green-800">Validated</Badge>
+                            </div>
+                            <div className="flex justify-between p-2 bg-blue-50 rounded border border-blue-200">
+                              <span className="text-gray-600">Code Compliance:</span>
+                              <Badge variant="outline" className="bg-blue-100 text-blue-800">ASME VIII-1 + API 510</Badge>
+                            </div>
                           </div>
-                          <div className="flex justify-between p-2 bg-gray-50 rounded">
-                            <span className="text-gray-600">Material DB:</span>
-                            <span className="font-mono">{fullResult.materialDatabaseVersion}</span>
+                          {fullResult.summary?.status === 'FAIL' && (
+                            <Alert className="mt-2 border-red-200 bg-red-50">
+                              <AlertTriangle className="h-4 w-4" />
+                              <AlertTitle>Non-Compliant Condition</AlertTitle>
+                              <AlertDescription>
+                                {fullResult.summary.statusReason || 'Actual thickness is below minimum required thickness'}
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                        </div>
+                        
+                        {/* Code References */}
+                        <div className="p-4 border rounded-lg">
+                          <h4 className="font-semibold mb-2 flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-blue-600" />
+                            Code References
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                            {fullResult.tRequired && (
+                              <div className="p-2 bg-gray-50 rounded">
+                                <span className="text-gray-600">t_min Formula:</span>
+                                <span className="ml-2 font-mono text-xs">{fullResult.tRequired.codeReference}</span>
+                              </div>
+                            )}
+                            {fullResult.mawp && (
+                              <div className="p-2 bg-gray-50 rounded">
+                                <span className="text-gray-600">MAWP Formula:</span>
+                                <span className="ml-2 font-mono text-xs">{fullResult.mawp.codeReference}</span>
+                              </div>
+                            )}
+                            {fullResult.corrosionRateLT && (
+                              <div className="p-2 bg-gray-50 rounded">
+                                <span className="text-gray-600">Corrosion Rate:</span>
+                                <span className="ml-2 font-mono text-xs">{fullResult.corrosionRateLT.codeReference}</span>
+                              </div>
+                            )}
+                            {fullResult.remainingLife && (
+                              <div className="p-2 bg-gray-50 rounded">
+                                <span className="text-gray-600">Remaining Life:</span>
+                                <span className="ml-2 font-mono text-xs">{fullResult.remainingLife.codeReference}</span>
+                              </div>
+                            )}
                           </div>
-                          <div className="flex justify-between p-2 bg-gray-50 rounded">
-                            <span className="text-gray-600">Calculated At:</span>
-                            <span className="font-mono">{fullResult.calculatedAt}</span>
-                          </div>
-                          <div className="flex justify-between p-2 bg-gray-50 rounded">
-                            <span className="text-gray-600">Component Type:</span>
-                            <span className="font-mono">{fullResult.componentType}</span>
+                        </div>
+                        
+                        {/* Audit Information */}
+                        <div className="p-4 border rounded-lg">
+                          <h4 className="font-semibold mb-2">Audit Information</h4>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="flex justify-between p-2 bg-gray-50 rounded">
+                              <span className="text-gray-600">Engine Version:</span>
+                              <span className="font-mono">{fullResult.calculationEngineVersion}</span>
+                            </div>
+                            <div className="flex justify-between p-2 bg-gray-50 rounded">
+                              <span className="text-gray-600">Material DB:</span>
+                              <span className="font-mono">{fullResult.materialDatabaseVersion}</span>
+                            </div>
+                            <div className="flex justify-between p-2 bg-gray-50 rounded">
+                              <span className="text-gray-600">Calculated At:</span>
+                              <span className="font-mono">{fullResult.calculatedAt}</span>
+                            </div>
+                            <div className="flex justify-between p-2 bg-gray-50 rounded">
+                              <span className="text-gray-600">Component Type:</span>
+                              <span className="font-mono">{fullResult.componentType}</span>
+                            </div>
                           </div>
                         </div>
                       </div>

@@ -462,6 +462,49 @@ export const professionalReports = mysqlTable("professionalReports", {
   operationalEfficiencyScore: int("operationalEfficiencyScore"), // 0-100
   complianceNotes: text("complianceNotes"),
   
+  // ========== GOLD STANDARD ENHANCEMENTS (Section 4) ==========
+  
+  // 1. Report Revision Control (P1 - Critical)
+  reportRevision: int("reportRevision").default(1).notNull(),
+  reportStatus: mysqlEnum("reportStatus", ["draft", "review", "final", "superseded"]).default("draft").notNull(),
+  previousReportId: varchar("previousReportId", { length: 64 }),
+  revisionReason: text("revisionReason"),
+  revisionDate: timestamp("revisionDate"),
+  revisedBy: varchar("revisedBy", { length: 255 }),
+  
+  // 2. Inspector Certification & Signature (P2 - High)
+  inspectorCertType: mysqlEnum("inspectorCertType", ["API_510", "API_570", "API_653", "AWS_CWI", "ASNT_Level_III"]),
+  inspectorCertExpiry: date("inspectorCertExpiry"),
+  inspectorCertValid: boolean("inspectorCertValid").default(true),
+  inspectorSignature: text("inspectorSignature"), // Base64 encoded signature or digital certificate hash
+  inspectorSignatureDate: timestamp("inspectorSignatureDate"),
+  inspectorSignatureHash: varchar("inspectorSignatureHash", { length: 64 }), // SHA-256 of report content at signing
+  
+  // 3. Client Signature (P2 - High)
+  clientSignature: text("clientSignature"),
+  clientSignatureDate: timestamp("clientSignatureDate"),
+  clientSignatureName: varchar("clientSignatureName", { length: 255 }),
+  clientSignatureTitle: varchar("clientSignatureTitle", { length: 255 }),
+  
+  // 4. Compliance Determination Documentation (P3 - Medium)
+  complianceDeterminationBasis: text("complianceDeterminationBasis"),
+  nonComplianceDetails: text("nonComplianceDetails"),
+  nonComplianceCodeSections: text("nonComplianceCodeSections"),
+  
+  // 5. Next Inspection Basis Documentation (P3 - Medium)
+  nextInspectionBasis: text("nextInspectionBasis"),
+  intervalCalculationMethod: mysqlEnum("intervalCalculationMethod", ["rl_half_or_10_years", "rbi_extended", "owner_user_specified", "regulatory_mandated"]),
+  rbiJustification: text("rbiJustification"),
+  
+  // 6. Risk & Governing Component Logic (P3 - Medium)
+  riskCalculationMethod: mysqlEnum("riskCalculationMethod", ["manual", "calculated", "rbi_based"]),
+  riskCalculationBasis: text("riskCalculationBasis"),
+  consequenceOfFailure: mysqlEnum("consequenceOfFailure", ["low", "medium", "high", "critical"]),
+  probabilityOfFailure: mysqlEnum("probabilityOfFailure", ["low", "medium", "high", "critical"]),
+  governingComponentMethod: mysqlEnum("governingComponentMethod", ["automatic", "manual_override"]),
+  governingComponentBasis: text("governingComponentBasis"),
+  governingComponentOverrideReason: text("governingComponentOverrideReason"),
+  
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
 });
@@ -544,6 +587,42 @@ export const componentCalculations = mysqlTable("componentCalculations", {
   pdfOriginalCalculatedMAWP: decimal("pdfOriginalCalculatedMAWP", { precision: 10, scale: 2 }),
   pdfOriginalCorrosionRate: decimal("pdfOriginalCorrosionRate", { precision: 10, scale: 6 }),
   pdfOriginalRemainingLife: decimal("pdfOriginalRemainingLife", { precision: 10, scale: 2 }),
+  
+  // ========== GOLD STANDARD ENHANCEMENTS (Section 4) ==========
+  
+  // 1. Code Reference Citations (P1 - Critical)
+  tMinCodeReference: varchar("tMinCodeReference", { length: 100 }), // e.g., "ASME VIII-1 UG-27(c)(1)"
+  mawpCodeReference: varchar("mawpCodeReference", { length: 100 }), // e.g., "ASME VIII-1 UG-27(c)(1)"
+  remainingLifeCodeReference: varchar("remainingLifeCodeReference", { length: 100 }), // e.g., "API 510 §7.1.1"
+  
+  // 2. Intermediate Calculation Values (P1 - Critical)
+  intermediateValues: json("intermediateValues"), // JSON object with all intermediate calculation steps
+  
+  // 3. Calculation Audit Trail (P1 - Critical)
+  calculationTimestamp: timestamp("calculationTimestamp").defaultNow(),
+  calculationVersion: varchar("calculationVersion", { length: 50 }), // Application version at calculation time
+  calculatedBy: varchar("calculatedBy", { length: 255 }), // User who performed calculation
+  calculationHash: varchar("calculationHash", { length: 64 }), // SHA-256 of inputs for integrity verification
+  
+  // 4. Material & Joint Efficiency Source (P2 - High)
+  allowableStressSource: varchar("allowableStressSource", { length: 255 }), // e.g., "ASME Section II Part D Table 1A"
+  allowableStressTableRef: varchar("allowableStressTableRef", { length: 50 }), // e.g., "Table 1A"
+  jointEfficiencySource: varchar("jointEfficiencySource", { length: 255 }), // e.g., "ASME VIII-1 UW-12"
+  jointEfficiencyCategory: varchar("jointEfficiencyCategory", { length: 20 }), // e.g., "A", "B", "C", "D"
+  jointEfficiencyType: varchar("jointEfficiencyType", { length: 20 }), // e.g., "Type 1", "Type 2"
+  jointEfficiencyExamination: varchar("jointEfficiencyExamination", { length: 50 }), // e.g., "Full RT", "Spot RT", "No RT"
+  
+  // 5. Measurement & Data Quality (P4 - Low)
+  measurementUncertainty: decimal("measurementUncertainty", { precision: 10, scale: 4 }), // +/- inches
+  measurementMethod: mysqlEnum("measurementMethod", ["ut_contact", "ut_immersion", "rt_derived", "profile_gauge"]),
+  measurementInstrument: varchar("measurementInstrument", { length: 255 }), // Equipment ID/model
+  measurementCalibrationDate: date("measurementCalibrationDate"),
+  
+  // 6. Validation Status (P2 - High)
+  validationStatus: mysqlEnum("validationStatus", ["pending", "validated", "rejected", "override"]).default("pending"),
+  validationNotes: text("validationNotes"),
+  validationDate: timestamp("validationDate"),
+  validatedBy: varchar("validatedBy", { length: 255 }),
   
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
