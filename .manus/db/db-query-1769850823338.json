@@ -1,0 +1,316 @@
+{
+  "query": "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'tmlReadings' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'tmlReadings' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "NO",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "inspectionId",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "NO",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "cmlNumber",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "NO",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "componentType",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "NO",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "location",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "NO",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "service",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "tml1",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "tml2",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "tml3",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "tml4",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "tActual",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "nominalThickness",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "previousThickness",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "previousInspectionDate",
+      "DATA_TYPE": "timestamp",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "currentInspectionDate",
+      "DATA_TYPE": "timestamp",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "loss",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "lossPercent",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "corrosionRate",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "status",
+      "DATA_TYPE": "enum",
+      "IS_NULLABLE": "NO",
+      "COLUMN_DEFAULT": "good"
+    },
+    {
+      "COLUMN_NAME": "tmlId",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "component",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "currentThickness",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "createdAt",
+      "DATA_TYPE": "timestamp",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "CURRENT_TIMESTAMP"
+    },
+    {
+      "COLUMN_NAME": "updatedAt",
+      "DATA_TYPE": "timestamp",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "CURRENT_TIMESTAMP"
+    },
+    {
+      "COLUMN_NAME": "readingType",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "nozzleSize",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "angle",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "tml5",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "tml6",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "tml7",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "tml8",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "tRequired",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "retirementThickness",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "originalInstallDate",
+      "DATA_TYPE": "timestamp",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "shortTermRate",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "longTermRate",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "corrosionRateType",
+      "DATA_TYPE": "enum",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "corrosionRateMpy",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "remainingLife",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "nextInspectionInterval",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "nextInspectionDate",
+      "DATA_TYPE": "timestamp",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "statusThreshold",
+      "DATA_TYPE": "decimal",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "1.10"
+    },
+    {
+      "COLUMN_NAME": "measurementMethod",
+      "DATA_TYPE": "enum",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "technicianId",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "technicianName",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "equipmentId",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "calibrationDate",
+      "DATA_TYPE": "timestamp",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "dataQualityStatus",
+      "DATA_TYPE": "enum",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "good"
+    },
+    {
+      "COLUMN_NAME": "reviewedBy",
+      "DATA_TYPE": "varchar",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "reviewDate",
+      "DATA_TYPE": "timestamp",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "notes",
+      "DATA_TYPE": "text",
+      "IS_NULLABLE": "YES",
+      "COLUMN_DEFAULT": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\tDATA_TYPE\tIS_NULLABLE\tCOLUMN_DEFAULT\nid\tvarchar\tNO\tNULL\ninspectionId\tvarchar\tNO\tNULL\ncmlNumber\tvarchar\tNO\tNULL\ncomponentType\tvarchar\tNO\tNULL\nlocation\tvarchar\tNO\tNULL\nservice\tvarchar\tYES\tNULL\ntml1\tdecimal\tYES\tNULL\ntml2\tdecimal\tYES\tNULL\ntml3\tdecimal\tYES\tNULL\ntml4\tdecimal\tYES\tNULL\ntActual\tdecimal\tYES\tNULL\nnominalThickness\tdecimal\tYES\tNULL\npreviousThickness\tdecimal\tYES\tNULL\npreviousInspectionDate\ttimestamp\tYES\tNULL\ncurrentInspectionDate\ttimestamp\tYES\tNULL\nloss\tdecimal\tYES\tNULL\nlossPercent\tdecimal\tYES\tNULL\ncorrosionRate\tdecimal\tYES\tNULL\nstatus\tenum\tNO\tgood\ntmlId\tvarchar\tYES\tNULL\ncomponent\tvarchar\tYES\tNULL\ncurrentThickness\tdecimal\tYES\tNULL\ncreatedAt\ttimestamp\tYES\tCURRENT_TIMESTAMP\nupdatedAt\ttimestamp\tYES\tCURRENT_TIMESTAMP\nreadingType\tvarchar\tYES\tNULL\nnozzleSize\tvarchar\tYES\tNULL\nangle\tvarchar\tYES\tNULL\ntml5\tdecimal\tYES\tNULL\ntml6\tdecimal\tYES\tNULL\ntml7\tdecimal\tYES\tNULL\ntml8\tdecimal\tYES\tNULL\ntRequired\tdecimal\tYES\tNULL\nretirementThickness\tdecimal\tYES\tNULL\noriginalInstallDate\ttimestamp\tYES\tNULL\nshortTermRate\tdecimal\tYES\tNULL\nlongTermRate\tdecimal\tYES\tNULL\ncorrosionRateType\tenum\tYES\tNULL\ncorrosionRateMpy\tdecimal\tYES\tNULL\nremainingLife\tdecimal\tYES\tNULL\nnextInspectionInterval\tdecimal\tYES\tNULL\nnextInspectionDate\ttimestamp\tYES\tNULL\nstatusThreshold\tdecimal\tYES\t1.10\nmeasurementMethod\tenum\tYES\tNULL\ntechnicianId\tvarchar\tYES\tNULL\ntechnicianName\tvarchar\tYES\tNULL\nequipmentId\tvarchar\tYES\tNULL\ncalibrationDate\ttimestamp\tYES\tNULL\ndataQualityStatus\tenum\tYES\tgood\nreviewedBy\tvarchar\tYES\tNULL\nreviewDate\ttimestamp\tYES\tNULL\nnotes\ttext\tYES\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

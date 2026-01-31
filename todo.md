@@ -2629,3 +2629,8 @@ remaining life and MAWP calculations. This ensures the calculation reflects the 
 - [x] Implement parser selection engine with user override capability (enhancedPdfParser.ts)
 - [x] Update PDF parser to use new validation and audit systems
 - [x] Write and run verification tests (769 tests passing)
+
+## Bug Fix: TML Readings Insert Error on PDF Import (Jan 31, 2026)
+- [x] Diagnose the SQL insert error for tmlReadings table (cmlNumber limited to 10 chars, componentType/location NOT NULL)
+- [x] Fix the database schema or insert query (added proper defaults and truncation)
+- [x] Test the fix (769 tests passing)

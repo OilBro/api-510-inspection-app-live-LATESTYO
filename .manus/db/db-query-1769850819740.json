@@ -1,0 +1,418 @@
+{
+  "query": "DESCRIBE tmlReadings;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute DESCRIBE tmlReadings;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "varchar(64)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "inspectionId",
+      "Type": "varchar(64)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "cmlNumber",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "componentType",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "location",
+      "Type": "varchar(50)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "service",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tml1",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tml2",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tml3",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tml4",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tActual",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nominalThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "previousThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "previousInspectionDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "currentInspectionDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "loss",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "lossPercent",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "corrosionRate",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "status",
+      "Type": "enum('good','monitor','critical')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "good",
+      "Extra": ""
+    },
+    {
+      "Field": "tmlId",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "component",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "currentThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "readingType",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nozzleSize",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "angle",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tml5",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tml6",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tml7",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tml8",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tRequired",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "retirementThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "originalInstallDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "shortTermRate",
+      "Type": "decimal(10,6)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "longTermRate",
+      "Type": "decimal(10,6)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "corrosionRateType",
+      "Type": "enum('LT','ST','USER','GOVERNING')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "corrosionRateMpy",
+      "Type": "decimal(10,3)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "remainingLife",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nextInspectionInterval",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nextInspectionDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "statusThreshold",
+      "Type": "decimal(4,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1.10",
+      "Extra": ""
+    },
+    {
+      "Field": "measurementMethod",
+      "Type": "enum('UT','RT','VISUAL','PROFILE','OTHER')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "technicianId",
+      "Type": "varchar(64)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "technicianName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "equipmentId",
+      "Type": "varchar(64)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "calibrationDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dataQualityStatus",
+      "Type": "enum('good','anomaly','growth_error','below_minimum','confirmed')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "good",
+      "Extra": ""
+    },
+    {
+      "Field": "reviewedBy",
+      "Type": "varchar(64)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "reviewDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "notes",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tvarchar(64)\tNO\tPRI\tNULL\t\ninspectionId\tvarchar(64)\tNO\t\tNULL\t\ncmlNumber\tvarchar(10)\tNO\t\tNULL\t\ncomponentType\tvarchar(255)\tNO\t\tNULL\t\nlocation\tvarchar(50)\tNO\t\tNULL\t\nservice\tvarchar(255)\tYES\t\tNULL\t\ntml1\tdecimal(10,4)\tYES\t\tNULL\t\ntml2\tdecimal(10,4)\tYES\t\tNULL\t\ntml3\tdecimal(10,4)\tYES\t\tNULL\t\ntml4\tdecimal(10,4)\tYES\t\tNULL\t\ntActual\tdecimal(10,4)\tYES\t\tNULL\t\nnominalThickness\tdecimal(10,4)\tYES\t\tNULL\t\npreviousThickness\tdecimal(10,4)\tYES\t\tNULL\t\npreviousInspectionDate\ttimestamp\tYES\t\tNULL\t\ncurrentInspectionDate\ttimestamp\tYES\t\tNULL\t\nloss\tdecimal(10,4)\tYES\t\tNULL\t\nlossPercent\tdecimal(10,2)\tYES\t\tNULL\t\ncorrosionRate\tdecimal(10,2)\tYES\t\tNULL\t\nstatus\tenum('good','monitor','critical')\tNO\t\tgood\t\ntmlId\tvarchar(255)\tYES\t\tNULL\t\ncomponent\tvarchar(255)\tYES\t\tNULL\t\ncurrentThickness\tdecimal(10,4)\tYES\t\tNULL\t\ncreatedAt\ttimestamp\tYES\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tYES\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\nreadingType\tvarchar(50)\tYES\t\tNULL\t\nnozzleSize\tvarchar(20)\tYES\t\tNULL\t\nangle\tvarchar(20)\tYES\t\tNULL\t\ntml5\tdecimal(10,4)\tYES\t\tNULL\t\ntml6\tdecimal(10,4)\tYES\t\tNULL\t\ntml7\tdecimal(10,4)\tYES\t\tNULL\t\ntml8\tdecimal(10,4)\tYES\t\tNULL\t\ntRequired\tdecimal(10,4)\tYES\t\tNULL\t\nretirementThickness\tdecimal(10,4)\tYES\t\tNULL\t\noriginalInstallDate\ttimestamp\tYES\t\tNULL\t\nshortTermRate\tdecimal(10,6)\tYES\t\tNULL\t\nlongTermRate\tdecimal(10,6)\tYES\t\tNULL\t\ncorrosionRateType\tenum('LT','ST','USER','GOVERNING')\tYES\t\tNULL\t\ncorrosionRateMpy\tdecimal(10,3)\tYES\t\tNULL\t\nremainingLife\tdecimal(10,2)\tYES\t\tNULL\t\nnextInspectionInterval\tdecimal(10,2)\tYES\t\tNULL\t\nnextInspectionDate\ttimestamp\tYES\t\tNULL\t\nstatusThreshold\tdecimal(4,2)\tYES\t\t1.10\t\nmeasurementMethod\tenum('UT','RT','VISUAL','PROFILE','OTHER')\tYES\t\tNULL\t\ntechnicianId\tvarchar(64)\tYES\t\tNULL\t\ntechnicianName\tvarchar(255)\tYES\t\tNULL\t\nequipmentId\tvarchar(64)\tYES\t\tNULL\t\ncalibrationDate\ttimestamp\tYES\t\tNULL\t\ndataQualityStatus\tenum('good','anomaly','growth_error','below_minimum','confirmed')\tYES\t\tgood\t\nreviewedBy\tvarchar(64)\tYES\t\tNULL\t\nreviewDate\ttimestamp\tYES\t\tNULL\t\nnotes\ttext\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 87
+}

@@ -1279,15 +1279,22 @@ Return JSON in this exact format:
           for (const tml of input.tmlReadings) {
             if (!tml.cmlNumber && !tml.currentThickness) continue;
             
+            // CRITICAL: cmlNumber, componentType, and location are NOT NULL in database
+            // cmlNumber is limited to 10 chars, location to 50 chars
+            const cmlNumber = (tml.cmlNumber || `CML-${Date.now()}`).substring(0, 10);
+            const componentType = (tml.componentType || tml.component || 'General').substring(0, 255);
+            const location = (tml.location || 'General').substring(0, 50);
+            
             await db.createTmlReading({
               id: nanoid(),
               inspectionId: inspection.id,
-              cmlNumber: (tml.cmlNumber || '').substring(0, 50),
-              tmlId: (tml.tmlId || '').substring(0, 50),
-              location: (tml.location || '').substring(0, 255),
+              cmlNumber: cmlNumber,
+              tmlId: (tml.tmlId || '').substring(0, 255),
+              location: location,
               component: (tml.component || '').substring(0, 255),
-              componentType: (tml.componentType || '').substring(0, 100),
+              componentType: componentType,
               currentThickness: tml.currentThickness || null,
+              tActual: tml.currentThickness || null, // Also set tActual for consistency
               previousThickness: tml.previousThickness || null,
               nominalThickness: tml.nominalThickness || null,
               readingType: (tml.readingType || '').substring(0, 50),
