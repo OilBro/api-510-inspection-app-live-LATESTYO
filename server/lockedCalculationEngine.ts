@@ -109,6 +109,7 @@ export interface FullCalculationResult {
   corrosionRateST?: CalculationResult;
   remainingLife?: CalculationResult;
   nextInspectionDate?: CalculationResult;
+  mapAtNextInspection?: MAPAtNextInspectionResult;
   
   // Summary
   summary: {
@@ -118,6 +119,8 @@ export interface FullCalculationResult {
     corrosionRateType: 'LT' | 'ST' | 'GOVERNING';
     remainingLife: number | null;
     nextInspectionYears: number | null;
+    mapAtNextInspection: number | null;
+    projectedThicknessAtNextInspection: number | null;
     status: 'acceptable' | 'marginal' | 'unacceptable';
     statusReason: string;
   };
@@ -726,6 +729,489 @@ export function calculateMAWPShell(input: CalculationInput): CalculationResult {
 }
 
 /**
+ * Calculate Maximum Allowable Working Pressure (MAWP) for hemispherical heads.
+ * 
+ * Formula per ASME Section VIII Division 1, UG-32(f):
+ * P = (2 × S × E × t) / (R + 0.2 × t)
+ * 
+ * Where:
+ *   S = Allowable stress (psi)
+ *   E = Joint efficiency
+ *   t = Actual thickness (inches)
+ *   R = Inside radius (inches)
+ */
+export function calculateMAWPHemisphericalHead(input: CalculationInput): CalculationResult {
+  const calculatedAt = new Date().toISOString();
+  const assumptions: string[] = [];
+  const warnings: string[] = [];
+  
+  if (!input.currentThickness || input.currentThickness <= 0) {
+    return createErrorResult('mawp_head_hemispherical', 'Current thickness must be > 0', calculatedAt);
+  }
+  if (!input.insideDiameter || input.insideDiameter <= 0) {
+    return createErrorResult('mawp_head_hemispherical', 'Inside diameter must be > 0', calculatedAt);
+  }
+  if (!input.jointEfficiency || input.jointEfficiency <= 0 || input.jointEfficiency > 1) {
+    return createErrorResult('mawp_head_hemispherical', 'Joint efficiency must be between 0 and 1', calculatedAt);
+  }
+  
+  let allowableStress: number;
+  let stressLookupDetails: Record<string, any> = {};
+  
+  if (input.allowableStress && input.allowableStress > 0) {
+    allowableStress = input.allowableStress;
+    stressLookupDetails = { source: 'user_provided', value: allowableStress };
+  } else {
+    const stressResult = getAllowableStressNormalized(input.materialSpec, input.designTemperature);
+    if (stressResult.status === 'error' || !stressResult.stress) {
+      return createErrorResult('mawp_head_hemispherical', 
+        `Failed to lookup allowable stress: ${stressResult.message}`, calculatedAt);
+    }
+    allowableStress = stressResult.stress;
+    stressLookupDetails = {
+      source: 'ASME_database',
+      materialSpec: stressResult.normalizedSpec || input.materialSpec,
+      temperature: input.designTemperature,
+      value: allowableStress,
+      databaseVersion: stressResult.databaseVersion
+    };
+  }
+  
+  const t = input.currentThickness;
+  const R = input.insideRadius || (input.insideDiameter / 2);
+  const S = allowableStress;
+  const E = input.jointEfficiency;
+  
+  // ASME VIII-1 UG-32(f): P = 2SEt / (R + 0.2t)
+  const numerator = 2 * S * E * t;
+  const denominator = R + (0.2 * t);
+  const mawp = numerator / denominator;
+  
+  assumptions.push('Formula per ASME Section VIII Division 1, UG-32(f)');
+  assumptions.push('MAWP calculated at current (corroded) thickness');
+  assumptions.push('Applies to hemispherical heads');
+  
+  if (input.designPressure && mawp < input.designPressure) {
+    warnings.push(`WARNING: Calculated MAWP (${mawp.toFixed(2)} psi) is below design pressure (${input.designPressure} psi)`);
+  }
+  
+  return {
+    success: true,
+    calculationType: 'mawp_head_hemispherical',
+    resultValue: round(mawp, 2),
+    resultUnit: 'psi',
+    codeReference: 'ASME Section VIII Division 1, UG-32(f)',
+    formulaUsed: 'P = (2 × S × E × t) / (R + 0.2 × t)',
+    intermediateValues: {
+      t, R, S, E,
+      '2 × S × E × t': numerator,
+      '0.2 × t': 0.2 * t,
+      'R + 0.2 × t': denominator,
+      MAWP: round(mawp, 2),
+      ...stressLookupDetails
+    },
+    assumptions,
+    warnings,
+    calculationEngineVersion: CALCULATION_ENGINE_VERSION,
+    materialDatabaseVersion: DATABASE_VERSION,
+    calculatedAt,
+    validationStatus: warnings.some(w => w.includes('WARNING')) ? 'warning' : 'valid'
+  };
+}
+
+/**
+ * Calculate Maximum Allowable Working Pressure (MAWP) for 2:1 ellipsoidal heads.
+ * 
+ * Formula per ASME Section VIII Division 1, UG-32(d):
+ * P = (2 × S × E × t) / (D + 0.2 × t)
+ * 
+ * Where:
+ *   S = Allowable stress (psi)
+ *   E = Joint efficiency
+ *   t = Actual thickness (inches)
+ *   D = Inside diameter (inches)
+ */
+export function calculateMAWPEllipsoidalHead(input: CalculationInput): CalculationResult {
+  const calculatedAt = new Date().toISOString();
+  const assumptions: string[] = [];
+  const warnings: string[] = [];
+  
+  if (!input.currentThickness || input.currentThickness <= 0) {
+    return createErrorResult('mawp_head_ellipsoidal', 'Current thickness must be > 0', calculatedAt);
+  }
+  if (!input.insideDiameter || input.insideDiameter <= 0) {
+    return createErrorResult('mawp_head_ellipsoidal', 'Inside diameter must be > 0', calculatedAt);
+  }
+  if (!input.jointEfficiency || input.jointEfficiency <= 0 || input.jointEfficiency > 1) {
+    return createErrorResult('mawp_head_ellipsoidal', 'Joint efficiency must be between 0 and 1', calculatedAt);
+  }
+  
+  let allowableStress: number;
+  let stressLookupDetails: Record<string, any> = {};
+  
+  if (input.allowableStress && input.allowableStress > 0) {
+    allowableStress = input.allowableStress;
+    stressLookupDetails = { source: 'user_provided', value: allowableStress };
+  } else {
+    const stressResult = getAllowableStressNormalized(input.materialSpec, input.designTemperature);
+    if (stressResult.status === 'error' || !stressResult.stress) {
+      return createErrorResult('mawp_head_ellipsoidal', 
+        `Failed to lookup allowable stress: ${stressResult.message}`, calculatedAt);
+    }
+    allowableStress = stressResult.stress;
+    stressLookupDetails = {
+      source: 'ASME_database',
+      materialSpec: stressResult.normalizedSpec || input.materialSpec,
+      temperature: input.designTemperature,
+      value: allowableStress,
+      databaseVersion: stressResult.databaseVersion
+    };
+  }
+  
+  const t = input.currentThickness;
+  const D = input.insideDiameter;
+  const S = allowableStress;
+  const E = input.jointEfficiency;
+  
+  // ASME VIII-1 UG-32(d): P = 2SEt / (D + 0.2t)
+  const numerator = 2 * S * E * t;
+  const denominator = D + (0.2 * t);
+  const mawp = numerator / denominator;
+  
+  assumptions.push('Formula per ASME Section VIII Division 1, UG-32(d)');
+  assumptions.push('MAWP calculated at current (corroded) thickness');
+  assumptions.push('Applies to 2:1 ellipsoidal heads');
+  
+  if (input.designPressure && mawp < input.designPressure) {
+    warnings.push(`WARNING: Calculated MAWP (${mawp.toFixed(2)} psi) is below design pressure (${input.designPressure} psi)`);
+  }
+  
+  return {
+    success: true,
+    calculationType: 'mawp_head_ellipsoidal',
+    resultValue: round(mawp, 2),
+    resultUnit: 'psi',
+    codeReference: 'ASME Section VIII Division 1, UG-32(d)',
+    formulaUsed: 'P = (2 × S × E × t) / (D + 0.2 × t)',
+    intermediateValues: {
+      t, D, S, E,
+      '2 × S × E × t': numerator,
+      '0.2 × t': 0.2 * t,
+      'D + 0.2 × t': denominator,
+      MAWP: round(mawp, 2),
+      ...stressLookupDetails
+    },
+    assumptions,
+    warnings,
+    calculationEngineVersion: CALCULATION_ENGINE_VERSION,
+    materialDatabaseVersion: DATABASE_VERSION,
+    calculatedAt,
+    validationStatus: warnings.some(w => w.includes('WARNING')) ? 'warning' : 'valid'
+  };
+}
+
+/**
+ * Calculate Maximum Allowable Working Pressure (MAWP) for torispherical heads.
+ * 
+ * Formula per ASME Section VIII Division 1, UG-32(e):
+ * P = (2 × S × E × t) / (L × M + 0.2 × t)
+ * 
+ * Where:
+ *   S = Allowable stress (psi)
+ *   E = Joint efficiency
+ *   t = Actual thickness (inches)
+ *   L = Inside crown radius (inches)
+ *   M = Factor = 0.25 × (3 + √(L/r))
+ *   r = Inside knuckle radius (inches)
+ */
+export function calculateMAWPTorisphericalHead(input: CalculationInput): CalculationResult {
+  const calculatedAt = new Date().toISOString();
+  const assumptions: string[] = [];
+  const warnings: string[] = [];
+  
+  if (!input.currentThickness || input.currentThickness <= 0) {
+    return createErrorResult('mawp_head_torispherical', 'Current thickness must be > 0', calculatedAt);
+  }
+  if (!input.insideDiameter || input.insideDiameter <= 0) {
+    return createErrorResult('mawp_head_torispherical', 'Inside diameter must be > 0', calculatedAt);
+  }
+  if (!input.jointEfficiency || input.jointEfficiency <= 0 || input.jointEfficiency > 1) {
+    return createErrorResult('mawp_head_torispherical', 'Joint efficiency must be between 0 and 1', calculatedAt);
+  }
+  
+  let crownRadius = input.crownRadius;
+  let knuckleRadius = input.knuckleRadius;
+  
+  if (!crownRadius || crownRadius <= 0) {
+    crownRadius = input.insideDiameter;
+    assumptions.push('Crown radius (L) defaulted to inside diameter (D)');
+  }
+  
+  if (!knuckleRadius || knuckleRadius <= 0) {
+    knuckleRadius = 0.06 * input.insideDiameter;
+    assumptions.push('Knuckle radius (r) defaulted to 6% of inside diameter (0.06D)');
+  }
+  
+  let allowableStress: number;
+  let stressLookupDetails: Record<string, any> = {};
+  
+  if (input.allowableStress && input.allowableStress > 0) {
+    allowableStress = input.allowableStress;
+    stressLookupDetails = { source: 'user_provided', value: allowableStress };
+  } else {
+    const stressResult = getAllowableStressNormalized(input.materialSpec, input.designTemperature);
+    if (stressResult.status === 'error' || !stressResult.stress) {
+      return createErrorResult('mawp_head_torispherical', 
+        `Failed to lookup allowable stress: ${stressResult.message}`, calculatedAt);
+    }
+    allowableStress = stressResult.stress;
+    stressLookupDetails = {
+      source: 'ASME_database',
+      materialSpec: stressResult.normalizedSpec || input.materialSpec,
+      temperature: input.designTemperature,
+      value: allowableStress,
+      databaseVersion: stressResult.databaseVersion
+    };
+  }
+  
+  const t = input.currentThickness;
+  const L = crownRadius;
+  const r = knuckleRadius;
+  const S = allowableStress;
+  const E = input.jointEfficiency;
+  
+  // Calculate M factor: M = 0.25 × (3 + √(L/r))
+  const LrRatio = L / r;
+  const M = 0.25 * (3 + Math.sqrt(LrRatio));
+  
+  // ASME VIII-1 UG-32(e): P = 2SEt / (LM + 0.2t)
+  const numerator = 2 * S * E * t;
+  const denominator = (L * M) + (0.2 * t);
+  const mawp = numerator / denominator;
+  
+  assumptions.push('Formula per ASME Section VIII Division 1, UG-32(e)');
+  assumptions.push('M factor calculated per UG-32(e): M = 0.25 × (3 + √(L/r))');
+  assumptions.push('MAWP calculated at current (corroded) thickness');
+  assumptions.push('Applies to torispherical heads');
+  
+  if (input.designPressure && mawp < input.designPressure) {
+    warnings.push(`WARNING: Calculated MAWP (${mawp.toFixed(2)} psi) is below design pressure (${input.designPressure} psi)`);
+  }
+  
+  return {
+    success: true,
+    calculationType: 'mawp_head_torispherical',
+    resultValue: round(mawp, 2),
+    resultUnit: 'psi',
+    codeReference: 'ASME Section VIII Division 1, UG-32(e)',
+    formulaUsed: 'P = (2 × S × E × t) / (L × M + 0.2 × t), where M = 0.25 × (3 + √(L/r))',
+    intermediateValues: {
+      t, L, r,
+      'L/r': round(LrRatio, 4),
+      M: round(M, 4),
+      S, E,
+      '2 × S × E × t': numerator,
+      'L × M': round(L * M, 4),
+      '0.2 × t': 0.2 * t,
+      'L × M + 0.2 × t': round(denominator, 4),
+      MAWP: round(mawp, 2),
+      ...stressLookupDetails
+    },
+    assumptions,
+    warnings,
+    calculationEngineVersion: CALCULATION_ENGINE_VERSION,
+    materialDatabaseVersion: DATABASE_VERSION,
+    calculatedAt,
+    validationStatus: warnings.some(w => w.includes('WARNING')) ? 'warning' : 'valid'
+  };
+}
+
+/**
+ * Calculate MAP (Maximum Allowable Pressure) at next inspection.
+ * 
+ * Formula:
+ * t_at_next_inspection = t_act - (2 × Yn × Cr)
+ * 
+ * Where:
+ *   t_act = Current actual thickness (inches)
+ *   Yn = Years to next inspection
+ *   Cr = Corrosion rate (in/yr)
+ *   Factor of 2 provides safety margin per API 510
+ */
+export interface MAPAtNextInspectionResult {
+  success: boolean;
+  projectedThickness: number;
+  mapAtNextInspection: number;
+  mawpAtNextInspection: number;
+  yearsToNextInspection: number;
+  corrosionRate: number;
+  staticHeadDeduction: number;
+  codeReference: string;
+  formulaUsed: string;
+  intermediateValues: Record<string, number | string>;
+  assumptions: string[];
+  warnings: string[];
+  calculationEngineVersion: string;
+  calculatedAt: string;
+}
+
+export function calculateMAPAtNextInspection(
+  input: CalculationInput,
+  componentType: 'Shell' | 'Head',
+  corrosionRate: number,
+  yearsToNextInspection: number
+): MAPAtNextInspectionResult {
+  const calculatedAt = new Date().toISOString();
+  const assumptions: string[] = [];
+  const warnings: string[] = [];
+  
+  if (!input.currentThickness || input.currentThickness <= 0) {
+    return {
+      success: false,
+      projectedThickness: 0,
+      mapAtNextInspection: 0,
+      mawpAtNextInspection: 0,
+      yearsToNextInspection: 0,
+      corrosionRate: 0,
+      staticHeadDeduction: 0,
+      codeReference: '',
+      formulaUsed: '',
+      intermediateValues: { error: 'Current thickness must be > 0' },
+      assumptions: [],
+      warnings: [],
+      calculationEngineVersion: CALCULATION_ENGINE_VERSION,
+      calculatedAt
+    };
+  }
+  
+  if (corrosionRate <= 0) {
+    return {
+      success: false,
+      projectedThickness: 0,
+      mapAtNextInspection: 0,
+      mawpAtNextInspection: 0,
+      yearsToNextInspection: 0,
+      corrosionRate: 0,
+      staticHeadDeduction: 0,
+      codeReference: '',
+      formulaUsed: '',
+      intermediateValues: { error: 'Corrosion rate must be > 0' },
+      assumptions: [],
+      warnings: [],
+      calculationEngineVersion: CALCULATION_ENGINE_VERSION,
+      calculatedAt
+    };
+  }
+  
+  // Calculate projected thickness: t = t_act - 2 × Yn × Cr
+  const projectedThicknessLoss = 2 * yearsToNextInspection * corrosionRate;
+  const projectedThickness = input.currentThickness - projectedThicknessLoss;
+  
+  assumptions.push('Projected thickness = t_act - (2 × Yn × Cr)');
+  assumptions.push('Factor of 2 provides safety margin per API 510');
+  
+  if (projectedThickness <= 0) {
+    warnings.push('CRITICAL: Projected thickness at next inspection is zero or negative');
+    return {
+      success: true,
+      projectedThickness: Math.max(0, projectedThickness),
+      mapAtNextInspection: 0,
+      mawpAtNextInspection: 0,
+      yearsToNextInspection,
+      corrosionRate,
+      staticHeadDeduction: 0,
+      codeReference: 'API 510',
+      formulaUsed: 't = t_act - 2×Yn×Cr',
+      intermediateValues: {
+        t_actual: input.currentThickness,
+        Yn: yearsToNextInspection,
+        Cr: corrosionRate,
+        '2 × Yn × Cr': projectedThicknessLoss,
+        t_projected: Math.max(0, projectedThickness),
+        note: 'Projected thickness at or below zero'
+      },
+      assumptions,
+      warnings,
+      calculationEngineVersion: CALCULATION_ENGINE_VERSION,
+      calculatedAt
+    };
+  }
+  
+  // Create input with projected thickness for MAWP calculation
+  const projectedInput: CalculationInput = {
+    ...input,
+    currentThickness: projectedThickness
+  };
+  
+  // Calculate MAP using appropriate formula
+  let mapResult: CalculationResult;
+  
+  if (componentType === 'Shell') {
+    mapResult = calculateMAWPShell(projectedInput);
+  } else {
+    switch (input.headType) {
+      case 'Hemispherical':
+        mapResult = calculateMAWPHemisphericalHead(projectedInput);
+        break;
+      case 'Torispherical':
+        mapResult = calculateMAWPTorisphericalHead(projectedInput);
+        break;
+      case '2:1 Ellipsoidal':
+      default:
+        mapResult = calculateMAWPEllipsoidalHead(projectedInput);
+        break;
+    }
+  }
+  
+  const mapAtNextInspection = mapResult.resultValue || 0;
+  
+  // Calculate static head deduction: SH × 0.433 × SG
+  let staticHeadDeduction = 0;
+  
+  if (input.specificGravity && input.liquidHeight && input.vesselOrientation === 'vertical') {
+    const liquidHeightFeet = input.liquidHeight / 12;
+    staticHeadDeduction = liquidHeightFeet * 0.433 * input.specificGravity;
+    assumptions.push(`Static head deduction: ${staticHeadDeduction.toFixed(2)} psi`);
+  } else {
+    assumptions.push('No static head deduction (horizontal vessel or no liquid height specified)');
+  }
+  
+  const mawpAtNextInspection = mapAtNextInspection - staticHeadDeduction;
+  
+  if (input.designPressure && mawpAtNextInspection < input.designPressure) {
+    warnings.push(`WARNING: Projected MAWP at next inspection (${mawpAtNextInspection.toFixed(2)} psi) will be below design pressure (${input.designPressure} psi)`);
+  }
+  
+  return {
+    success: true,
+    projectedThickness: round(projectedThickness, 4),
+    mapAtNextInspection: round(mapAtNextInspection, 2),
+    mawpAtNextInspection: round(mawpAtNextInspection, 2),
+    yearsToNextInspection,
+    corrosionRate,
+    staticHeadDeduction: round(staticHeadDeduction, 2),
+    codeReference: 'API 510 / ASME VIII-1',
+    formulaUsed: 't = t_act - 2×Yn×Cr; P = SEt/(R+0.6t) or head formula; MAWP = P - (SH×0.433×SG)',
+    intermediateValues: {
+      t_actual: input.currentThickness,
+      Yn_years: yearsToNextInspection,
+      Cr_in_per_yr: corrosionRate,
+      '2 × Yn × Cr': round(projectedThicknessLoss, 4),
+      t_projected: round(projectedThickness, 4),
+      MAP_at_next_inspection: round(mapAtNextInspection, 2),
+      static_head_deduction: round(staticHeadDeduction, 2),
+      MAWP_at_next_inspection: round(mawpAtNextInspection, 2),
+      component_type: componentType,
+      head_type: input.headType || 'N/A'
+    },
+    assumptions,
+    warnings,
+    calculationEngineVersion: CALCULATION_ENGINE_VERSION,
+    calculatedAt
+  };
+}
+
+/**
  * Calculate Long-Term corrosion rate.
  * 
  * Formula per API 510:
@@ -1090,14 +1576,32 @@ export function performFullCalculation(input: CalculationInput, componentType: '
     }
   }
   
-  // Calculate MAWP
-  const mawpResult = calculateMAWPShell(input);
+  // Calculate MAWP based on component type
+  let mawpResult: CalculationResult;
+  
+  if (componentType === 'Shell') {
+    mawpResult = calculateMAWPShell(input);
+  } else {
+    switch (input.headType) {
+      case 'Hemispherical':
+        mawpResult = calculateMAWPHemisphericalHead(input);
+        break;
+      case 'Torispherical':
+        mawpResult = calculateMAWPTorisphericalHead(input);
+        break;
+      case '2:1 Ellipsoidal':
+      default:
+        mawpResult = calculateMAWPEllipsoidalHead(input);
+        break;
+    }
+  }
   
   // Calculate corrosion rates
   let corrosionRateLT: CalculationResult | undefined;
   let corrosionRateST: CalculationResult | undefined;
   let remainingLifeResult: CalculationResult | undefined;
   let nextInspectionResult: CalculationResult | undefined;
+  let mapAtNextInspectionResult: MAPAtNextInspectionResult | undefined;
   
   // Long-term rate
   if (input.yearBuilt && input.nominalThickness) {
@@ -1138,6 +1642,16 @@ export function performFullCalculation(input: CalculationInput, componentType: '
     // Calculate next inspection interval
     if (remainingLifeResult.success && remainingLifeResult.resultValue !== null) {
       nextInspectionResult = calculateNextInspectionInterval(remainingLifeResult.resultValue);
+      
+      // Calculate MAP at next inspection
+      if (nextInspectionResult.success && nextInspectionResult.resultValue !== null) {
+        mapAtNextInspectionResult = calculateMAPAtNextInspection(
+          input,
+          componentType,
+          governingRate,
+          nextInspectionResult.resultValue
+        );
+      }
     }
   }
   
@@ -1165,6 +1679,7 @@ export function performFullCalculation(input: CalculationInput, componentType: '
   if (corrosionRateST?.warnings) warnings.push(...corrosionRateST.warnings);
   if (remainingLifeResult?.warnings) warnings.push(...remainingLifeResult.warnings);
   if (nextInspectionResult?.warnings) warnings.push(...nextInspectionResult.warnings);
+  if (mapAtNextInspectionResult?.warnings) warnings.push(...mapAtNextInspectionResult.warnings);
   
   return {
     success: tRequiredResult.success && mawpResult.success,
@@ -1175,6 +1690,7 @@ export function performFullCalculation(input: CalculationInput, componentType: '
     corrosionRateST,
     remainingLife: remainingLifeResult,
     nextInspectionDate: nextInspectionResult,
+    mapAtNextInspection: mapAtNextInspectionResult,
     summary: {
       tRequired: tRequiredResult.resultValue,
       mawp: mawpResult.resultValue,
@@ -1182,6 +1698,8 @@ export function performFullCalculation(input: CalculationInput, componentType: '
       corrosionRateType: governingRateType,
       remainingLife: remainingLifeResult?.resultValue ?? null,
       nextInspectionYears: nextInspectionResult?.resultValue ?? null,
+      mapAtNextInspection: mapAtNextInspectionResult?.mawpAtNextInspection ?? null,
+      projectedThicknessAtNextInspection: mapAtNextInspectionResult?.projectedThickness ?? null,
       status,
       statusReason
     },
@@ -1236,6 +1754,10 @@ export function getEngineInfo(): {
       't_required_head_torispherical (ASME VIII-1 UG-32(e))',
       't_required_head_hemispherical (ASME VIII-1 UG-32(f))',
       'mawp_shell (ASME VIII-1 UG-27)',
+      'mawp_head_hemispherical (ASME VIII-1 UG-32(f))',
+      'mawp_head_ellipsoidal (ASME VIII-1 UG-32(d))',
+      'mawp_head_torispherical (ASME VIII-1 UG-32(e))',
+      'map_at_next_inspection (API 510)',
       'corrosion_rate_lt (API 510)',
       'corrosion_rate_st (API 510)',
       'remaining_life (API 510 §7.1.1)',

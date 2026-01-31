@@ -2684,3 +2684,9 @@ remaining life and MAWP calculations. This ensures the calculation reflects the 
 - [x] Add "Clear All Warnings" button to report interface
 - [x] Add backend procedure to clear/dismiss warnings for an inspection (dismissAll in validationWarningsRouter and anomalyRouter)
 - [x] Test the feature (769 tests passing)
+
+## Calculation Engine Enhancements (Jan 31, 2026)
+- [x] Add head-specific MAWP functions (Hemispherical UG-32(f), Ellipsoidal UG-32(d), Torispherical UG-32(e))
+- [x] Add MAP at next inspection calculation (t = t_act - 2×Yn×Cr)
+- [x] Write tests for new calculations (794 tests passing)
+- [x] Update performFullCalculation to use head-specific MAWP
