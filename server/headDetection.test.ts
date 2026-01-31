@@ -8,7 +8,7 @@
 import { describe, it, expect } from 'vitest';
 
 // Replicate the head detection logic from routers.ts and professionalReportRouters.ts
-// Updated to include location field checking
+// Updated to include location field checking and Top/Bottom head detection
 function isEastHead(component: string, componentType: string, location?: string): boolean {
   const comp = (component || '').toLowerCase();
   const compType = (componentType || '').toLowerCase();
@@ -20,13 +20,18 @@ function isEastHead(component: string, componentType: string, location?: string)
   if (combined.includes('e head')) return true;
   if (combined.includes('head 1') || combined.includes('head-1')) return true;
   if (combined.includes('left head')) return true;
+  if (combined.includes('north head')) return true;
+  // For horizontal vessels, "Top Head" is often the first head (East)
+  if (combined.includes('top head')) return true;
   
-  // If it's a head but not explicitly west/right, treat as east (first head)
+  // If it's a head but not explicitly west/right/bottom/south, treat as east (first head)
   // Exclude if location indicates west head
   if ((combined.includes('head') && !combined.includes('shell')) &&
       !combined.includes('west') && !combined.includes('w head') &&
       !combined.includes('head 2') && !combined.includes('head-2') &&
-      !combined.includes('right') && !loc.includes('west')) {
+      !combined.includes('right') && !combined.includes('south') &&
+      !combined.includes('bottom') && !combined.includes('bttm') && !combined.includes('btm') &&
+      !loc.includes('west') && !loc.includes('south') && !loc.includes('bottom') && !loc.includes('bttm')) {
     return true;
   }
   return false;
@@ -43,6 +48,11 @@ function isWestHead(component: string, componentType: string, location?: string)
   if (combined.includes('w head')) return true;
   if (combined.includes('head 2') || combined.includes('head-2')) return true;
   if (combined.includes('right head')) return true;
+  if (combined.includes('south head')) return true;
+  // For horizontal vessels, "Bottom Head" is often the second head (West)
+  if (combined.includes('bottom head') || combined.includes('bttm head') || combined.includes('btm head')) return true;
+  // Check location field for west indicators
+  if (loc.includes('west') || loc.includes('south') || loc.includes('bottom') || loc.includes('bttm')) return true;
   
   return false;
 }
@@ -188,6 +198,51 @@ describe('Head Detection Logic', () => {
       expect(isEastHead('East HEAD', '')).toBe(true);
       expect(isWestHead('WEST HEAD', '')).toBe(true);
       expect(isWestHead('West HEAD', '')).toBe(true);
+    });
+  });
+
+  describe('Top/Bottom Head Detection (Horizontal Vessel Convention)', () => {
+    it('should detect "Top Head" as East Head', () => {
+      expect(isEastHead('Top Head', '')).toBe(true);
+      expect(isEastHead('Top Head', 'Top Head')).toBe(true);
+      expect(isEastHead('', 'Top Head')).toBe(true);
+    });
+
+    it('should detect "Bottom Head" as West Head', () => {
+      expect(isWestHead('Bottom Head', '')).toBe(true);
+      expect(isWestHead('Bttm Head', '')).toBe(true);
+      expect(isWestHead('Btm Head', '')).toBe(true);
+      expect(isWestHead('', 'Bottom Head')).toBe(true);
+      expect(isWestHead('', 'Bttm Head')).toBe(true);
+    });
+
+    it('should detect "North Head" as East Head', () => {
+      expect(isEastHead('North Head', '')).toBe(true);
+      expect(isEastHead('', 'North Head')).toBe(true);
+    });
+
+    it('should detect "South Head" as West Head', () => {
+      expect(isWestHead('South Head', '')).toBe(true);
+      expect(isWestHead('', 'South Head')).toBe(true);
+    });
+
+    it('should NOT detect Top Head as West Head', () => {
+      expect(isWestHead('Top Head', '')).toBe(false);
+    });
+
+    it('should NOT detect Bottom Head as East Head', () => {
+      expect(isEastHead('Bottom Head', '')).toBe(false);
+      expect(isEastHead('Bttm Head', '')).toBe(false);
+    });
+
+    it('should detect West Head from location field with bottom indicator', () => {
+      expect(isWestHead('Head', 'Head', 'Bottom')).toBe(true);
+      expect(isWestHead('Head', 'Head', 'Bttm')).toBe(true);
+    });
+
+    it('should NOT detect East Head when location indicates bottom', () => {
+      expect(isEastHead('Head', 'Head', 'Bottom')).toBe(false);
+      expect(isEastHead('Head', 'Head', 'Bttm')).toBe(false);
     });
   });
 });

@@ -29,6 +29,7 @@ import * as fieldMappingDb from "./fieldMappingDb";
 import * as professionalReportDb from "./professionalReportDb";
 import { consolidateTMLReadings } from "./cmlDeduplication";
 import { organizeReadingsByComponent, getFullComponentName } from "./componentOrganizer";
+import { normalizeComponent } from "./componentNormalization";
 import { processExtractionJob } from "./extractionJobHandler";
 import { extractionJobs } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -1285,7 +1286,16 @@ Return JSON in this exact format:
             // CRITICAL: cmlNumber, componentType, and location are NOT NULL in database
             // cmlNumber is limited to 10 chars, location to 50 chars
             const cmlNumber = (tml.cmlNumber || `CML-${Date.now()}`).substring(0, 10);
-            const componentType = (tml.componentType || tml.component || 'General').substring(0, 255);
+            
+            // Normalize component names and types for consistency
+            const normalized = normalizeComponent(
+              tml.component,
+              tml.componentType,
+              tml.location,
+              inspection.vesselConfiguration // Pass vessel orientation for head naming
+            );
+            const componentType = normalized.componentType.substring(0, 255);
+            const componentName = normalized.component.substring(0, 255);
             const location = (tml.location || 'General').substring(0, 50);
             
             await db.createTmlReading({
@@ -1294,8 +1304,8 @@ Return JSON in this exact format:
               cmlNumber: cmlNumber,
               tmlId: (tml.tmlId || '').substring(0, 255),
               location: location,
-              component: (tml.component || '').substring(0, 255),
-              componentType: componentType,
+              component: componentName, // Use normalized component name
+              componentType: componentType, // Use normalized component type
               currentThickness: tml.currentThickness || null,
               tActual: tml.currentThickness || null, // Also set tActual for consistency
               previousThickness: tml.previousThickness || null,

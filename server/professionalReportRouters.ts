@@ -928,7 +928,8 @@ export const professionalReportRouter = router({
       );
       
       // Create East Head calculation with improved detection
-      // Matches: 'east head', 'e head', 'head 1', 'head-1', 'left head', or any head without west/right keywords
+      // Matches: 'east head', 'e head', 'head 1', 'head-1', 'left head', 'top head', 'north head'
+      // or any head without west/right/bottom/south keywords
       // IMPORTANT: Also check location field for head identification
       await createComponentCalc(
         'head',
@@ -944,13 +945,18 @@ export const professionalReportRouter = router({
           if (combined.includes('e head')) return true;
           if (combined.includes('head 1') || combined.includes('head-1')) return true;
           if (combined.includes('left head')) return true;
+          if (combined.includes('north head')) return true;
+          // For horizontal vessels, "Top Head" is often the first head (East)
+          if (combined.includes('top head')) return true;
           
-          // If it's a head but not explicitly west/right, treat as east (first head)
+          // If it's a head but not explicitly west/right/bottom/south, treat as east (first head)
           // Exclude if location indicates west head
           if ((combined.includes('head') && !combined.includes('shell')) &&
               !combined.includes('west') && !combined.includes('w head') &&
               !combined.includes('head 2') && !combined.includes('head-2') &&
-              !combined.includes('right') && !loc.includes('west')) {
+              !combined.includes('right') && !combined.includes('south') &&
+              !combined.includes('bottom') && !combined.includes('bttm') && !combined.includes('btm') &&
+              !loc.includes('west') && !loc.includes('south') && !loc.includes('bottom') && !loc.includes('bttm')) {
             return true;
           }
           return false;
@@ -958,7 +964,7 @@ export const professionalReportRouter = router({
       );
       
       // Create West Head calculation with improved detection
-      // Matches: 'west head', 'w head', 'head 2', 'head-2', 'right head'
+      // Matches: 'west head', 'w head', 'head 2', 'head-2', 'right head', 'bottom head', 'south head'
       // IMPORTANT: Also check location field for head identification
       await createComponentCalc(
         'head',
@@ -974,6 +980,11 @@ export const professionalReportRouter = router({
           if (combined.includes('w head')) return true;
           if (combined.includes('head 2') || combined.includes('head-2')) return true;
           if (combined.includes('right head')) return true;
+          if (combined.includes('south head')) return true;
+          // For horizontal vessels, "Bottom Head" is often the second head (West)
+          if (combined.includes('bottom head') || combined.includes('bttm head') || combined.includes('btm head')) return true;
+          // Check location field for west indicators
+          if (loc.includes('west') || loc.includes('south') || loc.includes('bottom') || loc.includes('bttm')) return true;
           
           return false;
         }

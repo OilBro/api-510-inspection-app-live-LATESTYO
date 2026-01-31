@@ -58,14 +58,36 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     { enabled: !!materialSpec }
   );
   
-  // Group TML readings by component type
+  // Group TML readings by component name (normalized: "Vessel Shell", "East Head", "West Head")
+  // Use the 'component' field which contains the normalized display name
   const componentGroups = useMemo(() => {
     if (!tmlReadings) return {};
     const groups: Record<string, typeof tmlReadings> = {};
     for (const reading of tmlReadings) {
-      const type = reading.componentType || 'Unknown';
-      if (!groups[type]) groups[type] = [];
-      groups[type].push(reading);
+      // Use component field (normalized name) for grouping
+      // Fall back to componentType if component is empty
+      let groupKey = reading.component || reading.componentType || 'Unknown';
+      
+      // Additional normalization for legacy data that wasn't normalized on import
+      const lower = groupKey.toLowerCase();
+      if (lower.includes('top head') || lower.includes('north head') || lower.includes('head 1') || lower.includes('e head')) {
+        groupKey = 'East Head';
+      } else if (lower.includes('bottom head') || lower.includes('bttm head') || lower.includes('south head') || lower.includes('head 2') || lower.includes('w head')) {
+        groupKey = 'West Head';
+      } else if (lower.includes('shell') || lower.includes('cylinder') || lower.includes('body')) {
+        groupKey = 'Vessel Shell';
+      } else if (lower === 'head' && !lower.includes('east') && !lower.includes('west')) {
+        // Generic "head" without direction - check location field
+        const loc = (reading.location || '').toLowerCase();
+        if (loc.includes('west') || loc.includes('south') || loc.includes('bottom') || loc.includes('bttm')) {
+          groupKey = 'West Head';
+        } else {
+          groupKey = 'East Head'; // Default to East Head
+        }
+      }
+      
+      if (!groups[groupKey]) groups[groupKey] = [];
+      groups[groupKey].push(reading);
     }
     return groups;
   }, [tmlReadings]);
@@ -116,12 +138,13 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     if (selectedReadingId && tmlReadings) {
       const reading = tmlReadings.find(r => r.id === selectedReadingId);
       if (reading) {
-        // Determine component type from componentType field
-        const compType = reading.componentType?.toLowerCase() || '';
-        const isHead = compType.includes('head');
-        const isShell = compType.includes('shell');
+        // Determine component type from selected component group (normalized name)
+        // This is more reliable than checking the raw componentType field
+        const selectedLower = selectedComponent.toLowerCase();
+        const isHead = selectedLower.includes('head');
+        const isShell = selectedLower.includes('shell') || selectedLower.includes('cylinder');
         
-        // Determine head type from inspection or reading
+        // Determine head type from inspection.headType field
         let headType: '2:1 Ellipsoidal' | 'Torispherical' | 'Hemispherical' = '2:1 Ellipsoidal';
         if (inspection?.headType) {
           const inspHeadType = inspection.headType.toLowerCase();
@@ -139,10 +162,10 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
           nominalThickness: reading.nominalThickness?.toString() || '',
         }));
         
-        toast.info(`Loaded data from CML ${reading.cmlNumber} - ${reading.location}`);
+        toast.info(`Loaded data from CML ${reading.cmlNumber} - ${selectedComponent}`);
       }
     }
-  }, [selectedReadingId, tmlReadings, inspection]);
+  }, [selectedReadingId, tmlReadings, inspection, selectedComponent]);
   
   // Get readings for selected component
   const selectedComponentReadings = useMemo(() => {

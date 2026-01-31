@@ -1,0 +1,50 @@
+{
+  "query": "SELECT component, componentType, COUNT(*) as count FROM tmlReadings GROUP BY component, componentType ORDER BY count DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT component, componentType, COUNT(*) as count FROM tmlReadings GROUP BY component, componentType ORDER BY count DESC;",
+  "rows": [
+    {
+      "component": "Shell",
+      "componentType": "shell",
+      "count": "120"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Shell",
+      "count": "64"
+    },
+    {
+      "component": "East Head",
+      "componentType": "head",
+      "count": "30"
+    },
+    {
+      "component": "West Head",
+      "componentType": "head",
+      "count": "30"
+    },
+    {
+      "component": "Vessel Shell",
+      "componentType": "Vessel Shell",
+      "count": "21"
+    },
+    {
+      "component": "NULL",
+      "componentType": "Shell",
+      "count": "16"
+    },
+    {
+      "component": "Top Head",
+      "componentType": "Top Head",
+      "count": "5"
+    },
+    {
+      "component": "Bttm Head",
+      "componentType": "Bttm Head",
+      "count": "4"
+    }
+  ],
+  "messages": [],
+  "stdout": "component\tcomponentType\tcount\nShell\tshell\t120\nVessel Shell\tShell\t64\nEast Head\thead\t30\nWest Head\thead\t30\nVessel Shell\tVessel Shell\t21\nNULL\tShell\t16\nTop Head\tTop Head\t5\nBttm Head\tBttm Head\t4\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

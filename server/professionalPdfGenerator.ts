@@ -734,17 +734,21 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
   
   
   
-  // Find the three main components
-  const findComponent = (name: string) => {
-    return componentCalcs.find(c => 
-      c.componentName?.toLowerCase().includes(name.toLowerCase()) ||
-      c.componentType?.toLowerCase().includes(name.toLowerCase())
-    );
+  // Find the three main components with expanded pattern matching
+  // Handles legacy naming: Top/Bottom, North/South, as well as East/West
+  const findComponent = (patterns: string[]) => {
+    return componentCalcs.find(c => {
+      const name = (c.componentName || '').toLowerCase();
+      const type = (c.componentType || '').toLowerCase();
+      return patterns.some(p => name.includes(p) || type.includes(p));
+    });
   };
   
-  const shellCalc = findComponent('shell');
-  const eastCalc = findComponent('east');
-  const westCalc = findComponent('west');
+  const shellCalc = findComponent(['shell', 'cylinder', 'body']);
+  // East Head patterns: east, top, north, head 1, left
+  const eastCalc = findComponent(['east', 'top head', 'north', 'head 1', 'head-1', 'left head']);
+  // West Head patterns: west, bottom, bttm, south, head 2, right
+  const westCalc = findComponent(['west', 'bottom', 'bttm', 'btm', 'south', 'head 2', 'head-2', 'right head']);
   
   
   
@@ -1198,9 +1202,19 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   doc.text('Vessel Head(s)', MARGIN, doc.y);
   doc.moveDown(0.5);
   
-  // Get head component data
-  const eastHead = components.find(c => c.componentName?.includes('East'));
-  const westHead = components.find(c => c.componentName?.includes('West'));
+  // Get head component data with expanded pattern matching for legacy naming
+  const findHeadComponent = (patterns: string[]) => {
+    return components.find(c => {
+      const name = (c.componentName || '').toLowerCase();
+      const type = (c.componentType || '').toLowerCase();
+      return patterns.some(p => name.includes(p) || type.includes(p));
+    });
+  };
+  
+  // East Head patterns: east, top, north, head 1, left
+  const eastHead = findHeadComponent(['east', 'top head', 'north', 'head 1', 'head-1', 'left head']);
+  // West Head patterns: west, bottom, bttm, south, head 2, right
+  const westHead = findHeadComponent(['west', 'bottom', 'bttm', 'btm', 'south', 'head 2', 'head-2', 'right head']);
   
   const headInfoData = [
     ['', 'East Head and West Head', '', '', '', ''],
