@@ -569,13 +569,13 @@ export default function ImportData() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 mt-4">
                   <Button asChild className="bg-green-600 hover:bg-green-700">
-                    <Link href={`/inspection/${savedInspectionId}/report`}>
+                    <Link href={`/inspections/${savedInspectionId}`}>
                       <FileCheck className="mr-2 h-4 w-4" />
                       View Report
                     </Link>
                   </Button>
                   <Button asChild variant="outline">
-                    <Link href={`/inspection/${savedInspectionId}`}>
+                    <Link href={`/inspections/${savedInspectionId}`}>
                       <Eye className="mr-2 h-4 w-4" />
                       View Inspection Details
                     </Link>

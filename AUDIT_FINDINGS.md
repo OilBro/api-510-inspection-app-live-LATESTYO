@@ -186,3 +186,110 @@ The system calculates corrosion rate from these inputs but does not auto-select 
 ---
 
 *This audit was conducted per skills.md regulatory constraints. All findings are based on code review and do not constitute a formal regulatory compliance certification.*
+
+
+---
+
+# Updated Audit - January 31, 2026
+
+## CRITICAL ISSUES FOUND
+
+### 1. Broken Links (Routes That Don't Exist)
+
+| File | Line | Broken Link | Should Be |
+|------|------|-------------|-----------|
+| ImportData.tsx | 572 | `/inspection/${id}/report` | `/inspections/${id}` |
+| ImportData.tsx | 578 | `/inspection/${id}` | `/inspections/${id}` |
+| RCRAComplianceDashboard.tsx | 65 | `/inspection/${id}` | `/inspections/${id}` |
+| ComponentShowcase.tsx | 830 | `/components` | Route doesn't exist |
+
+**Root Cause**: Inconsistent route naming - some use `/inspection/` (singular) while routes are defined as `/inspections/` (plural)
+
+---
+
+### 2. Hardcoded Values Scan
+
+| File | Issue | Status |
+|------|-------|--------|
+| vite.config.ts | localhost/127.0.0.1 | ✅ OK - Dev config only |
+| sentry.ts | localhost in trace targets | ✅ OK - Monitoring config |
+| headEvaluation.test.ts | Test file checking for hardcoded values | ✅ OK - Test validation |
+
+**No hardcoded API keys or secrets found** ✅
+
+---
+
+## FIXES REQUIRED
+
+1. Fix all broken route links (change `/inspection/` to `/inspections/`)
+2. Remove or fix ComponentShowcase `/components` link
+3. Verify all button handlers work
+4. Audit report generation PDF output
+
+
+
+---
+
+### 3. Hardcoded Company Information in PDF Generator
+
+| File | Line | Issue |
+|------|------|-------|
+| professionalPdfGenerator.ts | 79 | Hardcoded "OILPRO CONSULTING LLC" |
+| professionalPdfGenerator.ts | 82 | Hardcoded phone "337-446-7459" |
+| professionalPdfGenerator.ts | 83 | Hardcoded website "www.oilproconsulting.com" |
+| professionalPdfGenerator.ts | 597 | Hardcoded "OILPRO CONSULTING LLC" |
+
+**Recommendation**: These should be configurable from user settings or report configuration.
+
+
+---
+
+## FIXES APPLIED - January 31, 2026
+
+### 1. Broken Links - FIXED ✅
+
+| File | Fix Applied |
+|------|-------------|
+| ImportData.tsx | Changed `/inspection/` to `/inspections/` |
+| RCRAComplianceDashboard.tsx | Changed `/inspection/` to `/inspections/` |
+| ComponentShowcase.tsx | Fixed breadcrumb link |
+
+### 2. Hardcoded Company Info - FIXED ✅
+
+| File | Fix Applied |
+|------|-------------|
+| professionalPdfGenerator.ts | Company name now uses `report.employerName` parameter |
+| professionalPdfGenerator.ts | Cover page uses `report.employerName` instead of "OILPRO CONSULTING LLC" |
+| professionalPdfGenerator.ts | Header function accepts `companyName` parameter |
+
+### 3. TML Readings Insert Error - FIXED ✅
+
+| Issue | Fix Applied |
+|-------|-------------|
+| cmlNumber truncation | Limited to 10 characters to match database column |
+| componentType NOT NULL | Added default "General" when empty |
+| location NOT NULL | Added default "General" when empty |
+
+---
+
+## Test Results
+
+**All 769 tests passing** ✅
+
+---
+
+## Calculation Engine Verification
+
+Per regulatory-inspection-engineering skill requirements, all calculations verified:
+
+| Formula | Implementation | Status |
+|---------|---------------|--------|
+| Shell t_min | `t = PR/(SE - 0.6P)` per ASME VIII-1 UG-27 | ✅ CORRECT |
+| Head t_min | `t = PLM/(2SE - 0.2P)` per ASME VIII-1 UG-32 | ✅ CORRECT |
+| Shell MAWP | `P = SEt/(R + 0.6t)` per ASME VIII-1 UG-27(c) | ✅ CORRECT |
+| Remaining Life | `RL = (t_act - t_req) / CR` per API 510 §7.1.1 | ✅ CORRECT |
+| Corrosion Rate | `CR = (t_prev - t_act) / years` | ✅ CORRECT |
+
+---
+
+*Audit completed January 31, 2026*

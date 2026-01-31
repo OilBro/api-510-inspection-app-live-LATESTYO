@@ -58,7 +58,7 @@ function extractCmlNumber(cmlStr: string): number {
   return 9999;
 }
 
-async function addHeader(doc: PDFKit.PDFDocument, title: string, logoBuffer?: Buffer) {
+async function addHeader(doc: PDFKit.PDFDocument, title: string, logoBuffer?: Buffer, companyName?: string) {
   const startY = doc.y;
   
   // Add logo if provided (top left)
@@ -73,14 +73,15 @@ async function addHeader(doc: PDFKit.PDFDocument, title: string, logoBuffer?: Bu
     }
   }
   
-  // Company information (right side of logo)
+  // Company information (right side of logo) - uses companyName parameter
   const companyX = MARGIN + 110;
   doc.font('Helvetica-Bold').fontSize(11).fillColor(COLORS.primary);
-  doc.text('OILPRO CONSULTING LLC', companyX, MARGIN);
+  doc.text(companyName || 'Inspection Services', companyX, MARGIN);
   
   doc.font('Helvetica').fontSize(9).fillColor(COLORS.text);
-  doc.text('Phone: 337-446-7459', companyX, MARGIN + 14);
-  doc.text('www.oilproconsulting.com', companyX, MARGIN + 26);
+  // Phone and website could be added as additional parameters in future
+  doc.text('', companyX, MARGIN + 14);
+  doc.text('', companyX, MARGIN + 26);
   
   // Dynamic page number calculation (current page in buffered range)
   const currentPage = doc.bufferedPageRange().count;
@@ -592,17 +593,18 @@ export async function generateProfessionalPDF(data: ProfessionalReportData): Pro
 // ============================================================================
 
 function generateCoverPage(doc: PDFKit.PDFDocument, report: any, inspection: any) {
-  // Company header
+  // Company header - uses report.employerName if available
   doc.font('Helvetica').fontSize(10).fillColor(COLORS.secondary);
-  doc.text('OILPRO CONSULTING LLC', MARGIN, MARGIN);
+  doc.text(report.employerName || 'Inspection Services', MARGIN, MARGIN);
   doc.text(`${inspection.vesselTagNumber || ''} API 510 IN LIEU OF`, 
     PAGE_WIDTH - MARGIN - 200, MARGIN, { width: 200, align: 'right' });
   
-  // Logo (text-based for now - will add image support)
+  // Logo (text-based - uses first word of employerName or generic)
+  const companyWords = (report.employerName || 'Inspection Services').split(' ');
   doc.font('Helvetica-Bold').fontSize(32).fillColor(COLORS.primary);
-  doc.text('OilPro', MARGIN, MARGIN + 60);
+  doc.text(companyWords[0] || 'Inspection', MARGIN, MARGIN + 60);
   doc.font('Helvetica').fontSize(12).fillColor(COLORS.secondary);
-  doc.text('CONSULTING', MARGIN + 10, MARGIN + 95);
+  doc.text(companyWords.slice(1).join(' ') || 'Services', MARGIN + 10, MARGIN + 95);
   
   // Client info
   doc.moveDown(4);
@@ -630,7 +632,7 @@ function generateCoverPage(doc: PDFKit.PDFDocument, report: any, inspection: any
   const fields = [
     ['Report No.:', report.reportNumber || ''],
     ['Inspector:', report.inspectorName || ''],
-    ['Employer:', report.employerName || 'OilPro Consulting LLC'],
+    ['Employer:', report.employerName || 'Inspection Services'],
     ['Inspection Date:', report.reportDate ? new Date(report.reportDate).toLocaleDateString('en-US') : ''],
   ];
   

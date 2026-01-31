@@ -62,7 +62,7 @@ export default function RCRAComplianceDashboard() {
   return (
     <div className="container py-6 space-y-6">
       <div className="flex items-center gap-4">
-        <Link href={`/inspection/${inspectionId}`}>
+        <Link href={`/inspections/${inspectionId}`}>
           <Button variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Inspection
