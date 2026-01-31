@@ -2678,3 +2678,9 @@ remaining life and MAWP calculations. This ensures the calculation reflects the 
 1. Broken links: /inspection/ changed to /inspections/ in ImportData.tsx, RCRAComplianceDashboard.tsx
 2. ComponentShowcase.tsx breadcrumb fixed
 3. PDF generator hardcoded company info replaced with report.employerName
+
+## Clear Warnings Feature (Jan 31, 2026)
+- [x] Find where warnings are displayed in the UI (ValidationWarnings.tsx, AnomalyPanel.tsx)
+- [x] Add "Clear All Warnings" button to report interface
+- [x] Add backend procedure to clear/dismiss warnings for an inspection (dismissAll in validationWarningsRouter and anomalyRouter)
+- [x] Test the feature (769 tests passing)

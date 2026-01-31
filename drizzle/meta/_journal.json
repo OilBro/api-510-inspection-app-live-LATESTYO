@@ -190,6 +190,13 @@
       "when": 1769739672575,
       "tag": "0026_fair_microbe",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "5",
+      "when": 1769873194510,
+      "tag": "0027_glossy_deadpool",
+      "breakpoints": true
     }
   ]
 }

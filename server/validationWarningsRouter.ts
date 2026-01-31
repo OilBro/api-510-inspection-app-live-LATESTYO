@@ -22,6 +22,44 @@ export interface ValidationWarning {
 
 export const validationWarningsRouter = router({
   /**
+   * Dismiss all warnings for an inspection
+   */
+  dismissAll: publicProcedure
+    .input(z.object({
+      inspectionId: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .update(inspections)
+        .set({ warningsDismissedAt: new Date() })
+        .where(eq(inspections.id, input.inspectionId));
+
+      return { success: true, message: "All warnings dismissed" };
+    }),
+
+  /**
+   * Restore warnings for an inspection (clear the dismissal)
+   */
+  restore: publicProcedure
+    .input(z.object({
+      inspectionId: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .update(inspections)
+        .set({ warningsDismissedAt: null })
+        .where(eq(inspections.id, input.inspectionId));
+
+      return { success: true, message: "Warnings restored" };
+    }),
+
+  /**
    * Get validation warnings for an inspection
    */
   getWarnings: publicProcedure
@@ -43,6 +81,22 @@ export const validationWarningsRouter = router({
 
       if (!inspection) {
         throw new Error("Inspection not found");
+      }
+
+      // Check if warnings have been dismissed
+      const warningsDismissed = !!inspection.warningsDismissedAt;
+
+      // If warnings are dismissed, return empty list with dismissed flag
+      if (warningsDismissed) {
+        return {
+          warnings: [],
+          totalWarnings: 0,
+          errorCount: 0,
+          warningCount: 0,
+          infoCount: 0,
+          dismissed: true,
+          dismissedAt: inspection.warningsDismissedAt,
+        };
       }
 
       // Check for missing joint efficiency (E)
@@ -146,6 +200,8 @@ export const validationWarningsRouter = router({
         errorCount: warnings.filter(w => w.severity === "error").length,
         warningCount: warnings.filter(w => w.severity === "warning").length,
         infoCount: warnings.filter(w => w.severity === "info").length,
+        dismissed: false,
+        dismissedAt: null,
       };
     }),
 });

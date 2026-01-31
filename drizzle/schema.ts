@@ -77,6 +77,9 @@ export const inspections = mysqlTable("inspections", {
   // Extraction quality tracking
   extractionQuality: varchar("extractionQuality", { length: 50 }).default("complete"), // complete, missing_recommendations, missing_results, missing_both, needs_review
   
+  // Warnings dismissal - when set, warnings are hidden until new data is added
+  warningsDismissedAt: timestamp("warningsDismissedAt"),
+  
   // Metadata
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),

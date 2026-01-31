@@ -151,6 +151,35 @@ export const anomalyRouter = router({
     }),
 
   /**
+   * Dismiss all anomalies for an inspection (mark as resolved)
+   */
+  dismissAll: protectedProcedure
+    .input(z.object({
+      inspectionId: z.string(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Mark all anomalies as resolved
+      await db.update(reportAnomalies)
+        .set({ 
+          reviewStatus: "resolved",
+          reviewedBy: ctx.user.id,
+          reviewedAt: new Date(),
+          reviewNotes: "Dismissed by user"
+        })
+        .where(eq(reportAnomalies.inspectionId, input.inspectionId));
+
+      // Update inspection review status
+      await db.update(inspections)
+        .set({ reviewStatus: "approved", anomalyCount: 0 })
+        .where(eq(inspections.id, input.inspectionId));
+
+      return { success: true, message: "All anomalies dismissed" };
+    }),
+
+  /**
    * Get anomaly statistics
    */
   getStatistics: protectedProcedure

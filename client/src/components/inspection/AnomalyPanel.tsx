@@ -77,6 +77,16 @@ export function AnomalyPanel({ inspectionId }: AnomalyPanelProps) {
     },
   });
 
+  const dismissAllMutation = trpc.anomalies.dismissAll.useMutation({
+    onSuccess: () => {
+      toast.success("All anomalies dismissed");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`Failed to dismiss anomalies: ${error.message}`);
+    },
+  });
+
   if (isLoading) {
     return (
       <Card>
@@ -171,6 +181,17 @@ export function AnomalyPanel({ inspectionId }: AnomalyPanelProps) {
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Export CSV
+                </Button>
+              )}
+              {anomalies.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => dismissAllMutation.mutate({ inspectionId })}
+                  disabled={dismissAllMutation.isPending}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Clear All
                 </Button>
               )}
               {pendingCount > 0 && (
