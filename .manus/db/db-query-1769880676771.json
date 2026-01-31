@@ -1,0 +1,55 @@
+{
+  "query": "SELECT id, cmlNumber, location, componentType, tActual, tml1, tml2 FROM tmlReadings WHERE cmlNumber LIKE '%30%' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, cmlNumber, location, componentType, tActual, tml1, tml2 FROM tmlReadings WHERE cmlNumber LIKE '%30%' LIMIT 5;",
+  "rows": [
+    {
+      "id": "_ePhamKTGe4u_ZI9tDXs7",
+      "cmlNumber": "CML 30",
+      "location": "North Head 9 O'Clock",
+      "componentType": "head",
+      "tActual": "NULL",
+      "tml1": "NULL",
+      "tml2": "NULL"
+    },
+    {
+      "id": "-enEDfNuAq5ZHbvXnlLC4",
+      "cmlNumber": "CML 30",
+      "location": "North Head 9 O'Clock",
+      "componentType": "head",
+      "tActual": "NULL",
+      "tml1": "NULL",
+      "tml2": "NULL"
+    },
+    {
+      "id": "1VjLo72O9Q7Y1r8ErJQqG",
+      "cmlNumber": "CML 30",
+      "location": "North Head 9 O'Clock",
+      "componentType": "head",
+      "tActual": "NULL",
+      "tml1": "NULL",
+      "tml2": "NULL"
+    },
+    {
+      "id": "9stBJbsRIHGAGsHQ2-PE9",
+      "cmlNumber": "030",
+      "location": "N/A",
+      "componentType": "Top Head",
+      "tActual": "0.5260",
+      "tml1": "0.5260",
+      "tml2": "NULL"
+    },
+    {
+      "id": "ph3lJrhfvX4tWBx2ByKle",
+      "cmlNumber": "CML 30",
+      "location": "North Head 9 O'Clock",
+      "componentType": "head",
+      "tActual": "NULL",
+      "tml1": "NULL",
+      "tml2": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcmlNumber\tlocation\tcomponentType\ttActual\ttml1\ttml2\n_ePhamKTGe4u_ZI9tDXs7\tCML 30\tNorth Head 9 O'Clock\thead\tNULL\tNULL\tNULL\n-enEDfNuAq5ZHbvXnlLC4\tCML 30\tNorth Head 9 O'Clock\thead\tNULL\tNULL\tNULL\n1VjLo72O9Q7Y1r8ErJQqG\tCML 30\tNorth Head 9 O'Clock\thead\tNULL\tNULL\tNULL\n9stBJbsRIHGAGsHQ2-PE9\t030\tN/A\tTop Head\t0.5260\t0.5260\tNULL\nph3lJrhfvX4tWBx2ByKle\tCML 30\tNorth Head 9 O'Clock\thead\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

@@ -150,13 +150,22 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
   }, [componentGroups, selectedComponent]);
   
   // Get minimum thickness for selected component (governing thickness)
+  // CRITICAL: Only consider readings with valid tActual values (not null/empty)
   const governingReading = useMemo(() => {
     if (selectedComponentReadings.length === 0) return null;
-    return selectedComponentReadings.reduce((min, reading) => {
-      const current = parseFloat(reading.tActual || '999');
-      const minVal = parseFloat(min?.tActual || '999');
+    
+    // Filter to only readings with valid tActual values
+    const validReadings = selectedComponentReadings.filter(r => 
+      r.tActual !== null && r.tActual !== undefined && r.tActual !== '' && !isNaN(parseFloat(r.tActual))
+    );
+    
+    if (validReadings.length === 0) return null;
+    
+    return validReadings.reduce((min, reading) => {
+      const current = parseFloat(reading.tActual!);
+      const minVal = parseFloat(min.tActual!);
       return current < minVal ? reading : min;
-    }, selectedComponentReadings[0]);
+    }, validReadings[0]);
   }, [selectedComponentReadings]);
   
   // Auto-select governing reading when component changes
@@ -451,9 +460,10 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                 <SelectContent>
                   {selectedComponentReadings.map((reading) => {
                     const isGoverning = reading.id === governingReading?.id;
+                    const hasValidThickness = reading.tActual !== null && reading.tActual !== undefined && reading.tActual !== '';
                     return (
                       <SelectItem key={reading.id} value={reading.id}>
-                        CML {reading.cmlNumber} - {reading.location}: {reading.tActual}" 
+                        CML {reading.cmlNumber} - {reading.location}: {hasValidThickness ? `${reading.tActual}"` : 'N/A'}
                         {isGoverning && ' (MIN)'}
                       </SelectItem>
                     );
@@ -490,15 +500,21 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                     </div>
                     <div>
                       <span className="text-gray-600">t_actual:</span>
-                      <span className="ml-2 font-bold text-blue-700">{reading.tActual}"</span>
+                      <span className="ml-2 font-bold text-blue-700">
+                        {reading.tActual ? `${reading.tActual}"` : <span className="text-gray-400">N/A</span>}
+                      </span>
                     </div>
                     <div>
                       <span className="text-gray-600">t_previous:</span>
-                      <span className="ml-2 font-semibold">{reading.previousThickness || 'N/A'}"</span>
+                      <span className="ml-2 font-semibold">
+                        {reading.previousThickness ? `${reading.previousThickness}"` : 'N/A'}
+                      </span>
                     </div>
                     <div>
                       <span className="text-gray-600">t_nominal:</span>
-                      <span className="ml-2 font-semibold">{reading.nominalThickness || 'N/A'}"</span>
+                      <span className="ml-2 font-semibold">
+                        {reading.nominalThickness ? `${reading.nominalThickness}"` : 'N/A'}
+                      </span>
                     </div>
                     <div>
                       <span className="text-gray-600">Status:</span>

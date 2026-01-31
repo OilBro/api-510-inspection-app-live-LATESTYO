@@ -2735,3 +2735,15 @@ remaining life and MAWP calculations. This ensures the calculation reflects the 
   - Updated CalculationPanel.tsx to prioritize fullResult.mawp (component-specific) over mawpResult (always shell)
   - Summary tab now shows correct head-specific MAWP when Full Calculation Suite is run
 - [x] Test the fix (799 tests passing, including 5 new MAWP consistency tests)
+
+## Bug Fix: CML Minimum Reading Display Shows Quotation Marks (Jan 31, 2026)
+- [x] Calculation engine shows "CML 30" as minimum reading but displays quotation marks instead of actual thickness value
+- [x] Investigate the display logic in CalculationPanel.tsx
+  - Root cause: Many TML readings have NULL tActual values in database
+  - The governingReading calculation was selecting records with NULL values
+  - Display was showing just quotation marks for null values
+- [x] Fix the display to show the actual minimum thickness value
+  - Updated governingReading calculation to filter out records with null/empty tActual
+  - Updated dropdown display to show "N/A" instead of empty quotation marks
+  - Updated Selected Reading Summary to show "N/A" for missing values
+- [x] Test the fix (799 tests passing)
