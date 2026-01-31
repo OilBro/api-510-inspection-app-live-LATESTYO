@@ -673,21 +673,32 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
               
               <TabsContent value="summary" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {shellResult && (
+                  {/* t_min: Prefer fullResult.tRequired (component-specific), fall back to shellResult */}
+                  {(fullResult?.tRequired || shellResult) && (
                     <div className="p-4 bg-gray-50 rounded-lg border">
                       <p className="text-sm text-gray-600">Min Required Thickness (t_min)</p>
-                      <p className="text-2xl font-bold">{formatValue(shellResult.resultValue)}"</p>
-                      <p className="text-xs text-gray-500 mt-1">{shellResult.codeReference}</p>
-                      {getStatusBadge(shellResult.validationStatus)}
+                      <p className="text-2xl font-bold">
+                        {formatValue(fullResult?.tRequired?.resultValue ?? shellResult?.resultValue)}"
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {fullResult?.tRequired?.codeReference ?? shellResult?.codeReference}
+                      </p>
+                      {getStatusBadge(fullResult?.tRequired?.validationStatus ?? shellResult?.validationStatus ?? 'valid')}
                     </div>
                   )}
                   
-                  {mawpResult && (
+                  {/* MAWP: Prefer fullResult.mawp (component-specific), fall back to mawpResult */}
+                  {/* CRITICAL FIX: fullResult.mawp uses correct head formula (UG-32) vs mawpResult uses shell formula (UG-27) */}
+                  {(fullResult?.mawp || mawpResult) && (
                     <div className="p-4 bg-gray-50 rounded-lg border">
                       <p className="text-sm text-gray-600">MAWP</p>
-                      <p className="text-2xl font-bold">{formatValue(mawpResult.resultValue, 1)} psi</p>
-                      <p className="text-xs text-gray-500 mt-1">{mawpResult.codeReference}</p>
-                      {getStatusBadge(mawpResult.validationStatus)}
+                      <p className="text-2xl font-bold">
+                        {formatValue(fullResult?.mawp?.resultValue ?? mawpResult?.resultValue, 1)} psi
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {fullResult?.mawp?.codeReference ?? mawpResult?.codeReference}
+                      </p>
+                      {getStatusBadge(fullResult?.mawp?.validationStatus ?? mawpResult?.validationStatus ?? 'valid')}
                     </div>
                   )}
                   

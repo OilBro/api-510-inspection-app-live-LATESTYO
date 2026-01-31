@@ -647,3 +647,126 @@ describe('Engine Information', () => {
     expect(info.materialCount).toBeGreaterThan(0);
   });
 });
+
+describe('MAWP Consistency Between Summary and Detailed Results', () => {
+  /**
+   * Critical test for bug fix: Summary tab was showing Shell MAWP (UG-27) 
+   * while Detailed Results showed Head MAWP (UG-32), causing 2x discrepancy.
+   * 
+   * The fullResult.summary.mawp MUST equal fullResult.mawp.resultValue
+   * to ensure consistency between Summary and Detailed Results tabs.
+   */
+  
+  it('should have consistent MAWP between summary and detailed results for shell', () => {
+    const input: CalculationInput = {
+      insideDiameter: 48,
+      designPressure: 150,
+      designTemperature: 100,
+      materialSpec: 'SA-516 Gr 70',
+      jointEfficiency: 1.0,
+      nominalThickness: 0.5,
+      currentThickness: 0.45,
+      corrosionAllowance: 0.125,
+      yearBuilt: 2010,
+      currentYear: 2025,
+    };
+
+    const result = performFullCalculation(input, 'Shell');
+    
+    // CRITICAL: summary.mawp MUST equal mawp.resultValue
+    expect(result.summary.mawp).toBe(result.mawp.resultValue);
+    expect(result.mawp.codeReference).toContain('UG-27'); // Shell formula
+  });
+
+  it('should have consistent MAWP between summary and detailed results for hemispherical head', () => {
+    const input: CalculationInput = {
+      insideDiameter: 48,
+      designPressure: 150,
+      designTemperature: 100,
+      materialSpec: 'SA-516 Gr 70',
+      jointEfficiency: 1.0,
+      nominalThickness: 0.5,
+      currentThickness: 0.45,
+      corrosionAllowance: 0.125,
+      headType: 'Hemispherical',
+      yearBuilt: 2010,
+      currentYear: 2025,
+    };
+
+    const result = performFullCalculation(input, 'Head');
+    
+    // CRITICAL: summary.mawp MUST equal mawp.resultValue
+    expect(result.summary.mawp).toBe(result.mawp.resultValue);
+    expect(result.mawp.codeReference).toContain('UG-32(f)'); // Hemispherical head formula
+  });
+
+  it('should have consistent MAWP between summary and detailed results for ellipsoidal head', () => {
+    const input: CalculationInput = {
+      insideDiameter: 48,
+      designPressure: 150,
+      designTemperature: 100,
+      materialSpec: 'SA-516 Gr 70',
+      jointEfficiency: 1.0,
+      nominalThickness: 0.5,
+      currentThickness: 0.45,
+      corrosionAllowance: 0.125,
+      headType: '2:1 Ellipsoidal',
+      yearBuilt: 2010,
+      currentYear: 2025,
+    };
+
+    const result = performFullCalculation(input, 'Head');
+    
+    // CRITICAL: summary.mawp MUST equal mawp.resultValue
+    expect(result.summary.mawp).toBe(result.mawp.resultValue);
+    expect(result.mawp.codeReference).toContain('UG-32(d)'); // Ellipsoidal head formula
+  });
+
+  it('should have consistent MAWP between summary and detailed results for torispherical head', () => {
+    const input: CalculationInput = {
+      insideDiameter: 48,
+      designPressure: 150,
+      designTemperature: 100,
+      materialSpec: 'SA-516 Gr 70',
+      jointEfficiency: 1.0,
+      nominalThickness: 0.5,
+      currentThickness: 0.45,
+      corrosionAllowance: 0.125,
+      headType: 'Torispherical',
+      yearBuilt: 2010,
+      currentYear: 2025,
+    };
+
+    const result = performFullCalculation(input, 'Head');
+    
+    // CRITICAL: summary.mawp MUST equal mawp.resultValue
+    expect(result.summary.mawp).toBe(result.mawp.resultValue);
+    expect(result.mawp.codeReference).toContain('UG-32(e)'); // Torispherical head formula
+  });
+
+  it('should show different MAWP values for shell vs hemispherical head with same inputs', () => {
+    const baseInput: CalculationInput = {
+      insideDiameter: 48,
+      designPressure: 150,
+      designTemperature: 100,
+      materialSpec: 'SA-516 Gr 70',
+      jointEfficiency: 1.0,
+      nominalThickness: 0.5,
+      currentThickness: 0.45,
+      corrosionAllowance: 0.125,
+      yearBuilt: 2010,
+      currentYear: 2025,
+    };
+
+    const shellResult = performFullCalculation(baseInput, 'Shell');
+    const headResult = performFullCalculation({ ...baseInput, headType: 'Hemispherical' }, 'Head');
+    
+    // Hemispherical head MAWP should be approximately 2x shell MAWP
+    // because P_head = 2*S*E*t/(R+0.2t) vs P_shell = S*E*t/(R+0.6t)
+    const shellMAWP = shellResult.mawp.resultValue!;
+    const headMAWP = headResult.mawp.resultValue!;
+    
+    expect(headMAWP).toBeGreaterThan(shellMAWP * 1.5); // Head should be significantly higher
+    expect(headMAWP).toBeLessThan(shellMAWP * 2.5); // But not more than 2.5x
+  });
+});

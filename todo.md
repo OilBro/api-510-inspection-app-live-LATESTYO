@@ -2724,3 +2724,14 @@ remaining life and MAWP calculations. This ensures the calculation reflects the 
 - [x] Improve PDF parser to extract more data fields - enhanced nozzle and checklist extraction prompts
 - [x] Improve field matching logic - added detailed search instructions for nozzles and checklists
 - [ ] Test with sample PDFs
+
+## Bug Fix: MAWP Discrepancy Between Summary and Detailed Results (Jan 31, 2026)
+- [x] Summary shows 161.4 psi, Detailed Results shows 323.9 psi (exactly 2x difference)
+- [x] Investigate calculation engine for source of discrepancy
+  - Root cause: Summary tab displayed mawpResult (from standalone "Calculate MAWP" button using Shell formula UG-27)
+  - Detailed Results displayed fullResult.mawp (from Full Calculation Suite using correct head formula UG-32(f))
+  - For hemispherical heads, UG-32(f) has factor of 2 in numerator, explaining 2x difference
+- [x] Fix the calculation or display issue
+  - Updated CalculationPanel.tsx to prioritize fullResult.mawp (component-specific) over mawpResult (always shell)
+  - Summary tab now shows correct head-specific MAWP when Full Calculation Suite is run
+- [x] Test the fix (799 tests passing, including 5 new MAWP consistency tests)
