@@ -1,0 +1,82 @@
+{
+  "query": "SELECT id, name, email, role FROM users WHERE name LIKE '%jerry%' OR email LIKE '%jerry%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, name, email, role FROM users WHERE name LIKE '%jerry%' OR email LIKE '%jerry%';",
+  "rows": [
+    {
+      "id": "1",
+      "name": "jerry hartfield",
+      "email": "jerrydean2020@gmail.com",
+      "role": "admin"
+    },
+    {
+      "id": "4",
+      "name": "jerry hartfield",
+      "email": "jerrydean2020@gmail.com",
+      "role": "user"
+    },
+    {
+      "id": "5940045",
+      "name": "jerry hartfield",
+      "email": "jerrydean2020@gmail.com",
+      "role": "admin"
+    },
+    {
+      "id": "5940049",
+      "name": "jerry hartfield",
+      "email": "jerrydean2020@gmail.com",
+      "role": "admin"
+    },
+    {
+      "id": "8430003",
+      "name": "jerry hartfield",
+      "email": "jerrydean2020@gmail.com",
+      "role": "admin"
+    },
+    {
+      "id": "8430023",
+      "name": "jerry hartfield",
+      "email": "jerrydean2020@gmail.com",
+      "role": "admin"
+    },
+    {
+      "id": "8790003",
+      "name": "jerry hartfield",
+      "email": "jerrydean2020@gmail.com",
+      "role": "admin"
+    },
+    {
+      "id": "9240140",
+      "name": "jerry hartfield",
+      "email": "jerrydean2020@gmail.com",
+      "role": "admin"
+    },
+    {
+      "id": "9780003",
+      "name": "jerry hartfield",
+      "email": "jerrydean2020@gmail.com",
+      "role": "user"
+    },
+    {
+      "id": "10500005",
+      "name": "jerry hartfield",
+      "email": "jerrydean2020@gmail.com",
+      "role": "admin"
+    },
+    {
+      "id": "10890168",
+      "name": "jerry hartfield",
+      "email": "jerrydean2020@gmail.com",
+      "role": "admin"
+    },
+    {
+      "id": "12810495",
+      "name": "jerry hartfield",
+      "email": "jerrydean2020@gmail.com",
+      "role": "user"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\n1\tjerry hartfield\tjerrydean2020@gmail.com\tadmin\n4\tjerry hartfield\tjerrydean2020@gmail.com\tuser\n5940045\tjerry hartfield\tjerrydean2020@gmail.com\tadmin\n5940049\tjerry hartfield\tjerrydean2020@gmail.com\tadmin\n8430003\tjerry hartfield\tjerrydean2020@gmail.com\tadmin\n8430023\tjerry hartfield\tjerrydean2020@gmail.com\tadmin\n8790003\tjerry hartfield\tjerrydean2020@gmail.com\tadmin\n9240140\tjerry hartfield\tjerrydean2020@gmail.com\tadmin\n9780003\tjerry hartfield\tjerrydean2020@gmail.com\tuser\n10500005\tjerry hartfield\tjerrydean2020@gmail.com\tadmin\n10890168\tjerry hartfield\tjerrydean2020@gmail.com\tadmin\n12810495\tjerry hartfield\tjerrydean2020@gmail.com\tuser\n",
+  "stderr": "",
+  "execution_time_ms": 69
+}

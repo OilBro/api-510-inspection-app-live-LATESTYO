@@ -1,0 +1,34 @@
+{
+  "query": "SELECT 'users' as table_name, COUNT(*) as record_count FROM users\nUNION ALL SELECT 'inspections', COUNT(*) FROM inspections\nUNION ALL SELECT 'tmlReadings', COUNT(*) FROM tmlReadings\nUNION ALL SELECT 'professionalReports', COUNT(*) FROM professionalReports\nUNION ALL SELECT 'componentCalculations', COUNT(*) FROM componentCalculations\nUNION ALL SELECT 'auditLog', COUNT(*) FROM auditLog;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT 'users' as table_name, COUNT(*) as record_count FROM users\nUNION ALL SELECT 'inspections', COUNT(*) FROM inspections\nUNION ALL SELECT 'tmlReadings', COUNT(*) FROM tmlReadings\nUNION ALL SELECT 'professionalReports', COUNT(*) FROM professionalReports\nUNION ALL SELECT 'componentCalculations', COUNT(*) FROM componentCalculations\nUNION ALL SELECT 'auditLog', COUNT(*) FROM auditLog;",
+  "rows": [
+    {
+      "table_name": "professionalReports",
+      "record_count": "0"
+    },
+    {
+      "table_name": "inspections",
+      "record_count": "0"
+    },
+    {
+      "table_name": "componentCalculations",
+      "record_count": "0"
+    },
+    {
+      "table_name": "auditLog",
+      "record_count": "0"
+    },
+    {
+      "table_name": "tmlReadings",
+      "record_count": "0"
+    },
+    {
+      "table_name": "users",
+      "record_count": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "table_name\trecord_count\nprofessionalReports\t0\ninspections\t0\ncomponentCalculations\t0\nauditLog\t0\ntmlReadings\t0\nusers\t2\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

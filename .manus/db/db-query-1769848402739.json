@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE importedFiles \nADD COLUMN IF NOT EXISTS schemaVersion VARCHAR(20) DEFAULT '2.0.0',\nADD COLUMN IF NOT EXISTS pageCount INT,\nADD COLUMN IF NOT EXISTS isTextExtractable BOOLEAN,\nADD COLUMN IF NOT EXISTS isScannedDocument BOOLEAN,\nADD COLUMN IF NOT EXISTS vesselDataCompleteness DECIMAL(5,2),\nADD COLUMN IF NOT EXISTS tmlDataCompleteness DECIMAL(5,2),\nADD COLUMN IF NOT EXISTS physicalValidationPassRate DECIMAL(5,2),\nADD COLUMN IF NOT EXISTS confidenceScoreAverage DECIMAL(3,2),\nADD COLUMN IF NOT EXISTS overallQuality ENUM('complete', 'partial', 'needs_review', 'failed');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute ALTER TABLE importedFiles \nADD COLUMN IF NOT EXISTS schemaVersion VARCHAR(20) DEFAULT '2.0.0',\nADD COLUMN IF NOT EXISTS pageCount INT,\nADD COLUMN IF NOT EXISTS isTextExtractable BOOLEAN,\nADD COLUMN IF NOT EXISTS isScannedDocument BOOLEAN,\nADD COLUMN IF NOT EXISTS vesselDataCompleteness DECIMAL(5,2),\nADD COLUMN IF NOT EXISTS tmlDataCompleteness DECIMAL(5,2),\nADD COLUMN IF NOT EXISTS physicalValidationPassRate DECIMAL(5,2),\nADD COLUMN IF NOT EXISTS confidenceScoreAverage DECIMAL(3,2),\nADD COLUMN IF NOT EXISTS overallQuality ENUM('complete', 'partial', 'needs_review', 'failed');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2573
+}

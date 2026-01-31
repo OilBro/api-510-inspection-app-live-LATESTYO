@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS extractionAuditLog (\n  id VARCHAR(64) PRIMARY KEY,\n  extractionJobId VARCHAR(64),\n  importedFileId VARCHAR(64),\n  timestamp TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6),\n  fieldName VARCHAR(255) NOT NULL,\n  rawValue TEXT,\n  parsedValue TEXT,\n  parsedUnit VARCHAR(50),\n  validationStatus ENUM('passed', 'failed', 'warning', 'pending') NOT NULL DEFAULT 'pending',\n  validationMessage TEXT,\n  parserSource VARCHAR(50) NOT NULL,\n  pageNumber INT,\n  boundingBox JSON,\n  codeReference VARCHAR(255),\n  confidenceScore DECIMAL(3,2),\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_extractionJobId (extractionJobId),\n  INDEX idx_importedFileId (importedFileId),\n  INDEX idx_fieldName (fieldName),\n  INDEX idx_validationStatus (validationStatus)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute CREATE TABLE IF NOT EXISTS extractionAuditLog (\n  id VARCHAR(64) PRIMARY KEY,\n  extractionJobId VARCHAR(64),\n  importedFileId VARCHAR(64),\n  timestamp TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6),\n  fieldName VARCHAR(255) NOT NULL,\n  rawValue TEXT,\n  parsedValue TEXT,\n  parsedUnit VARCHAR(50),\n  validationStatus ENUM('passed', 'failed', 'warning', 'pending') NOT NULL DEFAULT 'pending',\n  validationMessage TEXT,\n  parserSource VARCHAR(50) NOT NULL,\n  pageNumber INT,\n  boundingBox JSON,\n  codeReference VARCHAR(255),\n  confidenceScore DECIMAL(3,2),\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_extractionJobId (extractionJobId),\n  INDEX idx_importedFileId (importedFileId),\n  INDEX idx_fieldName (fieldName),\n  INDEX idx_validationStatus (validationStatus)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1480
+}

@@ -2614,3 +2614,18 @@ remaining life and MAWP calculations. This ensures the calculation reflects the 
 - [x] Implement validation service and report finalization
 - [x] Update UI to display compliance data and audit information
 - [x] Write and run verification tests (699 tests passing)
+
+
+## Bug Fix: Vite HMR Websocket Connection Error (Jan 30, 2026)
+- [ ] Review current Vite configuration
+- [ ] Update HMR configuration for Manus proxy compatibility
+- [ ] Test hot reloading works correctly
+
+## Section 5: Gold-Standard PDF Import & Data Extraction (Jan 31, 2026)
+- [x] Update database schema with extractionAuditLog and dataConflicts tables
+- [x] Implement validation engine with physical reasonableness checks (extractionValidationEngine.ts)
+- [x] Implement audit trail system for extraction decisions (extractionAuditService.ts)
+- [x] Implement location matching engine for TML data - prioritizes location over CML number (locationMatchingEngine.ts)
+- [x] Implement parser selection engine with user override capability (enhancedPdfParser.ts)
+- [x] Update PDF parser to use new validation and audit systems
+- [x] Write and run verification tests (769 tests passing)

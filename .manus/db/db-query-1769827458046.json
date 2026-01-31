@@ -1,0 +1,43 @@
+{
+  "query": "SELECT COUNT(*) as users_count FROM users;\nSELECT COUNT(*) as inspections_count FROM inspections;\nSELECT COUNT(*) as tmlReadings_count FROM tmlReadings;\nSELECT COUNT(*) as reports_count FROM professionalReports;\nSELECT COUNT(*) as calculations_count FROM componentCalculations;\nSELECT COUNT(*) as audit_count FROM auditLog;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT COUNT(*) as users_count FROM users;\nSELECT COUNT(*) as inspections_count FROM inspections;\nSELECT COUNT(*) as tmlReadings_count FROM tmlReadings;\nSELECT COUNT(*) as reports_count FROM professionalReports;\nSELECT COUNT(*) as calculations_count FROM componentCalculations;\nSELECT COUNT(*) as audit_count FROM auditLog;",
+  "rows": [
+    {
+      "users_count": "12514"
+    },
+    {
+      "users_count": "inspections_count"
+    },
+    {
+      "users_count": "459"
+    },
+    {
+      "users_count": "tmlReadings_count"
+    },
+    {
+      "users_count": "9896"
+    },
+    {
+      "users_count": "reports_count"
+    },
+    {
+      "users_count": "79"
+    },
+    {
+      "users_count": "calculations_count"
+    },
+    {
+      "users_count": "2700"
+    },
+    {
+      "users_count": "audit_count"
+    },
+    {
+      "users_count": "1054"
+    }
+  ],
+  "messages": [],
+  "stdout": "users_count\n12514\ninspections_count\n459\ntmlReadings_count\n9896\nreports_count\n79\ncalculations_count\n2700\naudit_count\n1054\n",
+  "stderr": "",
+  "execution_time_ms": 89
+}

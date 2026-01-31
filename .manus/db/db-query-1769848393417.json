@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS dataConflicts (\n  id VARCHAR(64) PRIMARY KEY,\n  inspectionId VARCHAR(64) NOT NULL,\n  importedFileId VARCHAR(64) NOT NULL,\n  fieldName VARCHAR(255) NOT NULL,\n  existingValue TEXT,\n  newValue TEXT,\n  conflictType ENUM('value_mismatch', 'unit_mismatch', 'source_conflict') NOT NULL,\n  resolutionStatus ENUM('pending', 'auto_resolved', 'user_resolved', 'regulation_override') NOT NULL DEFAULT 'pending',\n  resolutionRationale TEXT,\n  resolvedBy INT,\n  resolvedAt TIMESTAMP NULL,\n  regulatoryReference VARCHAR(255),\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  INDEX idx_inspectionId (inspectionId),\n  INDEX idx_importedFileId (importedFileId),\n  INDEX idx_resolutionStatus (resolutionStatus)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute CREATE TABLE IF NOT EXISTS dataConflicts (\n  id VARCHAR(64) PRIMARY KEY,\n  inspectionId VARCHAR(64) NOT NULL,\n  importedFileId VARCHAR(64) NOT NULL,\n  fieldName VARCHAR(255) NOT NULL,\n  existingValue TEXT,\n  newValue TEXT,\n  conflictType ENUM('value_mismatch', 'unit_mismatch', 'source_conflict') NOT NULL,\n  resolutionStatus ENUM('pending', 'auto_resolved', 'user_resolved', 'regulation_override') NOT NULL DEFAULT 'pending',\n  resolutionRationale TEXT,\n  resolvedBy INT,\n  resolvedAt TIMESTAMP NULL,\n  regulatoryReference VARCHAR(255),\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  INDEX idx_inspectionId (inspectionId),\n  INDEX idx_importedFileId (importedFileId),\n  INDEX idx_resolutionStatus (resolutionStatus)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 325
+}
