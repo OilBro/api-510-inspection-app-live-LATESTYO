@@ -215,6 +215,9 @@ export const appRouter = router({
         vesselType: z.string().optional(),
         insideDiameter: z.string().optional(),
         overallLength: z.string().optional(),
+        headType: z.string().optional(),
+        vesselOrientation: z.string().optional(),
+        liquidHeight: z.string().optional(),
         status: z.enum(["draft", "in_progress", "completed", "archived"]).optional(),
         inspectionDate: z.string().optional(),
       }))

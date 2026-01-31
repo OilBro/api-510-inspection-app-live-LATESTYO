@@ -2690,3 +2690,12 @@ remaining life and MAWP calculations. This ensures the calculation reflects the 
 - [x] Add MAP at next inspection calculation (t = t_act - 2×Yn×Cr)
 - [x] Write tests for new calculations (794 tests passing)
 - [x] Update performFullCalculation to use head-specific MAWP
+
+## UI Enhancements for Calculation Display (Jan 31, 2026)
+- [x] Add head type selection dropdown to vessel data form (Hemispherical, 2:1 Ellipsoidal, Torispherical)
+- [x] Add vessel orientation selection (vertical/horizontal) for static head calculation
+- [x] Add liquid height input for static head calculation
+- [x] Display MAP at next inspection in Remaining Life tab
+- [x] Show projected thickness at next inspection (t = t_act - 2×Yn×Cr)
+- [x] Show thickness loss by next inspection
+- [x] Test and verify the new UI elements (794 tests passing)

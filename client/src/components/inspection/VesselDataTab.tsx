@@ -33,6 +33,9 @@ export default function VesselDataTab({ inspection }: VesselDataTabProps) {
     vesselType: inspection.vesselType || "",
     insideDiameter: inspection.insideDiameter || "",
     overallLength: inspection.overallLength || "",
+    headType: inspection.headType || "",
+    vesselOrientation: inspection.vesselOrientation || "",
+    liquidHeight: inspection.liquidHeight || "",
   });
 
   const handleChange = (field: string, value: string) => {
@@ -83,6 +86,9 @@ export default function VesselDataTab({ inspection }: VesselDataTabProps) {
         vesselType: formData.vesselType || undefined,
         insideDiameter: formData.insideDiameter || undefined,
         overallLength: formData.overallLength || undefined,
+        headType: formData.headType || undefined,
+        vesselOrientation: formData.vesselOrientation || undefined,
+        liquidHeight: formData.liquidHeight || undefined,
       });
 
       utils.inspections.get.invalidate({ id: inspection.id });
@@ -334,6 +340,55 @@ export default function VesselDataTab({ inspection }: VesselDataTabProps) {
                 value={formData.overallLength}
                 onChange={(e) => handleChange("overallLength", e.target.value)}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="headType">Head Type</Label>
+              <Select
+                value={formData.headType}
+                onValueChange={(value) => handleChange("headType", value)}
+              >
+                <SelectTrigger id="headType">
+                  <SelectValue placeholder="Select head type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2:1 Ellipsoidal">2:1 Ellipsoidal (Most Common)</SelectItem>
+                  <SelectItem value="Hemispherical">Hemispherical (Highest MAWP)</SelectItem>
+                  <SelectItem value="Torispherical">Torispherical (ASME F&D)</SelectItem>
+                  <SelectItem value="Flat">Flat Head</SelectItem>
+                  <SelectItem value="Conical">Conical</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Affects MAWP calculation per ASME VIII-1 UG-32</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="vesselOrientation">Vessel Orientation</Label>
+              <Select
+                value={formData.vesselOrientation}
+                onValueChange={(value) => handleChange("vesselOrientation", value)}
+              >
+                <SelectTrigger id="vesselOrientation">
+                  <SelectValue placeholder="Select orientation" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="vertical">Vertical</SelectItem>
+                  <SelectItem value="horizontal">Horizontal</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Affects static head calculation for MAWP</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="liquidHeight">Liquid Height (inches)</Label>
+              <Input
+                id="liquidHeight"
+                type="number"
+                step="0.01"
+                value={formData.liquidHeight}
+                onChange={(e) => handleChange("liquidHeight", e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">For static head: P = SH(ft) × 0.433 × SG</p>
             </div>
           </div>
         </div>

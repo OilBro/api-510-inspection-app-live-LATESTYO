@@ -59,6 +59,8 @@ export const inspections = mysqlTable("inspections", {
   overallLength: decimal("overallLength", { precision: 10, scale: 2 }),
   crownRadius: decimal("crownRadius", { precision: 10, scale: 3 }), // L parameter for torispherical heads
   knuckleRadius: decimal("knuckleRadius", { precision: 10, scale: 3 }), // r parameter for torispherical heads
+  vesselOrientation: varchar("vesselOrientation", { length: 50 }), // vertical or horizontal
+  liquidHeight: decimal("liquidHeight", { precision: 10, scale: 2 }), // in inches, for static head calculation
   
   // Status
   status: mysqlEnum("status", ["draft", "in_progress", "completed", "archived"]).default("draft").notNull(),

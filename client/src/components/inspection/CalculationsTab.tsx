@@ -1027,6 +1027,76 @@ export default function CalculationsTab({ inspectionId }: CalculationsTabProps) 
                 <Calculator className="mr-2 h-4 w-4" />
                 Calculate Remaining Life
               </Button>
+
+              {/* MAP at Next Inspection Section */}
+              {remainingLife.nextInspection && remainingLife.currentThickness && remainingLife.corrosionRate && (
+                <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                  <h4 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Info className="h-5 w-5 text-blue-600" />
+                    MAP at Next Inspection (Projected)
+                  </h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Based on API 510: t = t_act - 2 × Yn × Cr (factor of 2 for safety margin)
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-3 bg-white rounded-md border">
+                      <Label className="text-xs text-muted-foreground">Projected Thickness at Next Inspection</Label>
+                      <p className="text-xl font-bold text-slate-700">
+                        {(() => {
+                          const t_act = parseFloat(remainingLife.currentThickness);
+                          const Yn = parseFloat(remainingLife.nextInspection);
+                          const Cr = parseFloat(remainingLife.corrosionRate);
+                          if (!isNaN(t_act) && !isNaN(Yn) && !isNaN(Cr)) {
+                            const t_projected = t_act - (2 * Yn * Cr);
+                            return t_projected > 0 ? t_projected.toFixed(4) + '"' : "Below minimum";
+                          }
+                          return "—";
+                        })()}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-white rounded-md border">
+                      <Label className="text-xs text-muted-foreground">Thickness Loss by Next Inspection</Label>
+                      <p className="text-xl font-bold text-amber-600">
+                        {(() => {
+                          const Yn = parseFloat(remainingLife.nextInspection);
+                          const Cr = parseFloat(remainingLife.corrosionRate);
+                          if (!isNaN(Yn) && !isNaN(Cr)) {
+                            return (2 * Yn * Cr).toFixed(4) + '"';
+                          }
+                          return "—";
+                        })()}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-white rounded-md border">
+                      <Label className="text-xs text-muted-foreground">Projected MAP at Next Inspection</Label>
+                      <p className="text-xl font-bold text-blue-700">
+                        {(() => {
+                          const t_act = parseFloat(remainingLife.currentThickness);
+                          const Yn = parseFloat(remainingLife.nextInspection);
+                          const Cr = parseFloat(remainingLife.corrosionRate);
+                          const R = parseFloat(shellMAWP.insideRadius);
+                          const S = parseFloat(shellMAWP.allowableStress);
+                          const E = parseFloat(shellMAWP.jointEfficiency);
+                          
+                          if (!isNaN(t_act) && !isNaN(Yn) && !isNaN(Cr) && !isNaN(R) && !isNaN(S) && !isNaN(E)) {
+                            const t_projected = t_act - (2 * Yn * Cr);
+                            if (t_projected > 0) {
+                              // P = SEt / (R + 0.6t)
+                              const MAP = (S * E * t_projected) / (R + 0.6 * t_projected);
+                              return MAP.toFixed(1) + " psig";
+                            }
+                            return "Below minimum";
+                          }
+                          return "Enter MAWP inputs";
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Note: MAP calculation uses shell formula. For heads, use the Head Calculations tab with projected thickness.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
