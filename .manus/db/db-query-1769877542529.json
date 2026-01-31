@@ -1,0 +1,50 @@
+{
+  "query": "SELECT id, inspectionId, nozzleNumber, nominalSize, actualThickness, minimumRequired FROM nozzleEvaluations LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, inspectionId, nozzleNumber, nominalSize, actualThickness, minimumRequired FROM nozzleEvaluations LIMIT 5;",
+  "rows": [
+    {
+      "id": "__AdMB89BMlpcyeDWB3IF",
+      "inspectionId": "vhkEkAzNLdJppUwWAP15C",
+      "nozzleNumber": "N7",
+      "nominalSize": "2",
+      "actualThickness": "NULL",
+      "minimumRequired": "0.1348"
+    },
+    {
+      "id": "_2mpSjMrBZRLyzxccSWiY",
+      "inspectionId": "FRf-W8ZbqIt6CYcaxpiWp",
+      "nozzleNumber": "N9",
+      "nominalSize": "1",
+      "actualThickness": "NULL",
+      "minimumRequired": "0.1164"
+    },
+    {
+      "id": "_47chYfunURz-VY4EWv2S",
+      "inspectionId": "ppQXyyn1OkkYATjNDKRU2",
+      "nozzleNumber": "N5",
+      "nominalSize": "1\"",
+      "actualThickness": "0.1320",
+      "minimumRequired": "0.1160"
+    },
+    {
+      "id": "_a8ThxkswqsrhjaWpxvgI",
+      "inspectionId": "iFDbj_rnLLSeVUJ2C0xoT",
+      "nozzleNumber": "N3",
+      "nominalSize": "2\"",
+      "actualThickness": "NULL",
+      "minimumRequired": "0.1350"
+    },
+    {
+      "id": "_av-6dEL_WMG2PnWHR232",
+      "inspectionId": "FRf-W8ZbqIt6CYcaxpiWp",
+      "nozzleNumber": "N7",
+      "nominalSize": "1",
+      "actualThickness": "NULL",
+      "minimumRequired": "0.1164"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tinspectionId\tnozzleNumber\tnominalSize\tactualThickness\tminimumRequired\n__AdMB89BMlpcyeDWB3IF\tvhkEkAzNLdJppUwWAP15C\tN7\t2\tNULL\t0.1348\n_2mpSjMrBZRLyzxccSWiY\tFRf-W8ZbqIt6CYcaxpiWp\tN9\t1\tNULL\t0.1164\n_47chYfunURz-VY4EWv2S\tppQXyyn1OkkYATjNDKRU2\tN5\t1\"\t0.1320\t0.1160\n_a8ThxkswqsrhjaWpxvgI\tiFDbj_rnLLSeVUJ2C0xoT\tN3\t2\"\tNULL\t0.1350\n_av-6dEL_WMG2PnWHR232\tFRf-W8ZbqIt6CYcaxpiWp\tN7\t1\tNULL\t0.1164\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

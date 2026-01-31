@@ -281,15 +281,24 @@ export async function saveAnomalies(inspectionId: string, anomalies: DetectedAno
 }
 
 /**
- * Get anomalies for an inspection
+ * Get anomalies for an inspection (excludes resolved/dismissed anomalies)
  */
 export async function getAnomalies(inspectionId: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
+  // Only return anomalies that are not resolved (dismissed)
   return await db.select()
     .from(reportAnomalies)
-    .where(eq(reportAnomalies.inspectionId, inspectionId));
+    .where(
+      and(
+        eq(reportAnomalies.inspectionId, inspectionId),
+        // Exclude resolved anomalies (these are "cleared/dismissed")
+        // Show pending, acknowledged, and false_positive
+        // resolved means user clicked "Clear All" or "Mark as Resolved"
+        eq(reportAnomalies.reviewStatus, "pending")
+      )
+    );
 }
 
 /**

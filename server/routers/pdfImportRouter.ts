@@ -173,20 +173,28 @@ CRITICAL EXTRACTION RULES AND REQUIREMENTS:
    - Values typically: 1.0 (Full RT), 0.85 (Spot RT), 0.70 (No RT)
    - If not explicitly stated, infer from radiography type
 
-5. NOZZLES - EXTRACT ALL:
-   - Extract EVERY nozzle from nozzle evaluation tables
-   - Look for tables titled "Nozzle Evaluation", "Appendix B", "TABLE B"
-   - Include ALL sizes mentioned (18", 2", 24", etc.)
-   - Include service type for identification
-   - Extract ALL columns: CML, Noz ID, Size, Material, Age, t_prev, t_act, t_min, Ca, Cr, RL
-   - If remaining life shows ">20", use 999 as the number
-   - Extract acceptability status clearly
-   - CRITICAL: Do not miss any nozzles - count them and verify
+5. NOZZLES - EXTRACT ALL (CRITICAL):
+   - Extract EVERY nozzle from ALL nozzle-related tables in the document
+   - Search for tables titled: "Nozzle Evaluation", "Appendix B", "TABLE B", "Nozzle Schedule", "Nozzle Data", "Nozzle Thickness", "Nozzle RL", "Remaining Life Calculations"
+   - Look in Section 7.0 (Nozzle Evaluation), Appendix sections, and any tables with nozzle data
+   - Common nozzle identifiers: N1, N2, N3, MW (Manway), RV (Relief Valve), Inlet, Outlet, Drain, Vent, Level, Gauge, Thermowell
+   - Include ALL sizes: 24", 18", 12", 8", 6", 4", 3", 2", 1", 3/4"
+   - Extract ALL columns: CML, Noz ID/Number, Size, Material, Schedule, Age, t_prev, t_act, t_min, Ca, Cr, RL
+   - If remaining life shows ">20" or "20+", use 999 as the number
+   - Extract acceptability status (Pass/Fail, Acceptable/Unacceptable, Yes/No)
+   - MANDATORY: Count all nozzles found and ensure EVERY one is extracted
+   - If you see "12 nozzles" mentioned, you MUST extract 12 nozzle records
+   - Look for nozzle thickness readings in TML tables too (component = "Nozzle")
 
-6. CHECKLIST:
-   - Extract ALL checklist items with their EXACT status from report
-   - Do not infer or assume - use exact text from document
-   - Include all categories present
+6. CHECKLIST - EXTRACT ALL ITEMS:
+   - Extract EVERY checklist item from the inspection checklist section
+   - Look for tables titled: "Inspection Checklist", "Checklist", "Inspection Items", "Section 2.0"
+   - Common checklist categories: External Visual, Internal Visual, Nozzles, Supports, Nameplate, Insulation, Coating, Corrosion, Erosion, Cracking, Deformation
+   - Extract item description/name EXACTLY as written
+   - Extract status: Pass/Fail, Yes/No, Acceptable/Unacceptable, Satisfactory/Unsatisfactory, N/A, Not Inspected
+   - Extract any notes or comments for each item
+   - MANDATORY: Count all checklist items and ensure EVERY one is extracted
+   - If checklist has 25 items, you MUST extract 25 checklist records
 
 7. TABLE A - COMPONENT CALCULATIONS:
    - Extract data exactly as shown in Executive Summary table

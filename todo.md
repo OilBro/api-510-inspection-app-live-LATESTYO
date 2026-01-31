@@ -2699,3 +2699,28 @@ remaining life and MAWP calculations. This ensures the calculation reflects the 
 - [x] Show projected thickness at next inspection (t = t_act - 2×Yn×Cr)
 - [x] Show thickness loss by next inspection
 - [x] Test and verify the new UI elements (794 tests passing)
+
+## Clear Anomalies Feature (Jan 31, 2026)
+- [x] Add "Clear All Anomalies" button to AnomalyPanel (already implemented at line 186-196)
+- [x] Verify dismissAll procedure exists in anomalyRouter (mutation at line 80-88)
+- [x] Test the feature - button visible when anomalies exist
+
+## Bug Fix: Checklist Items Not Importing (Jan 31, 2026)
+- [x] Investigate checklist import logic in PDF import router
+- [x] Enhanced extraction prompt with detailed checklist search instructions
+- [ ] Test the fix with new PDF import
+
+## Bug Fix: Nozzles Not Populating in Professional Report (Jan 31, 2026)
+- [x] Investigate nozzle data flow from import to professional report
+- [x] Root cause: LLM not extracting nozzles from PDF - enhanced extraction prompt with detailed nozzle search instructions
+- [ ] Test the fix with new PDF import
+
+## Bug Fix: Anomalies Not Clearing (Jan 31, 2026)
+- [x] Investigate dismissAll mutation in anomalyRouter
+- [x] Fix the anomaly clearing issue - updated getAnomalies to filter out resolved anomalies
+- [x] Test the fix (794 tests passing)
+
+## Bug Fix: PDF Parser Not Finding/Matching Everything (Jan 31, 2026)
+- [x] Improve PDF parser to extract more data fields - enhanced nozzle and checklist extraction prompts
+- [x] Improve field matching logic - added detailed search instructions for nozzles and checklists
+- [ ] Test with sample PDFs

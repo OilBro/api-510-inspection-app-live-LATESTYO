@@ -1,0 +1,30 @@
+{
+  "query": "SELECT COUNT(*) as count, inspectionId FROM nozzleEvaluations GROUP BY inspectionId LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT COUNT(*) as count, inspectionId FROM nozzleEvaluations GROUP BY inspectionId LIMIT 5;",
+  "rows": [
+    {
+      "count": "7",
+      "inspectionId": "AeT7KIXu7Nx1pOv7TwpTj"
+    },
+    {
+      "count": "12",
+      "inspectionId": "P24rf5jYwj1t2zGdjFyNc"
+    },
+    {
+      "count": "21",
+      "inspectionId": "UZNDBONAZepnbaTGt99W3"
+    },
+    {
+      "count": "7",
+      "inspectionId": "kSy4Y6ApnmaWuFAafoU6B"
+    },
+    {
+      "count": "44",
+      "inspectionId": "-hVQHlzdjeyw4lqUsqKry"
+    }
+  ],
+  "messages": [],
+  "stdout": "count\tinspectionId\n7\tAeT7KIXu7Nx1pOv7TwpTj\n12\tP24rf5jYwj1t2zGdjFyNc\n21\tUZNDBONAZepnbaTGt99W3\n7\tkSy4Y6ApnmaWuFAafoU6B\n44\t-hVQHlzdjeyw4lqUsqKry\n",
+  "stderr": "",
+  "execution_time_ms": 80
+}
