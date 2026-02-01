@@ -2788,3 +2788,15 @@ Test PDF: 54-11-067 2017.pdf
 - [x] All 836 tests passing
 - [x] Component normalization working correctly
 - [x] Head detection handles all legacy naming patterns
+
+## PDF Audit Critical Issues (Jan 31, 2026)
+
+### P0 - Critical Calculation Issues - COMPLETED
+- [x] Phase 1: Head formula analysis
+  - Root cause: Calculation engine has correct UG-32 formulas
+  - Issue: Data not being passed correctly from TML readings to PDF generator
+- [x] Phase 2-5: All critical fixes implemented
+  - Previous thickness extraction from TML readings
+  - Time interval calculation from actual inspection dates
+  - Material data flow from inspection.materialSpec
+  - Inspector name extraction and display

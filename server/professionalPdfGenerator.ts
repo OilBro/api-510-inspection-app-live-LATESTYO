@@ -1103,7 +1103,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   const shellMaterialData = [
     ['Material', 'Temp.', 'MAWP', 'SH', 'SG', 'D', 't nom'],
     [
-      inspection?.materialSpec || 'SSA-304',
+      inspection?.materialSpec || 'SA-516 Gr. 70',
       inspection?.designTemperature || '200',
       inspection?.designPressure || '250',
       shellComp?.staticHead || '0',
@@ -1239,7 +1239,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       'East Head',
       'Ellipsoidal',
       eastHead?.nominalThickness || '0.500',
-      inspection?.materialSpec || 'SSA-304',
+      inspection?.materialSpec || 'SA-516 Gr. 70',
       eastHead?.allowableStress || inspection?.allowableStress || '20000',
       eastHead?.staticHead || '0',
       eastHead?.designMAWP || inspection?.designPressure || '252.4'
@@ -1248,7 +1248,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       'West Head',
       'Ellipsoidal',
       westHead?.nominalThickness || '0.500',
-      inspection?.materialSpec || 'SSA-304',
+      inspection?.materialSpec || 'SA-516 Gr. 70',
       westHead?.allowableStress || inspection?.allowableStress || '20000',
       westHead?.staticHead || '0',
       westHead?.designMAWP || inspection?.designPressure || '252.4'

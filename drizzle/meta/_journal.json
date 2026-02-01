@@ -204,6 +204,20 @@
       "when": 1769876012178,
       "tag": "0028_tough_richard_fisk",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1769902755501,
+      "tag": "0029_amazing_franklin_storm",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1769973877852,
+      "tag": "0030_rich_miracleman",
+      "breakpoints": true
     }
   ]
 }

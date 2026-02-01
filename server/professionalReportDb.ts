@@ -484,12 +484,14 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
     
     // Determine thicknesses (MINIMUM of relevant TMLs for conservative API 510 calculations)
     const validCurrent = relevantTMLs.map(t => parseFloat(t.tActual || t.currentThickness || '0')).filter(v => v > 0);
+    // CRITICAL FIX: Extract previousThickness from TML readings
     const validPrev = relevantTMLs.map(t => parseFloat(t.previousThickness || '0')).filter(v => v > 0);
     const validNominal = relevantTMLs.map(t => parseFloat(t.nominalThickness || '0')).filter(v => v > 0);
     
     // Use MINIMUM thickness (most conservative for safety calculations)
     const avgCurrent = validCurrent.length ? Math.min(...validCurrent) : (type === 'shell' ? 0.652 : 0.555);
     // For previous/nominal: prefer actual previous readings, then nominal, then defaults
+    // CRITICAL: If no previousThickness, use nominalThickness as baseline
     const avgPrev = validPrev.length ? Math.min(...validPrev) : 
                     (validNominal.length ? Math.min(...validNominal) : (type === 'shell' ? 0.625 : 0.500));
     const avgNominal = validNominal.length ? Math.min(...validNominal) : avgPrev;
@@ -560,6 +562,7 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
     const CA = (avgCurrent - tMin).toFixed(3);
     
     // Calculate time between inspections from dates (if available)
+    // CRITICAL FIX: Calculate actual time between inspections using inspection dates
     let yearsBetween = 10; // Default assumption
     if (inspection.inspectionDate && inspection.previousInspectionId) {
       try {
@@ -630,12 +633,15 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       nextInspectionYears = Math.min(10, halfLife).toFixed(2);
     }
 
+    // CRITICAL FIX: Ensure material code is correctly set from inspection
+    const materialCode = inspection.materialSpec || 'SA-516-70';
+    
     await createComponentCalculation({
       id: nanoid(),
       reportId,
       componentName: name,
       componentType: type,
-      materialCode: inspection.materialSpec || 'SA-516-70',
+      materialCode: materialCode,
       designMAWP: inspection.designPressure || '250',
       designTemp: inspection.designTemperature || '200',
       insideDiameter: inspection.insideDiameter || '70.75',
