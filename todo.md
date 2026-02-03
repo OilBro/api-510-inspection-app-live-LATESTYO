@@ -2814,3 +2814,17 @@ Test PDF: 54-11-067 2017.pdf
   - Analysis: No programmatic history manipulation found
   - Source: Browser behavior with navigation patterns
   - Status: Non-critical, does not affect functionality
+
+## Custom Notification System (Feb 1, 2026)
+- [ ] Phase 1: Analyze existing notification system and requirements
+- [ ] Phase 2: Design custom notification system architecture
+- [ ] Phase 3: Implement backend notification procedures
+- [ ] Phase 4: Implement frontend notification UI components
+- [ ] Phase 5: Add notification triggers for key events
+- [ ] Phase 6: Test and save checkpoint
+
+## CRITICAL BUG: Allowable Stress Not Saved/Retrieved (Feb 1, 2026) - FIXED
+- [x] Phase 1: Trace vessel data save flow - COMPLETED
+- [x] Phase 2: Trace calculation engine data retrieval - COMPLETED
+- [x] Phase 3: Fix the data persistence issue - COMPLETED
+- [x] Phase 4: Test with user's exact values - COMPLETED

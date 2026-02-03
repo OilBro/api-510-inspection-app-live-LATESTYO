@@ -211,8 +211,11 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     const yearBuilt = parseInt(inputs.yearBuilt || '0');
     const currentYear = parseInt(inputs.currentYear || new Date().getFullYear().toString());
     
-    // Get allowable stress from ASME database or inspection
-    const allowableStress = stressData?.stress || parseFloat(String(inspection.allowableStress || 20000));
+    // Get allowable stress: prioritize user-entered value over ASME database
+    // If user manually entered an allowable stress, use that (it's more accurate for their specific vessel)
+    // Otherwise fall back to ASME database lookup, then default to 20000
+    const userEnteredStress = inspection.allowableStress ? parseFloat(String(inspection.allowableStress)) : null;
+    const allowableStress = userEnteredStress || stressData?.stress || 20000;
     
     // Determine vessel orientation from inspection data
     // Default to horizontal as most process vessels are horizontal
