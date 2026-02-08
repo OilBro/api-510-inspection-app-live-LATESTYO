@@ -2845,3 +2845,47 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Test TypeScript compilation (all errors resolved)
 - [x] Test suite passing (836 tests)
 - [x] Ready for checkpoint
+
+## 4-Bucket Production Readiness Control Plan
+
+### Bucket A — Calculation Correctness (Code Compliance)
+- [ ] Shell MAWP formula verified against UG-27(c)(1) with both hoop and longitudinal cases
+- [ ] Head MAWP formulas verified per actual head type (UG-32(d/e/f))
+- [ ] Static head inclusion rules documented (only lower shell / bottom head)
+- [ ] Radius definition standardized and locked (ID/2 vs ID/2 − t_nom)
+- [ ] Corrosion allowance handling explicitly documented (included or excluded — no ambiguity)
+- [ ] Create "Calculation Basis & Scope" document (1-2 pages)
+
+### Bucket B — Data Lineage & Mapping (Highest Risk)
+- [x] Verify CML correlation table actively used in corrosion rate calculations (not just stored)
+- [x] Add stationKey system to database schema (stationKey, sliceNumber, angleDeg, trueCmlId, axialPosition)
+- [x] Create stationKey normalization utility with comprehensive tests (21 tests passing)
+- [x] Integrate stationKey generation into TML reading creation/update
+- [x] Handle slice-vs-CML confusion (slice numbers 7-27 vs true CML IDs 6-173)
+- [x] Multiple formats converge to canonical station ID (SHELL-SLICE-{n}-A{deg}, {HEAD}-{position}, NOZZLE-{id})
+- [ ] Verify UT upload logic: previous → current thickness shift is correct
+- [ ] Verify time delta uses inspection dates, not defaults
+- [ ] Location-based matching overrides CML numbering when conflicts exist
+- [ ] Create "CML Normalization & Correlation Logic" specification
+
+### Bucket C — Locked Engine Integrity (Audit Defense)
+- [ ] Explicit engine versioning displayed in UI and PDF
+- [ ] Calculation hash (inputs → outputs) stored for each run
+- [ ] Proof that user cannot override formulas
+- [ ] Proof that recalculation is deterministic
+- [ ] Change log shows why recalculation occurred (UT upload, mapping change, manual edit)
+- [ ] Create "Calculation Engine Control Statement"
+
+### Bucket D — End-to-End Validation with Real Assets
+- [ ] Select 3 real vessels: simple shell, ellipsoidal heads, torispherical heads + UT update
+- [ ] Hand-calc shell t_required for each vessel
+- [ ] Hand-calc head t_required for each vessel
+- [ ] Hand-calc corrosion rate & RL for each vessel
+- [ ] Compare original PDF, Excel, and app output
+- [ ] Verify discrepancy threshold < ±2%
+- [ ] Create Validation Matrix (PDF + CSV)
+
+### Critical Design Questions (Must Answer Before Code Changes)
+- [ ] Which head types will be officially supported right now?
+- [ ] Is corrosion allowance included in t_required or treated separately?
+- [ ] Does static head apply to heads or shell only?

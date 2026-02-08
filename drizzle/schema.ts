@@ -227,10 +227,20 @@ export const tmlReadings = mysqlTable("tmlReadings", {
   inspectionId: varchar("inspectionId", { length: 64 }).notNull(),
   
   // Grid-based identification
-  cmlNumber: varchar("cmlNumber", { length: 10 }).notNull(), // "001", "002", "003"
+  cmlNumber: varchar("cmlNumber", { length: 10 }).notNull(), // "001", "002", "003" - can be slice number OR true CML ID
   componentType: varchar("componentType", { length: 255 }).notNull(), // "Vessel Shell", "East Head", "West Head", "24"
   location: varchar("location", { length: 50 }).notNull(), // "7-0", "7-45", "11B-C", "N1"
+  
+  // CRITICAL: Station Key System (Bucket B - Data Lineage)
+  // Canonical identifier for physical measurement location across inspections
+  // Format: "SHELL-SLICE-{slice}-A{angle}" or "{HEAD}-{position}" or "NOZZLE-{id}"
+  // Example: "SHELL-SLICE-27-A0", "SOUTH-HEAD-12-OCLOCK", "NOZZLE-N1"
+  stationKey: varchar("stationKey", { length: 100 }), // Canonical location identifier
+  sliceNumber: int("sliceNumber"), // Axial station/slice (7-27 for vessel 54-11-001)
+  angleDeg: int("angleDeg"), // Circumferential angle (0, 45, 90, 135, 180, 225, 270, 315)
+  trueCmlId: varchar("trueCmlId", { length: 10 }), // True CML ID from grid cell (e.g., 166, 14)
   service: varchar("service", { length: 255 }), // For nozzles: "Manhole", "Relief", "Vap Out"
+  axialPosition: varchar("axialPosition", { length: 50 }), // "2'", "4'", "2\" head side" - descriptive position
   
   // Reading metadata for deduplication
   readingType: varchar("readingType", { length: 50 }), // "nozzle", "seam", "spot", "general"

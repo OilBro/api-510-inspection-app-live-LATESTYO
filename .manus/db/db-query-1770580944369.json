@@ -1,0 +1,115 @@
+{
+  "query": "SELECT \n  cmlNumber,\n  location,\n  component,\n  componentType,\n  tActual\nFROM tmlReadings \nWHERE cmlNumber REGEXP '^[0-9]+$'\nORDER BY CAST(cmlNumber AS UNSIGNED)\nLIMIT 15;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT \n  cmlNumber,\n  location,\n  component,\n  componentType,\n  tActual\nFROM tmlReadings \nWHERE cmlNumber REGEXP '^[0-9]+$'\nORDER BY CAST(cmlNumber AS UNSIGNED)\nLIMIT 15;",
+  "rows": [
+    {
+      "cmlNumber": "001",
+      "location": "1-C",
+      "component": "East Head",
+      "componentType": "head",
+      "tActual": "0.5430"
+    },
+    {
+      "cmlNumber": "001",
+      "location": "East Head 1 - C",
+      "component": "East Head",
+      "componentType": "head",
+      "tActual": "NULL"
+    },
+    {
+      "cmlNumber": "1",
+      "location": "N/A",
+      "component": "Manway",
+      "componentType": "Manway",
+      "tActual": "0.3790"
+    },
+    {
+      "cmlNumber": "1",
+      "location": "East Head 12 O'Clock",
+      "component": "East Head 12 O'Clock",
+      "componentType": "East Head 12 O'Clock",
+      "tActual": "0.5430"
+    },
+    {
+      "cmlNumber": "1",
+      "location": "null",
+      "component": "2\" from Seam w/East Head",
+      "componentType": "2\" from Seam w/East Head",
+      "tActual": "0.4190"
+    },
+    {
+      "cmlNumber": "001",
+      "location": "N/A",
+      "component": "Bttm Head",
+      "componentType": "Bttm Head",
+      "tActual": "0.5160"
+    },
+    {
+      "cmlNumber": "001",
+      "location": "South Head 12 O'Clock",
+      "component": "West Head",
+      "componentType": "head",
+      "tActual": "NULL"
+    },
+    {
+      "cmlNumber": "001",
+      "location": "1-C",
+      "component": "East Head",
+      "componentType": "head",
+      "tActual": "0.5430"
+    },
+    {
+      "cmlNumber": "002",
+      "location": "2",
+      "component": "West Head",
+      "componentType": "head",
+      "tActual": "0.5260"
+    },
+    {
+      "cmlNumber": "2",
+      "location": "null",
+      "component": "2'",
+      "componentType": "2'",
+      "tActual": "0.4660"
+    },
+    {
+      "cmlNumber": "002",
+      "location": "2-B",
+      "component": "East Head",
+      "componentType": "head",
+      "tActual": "0.5290"
+    },
+    {
+      "cmlNumber": "2",
+      "location": "East Head 3 O'Clock",
+      "component": "East Head 3 O'Clock",
+      "componentType": "East Head 3 O'Clock",
+      "tActual": "0.5600"
+    },
+    {
+      "cmlNumber": "002",
+      "location": "East Head 2 - B",
+      "component": "East Head",
+      "componentType": "head",
+      "tActual": "NULL"
+    },
+    {
+      "cmlNumber": "2",
+      "location": "N/A",
+      "component": "Relief",
+      "componentType": "Relief",
+      "tActual": "0.1950"
+    },
+    {
+      "cmlNumber": "002",
+      "location": "2-B",
+      "component": "East Head",
+      "componentType": "head",
+      "tActual": "0.5290"
+    }
+  ],
+  "messages": [],
+  "stdout": "cmlNumber\tlocation\tcomponent\tcomponentType\ttActual\n001\t1-C\tEast Head\thead\t0.5430\n001\tEast Head 1 - C\tEast Head\thead\tNULL\n1\tN/A\tManway\tManway\t0.3790\n1\tEast Head 12 O'Clock\tEast Head 12 O'Clock\tEast Head 12 O'Clock\t0.5430\n1\tnull\t2\" from Seam w/East Head\t2\" from Seam w/East Head\t0.4190\n001\tN/A\tBttm Head\tBttm Head\t0.5160\n001\tSouth Head 12 O'Clock\tWest Head\thead\tNULL\n001\t1-C\tEast Head\thead\t0.5430\n002\t2\tWest Head\thead\t0.5260\n2\tnull\t2'\t2'\t0.4660\n002\t2-B\tEast Head\thead\t0.5290\n2\tEast Head 3 O'Clock\tEast Head 3 O'Clock\tEast Head 3 O'Clock\t0.5600\n002\tEast Head 2 - B\tEast Head\thead\tNULL\n2\tN/A\tRelief\tRelief\t0.1950\n002\t2-B\tEast Head\thead\t0.5290\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

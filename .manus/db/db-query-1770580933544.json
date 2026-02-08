@@ -1,0 +1,190 @@
+{
+  "query": "SELECT \n  cmlNumber,\n  COUNT(*) as count,\n  MIN(CAST(tActual AS DECIMAL(10,4))) as min_thickness,\n  MAX(CAST(tActual AS DECIMAL(10,4))) as max_thickness\nFROM tmlReadings \nWHERE cmlNumber IS NOT NULL \nGROUP BY cmlNumber \nORDER BY cmlNumber \nLIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT \n  cmlNumber,\n  COUNT(*) as count,\n  MIN(CAST(tActual AS DECIMAL(10,4))) as min_thickness,\n  MAX(CAST(tActual AS DECIMAL(10,4))) as max_thickness\nFROM tmlReadings \nWHERE cmlNumber IS NOT NULL \nGROUP BY cmlNumber \nORDER BY cmlNumber \nLIMIT 30;",
+  "rows": [
+    {
+      "cmlNumber": "001",
+      "count": "5",
+      "min_thickness": "0.5160",
+      "max_thickness": "0.5430"
+    },
+    {
+      "cmlNumber": "002",
+      "count": "5",
+      "min_thickness": "0.5260",
+      "max_thickness": "0.5290"
+    },
+    {
+      "cmlNumber": "003",
+      "count": "5",
+      "min_thickness": "0.5260",
+      "max_thickness": "0.5390"
+    },
+    {
+      "cmlNumber": "004",
+      "count": "5",
+      "min_thickness": "0.5150",
+      "max_thickness": "0.5410"
+    },
+    {
+      "cmlNumber": "005",
+      "count": "5",
+      "min_thickness": "0.5200",
+      "max_thickness": "0.5370"
+    },
+    {
+      "cmlNumber": "006",
+      "count": "5",
+      "min_thickness": "0.5070",
+      "max_thickness": "0.7920"
+    },
+    {
+      "cmlNumber": "007",
+      "count": "5",
+      "min_thickness": "0.5010",
+      "max_thickness": "0.8100"
+    },
+    {
+      "cmlNumber": "008",
+      "count": "5",
+      "min_thickness": "0.4980",
+      "max_thickness": "0.8150"
+    },
+    {
+      "cmlNumber": "009",
+      "count": "5",
+      "min_thickness": "0.4930",
+      "max_thickness": "0.8150"
+    },
+    {
+      "cmlNumber": "010",
+      "count": "5",
+      "min_thickness": "0.5100",
+      "max_thickness": "0.8090"
+    },
+    {
+      "cmlNumber": "011",
+      "count": "5",
+      "min_thickness": "0.4990",
+      "max_thickness": "0.7820"
+    },
+    {
+      "cmlNumber": "012",
+      "count": "5",
+      "min_thickness": "0.4940",
+      "max_thickness": "0.7840"
+    },
+    {
+      "cmlNumber": "013",
+      "count": "5",
+      "min_thickness": "0.4940",
+      "max_thickness": "0.7800"
+    },
+    {
+      "cmlNumber": "014",
+      "count": "5",
+      "min_thickness": "0.4700",
+      "max_thickness": "0.8100"
+    },
+    {
+      "cmlNumber": "015",
+      "count": "5",
+      "min_thickness": "0.4710",
+      "max_thickness": "0.8090"
+    },
+    {
+      "cmlNumber": "016",
+      "count": "5",
+      "min_thickness": "0.4580",
+      "max_thickness": "0.8130"
+    },
+    {
+      "cmlNumber": "017",
+      "count": "5",
+      "min_thickness": "0.4510",
+      "max_thickness": "0.8090"
+    },
+    {
+      "cmlNumber": "018",
+      "count": "5",
+      "min_thickness": "0.4960",
+      "max_thickness": "0.8070"
+    },
+    {
+      "cmlNumber": "019",
+      "count": "4",
+      "min_thickness": "0.4520",
+      "max_thickness": "0.7910"
+    },
+    {
+      "cmlNumber": "020",
+      "count": "4",
+      "min_thickness": "0.4530",
+      "max_thickness": "0.7930"
+    },
+    {
+      "cmlNumber": "021",
+      "count": "4",
+      "min_thickness": "0.0000",
+      "max_thickness": "0.4690"
+    },
+    {
+      "cmlNumber": "022",
+      "count": "4",
+      "min_thickness": "0.4780",
+      "max_thickness": "0.7840"
+    },
+    {
+      "cmlNumber": "023",
+      "count": "4",
+      "min_thickness": "0.0000",
+      "max_thickness": "0.4790"
+    },
+    {
+      "cmlNumber": "024",
+      "count": "4",
+      "min_thickness": "0.0000",
+      "max_thickness": "0.4650"
+    },
+    {
+      "cmlNumber": "025",
+      "count": "4",
+      "min_thickness": "0.0000",
+      "max_thickness": "0.4570"
+    },
+    {
+      "cmlNumber": "026",
+      "count": "4",
+      "min_thickness": "0.4540",
+      "max_thickness": "0.5190"
+    },
+    {
+      "cmlNumber": "027",
+      "count": "4",
+      "min_thickness": "0.4610",
+      "max_thickness": "0.5210"
+    },
+    {
+      "cmlNumber": "028",
+      "count": "4",
+      "min_thickness": "0.4590",
+      "max_thickness": "0.5250"
+    },
+    {
+      "cmlNumber": "029",
+      "count": "4",
+      "min_thickness": "0.4760",
+      "max_thickness": "0.5230"
+    },
+    {
+      "cmlNumber": "030",
+      "count": "4",
+      "min_thickness": "0.4770",
+      "max_thickness": "0.5260"
+    }
+  ],
+  "messages": [],
+  "stdout": "cmlNumber\tcount\tmin_thickness\tmax_thickness\n001\t5\t0.5160\t0.5430\n002\t5\t0.5260\t0.5290\n003\t5\t0.5260\t0.5390\n004\t5\t0.5150\t0.5410\n005\t5\t0.5200\t0.5370\n006\t5\t0.5070\t0.7920\n007\t5\t0.5010\t0.8100\n008\t5\t0.4980\t0.8150\n009\t5\t0.4930\t0.8150\n010\t5\t0.5100\t0.8090\n011\t5\t0.4990\t0.7820\n012\t5\t0.4940\t0.7840\n013\t5\t0.4940\t0.7800\n014\t5\t0.4700\t0.8100\n015\t5\t0.4710\t0.8090\n016\t5\t0.4580\t0.8130\n017\t5\t0.4510\t0.8090\n018\t5\t0.4960\t0.8070\n019\t4\t0.4520\t0.7910\n020\t4\t0.4530\t0.7930\n021\t4\t0.0000\t0.4690\n022\t4\t0.4780\t0.7840\n023\t4\t0.0000\t0.4790\n024\t4\t0.0000\t0.4650\n025\t4\t0.0000\t0.4570\n026\t4\t0.4540\t0.5190\n027\t4\t0.4610\t0.5210\n028\t4\t0.4590\t0.5250\n029\t4\t0.4760\t0.5230\n030\t4\t0.4770\t0.5260\n",
+  "stderr": "",
+  "execution_time_ms": 127
+}

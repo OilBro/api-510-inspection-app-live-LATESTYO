@@ -1,0 +1,16 @@
+{
+  "query": "SELECT \n  MIN(CAST(cmlNumber AS UNSIGNED)) as min_cml,\n  MAX(CAST(cmlNumber AS UNSIGNED)) as max_cml,\n  COUNT(DISTINCT cmlNumber) as distinct_count,\n  COUNT(*) as total_count\nFROM tmlReadings \nWHERE cmlNumber IS NOT NULL \n  AND cmlNumber REGEXP '^[0-9]+$';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT \n  MIN(CAST(cmlNumber AS UNSIGNED)) as min_cml,\n  MAX(CAST(cmlNumber AS UNSIGNED)) as max_cml,\n  COUNT(DISTINCT cmlNumber) as distinct_count,\n  COUNT(*) as total_count\nFROM tmlReadings \nWHERE cmlNumber IS NOT NULL \n  AND cmlNumber REGEXP '^[0-9]+$';",
+  "rows": [
+    {
+      "min_cml": "1",
+      "max_cml": "177",
+      "distinct_count": "171",
+      "total_count": "509"
+    }
+  ],
+  "messages": [],
+  "stdout": "min_cml\tmax_cml\tdistinct_count\ttotal_count\n1\t177\t171\t509\n",
+  "stderr": "",
+  "execution_time_ms": 65
+}

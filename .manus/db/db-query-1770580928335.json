@@ -1,0 +1,190 @@
+{
+  "query": "SELECT \n  cmlNumber,\n  location,\n  component,\n  componentType,\n  tActual,\n  previousThickness,\n  nominalThickness\nFROM tmlReadings \nWHERE cmlNumber IS NOT NULL \nLIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT \n  cmlNumber,\n  location,\n  component,\n  componentType,\n  tActual,\n  previousThickness,\n  nominalThickness\nFROM tmlReadings \nWHERE cmlNumber IS NOT NULL \nLIMIT 20;",
+  "rows": [
+    {
+      "cmlNumber": "CML 30",
+      "location": "North Head 9 O'Clock",
+      "component": "East Head",
+      "componentType": "head",
+      "tActual": "NULL",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.5000"
+    },
+    {
+      "cmlNumber": "116",
+      "location": "4\" Nozzle",
+      "component": "Nozzle",
+      "componentType": "nozzle",
+      "tActual": "0.2240",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "cmlNumber": "CML 24",
+      "location": "Shell Course 1",
+      "component": "Shell",
+      "componentType": "shell",
+      "tActual": "NULL",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.8125"
+    },
+    {
+      "cmlNumber": "CML 14",
+      "location": "Shell Course 3",
+      "component": "Shell",
+      "componentType": "shell",
+      "tActual": "NULL",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.8125"
+    },
+    {
+      "cmlNumber": "116",
+      "location": "N2 - Vent",
+      "component": "Nozzle",
+      "componentType": "nozzle",
+      "tActual": "0.2280",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "cmlNumber": "CML 22",
+      "location": "Shell Course 1",
+      "component": "Shell",
+      "componentType": "shell",
+      "tActual": "NULL",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.8125"
+    },
+    {
+      "cmlNumber": "CML-2",
+      "location": "9 o'clock",
+      "component": "Vessel Shell",
+      "componentType": "Shell",
+      "tActual": "0.5100",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "cmlNumber": "CML 24",
+      "location": "Shell Course 1",
+      "component": "Shell",
+      "componentType": "shell",
+      "tActual": "NULL",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.8125"
+    },
+    {
+      "cmlNumber": "CML 23",
+      "location": "Shell Course 1",
+      "component": "Shell",
+      "componentType": "shell",
+      "tActual": "NULL",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.8125"
+    },
+    {
+      "cmlNumber": "018",
+      "location": "7-180",
+      "component": "Vessel Shell",
+      "componentType": "shell",
+      "tActual": "0.4960",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "cmlNumber": "11-90",
+      "location": "Vessel Shell",
+      "component": "Vessel Shell",
+      "componentType": "shell",
+      "tActual": "NULL",
+      "previousThickness": "0.4570",
+      "nominalThickness": "NULL"
+    },
+    {
+      "cmlNumber": "CML 18",
+      "location": "Shell Course 2",
+      "component": "Shell",
+      "componentType": "shell",
+      "tActual": "NULL",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.8125"
+    },
+    {
+      "cmlNumber": "CML-2",
+      "location": "9 o'clock",
+      "component": "Vessel Shell",
+      "componentType": "Shell",
+      "tActual": "0.5100",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "cmlNumber": "CML 8",
+      "location": "Shell Course 5",
+      "component": "Shell",
+      "componentType": "shell",
+      "tActual": "NULL",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.8125"
+    },
+    {
+      "cmlNumber": "CML-2",
+      "location": "9 o'clock",
+      "component": "Vessel Shell",
+      "componentType": "Shell",
+      "tActual": "0.5100",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "cmlNumber": "16-0",
+      "location": "Vessel Shell",
+      "component": "Vessel Shell",
+      "componentType": "shell",
+      "tActual": "NULL",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "cmlNumber": "CML 8",
+      "location": "Shell Course 5",
+      "component": "Shell",
+      "componentType": "shell",
+      "tActual": "NULL",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.8125"
+    },
+    {
+      "cmlNumber": "CML 30",
+      "location": "North Head 9 O'Clock",
+      "component": "East Head",
+      "componentType": "head",
+      "tActual": "NULL",
+      "previousThickness": "NULL",
+      "nominalThickness": "0.5000"
+    },
+    {
+      "cmlNumber": "CML-2",
+      "location": "9 o'clock",
+      "component": "Vessel Shell",
+      "componentType": "Shell",
+      "tActual": "0.5100",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    },
+    {
+      "cmlNumber": "CML-1",
+      "location": "12 o'clock",
+      "component": "NULL",
+      "componentType": "Shell",
+      "tActual": "0.1000",
+      "previousThickness": "NULL",
+      "nominalThickness": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "cmlNumber\tlocation\tcomponent\tcomponentType\ttActual\tpreviousThickness\tnominalThickness\nCML 30\tNorth Head 9 O'Clock\tEast Head\thead\tNULL\tNULL\t0.5000\n116\t4\" Nozzle\tNozzle\tnozzle\t0.2240\tNULL\tNULL\nCML 24\tShell Course 1\tShell\tshell\tNULL\tNULL\t0.8125\nCML 14\tShell Course 3\tShell\tshell\tNULL\tNULL\t0.8125\n116\tN2 - Vent\tNozzle\tnozzle\t0.2280\tNULL\tNULL\nCML 22\tShell Course 1\tShell\tshell\tNULL\tNULL\t0.8125\nCML-2\t9 o'clock\tVessel Shell\tShell\t0.5100\tNULL\tNULL\nCML 24\tShell Course 1\tShell\tshell\tNULL\tNULL\t0.8125\nCML 23\tShell Course 1\tShell\tshell\tNULL\tNULL\t0.8125\n018\t7-180\tVessel Shell\tshell\t0.4960\tNULL\tNULL\n11-90\tVessel Shell\tVessel Shell\tshell\tNULL\t0.4570\tNULL\nCML 18\tShell Course 2\tShell\tshell\tNULL\tNULL\t0.8125\nCML-2\t9 o'clock\tVessel Shell\tShell\t0.5100\tNULL\tNULL\nCML 8\tShell Course 5\tShell\tshell\tNULL\tNULL\t0.8125\nCML-2\t9 o'clock\tVessel Shell\tShell\t0.5100\tNULL\tNULL\n16-0\tVessel Shell\tVessel Shell\tshell\tNULL\tNULL\tNULL\nCML 8\tShell Course 5\tShell\tshell\tNULL\tNULL\t0.8125\nCML 30\tNorth Head 9 O'Clock\tEast Head\thead\tNULL\tNULL\t0.5000\nCML-2\t9 o'clock\tVessel Shell\tShell\t0.5100\tNULL\tNULL\nCML-1\t12 o'clock\tNULL\tShell\t0.1000\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 157
+}

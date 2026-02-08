@@ -1,6 +1,7 @@
 import { eq, desc } from "drizzle-orm";
 import { logger } from "./_core/logger";
 import { drizzle } from "drizzle-orm/mysql2";
+import { generateStationKey } from "./lib/stationKeyNormalization";
 import { 
   InsertUser, 
   users, 
@@ -181,26 +182,68 @@ export async function saveCalculations(calculation: InsertCalculation) {
 
 // ============= TML Reading Functions =============
 
-export async function getTmlReadings(inspectionId: string) {
+export async function getTmlReadingsByInspectionId(inspectionId: string) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) throw new Error("Database not available");
   
   const result = await db.select().from(tmlReadings).where(eq(tmlReadings.inspectionId, inspectionId));
   return result;
+}
+
+// Backward compatibility alias
+export const getTmlReadings = getTmlReadingsByInspectionId;
+
+/**
+ * Enrich TML reading with stationKey and related fields
+ * This ensures data lineage consistency across inspections (Bucket B)
+ */
+async function enrichTmlReadingWithStationKey(
+  reading: Partial<InsertTmlReading>
+): Promise<Partial<InsertTmlReading>> {
+  // Skip if stationKey already provided
+  if (reading.stationKey) {
+    return reading;
+  }
+  
+  // Generate stationKey from reading data
+  const result = generateStationKey({
+    component: reading.component,
+    componentType: reading.componentType,
+    location: reading.location,
+    sliceNumber: reading.sliceNumber,
+    angleDeg: reading.angleDeg,
+    cmlNumber: reading.cmlNumber,
+    service: reading.service,
+  });
+  
+  return {
+    ...reading,
+    stationKey: result.stationKey,
+    sliceNumber: result.sliceNumber ?? reading.sliceNumber,
+    angleDeg: result.angleDeg ?? reading.angleDeg,
+    trueCmlId: result.trueCmlId ?? reading.trueCmlId,
+    axialPosition: result.axialPosition ?? reading.axialPosition,
+  };
 }
 
 export async function createTmlReading(reading: InsertTmlReading) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  await db.insert(tmlReadings).values(reading);
+  // Generate stationKey if not provided
+  const enrichedReading = await enrichTmlReadingWithStationKey(reading);
+  
+  await db.insert(tmlReadings).values(enrichedReading as InsertTmlReading);
 }
 
 export async function updateTmlReading(id: string, data: Partial<InsertTmlReading>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  await db.update(tmlReadings).set(data).where(eq(tmlReadings.id, id));
+  // Generate stationKey if location/component changed
+  const enrichedData = await enrichTmlReadingWithStationKey(data);
+  
+  await db.update(tmlReadings).set(enrichedData as Partial<InsertTmlReading>).where(eq(tmlReadings.id, id));
 }
 
 export async function deleteTmlReading(id: string) {
