@@ -47,37 +47,77 @@ export async function getCorrelatedTMLReadings(
   const correlatedPairs: Array<{
     current: typeof currentReadings[0];
     baseline: typeof baselineReadings[0] | null;
+    matchMethod: 'stationKey' | 'correlation' | 'legacyLocationId' | 'none';
   }> = [];
   
   for (const currentReading of currentReadings) {
-    // Find correlation mapping for this reading
-    const correlation = correlations.find((c) =>
-      currentReading.location?.includes(c.currentCML) ||
-      currentReading.legacyLocationId?.includes(c.currentCML)
-    );
+    let baselineReading: typeof baselineReadings[0] | null = null;
+    let matchMethod: 'stationKey' | 'correlation' | 'legacyLocationId' | 'none' = 'none';
     
-    if (correlation) {
-      // Find matching baseline reading
-      const baselineReading = baselineReadings.find((b) =>
-        b.location?.includes(correlation.baselineCML) ||
-        b.legacyLocationId?.includes(correlation.baselineCML)
-      );
+    // PRIORITY 1: Direct stationKey match (highest confidence)
+    if (currentReading.stationKey) {
+      baselineReading = baselineReadings.find(
+        (b) => b.stationKey === currentReading.stationKey
+      ) || null;
       
-      correlatedPairs.push({
-        current: currentReading,
-        baseline: baselineReading || null,
-      });
-    } else {
-      // No correlation found - try direct CML number match
-      const baselineReading = baselineReadings.find(
-        (b) => b.legacyLocationId === currentReading.legacyLocationId
-      );
-      
-      correlatedPairs.push({
-        current: currentReading,
-        baseline: baselineReading || null,
-      });
+      if (baselineReading) {
+        matchMethod = 'stationKey';
+      }
     }
+    
+    // PRIORITY 2: Use correlation mapping (for cases where stationKey changed)
+    if (!baselineReading) {
+      const correlation = correlations.find((c) =>
+        currentReading.location?.includes(c.currentCML) ||
+        currentReading.legacyLocationId?.includes(c.currentCML)
+      );
+      
+      if (correlation) {
+        baselineReading = baselineReadings.find((b) =>
+          b.location?.includes(correlation.baselineCML) ||
+          b.legacyLocationId?.includes(correlation.baselineCML)
+        ) || null;
+        
+        if (baselineReading) {
+          matchMethod = 'correlation';
+        }
+      }
+    }
+    
+    // PRIORITY 3: Fallback to direct legacyLocationId match (legacy support)
+    if (!baselineReading && currentReading.legacyLocationId) {
+      baselineReading = baselineReadings.find(
+        (b) => b.legacyLocationId === currentReading.legacyLocationId
+      ) || null;
+      
+      if (baselineReading) {
+        matchMethod = 'legacyLocationId';
+      }
+    }
+    
+    correlatedPairs.push({
+      current: currentReading,
+      baseline: baselineReading,
+      matchMethod,
+    });
+  }
+  
+  // Log match quality statistics for audit trail
+  const matchStats = {
+    stationKey: correlatedPairs.filter(p => p.matchMethod === 'stationKey').length,
+    correlation: correlatedPairs.filter(p => p.matchMethod === 'correlation').length,
+    legacyLocationId: correlatedPairs.filter(p => p.matchMethod === 'legacyLocationId').length,
+    none: correlatedPairs.filter(p => p.matchMethod === 'none').length,
+    total: correlatedPairs.length,
+  };
+  
+  console.log(`[CML Pairing] Component: ${component}`);
+  console.log(`[CML Pairing] Match statistics:`, matchStats);
+  console.log(`[CML Pairing] Match quality: ${((matchStats.stationKey / matchStats.total) * 100).toFixed(1)}% stationKey matches`);
+  
+  // Warn if low stationKey match rate
+  if (matchStats.stationKey < matchStats.total * 0.5) {
+    console.warn(`[CML Pairing] WARNING: Low stationKey match rate (${matchStats.stationKey}/${matchStats.total}). Consider running backfill script.`);
   }
   
   return correlatedPairs;

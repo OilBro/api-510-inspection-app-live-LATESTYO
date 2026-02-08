@@ -2905,3 +2905,14 @@ Test PDF: 54-11-067 2017.pdf
 - [ ] Update professional report calculation to use stationKey for pairing
 - [ ] Update all database queries to use stationKey
 - [x] Run all tests to verify migration success (857 tests passing)
+
+## Update Professional Report Corrosion Rate Calculation to Use StationKey
+- [x] Analyze current corrosion rate calculation logic in professionalReportDb.ts
+- [x] Identify where thickness pairing happens (previous → current)
+- [x] Update pairing logic to use stationKey instead of legacyLocationId
+- [x] Add fallback logic for readings without stationKey (backward compatibility)
+- [x] Add 3-tier priority system: stationKey > correlation > legacyLocationId
+- [x] Add diagnostic logging for match quality tracking
+- [x] Add tests to verify stationKey-based pairing works correctly (5 tests created)
+- [ ] Fix cmlCorrelations table schema case sensitivity issue
+- [ ] Test with real vessel data to verify accurate corrosion rates
