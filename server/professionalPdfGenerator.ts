@@ -1559,7 +1559,7 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
   doc.moveDown(0.5);
   
   // Calculate CML numbers (continuing from shell/head components)
-  let cmlNumber = 100; // Start at 100 for nozzles (adjust based on last shell/head CML)
+  let legacyLocationId = 100; // Start at 100 for nozzles (adjust based on last shell/head CML)
   
   // Build nozzle RL table
   const nozzleRLHeaders = [
@@ -1579,7 +1579,7 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
   const nozzleRLWidths = [35, 40, 35, 60, 40, 45, 45, 45, 40, 50, 45];
   
   const nozzleRLRows = nozzles.map((nozzle, index) => {
-    const cml = cmlNumber + index;
+    const cml = legacyLocationId + index;
     
     // Get TML readings for this nozzle (at 0°, 90°, 180°, 270°)
     const nozzleTMLs = tmlReadings?.filter((tml: any) => {
@@ -1638,8 +1638,8 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
 async function generateThicknessReadings(doc: PDFKit.PDFDocument, readings: any[], logoBuffer?: Buffer) {
   // Sort readings by CML number numerically
   const sortedReadings = [...(readings || [])].sort((a, b) => {
-    const aNum = extractCmlNumber(a.cmlNumber || a.tmlId || '');
-    const bNum = extractCmlNumber(b.cmlNumber || b.tmlId || '');
+    const aNum = extractCmlNumber(a.legacyLocationId || a.tmlId || '');
+    const bNum = extractCmlNumber(b.legacyLocationId || b.tmlId || '');
     return aNum - bNum;
   });
   
@@ -1661,7 +1661,7 @@ async function generateThicknessReadings(doc: PDFKit.PDFDocument, readings: any[
   // Enhanced grid-based format with angle labels and metadata
   const headers = ['CML', 'Comp ID', 'Location', 'Type', 'Size', 'Service', 't prev', '0°', '90°', '180°', '270°', 't act*'];
   const rows = sortedReadings.map(r => [
-    r.cmlNumber || r.tmlId || '-',
+    r.legacyLocationId || r.tmlId || '-',
     r.componentType || r.component || '-',
     r.location || '-',
     r.readingType || '-',

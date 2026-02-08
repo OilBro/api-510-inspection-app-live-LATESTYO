@@ -53,14 +53,14 @@ export async function getCorrelatedTMLReadings(
     // Find correlation mapping for this reading
     const correlation = correlations.find((c) =>
       currentReading.location?.includes(c.currentCML) ||
-      currentReading.cmlNumber?.includes(c.currentCML)
+      currentReading.legacyLocationId?.includes(c.currentCML)
     );
     
     if (correlation) {
       // Find matching baseline reading
       const baselineReading = baselineReadings.find((b) =>
         b.location?.includes(correlation.baselineCML) ||
-        b.cmlNumber?.includes(correlation.baselineCML)
+        b.legacyLocationId?.includes(correlation.baselineCML)
       );
       
       correlatedPairs.push({
@@ -70,7 +70,7 @@ export async function getCorrelatedTMLReadings(
     } else {
       // No correlation found - try direct CML number match
       const baselineReading = baselineReadings.find(
-        (b) => b.cmlNumber === currentReading.cmlNumber
+        (b) => b.legacyLocationId === currentReading.legacyLocationId
       );
       
       correlatedPairs.push({

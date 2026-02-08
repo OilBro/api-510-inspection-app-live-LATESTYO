@@ -38,21 +38,21 @@ describe('CML Sorting Utility', () => {
 
   describe('compareCmlNumbers', () => {
     it('should sort by numeric value ascending', () => {
-      const a = { cmlNumber: 'CML-001' };
-      const b = { cmlNumber: 'CML-010' };
+      const a = { legacyLocationId: 'CML-001' };
+      const b = { legacyLocationId: 'CML-010' };
       expect(compareCmlNumbers(a, b)).toBeLessThan(0);
     });
 
     it('should handle equal numbers with alphabetical fallback', () => {
-      const a = { cmlNumber: 'CML-001' };
-      const b = { cmlNumber: 'TML-001' };
+      const a = { legacyLocationId: 'CML-001' };
+      const b = { legacyLocationId: 'TML-001' };
       // Both have numeric value 1, so compare alphabetically
       expect(compareCmlNumbers(a, b)).toBeLessThan(0); // C < T
     });
 
     it('should put null/empty values at the end', () => {
-      const a = { cmlNumber: null };
-      const b = { cmlNumber: 'CML-001' };
+      const a = { legacyLocationId: null };
+      const b = { legacyLocationId: 'CML-001' };
       expect(compareCmlNumbers(a, b)).toBeGreaterThan(0);
     });
   });
@@ -60,16 +60,16 @@ describe('CML Sorting Utility', () => {
   describe('sortByCmlNumber', () => {
     it('should sort readings numerically from low to high', () => {
       const readings = [
-        { id: '1', cmlNumber: 'CML-010' },
-        { id: '2', cmlNumber: 'CML-002' },
-        { id: '3', cmlNumber: 'CML-001' },
-        { id: '4', cmlNumber: 'CML-100' },
-        { id: '5', cmlNumber: 'CML-005' },
+        { id: '1', legacyLocationId: 'CML-010' },
+        { id: '2', legacyLocationId: 'CML-002' },
+        { id: '3', legacyLocationId: 'CML-001' },
+        { id: '4', legacyLocationId: 'CML-100' },
+        { id: '5', legacyLocationId: 'CML-005' },
       ];
 
       const sorted = sortByCmlNumber(readings);
 
-      expect(sorted.map(r => r.cmlNumber)).toEqual([
+      expect(sorted.map(r => r.legacyLocationId)).toEqual([
         'CML-001',
         'CML-002',
         'CML-005',
@@ -80,15 +80,15 @@ describe('CML Sorting Utility', () => {
 
     it('should handle mixed formats', () => {
       const readings = [
-        { id: '1', cmlNumber: 'TML-5' },
-        { id: '2', cmlNumber: 'CML-001' },
-        { id: '3', cmlNumber: '3' },
-        { id: '4', cmlNumber: 'A-2' },
+        { id: '1', legacyLocationId: 'TML-5' },
+        { id: '2', legacyLocationId: 'CML-001' },
+        { id: '3', legacyLocationId: '3' },
+        { id: '4', legacyLocationId: 'A-2' },
       ];
 
       const sorted = sortByCmlNumber(readings);
 
-      expect(sorted.map(r => r.cmlNumber)).toEqual([
+      expect(sorted.map(r => r.legacyLocationId)).toEqual([
         'CML-001',  // 1
         'A-2',      // 2
         '3',        // 3
@@ -98,25 +98,25 @@ describe('CML Sorting Utility', () => {
 
     it('should put empty/null values at the end', () => {
       const readings = [
-        { id: '1', cmlNumber: 'CML-002' },
-        { id: '2', cmlNumber: null },
-        { id: '3', cmlNumber: 'CML-001' },
-        { id: '4', cmlNumber: '' },
+        { id: '1', legacyLocationId: 'CML-002' },
+        { id: '2', legacyLocationId: null },
+        { id: '3', legacyLocationId: 'CML-001' },
+        { id: '4', legacyLocationId: '' },
       ];
 
       const sorted = sortByCmlNumber(readings);
 
-      expect(sorted[0].cmlNumber).toBe('CML-001');
-      expect(sorted[1].cmlNumber).toBe('CML-002');
+      expect(sorted[0].legacyLocationId).toBe('CML-001');
+      expect(sorted[1].legacyLocationId).toBe('CML-002');
       // null and empty should be at the end
-      expect(sorted[2].cmlNumber === null || sorted[2].cmlNumber === '').toBe(true);
-      expect(sorted[3].cmlNumber === null || sorted[3].cmlNumber === '').toBe(true);
+      expect(sorted[2].legacyLocationId === null || sorted[2].legacyLocationId === '').toBe(true);
+      expect(sorted[3].legacyLocationId === null || sorted[3].legacyLocationId === '').toBe(true);
     });
 
     it('should not mutate the original array', () => {
       const readings = [
-        { id: '1', cmlNumber: 'CML-002' },
-        { id: '2', cmlNumber: 'CML-001' },
+        { id: '1', legacyLocationId: 'CML-002' },
+        { id: '2', legacyLocationId: 'CML-001' },
       ];
       const original = [...readings];
 
@@ -131,7 +131,7 @@ describe('CML Sorting Utility', () => {
     });
 
     it('should handle single item array', () => {
-      const readings = [{ id: '1', cmlNumber: 'CML-001' }];
+      const readings = [{ id: '1', legacyLocationId: 'CML-001' }];
       const sorted = sortByCmlNumber(readings);
       expect(sorted).toEqual(readings);
     });

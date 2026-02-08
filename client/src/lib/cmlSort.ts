@@ -37,14 +37,14 @@ export function extractCmlNumber(cmlString: string | null | undefined): number {
  * Compare function for sorting CML readings by their cmlNumber field.
  * Sorts numerically from low to high.
  */
-export function compareCmlNumbers<T extends { cmlNumber?: string | null }>(a: T, b: T): number {
-  const numA = extractCmlNumber(a.cmlNumber);
-  const numB = extractCmlNumber(b.cmlNumber);
+export function compareCmlNumbers<T extends { legacyLocationId?: string | null }>(a: T, b: T): number {
+  const numA = extractCmlNumber(a.legacyLocationId);
+  const numB = extractCmlNumber(b.legacyLocationId);
   
   if (numA === numB) {
     // If numbers are equal, sort alphabetically by the full string
-    const strA = a.cmlNumber || '';
-    const strB = b.cmlNumber || '';
+    const strA = a.legacyLocationId || '';
+    const strB = b.legacyLocationId || '';
     return strA.localeCompare(strB);
   }
   
@@ -55,6 +55,6 @@ export function compareCmlNumbers<T extends { cmlNumber?: string | null }>(a: T,
  * Sort an array of readings by CML number (low to high).
  * Returns a new sorted array, does not mutate the original.
  */
-export function sortByCmlNumber<T extends { cmlNumber?: string | null }>(readings: T[]): T[] {
+export function sortByCmlNumber<T extends { legacyLocationId?: string | null }>(readings: T[]): T[] {
   return [...readings].sort(compareCmlNumbers);
 }

@@ -98,7 +98,7 @@ function detectThicknessAnomalies(tmlData: any[], inspection: any): DetectedAnom
       // Check all possible thickness fields
       const thicknessStr = reading.currentThickness || reading.newThickness || reading.actualThickness || reading.tml1 || "0";
       const thickness = parseFloat(thicknessStr);
-      const location = reading.location || reading.cmlNumber || "Unknown";
+      const location = reading.location || reading.legacyLocationId || "Unknown";
 
       // Check if thickness is below minimum
       if (thickness > 0 && thickness < t_min_shell) {

@@ -78,16 +78,16 @@ describe('Location Matcher Utility', () => {
 
   describe('matchReadingsByLocation', () => {
     const existingCMLs: ExistingCML[] = [
-      { id: '1', cmlNumber: '1', location: "2'", component: 'Shell', angularPosition: 0 },
-      { id: '2', cmlNumber: '2', location: "2'", component: 'Shell', angularPosition: 45 },
-      { id: '3', cmlNumber: '3', location: "2'", component: 'Shell', angularPosition: 90 },
-      { id: '4', cmlNumber: '4', location: "East Head 12 O'Clock", component: 'East Head' },
-      { id: '5', cmlNumber: '5', location: "4'", component: 'Shell', angularPosition: 0 },
+      { id: '1', legacyLocationId: '1', location: "2'", component: 'Shell', angularPosition: 0 },
+      { id: '2', legacyLocationId: '2', location: "2'", component: 'Shell', angularPosition: 45 },
+      { id: '3', legacyLocationId: '3', location: "2'", component: 'Shell', angularPosition: 90 },
+      { id: '4', legacyLocationId: '4', location: "East Head 12 O'Clock", component: 'East Head' },
+      { id: '5', legacyLocationId: '5', location: "4'", component: 'Shell', angularPosition: 0 },
     ];
 
     it('should match by exact location', () => {
       const newReadings: NewReading[] = [
-        { cmlNumber: '10', location: "East Head 12 O'Clock", component: 'East Head', thickness: 0.543 },
+        { legacyLocationId: '10', location: "East Head 12 O'Clock", component: 'East Head', thickness: 0.543 },
       ];
 
       const result = matchReadingsByLocation(existingCMLs, newReadings);
@@ -99,7 +99,7 @@ describe('Location Matcher Utility', () => {
 
     it('should match by location + angular position', () => {
       const newReadings: NewReading[] = [
-        { cmlNumber: '20', location: "2'", component: 'Shell', angularPosition: 45, thickness: 0.641 },
+        { legacyLocationId: '20', location: "2'", component: 'Shell', angularPosition: 45, thickness: 0.641 },
       ];
 
       const result = matchReadingsByLocation(existingCMLs, newReadings);
@@ -110,7 +110,7 @@ describe('Location Matcher Utility', () => {
 
     it('should report unmatched readings', () => {
       const newReadings: NewReading[] = [
-        { cmlNumber: '99', location: "Unknown Location", component: 'Unknown', thickness: 0.5 },
+        { legacyLocationId: '99', location: "Unknown Location", component: 'Unknown', thickness: 0.5 },
       ];
 
       const result = matchReadingsByLocation(existingCMLs, newReadings, { minConfidence: 0.9 });
@@ -121,9 +121,9 @@ describe('Location Matcher Utility', () => {
 
     it('should calculate correct match rate', () => {
       const newReadings: NewReading[] = [
-        { cmlNumber: '10', location: "East Head 12 O'Clock", component: 'East Head', thickness: 0.543 },
-        { cmlNumber: '20', location: "2'", component: 'Shell', angularPosition: 0, thickness: 0.640 },
-        { cmlNumber: '99', location: "Nonexistent", component: 'Unknown', thickness: 0.5 },
+        { legacyLocationId: '10', location: "East Head 12 O'Clock", component: 'East Head', thickness: 0.543 },
+        { legacyLocationId: '20', location: "2'", component: 'Shell', angularPosition: 0, thickness: 0.640 },
+        { legacyLocationId: '99', location: "Nonexistent", component: 'Unknown', thickness: 0.5 },
       ];
 
       const result = matchReadingsByLocation(existingCMLs, newReadings, { minConfidence: 0.9 });
@@ -136,8 +136,8 @@ describe('Location Matcher Utility', () => {
 
     it('should not match same existing CML twice', () => {
       const newReadings: NewReading[] = [
-        { cmlNumber: '10', location: "East Head 12 O'Clock", component: 'East Head', thickness: 0.543 },
-        { cmlNumber: '11', location: "East Head 12 O'Clock", component: 'East Head', thickness: 0.545 },
+        { legacyLocationId: '10', location: "East Head 12 O'Clock", component: 'East Head', thickness: 0.543 },
+        { legacyLocationId: '11', location: "East Head 12 O'Clock", component: 'East Head', thickness: 0.545 },
       ];
 
       const result = matchReadingsByLocation(existingCMLs, newReadings);

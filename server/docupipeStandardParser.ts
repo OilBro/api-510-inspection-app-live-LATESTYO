@@ -62,7 +62,7 @@ export interface DocupipeStandardFormat {
       remainingLifeUnit: string;
     }>;
     thicknessReadings: Array<{
-      cmlNumber: string;
+      legacyLocationId: string;
       componentId: string;
       location: string;
       actualThickness: number;
@@ -117,7 +117,7 @@ export interface ParsedInspectionData {
   
   // Thickness readings
   tmlReadings: Array<{
-    cmlNumber?: string;
+    legacyLocationId?: string;
     location: string;
     component: string;
     nominalThickness?: number;
@@ -196,7 +196,7 @@ export function parseDocupipeStandard(data: DocupipeStandardFormat): ParsedInspe
   // Map thickness readings from detailed CML data
   if (data.thicknessData?.thicknessReadings) {
     result.tmlReadings = data.thicknessData.thicknessReadings.map(reading => ({
-      cmlNumber: reading.cmlNumber,
+      legacyLocationId: reading.legacyLocationId,
       location: reading.location,
       component: reading.componentId,
       currentThickness: reading.actualThickness,

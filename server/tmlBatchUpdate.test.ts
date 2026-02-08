@@ -7,14 +7,14 @@ describe("TML Batch Update Router", () => {
         inspectionId: "test-inspection-123",
         updates: [
           {
-            cmlNumber: "CML-1",
+            legacyLocationId: "CML-1",
             tml1: 0.375,
             tml2: 0.380,
             tml3: 0.372,
             tml4: 0.378,
           },
           {
-            cmlNumber: "CML-2",
+            legacyLocationId: "CML-2",
             tml1: 0.250,
             previousThickness: 0.260,
           },
@@ -25,7 +25,7 @@ describe("TML Batch Update Router", () => {
       expect(validInput.inspectionId).toBeDefined();
       expect(Array.isArray(validInput.updates)).toBe(true);
       expect(validInput.updates.length).toBe(2);
-      expect(validInput.updates[0].cmlNumber).toBe("CML-1");
+      expect(validInput.updates[0].legacyLocationId).toBe("CML-1");
       expect(validInput.updates[0].tml1).toBe(0.375);
     });
 

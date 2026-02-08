@@ -55,7 +55,7 @@ export interface VesselValidationInput {
 }
 
 export interface TMLValidationInput {
-  cmlNumber?: string;
+  legacyLocationId?: string;
   location?: string;
   componentType?: string;
   tActual?: UnitValue | number;

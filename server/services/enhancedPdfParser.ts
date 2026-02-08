@@ -469,7 +469,7 @@ export class EnhancedPdfParser {
       const parsed = parseCmlNamingConvention(m.cml);
       return {
         location: {
-          cmlNumber: m.cml,
+          legacyLocationId: m.cml,
           componentType: this.inferComponentType(m.component),
           locationDescription: m.location || m.component,
           sliceNumber: parsed.sliceNumber ?? undefined,

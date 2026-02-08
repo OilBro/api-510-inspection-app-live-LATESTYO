@@ -226,8 +226,8 @@ export const tmlReadings = mysqlTable("tmlReadings", {
   id: varchar("id", { length: 64 }).primaryKey(),
   inspectionId: varchar("inspectionId", { length: 64 }).notNull(),
   
-  // Grid-based identification
-  cmlNumber: varchar("cmlNumber", { length: 10 }).notNull(), // "001", "002", "003" - can be slice number OR true CML ID
+  // Grid-based identification (LEGACY FIELD - use stationKey for pairing)
+  legacyLocationId: varchar("legacyLocationId", { length: 10 }).notNull(), // Mixed identifier: slice numbers, spot IDs, or nozzle IDs
   componentType: varchar("componentType", { length: 255 }).notNull(), // "Vessel Shell", "East Head", "West Head", "24"
   location: varchar("location", { length: 50 }).notNull(), // "7-0", "7-45", "11B-C", "N1"
   
@@ -235,7 +235,9 @@ export const tmlReadings = mysqlTable("tmlReadings", {
   // Canonical identifier for physical measurement location across inspections
   // Format: "SHELL-SLICE-{slice}-A{angle}" or "{HEAD}-{position}" or "NOZZLE-{id}"
   // Example: "SHELL-SLICE-27-A0", "SOUTH-HEAD-12-OCLOCK", "NOZZLE-N1"
-  stationKey: varchar("stationKey", { length: 100 }), // Canonical location identifier
+  componentGroup: varchar("componentGroup", { length: 32 }).notNull().default("OTHER"), // SHELL, EASTHEAD, WESTHEAD, NOZZLE, OTHER
+  schemaVersion: int("schemaVersion").notNull().default(1), // Schema version for migration tracking
+  stationKey: varchar("stationKey", { length: 128 }), // Canonical location identifier
   sliceNumber: int("sliceNumber"), // Axial station/slice (7-27 for vessel 54-11-001)
   angleDeg: int("angleDeg"), // Circumferential angle (0, 45, 90, 135, 180, 225, 270, 315)
   trueCmlId: varchar("trueCmlId", { length: 10 }), // True CML ID from grid cell (e.g., 166, 14)

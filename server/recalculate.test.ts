@@ -58,7 +58,7 @@ suite('Recalculate Component Calculations', () => {
       {
         id: `tml-shell-1-${nanoid(6)}`,
         inspectionId: testInspectionId,
-        cmlNumber: 'CML-1',
+        legacyLocationId: 'CML-1',
         component: 'Vessel Shell',
         componentType: '0',  // Degree position
         location: '8',       // Numeric location >= 8 for shell
@@ -72,7 +72,7 @@ suite('Recalculate Component Calculations', () => {
       {
         id: `tml-shell-2-${nanoid(6)}`,
         inspectionId: testInspectionId,
-        cmlNumber: 'CML-2',
+        legacyLocationId: 'CML-2',
         component: 'Vessel Shell',
         componentType: '180', // Degree position
         location: '9',        // Numeric location >= 8 for shell
@@ -90,7 +90,7 @@ suite('Recalculate Component Calculations', () => {
       {
         id: `tml-east-1-${nanoid(6)}`,
         inspectionId: testInspectionId,
-        cmlNumber: 'CML-6',
+        legacyLocationId: 'CML-6',
         component: 'Head',  // Generic "Head" should be treated as East Head
         componentType: 'Head',
         location: '12 o\'clock',
@@ -108,7 +108,7 @@ suite('Recalculate Component Calculations', () => {
       {
         id: `tml-west-1-${nanoid(6)}`,
         inspectionId: testInspectionId,
-        cmlNumber: 'CML-16',
+        legacyLocationId: 'CML-16',
         component: 'Head 2',  // "Head 2" should be treated as West Head
         componentType: 'Head',
         location: '12 o\'clock',

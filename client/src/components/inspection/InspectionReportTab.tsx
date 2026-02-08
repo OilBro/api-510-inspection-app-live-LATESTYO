@@ -171,7 +171,7 @@ export default function InspectionReportTab({ inspection }: InspectionReportTabP
 
         doc.setFont("helvetica", "normal");
         
-        for (const reading of sortByCmlNumber(tmlReadings.map(r => ({ ...r, cmlNumber: r.cmlNumber || r.tmlId })))) {
+        for (const reading of sortByCmlNumber(tmlReadings.map(r => ({ ...r, legacyLocationId: r.legacyLocationId || r.tmlId })))) {
           if (yPos > pageHeight) {
             doc.addPage();
             yPos = 20;

@@ -110,7 +110,7 @@ describe('CSV Export', () => {
         ],
         tmlReadings: [
           {
-            cmlNumber: 'CML-001',
+            legacyLocationId: 'CML-001',
             componentType: 'shell',
             location: 'Top',
             readingType: 'spot',
@@ -184,7 +184,7 @@ describe('CSV Export', () => {
       const mockData = {
         inspection: { vesselTagNumber: 'TEST-001' },
         components: [{ componentName: 'Shell', actualThickness: '0.625' }],
-        tmlReadings: [{ cmlNumber: 'CML-001', actualThickness: '0.625' }],
+        tmlReadings: [{ legacyLocationId: 'CML-001', actualThickness: '0.625' }],
         nozzles: [],
       };
 
@@ -196,7 +196,7 @@ describe('CSV Export', () => {
       
       // Check for proper CSV structure (header rows followed by data rows)
       expect(csv).toMatch(/componentName.*\n.*Shell/);
-      expect(csv).toMatch(/cmlNumber.*\n.*CML-001/);
+      expect(csv).toMatch(/legacyLocationId.*\n.*CML-001/);
     });
   });
 });

@@ -122,8 +122,8 @@ describe('Merge Extraction Results', () => {
         vesselName: 'Test Vessel',
       },
       tmlReadings: [
-        { cmlNumber: '1', currentThickness: '0.500' },
-        { cmlNumber: '2', currentThickness: '0.480' },
+        { legacyLocationId: '1', currentThickness: '0.500' },
+        { legacyLocationId: '2', currentThickness: '0.480' },
       ],
     };
 
@@ -133,8 +133,8 @@ describe('Merge Extraction Results', () => {
         manufacturer: 'ABC Corp', // Missing from text
       },
       thicknessMeasurements: [
-        { cmlNumber: '1', currentThickness: '0.500' }, // Duplicate
-        { cmlNumber: '3', currentThickness: '0.520' }, // New
+        { legacyLocationId: '1', currentThickness: '0.500' }, // Duplicate
+        { legacyLocationId: '3', currentThickness: '0.520' }, // New
       ],
     };
 
@@ -150,11 +150,11 @@ describe('Merge Extraction Results', () => {
     // Merge TML readings by CML number
     const cmlMap = new Map<string, any>();
     for (const tml of merged.tmlReadings || []) {
-      cmlMap.set(tml.cmlNumber.toLowerCase(), tml);
+      cmlMap.set(tml.legacyLocationId.toLowerCase(), tml);
     }
     for (const tml of visionResult.thicknessMeasurements || []) {
-      if (!cmlMap.has(tml.cmlNumber.toLowerCase())) {
-        cmlMap.set(tml.cmlNumber.toLowerCase(), tml);
+      if (!cmlMap.has(tml.legacyLocationId.toLowerCase())) {
+        cmlMap.set(tml.legacyLocationId.toLowerCase(), tml);
       }
     }
     merged.tmlReadings = Array.from(cmlMap.values());

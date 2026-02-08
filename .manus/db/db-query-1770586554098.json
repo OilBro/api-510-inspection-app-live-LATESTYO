@@ -1,0 +1,9 @@
+{
+  "query": "CREATE INDEX idx_tml_stationKey ON tmlReadings (stationKey);\nCREATE INDEX idx_tml_slice_angle ON tmlReadings (sliceNumber, angleDeg);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute CREATE INDEX idx_tml_stationKey ON tmlReadings (stationKey);\nCREATE INDEX idx_tml_slice_angle ON tmlReadings (sliceNumber, angleDeg);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1391
+}

@@ -68,7 +68,7 @@ interface VisionParsedData {
   
   // Thickness Measurements
   thicknessMeasurements?: Array<{
-    cmlNumber?: string;
+    legacyLocationId?: string;
     tmlId?: string;
     location?: string;
     component?: string;
@@ -280,7 +280,7 @@ Return the data in this JSON structure:
   "recommendations": "string",
   "thicknessMeasurements": [
     {
-      "cmlNumber": "string",
+      "legacyLocationId": "string",
       "location": "string",
       "component": "string (Shell/East Head/West Head/Nozzle)",
       "componentType": "string (shell/head/nozzle)",

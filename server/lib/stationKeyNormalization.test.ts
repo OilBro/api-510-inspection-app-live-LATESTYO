@@ -105,7 +105,7 @@ describe('stationKeyNormalization', () => {
       const result = generateStationKey({
         sliceNumber: 27,
         angleDeg: 0,
-        cmlNumber: '166',
+        legacyLocationId: '166',
       });
 
       expect(result.stationKey).toBe('SHELL-SLICE-27-A0');
@@ -119,7 +119,7 @@ describe('stationKeyNormalization', () => {
     it('should generate shell stationKey from location format', () => {
       const result = generateStationKey({
         location: '7-0',
-        cmlNumber: '14',
+        legacyLocationId: '14',
       });
 
       expect(result.stationKey).toBe('SHELL-SLICE-7-A0');
@@ -134,7 +134,7 @@ describe('stationKeyNormalization', () => {
       const result = generateStationKey({
         component: 'South Head',
         location: "12 O'Clock",
-        cmlNumber: '1',
+        legacyLocationId: '1',
       });
 
       expect(result.stationKey).toBe('SOUTH-HEAD-12-OCLOCK');
@@ -148,7 +148,7 @@ describe('stationKeyNormalization', () => {
     it('should generate nozzle stationKey', () => {
       const result = generateStationKey({
         component: 'Nozzle',
-        cmlNumber: 'N1',
+        legacyLocationId: 'N1',
         service: 'Manway',
       });
 
@@ -160,7 +160,7 @@ describe('stationKeyNormalization', () => {
     it('should fallback to location for unknown formats', () => {
       const result = generateStationKey({
         location: 'Unknown Location',
-        cmlNumber: 'X99',
+        legacyLocationId: 'X99',
       });
 
       expect(result.stationKey).toBe('LOCATION-UNKNOWN LOCATION');
@@ -183,7 +183,7 @@ describe('stationKeyNormalization', () => {
       const result = await resolveStationKeyWithCorrelation(
         {
           location: 'Shell @ 2 ft from West Head',
-          cmlNumber: 'UT-2025-001',
+          legacyLocationId: 'UT-2025-001',
         },
         correlations
       );
@@ -195,7 +195,7 @@ describe('stationKeyNormalization', () => {
     it('should fallback to direct generation without correlations', async () => {
       const result = await resolveStationKeyWithCorrelation({
         location: '7-0',
-        cmlNumber: '14',
+        legacyLocationId: '14',
       });
 
       expect(result.stationKey).toBe('SHELL-SLICE-7-A0');

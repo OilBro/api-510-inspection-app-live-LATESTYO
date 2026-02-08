@@ -162,7 +162,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
           nominalThickness: reading.nominalThickness?.toString() || '',
         }));
         
-        toast.info(`Loaded data from CML ${reading.cmlNumber} - ${selectedComponent}`);
+        toast.info(`Loaded data from CML ${reading.legacyLocationId} - ${selectedComponent}`);
       }
     }
   }, [selectedReadingId, tmlReadings, inspection, selectedComponent]);
@@ -489,7 +489,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                     const hasValidThickness = reading.tActual !== null && reading.tActual !== undefined && reading.tActual !== '';
                     return (
                       <SelectItem key={reading.id} value={reading.id}>
-                        CML {reading.cmlNumber} - {reading.location}: {hasValidThickness ? `${reading.tActual}"` : 'N/A'}
+                        CML {reading.legacyLocationId} - {reading.location}: {hasValidThickness ? `${reading.tActual}"` : 'N/A'}
                         {isGoverning && ' (MIN)'}
                       </SelectItem>
                     );
@@ -498,7 +498,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
               </Select>
               {governingReading && (
                 <p className="text-xs text-gray-500">
-                  Governing thickness for {selectedComponent}: {governingReading.tActual}" at CML {governingReading.cmlNumber}
+                  Governing thickness for {selectedComponent}: {governingReading.tActual}" at CML {governingReading.legacyLocationId}
                 </p>
               )}
             </div>
@@ -514,7 +514,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
                       <span className="text-gray-600">CML Number:</span>
-                      <span className="ml-2 font-semibold">{reading.cmlNumber}</span>
+                      <span className="ml-2 font-semibold">{reading.legacyLocationId}</span>
                     </div>
                     <div>
                       <span className="text-gray-600">Location:</span>

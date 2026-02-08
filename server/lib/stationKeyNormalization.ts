@@ -11,6 +11,8 @@
  * BUCKET B - DATA LINEAGE & MAPPING (Critical for audit defensibility)
  */
 
+import { normalizeComponentGroup } from './componentGroupNormalizer';
+
 /**
  * Normalize a string for consistent comparison
  * - Trim whitespace
@@ -147,12 +149,13 @@ export interface StationKeyInput {
   location?: string | null;
   sliceNumber?: number | null;
   angleDeg?: number | null;
-  cmlNumber?: string | null;
+  legacyLocationId?: string | null;
   service?: string | null; // For nozzles
 }
 
 export interface StationKeyResult {
   stationKey: string;
+  componentGroup: string;
   sliceNumber: number | null;
   angleDeg: number | null;
   trueCmlId: string | null;
@@ -164,14 +167,16 @@ export interface StationKeyResult {
 export function generateStationKey(input: StationKeyInput): StationKeyResult {
   const component = normalizeString(input.component || input.componentType || '');
   const location = normalizeString(input.location || '');
+  const componentGroup = normalizeComponentGroup(input.component || input.componentType);
   
   // RULE 1: Explicit slice + angle (highest confidence)
   if (input.sliceNumber != null && input.angleDeg != null) {
     return {
       stationKey: `SHELL-SLICE-${input.sliceNumber}-A${input.angleDeg}`,
+      componentGroup,
       sliceNumber: input.sliceNumber,
       angleDeg: input.angleDeg,
-      trueCmlId: input.cmlNumber || null,
+      trueCmlId: input.legacyLocationId || null,
       axialPosition: parseAxialPosition(location),
       confidence: 'high',
       method: 'explicit_slice_angle',
@@ -183,9 +188,10 @@ export function generateStationKey(input: StationKeyInput): StationKeyResult {
   if (parsed.slice != null && parsed.angle != null) {
     return {
       stationKey: `SHELL-SLICE-${parsed.slice}-A${parsed.angle}`,
+      componentGroup,
       sliceNumber: parsed.slice,
       angleDeg: parsed.angle,
-      trueCmlId: input.cmlNumber || null,
+      trueCmlId: input.legacyLocationId || null,
       axialPosition: parseAxialPosition(location),
       confidence: 'high',
       method: 'parsed_slice_angle',
@@ -199,9 +205,10 @@ export function generateStationKey(input: StationKeyInput): StationKeyResult {
     if (position) {
       return {
         stationKey: `${headName}-${position}`,
+        componentGroup,
         sliceNumber: null,
         angleDeg: null,
-        trueCmlId: input.cmlNumber || null,
+        trueCmlId: input.legacyLocationId || null,
         axialPosition: null,
         confidence: 'high',
         method: 'head_position',
@@ -211,9 +218,10 @@ export function generateStationKey(input: StationKeyInput): StationKeyResult {
   
   // RULE 4: Nozzle readings
   if (component.includes('NOZZLE') || component.startsWith('N') || input.service) {
-    const nozzleId = input.cmlNumber || location || 'UNKNOWN';
+    const nozzleId = input.legacyLocationId || location || 'UNKNOWN';
     return {
       stationKey: `NOZZLE-${normalizeString(nozzleId)}`,
+      componentGroup: 'NOZZLE',
       sliceNumber: null,
       angleDeg: null,
       trueCmlId: null,
@@ -224,12 +232,13 @@ export function generateStationKey(input: StationKeyInput): StationKeyResult {
   }
   
   // RULE 5: Fallback to normalized location
-  const fallbackKey = normalizeString(location || input.cmlNumber || 'UNKNOWN');
+  const fallbackKey = normalizeString(location || input.legacyLocationId || 'UNKNOWN');
   return {
     stationKey: `LOCATION-${fallbackKey}`,
+    componentGroup,
     sliceNumber: null,
     angleDeg: null,
-    trueCmlId: input.cmlNumber || null,
+    trueCmlId: input.legacyLocationId || null,
     axialPosition: parseAxialPosition(location),
     confidence: 'low',
     method: 'fallback_location',
@@ -258,7 +267,7 @@ export async function resolveStationKeyWithCorrelation(
   // Try to find correlation mapping first
   if (correlationMappings && correlationMappings.length > 0) {
     const normalizedLocation = normalizeString(input.location || '');
-    const normalizedCML = normalizeString(input.cmlNumber || '');
+    const normalizedCML = normalizeString(input.legacyLocationId || '');
     
     for (const mapping of correlationMappings) {
       const matchesCurrent = 
@@ -270,7 +279,7 @@ export async function resolveStationKeyWithCorrelation(
         // Use baseline CML as the stationKey anchor
         const baselineKey = generateStationKey({
           ...input,
-          cmlNumber: mapping.baselineCML,
+          legacyLocationId: mapping.baselineCML,
           location: mapping.baselineDescription || mapping.baselineCML,
         });
         

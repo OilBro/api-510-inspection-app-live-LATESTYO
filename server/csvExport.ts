@@ -122,7 +122,7 @@ export function generateInspectionCSV(data: {
   sections.push('TML READINGS (THICKNESS MEASUREMENT LOCATIONS)');
   
   const tmlHeaders = [
-    'cmlNumber',
+    'legacyLocationId',
     'componentType',
     'location',
     'readingType',

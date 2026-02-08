@@ -27,7 +27,7 @@ describe('Enhanced Thickness Table Format', () => {
 
   it('should format thickness readings with all metadata', () => {
     const mockReading = {
-      cmlNumber: 'CML-001',
+      legacyLocationId: 'CML-001',
       componentType: 'Vessel Shell',
       location: '7-0',
       readingType: 'seam',
@@ -42,7 +42,7 @@ describe('Enhanced Thickness Table Format', () => {
     };
 
     const row = [
-      mockReading.cmlNumber || '-',
+      mockReading.legacyLocationId || '-',
       mockReading.componentType || '-',
       mockReading.location || '-',
       mockReading.readingType || '-',
@@ -74,7 +74,7 @@ describe('Enhanced Thickness Table Format', () => {
 
   it('should format nozzle readings with size and service', () => {
     const mockNozzle = {
-      cmlNumber: 'N1',
+      legacyLocationId: 'N1',
       componentType: '24',
       location: 'N1',
       readingType: 'nozzle',
@@ -89,7 +89,7 @@ describe('Enhanced Thickness Table Format', () => {
     };
 
     const row = [
-      mockNozzle.cmlNumber || '-',
+      mockNozzle.legacyLocationId || '-',
       mockNozzle.componentType || '-',
       mockNozzle.location || '-',
       mockNozzle.readingType || '-',
@@ -121,7 +121,7 @@ describe('Enhanced Thickness Table Format', () => {
 
   it('should handle partial angle readings', () => {
     const mockReading = {
-      cmlNumber: 'CML-002',
+      legacyLocationId: 'CML-002',
       componentType: 'East Head',
       location: '11B-C',
       readingType: 'spot',
@@ -136,7 +136,7 @@ describe('Enhanced Thickness Table Format', () => {
     };
 
     const row = [
-      mockReading.cmlNumber || '-',
+      mockReading.legacyLocationId || '-',
       mockReading.componentType || '-',
       mockReading.location || '-',
       mockReading.readingType || '-',
@@ -171,7 +171,7 @@ describe('Enhanced Thickness Table Format', () => {
 
   it('should handle missing previous thickness', () => {
     const mockReading = {
-      cmlNumber: 'CML-003',
+      legacyLocationId: 'CML-003',
       componentType: 'West Head',
       location: '12-0',
       readingType: 'general',
@@ -186,7 +186,7 @@ describe('Enhanced Thickness Table Format', () => {
     };
 
     const row = [
-      mockReading.cmlNumber || '-',
+      mockReading.legacyLocationId || '-',
       mockReading.componentType || '-',
       mockReading.location || '-',
       mockReading.readingType || '-',

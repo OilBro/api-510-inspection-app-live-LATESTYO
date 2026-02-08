@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 interface TMLReading {
   id: string;
-  cmlNumber: string;
+  legacyLocationId: string;
   componentType: string;
   location: string;
   tml1: string | null;
@@ -82,7 +82,7 @@ function ComparisonRow({
 
 export function TMLEditor({ reading, open, onOpenChange, onSaved }: TMLEditorProps) {
   const [formData, setFormData] = useState({
-    cmlNumber: "",
+    legacyLocationId: "",
     componentType: "",
     location: "",
     tml1: "",
@@ -99,7 +99,7 @@ export function TMLEditor({ reading, open, onOpenChange, onSaved }: TMLEditorPro
 
   // Store original values for comparison
   const [originalData, setOriginalData] = useState({
-    cmlNumber: "",
+    legacyLocationId: "",
     componentType: "",
     location: "",
     tml1: "",
@@ -116,7 +116,7 @@ export function TMLEditor({ reading, open, onOpenChange, onSaved }: TMLEditorPro
   useEffect(() => {
     if (reading) {
       const data = {
-        cmlNumber: reading.cmlNumber || "",
+        legacyLocationId: reading.legacyLocationId || "",
         componentType: reading.componentType || "",
         location: reading.location || "",
         tml1: reading.tml1 || "",
@@ -137,7 +137,7 @@ export function TMLEditor({ reading, open, onOpenChange, onSaved }: TMLEditorPro
   // Calculate if there are any changes
   const changedFields = useMemo(() => {
     const changes: string[] = [];
-    if (hasChanged(originalData.cmlNumber, formData.cmlNumber)) changes.push("CML Number");
+    if (hasChanged(originalData.legacyLocationId, formData.legacyLocationId)) changes.push("CML Number");
     if (hasChanged(originalData.componentType, formData.componentType)) changes.push("Component");
     if (hasChanged(originalData.location, formData.location)) changes.push("Location");
     if (hasChanged(originalData.tml1, formData.tml1)) changes.push("0° Reading");
@@ -186,7 +186,7 @@ export function TMLEditor({ reading, open, onOpenChange, onSaved }: TMLEditorPro
 
     updateMutation.mutate({
       id: reading.id,
-      cmlNumber: formData.cmlNumber || undefined,
+      legacyLocationId: formData.legacyLocationId || undefined,
       componentType: formData.componentType || undefined,
       location: formData.location || undefined,
       tml1: formData.tml1 || undefined,
@@ -221,7 +221,7 @@ export function TMLEditor({ reading, open, onOpenChange, onSaved }: TMLEditorPro
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-amber-500" />
-              Review Changes - CML {reading?.cmlNumber}
+              Review Changes - CML {reading?.legacyLocationId}
             </DialogTitle>
             <DialogDescription>
               Review the changes below before saving. Changed fields are highlighted.
@@ -251,7 +251,7 @@ export function TMLEditor({ reading, open, onOpenChange, onSaved }: TMLEditorPro
             {/* Identification Section */}
             <div className="mt-2">
               <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-3">Identification</h4>
-              <ComparisonRow label="CML Number" original={originalData.cmlNumber} edited={formData.cmlNumber} />
+              <ComparisonRow label="CML Number" original={originalData.legacyLocationId} edited={formData.legacyLocationId} />
               <ComparisonRow label="Component" original={originalData.componentType} edited={formData.componentType} />
               <ComparisonRow label="Location" original={originalData.location} edited={formData.location} />
             </div>
@@ -329,7 +329,7 @@ export function TMLEditor({ reading, open, onOpenChange, onSaved }: TMLEditorPro
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Pencil className="h-5 w-5" />
-            Edit TML Reading - CML {reading?.cmlNumber}
+            Edit TML Reading - CML {reading?.legacyLocationId}
           </DialogTitle>
           <DialogDescription>
             Manually edit thickness measurements and metadata for this CML location
@@ -340,13 +340,13 @@ export function TMLEditor({ reading, open, onOpenChange, onSaved }: TMLEditorPro
           {/* Identification */}
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="cmlNumber">CML Number</Label>
+              <Label htmlFor="legacyLocationId">CML Number</Label>
               <Input
-                id="cmlNumber"
-                value={formData.cmlNumber}
-                onChange={(e) => updateField("cmlNumber", e.target.value)}
+                id="legacyLocationId"
+                value={formData.legacyLocationId}
+                onChange={(e) => updateField("legacyLocationId", e.target.value)}
                 placeholder="e.g., 1, CML-1"
-                className={cn(hasChanged(originalData.cmlNumber, formData.cmlNumber) && "border-amber-400 bg-amber-50")}
+                className={cn(hasChanged(originalData.legacyLocationId, formData.legacyLocationId) && "border-amber-400 bg-amber-50")}
               />
             </div>
             <div>

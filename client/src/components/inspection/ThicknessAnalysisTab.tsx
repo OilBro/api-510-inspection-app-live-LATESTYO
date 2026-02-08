@@ -116,7 +116,7 @@ export default function ThicknessAnalysisTab({ inspectionId }: ThicknessAnalysis
 
       await createMutation.mutateAsync({
         inspectionId,
-        cmlNumber: newReading.tmlId || "CML-001",
+        legacyLocationId: newReading.tmlId || "CML-001",
         componentType: newReading.component || "Shell",
         location: newReading.tmlId || "Unknown",
         tmlId: newReading.tmlId,
@@ -236,7 +236,7 @@ export default function ThicknessAnalysisTab({ inspectionId }: ThicknessAnalysis
 
           await createMutation.mutateAsync({
             inspectionId,
-            cmlNumber: tmlData.tmlId || "CML-001",
+            legacyLocationId: tmlData.tmlId || "CML-001",
             componentType: tmlData.component || "Shell",
             location: tmlData.tmlId || "Unknown",
             tmlId: tmlData.tmlId,
@@ -411,7 +411,7 @@ export default function ThicknessAnalysisTab({ inspectionId }: ThicknessAnalysis
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortByCmlNumber(readings.map(r => ({ ...r, cmlNumber: r.cmlNumber || r.tmlId }))).map((reading) => (
+                  {sortByCmlNumber(readings.map(r => ({ ...r, legacyLocationId: r.legacyLocationId || r.tmlId }))).map((reading) => (
                     <TableRow key={reading.id}>
                       <TableCell className="font-medium">{reading.tmlId}</TableCell>
                       <TableCell>{reading.component}</TableCell>
@@ -426,7 +426,7 @@ export default function ThicknessAnalysisTab({ inspectionId }: ThicknessAnalysis
                           <TMLEditorButton
                             reading={{
                               id: reading.id,
-                              cmlNumber: reading.cmlNumber || reading.tmlId || '',
+                              legacyLocationId: reading.legacyLocationId || reading.tmlId || '',
                               componentType: reading.componentType || reading.component || '',
                               location: reading.location || '',
                               tml1: reading.tml1 ? String(reading.tml1) : null,

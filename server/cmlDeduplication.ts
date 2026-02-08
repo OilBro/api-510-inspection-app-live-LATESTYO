@@ -8,7 +8,7 @@ import { logger } from "./_core/logger";
  */
 
 interface ParsedTMLReading {
-  cmlNumber?: string;
+  legacyLocationId?: string;
   tmlId?: string;
   location?: string;
   component?: string;
@@ -23,7 +23,7 @@ interface ParsedTMLReading {
 }
 
 interface ConsolidatedTMLReading {
-  cmlNumber: string;
+  legacyLocationId: string;
   componentType: string;
   location: string;
   readingType?: string;
@@ -60,12 +60,12 @@ export function consolidateTMLReadings(readings: ParsedTMLReading[]): Consolidat
   const groupedReadings = new Map<string, ParsedTMLReading[]>();
   
   for (const reading of validReadings) {
-    const cmlNumber = String(reading.cmlNumber || reading.tmlId || reading.location || 'N/A');
+    const legacyLocationId = String(reading.legacyLocationId || reading.tmlId || reading.location || 'N/A');
     const componentType = String(reading.component || 'Unknown');
-    const location = String(reading.location || reading.cmlNumber || 'N/A');
+    const location = String(reading.location || reading.legacyLocationId || 'N/A');
     
     // Create unique key for grouping
-    const groupKey = `${cmlNumber}|${componentType}|${location}`;
+    const groupKey = `${legacyLocationId}|${componentType}|${location}`;
     
     if (!groupedReadings.has(groupKey)) {
       groupedReadings.set(groupKey, []);
@@ -77,7 +77,7 @@ export function consolidateTMLReadings(readings: ParsedTMLReading[]): Consolidat
   const consolidated: ConsolidatedTMLReading[] = [];
   
   for (const [groupKey, group] of Array.from(groupedReadings.entries())) {
-    const [cmlNumber, componentType, location] = groupKey.split('|');
+    const [legacyLocationId, componentType, location] = groupKey.split('|');
     
     // Sort readings by angle for consistent tml1-4 ordering
     const sortedGroup = group.sort((a: ParsedTMLReading, b: ParsedTMLReading) => {
@@ -107,7 +107,7 @@ export function consolidateTMLReadings(readings: ParsedTMLReading[]): Consolidat
     
     // Build consolidated record
     const consolidatedRecord: ConsolidatedTMLReading = {
-      cmlNumber: cmlNumber.substring(0, 10),
+      legacyLocationId: legacyLocationId.substring(0, 10),
       componentType: componentType.substring(0, 255),
       location: location.substring(0, 50),
       readingType: firstReading.readingType,

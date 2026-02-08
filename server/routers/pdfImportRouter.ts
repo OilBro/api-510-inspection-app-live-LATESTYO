@@ -383,7 +383,7 @@ CRITICAL RULES:
       
       const existingReadingsMap = new Map<string, typeof existingReadings[0]>();
       for (const reading of existingReadings) {
-        const cmlKey = normalizeCmlKey(reading.cmlNumber || reading.tmlId);
+        const cmlKey = normalizeCmlKey(reading.legacyLocationId || reading.tmlId);
         if (cmlKey) {
           existingReadingsMap.set(cmlKey, reading);
         }
@@ -476,7 +476,7 @@ CRITICAL RULES:
             // INSERT new reading (no previous data exists)
             await db.execute(sql`
               INSERT INTO tmlReadings (
-                id, inspectionId, cmlNumber, componentType, location, service,
+                id, inspectionId, legacyLocationId, componentType, location, service,
                 tml1, tml2, tml3, tml4, tActual, currentThickness,
                 currentInspectionDate, status, tmlId, component
               ) VALUES (
@@ -1056,7 +1056,7 @@ CRITICAL RULES:
           const record = {
             id: nanoid(),
             inspectionId: inspectionId,
-            cmlNumber: String(measurement.cml || 'N/A'),
+            legacyLocationId: String(measurement.cml || 'N/A'),
             componentType: String(measurement.component || 'Unknown'),
             location: String(measurement.location || 'N/A'),
             service: null as string | null,
@@ -1080,12 +1080,12 @@ CRITICAL RULES:
 
           await db.execute(sql`
             INSERT INTO tmlReadings (
-              id, inspectionId, cmlNumber, componentType, location, service,
+              id, inspectionId, legacyLocationId, componentType, location, service,
               tml1, tml2, tml3, tml4, tActual, nominalThickness, previousThickness,
               previousInspectionDate, currentInspectionDate, loss, lossPercent, corrosionRate,
               status, tmlId, component, currentThickness
             ) VALUES (
-              ${record.id}, ${record.inspectionId}, ${record.cmlNumber}, ${record.componentType}, ${record.location}, ${record.service},
+              ${record.id}, ${record.inspectionId}, ${record.legacyLocationId}, ${record.componentType}, ${record.location}, ${record.service},
               ${record.tml1}, ${record.tml2}, ${record.tml3}, ${record.tml4}, ${record.tActual}, ${record.nominalThickness}, ${record.previousThickness},
               ${record.previousInspectionDate}, ${record.currentInspectionDate}, ${record.loss}, ${record.lossPercent}, ${record.corrosionRate},
               ${record.status}, ${record.tmlId}, ${record.component}, ${record.currentThickness}
@@ -1479,7 +1479,7 @@ EXTRACT ALL THICKNESS READINGS in this exact JSON format:
   "technician": "string - technician name if found",
   "readings": [
     {
-      "cmlNumber": "string - CML number from the report",
+      "legacyLocationId": "string - CML number from the report",
       "location": "string - FULL location description (e.g., '2\"', '4\"', 'East Head 12 O\'Clock', '2\" East Head Seam - Head Side')",
       "component": "string - component type (Shell, East Head, West Head, Nozzle, etc.)",
       "angularReadings": {
@@ -1532,7 +1532,7 @@ CRITICAL RULES:
                   items: {
                     type: "object",
                     properties: {
-                      cmlNumber: { type: "string" },
+                      legacyLocationId: { type: "string" },
                       location: { type: "string" },
                       component: { type: "string" },
                       angularReadings: {
@@ -1552,7 +1552,7 @@ CRITICAL RULES:
                       singleReading: { type: ["number", "null"] },
                       tmin: { type: ["number", "null"] }
                     },
-                    required: ["cmlNumber", "location", "component"],
+                    required: ["legacyLocationId", "location", "component"],
                     additionalProperties: false
                   }
                 }
@@ -1565,7 +1565,7 @@ CRITICAL RULES:
       });
 
       const messageContent = response.choices[0].message.content;
-      let extractedData: { readings: Array<{ cmlNumber: string; location: string; component: string; angularReadings?: Record<string, number | null> | null; singleReading?: number | null; tmin?: number | null }> };
+      let extractedData: { readings: Array<{ legacyLocationId: string; location: string; component: string; angularReadings?: Record<string, number | null> | null; singleReading?: number | null; tmin?: number | null }> };
       
       try {
         extractedData = JSON.parse(typeof messageContent === 'string' ? messageContent : "{}");
@@ -1588,7 +1588,7 @@ CRITICAL RULES:
       // Prepare existing CMLs for matching
       const existingForMatching = existingTMLs.map(tml => ({
         id: tml.id,
-        cmlNumber: tml.cmlNumber || '',
+        legacyLocationId: tml.legacyLocationId || '',
         location: tml.location || tml.componentType || '',
         component: tml.componentType || '',
         angularPosition: tml.angle ? parseInt(tml.angle.replace('°', ''), 10) : undefined,
@@ -1597,7 +1597,7 @@ CRITICAL RULES:
 
       // Prepare new readings for matching - expand angular readings into individual TMLs
       interface ExpandedReading {
-        cmlNumber: string;
+        legacyLocationId: string;
         location: string;
         component: string;
         angularPosition?: number;
@@ -1610,7 +1610,7 @@ CRITICAL RULES:
         // Handle single readings (head readings)
         if (reading.singleReading !== null && reading.singleReading !== undefined) {
           expandedNewReadings.push({
-            cmlNumber: reading.cmlNumber || '',
+            legacyLocationId: reading.legacyLocationId || '',
             location: reading.location || '',
             component: reading.component || '',
             thickness: reading.singleReading,
@@ -1625,7 +1625,7 @@ CRITICAL RULES:
             const value = reading.angularReadings[angle];
             if (value !== null && value !== undefined) {
               expandedNewReadings.push({
-                cmlNumber: reading.cmlNumber || '',
+                legacyLocationId: reading.legacyLocationId || '',
                 location: reading.location || '',
                 component: reading.component || '',
                 angularPosition: parseInt(angle, 10),
@@ -1683,7 +1683,7 @@ CRITICAL RULES:
         await db.insert(tmlReadings).values({
           id: newTmlId,
           inspectionId: input.targetInspectionId,
-          cmlNumber: reading.cmlNumber || `NEW-${createdCount + 1}`,
+          legacyLocationId: reading.legacyLocationId || `NEW-${createdCount + 1}`,
           location: reading.location,
           componentType: reading.component || 'Unknown',
           angle: reading.angularPosition !== undefined ? `${reading.angularPosition}°` : null,

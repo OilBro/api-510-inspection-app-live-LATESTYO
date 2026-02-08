@@ -16,7 +16,7 @@
 
 export interface ExistingCML {
   id: string;
-  cmlNumber: string;
+  legacyLocationId: string;
   location: string;
   component: string;
   sliceLocation?: string;
@@ -25,7 +25,7 @@ export interface ExistingCML {
 }
 
 export interface NewReading {
-  cmlNumber: string;
+  legacyLocationId: string;
   location: string;
   component: string;
   angularPosition?: number;
@@ -249,7 +249,7 @@ export function matchReadingsByLocation(
     if (bestMatch && bestMatch.confidence >= minConfidence) {
       matched.push({
         existingCmlId: bestMatch.cml.id,
-        existingCmlNumber: bestMatch.cml.cmlNumber,
+        existingCmlNumber: bestMatch.cml.legacyLocationId,
         newReading: reading,
         confidence: bestMatch.confidence,
         matchType: bestMatch.matchType,

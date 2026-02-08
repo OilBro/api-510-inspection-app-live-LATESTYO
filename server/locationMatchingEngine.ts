@@ -19,7 +19,7 @@ import { nanoid } from 'nanoid';
 
 export interface TmlLocation {
   id?: string;
-  cmlNumber: string;
+  legacyLocationId: string;
   componentType: string;
   locationDescription: string;
   sliceNumber?: number;
@@ -80,12 +80,12 @@ export interface MatchResult {
  * Parse CML/TML naming convention to extract slice and circumferential position
  * Format: "2" or "2-45" where first number is slice, second is degrees
  */
-export function parseCmlNamingConvention(cmlNumber: string): {
+export function parseCmlNamingConvention(legacyLocationId: string): {
   sliceNumber: number | null;
   circumferentialPosition: number | null;
   raw: string;
 } {
-  const raw = cmlNumber.trim();
+  const raw = legacyLocationId.trim();
   
   // Pattern: "2-45" or "2-0" (slice-degrees)
   const dashPattern = /^(\d+)-(\d+)$/;
@@ -210,8 +210,8 @@ export function calculateLocationSimilarity(
   reasons.push('Component type match');
   
   // Parse CML naming convention
-  const existingParsed = parseCmlNamingConvention(existing.cmlNumber);
-  const newParsed = parseCmlNamingConvention(newLoc.cmlNumber);
+  const existingParsed = parseCmlNamingConvention(existing.legacyLocationId);
+  const newParsed = parseCmlNamingConvention(newLoc.legacyLocationId);
   
   // Slice number match (high weight)
   const existingSlice = existing.sliceNumber ?? existingParsed.sliceNumber;
@@ -329,7 +329,7 @@ export function matchTmlReadings(
         const cmlMatch = existingLocations.find(
           e => e.id && 
                !usedExistingIds.has(e.id) && 
-               e.cmlNumber === newReading.location.cmlNumber
+               e.legacyLocationId === newReading.location.legacyLocationId
         );
         
         if (cmlMatch && cmlMatch.id) {
@@ -353,7 +353,7 @@ export function matchTmlReadings(
     } else if (candidates.length === 1 || candidates[0].confidence >= exactMatchThreshold) {
       // Single high-confidence match or exact match
       const best = candidates[0];
-      const cmlChanged = best.existingLocation.cmlNumber !== newReading.location.cmlNumber;
+      const cmlChanged = best.existingLocation.legacyLocationId !== newReading.location.legacyLocationId;
       
       let matchType: 'exact' | 'location_based' | 'fuzzy';
       if (best.confidence >= exactMatchThreshold) {
@@ -374,8 +374,8 @@ export function matchTmlReadings(
         confidence: best.confidence,
         matchReason: best.reason,
         cmlNumberChanged: cmlChanged,
-        oldCmlNumber: cmlChanged ? best.existingLocation.cmlNumber : undefined,
-        newCmlNumber: cmlChanged ? newReading.location.cmlNumber : undefined
+        oldCmlNumber: cmlChanged ? best.existingLocation.legacyLocationId : undefined,
+        newCmlNumber: cmlChanged ? newReading.location.legacyLocationId : undefined
       });
       usedExistingIds.add(best.existingId);
     } else {
@@ -492,7 +492,7 @@ export function processTmlBatch(
   matchResult: MatchResult;
   corrosionRates: Array<{
     locationId: string;
-    cmlNumber: string;
+    legacyLocationId: string;
     rate: number;
     unit: string;
     thicknessLoss: number;
@@ -506,7 +506,7 @@ export function processTmlBatch(
   // Then calculate corrosion rates for matched locations
   const corrosionRates: Array<{
     locationId: string;
-    cmlNumber: string;
+    legacyLocationId: string;
     rate: number;
     unit: string;
     thicknessLoss: number;
@@ -526,7 +526,7 @@ export function processTmlBatch(
       if (rateResult.isValid) {
         corrosionRates.push({
           locationId: match.existingId,
-          cmlNumber: match.newReading.location.cmlNumber,
+          legacyLocationId: match.newReading.location.legacyLocationId,
           rate: rateResult.rate,
           unit: rateResult.unit,
           thicknessLoss: rateResult.thicknessLoss,
@@ -548,7 +548,7 @@ export function processTmlBatch(
  */
 export function generateLocationId(location: TmlLocation): string {
   const componentType = normalizeComponentType(location.componentType);
-  const parsed = parseCmlNamingConvention(location.cmlNumber);
+  const parsed = parseCmlNamingConvention(location.legacyLocationId);
   
   const parts = [componentType];
   
@@ -562,7 +562,7 @@ export function generateLocationId(location: TmlLocation): string {
   
   if (parts.length === 1) {
     // Fallback to CML number if no structured data
-    parts.push(location.cmlNumber.replace(/\s+/g, '_'));
+    parts.push(location.legacyLocationId.replace(/\s+/g, '_'));
   }
   
   return `loc_${parts.join('_')}_${nanoid(8)}`;

@@ -512,7 +512,7 @@ Return JSON in this exact format:
       .input(z.object({
         inspectionId: z.string(),
         // New grid-based fields
-        cmlNumber: z.string(),
+        legacyLocationId: z.string(),
         componentType: z.string(),
         location: z.string(),
         service: z.string().optional(),
@@ -572,7 +572,7 @@ Return JSON in this exact format:
       .input(z.object({
         id: z.string(),
         // New grid-based fields
-        cmlNumber: z.string().optional(),
+        legacyLocationId: z.string().optional(),
         componentType: z.string().optional(),
         location: z.string().optional(),
         service: z.string().optional(),
@@ -695,7 +695,7 @@ Return JSON in this exact format:
       .input(z.object({
         inspectionId: z.string(),
         updates: z.array(z.object({
-          cmlNumber: z.string(),
+          legacyLocationId: z.string(),
           location: z.string().optional(),
           size: z.string().optional(),
           componentType: z.string().optional(),
@@ -717,9 +717,9 @@ Return JSON in this exact format:
         
         for (const update of updates) {
           // Find matching TML reading by CML number (normalized)
-          const normalizedCml = update.cmlNumber.replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
+          const normalizedCml = update.legacyLocationId.replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
           const matching = existingReadings.find(r => {
-            const existingNormalized = (r.cmlNumber || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
+            const existingNormalized = (r.legacyLocationId || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
             return existingNormalized === normalizedCml;
           });
           
@@ -752,7 +752,7 @@ Return JSON in this exact format:
             updatedCount++;
           } else {
             notFoundCount++;
-            logger.warn(`[TML Batch Update] CML ${update.cmlNumber} not found in inspection ${inspectionId}`);
+            logger.warn(`[TML Batch Update] CML ${update.legacyLocationId} not found in inspection ${inspectionId}`);
           }
         }
         
@@ -1054,7 +1054,7 @@ Return JSON in this exact format:
             },
             tmlReadings: (parsedData.tmlReadings || []).map((tml: any, idx: number) => ({
               id: `tml-${idx}`,
-              cmlNumber: String(tml.cmlNumber || tml.cml || ''),
+              legacyLocationId: String(tml.legacyLocationId || tml.cml || ''),
               tmlId: String(tml.tmlId || ''),
               location: String(tml.location || ''),
               component: String(tml.component || ''),
@@ -1158,7 +1158,7 @@ Return JSON in this exact format:
         }),
         tmlReadings: z.array(z.object({
           id: z.string(),
-          cmlNumber: z.string(),
+          legacyLocationId: z.string(),
           tmlId: z.string().optional(),
           location: z.string().optional(),
           component: z.string().optional(),
@@ -1317,11 +1317,11 @@ Return JSON in this exact format:
 
           // Save TML readings
           for (const tml of input.tmlReadings) {
-            if (!tml.cmlNumber && !tml.currentThickness) continue;
+            if (!tml.legacyLocationId && !tml.currentThickness) continue;
             
             // CRITICAL: cmlNumber, componentType, and location are NOT NULL in database
             // cmlNumber is limited to 10 chars, location to 50 chars
-            const cmlNumber = (tml.cmlNumber || `CML-${Date.now()}`).substring(0, 10);
+            const legacyLocationId = (tml.legacyLocationId || `CML-${Date.now()}`).substring(0, 10);
             
             // Normalize component names and types for consistency
             const normalized = normalizeComponent(
@@ -1337,7 +1337,7 @@ Return JSON in this exact format:
             await db.createTmlReading({
               id: nanoid(),
               inspectionId: inspection.id,
-              cmlNumber: cmlNumber,
+              legacyLocationId: legacyLocationId,
               tmlId: (tml.tmlId || '').substring(0, 255),
               location: location,
               component: componentName, // Use normalized component name
@@ -1737,7 +1737,7 @@ Return JSON in this exact format:
                 id: nanoid(),
                 inspectionId: inspection.id,
                 // Required fields
-                cmlNumber: consolidated.cmlNumber,
+                legacyLocationId: consolidated.legacyLocationId,
                 componentType: consolidated.componentType,
                 location: consolidated.location,
                 status: 'good' as const,

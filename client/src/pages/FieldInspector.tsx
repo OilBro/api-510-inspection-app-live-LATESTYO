@@ -13,7 +13,7 @@ interface PendingReading {
   id: string;
   inspectionId: string;
   vesselTag: string;
-  cmlNumber: string;
+  legacyLocationId: string;
   location: string;
   thickness: string;
   photo?: string;
@@ -28,7 +28,7 @@ export default function FieldInspector() {
   const [pendingReadings, setPendingReadings] = useState<PendingReading[]>([]);
   const [selectedInspection, setSelectedInspection] = useState<string>("");
   const [formData, setFormData] = useState({
-    cmlNumber: "",
+    legacyLocationId: "",
     location: "",
     thickness: "",
   });
@@ -71,7 +71,7 @@ export default function FieldInspector() {
   }, [isOnline]);
 
   const captureReading = async () => {
-    if (!selectedInspection || !formData.cmlNumber || !formData.thickness) {
+    if (!selectedInspection || !formData.legacyLocationId || !formData.thickness) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -102,7 +102,7 @@ export default function FieldInspector() {
       id: `reading-${Date.now()}`,
       inspectionId: selectedInspection,
       vesselTag: inspection.vesselTagNumber || "Unknown",
-      cmlNumber: formData.cmlNumber,
+      legacyLocationId: formData.legacyLocationId,
       location: formData.location,
       thickness: formData.thickness,
       latitude,
@@ -114,7 +114,7 @@ export default function FieldInspector() {
     setPendingReadings(prev => [...prev, newReading]);
     
     // Reset form
-    setFormData({ cmlNumber: "", location: "", thickness: "" });
+    setFormData({ legacyLocationId: "", location: "", thickness: "" });
     
     toast.success("Reading captured", {
       description: isOnline ? "Syncing..." : "Saved offline, will sync when online",
@@ -130,7 +130,7 @@ export default function FieldInspector() {
     try {
       await createTmlMutation.mutateAsync({
         inspectionId: reading.inspectionId,
-        cmlNumber: reading.cmlNumber,
+        legacyLocationId: reading.legacyLocationId,
         componentType: "Field Reading",
         location: reading.location,
         currentThickness: reading.thickness,
@@ -143,7 +143,7 @@ export default function FieldInspector() {
         prev.map(r => r.id === reading.id ? { ...r, synced: true } : r)
       );
 
-      toast.success(`Reading ${reading.cmlNumber} synced`);
+      toast.success(`Reading ${reading.legacyLocationId} synced`);
     } catch (error: any) {
       toast.error(`Sync failed: ${error.message}`);
     }
@@ -289,12 +289,12 @@ export default function FieldInspector() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="cmlNumber">CML Number *</Label>
+                <Label htmlFor="legacyLocationId">CML Number *</Label>
                 <Input
-                  id="cmlNumber"
+                  id="legacyLocationId"
                   placeholder="e.g., CML-1, CML-2"
-                  value={formData.cmlNumber}
-                  onChange={(e) => setFormData({ ...formData, cmlNumber: e.target.value })}
+                  value={formData.legacyLocationId}
+                  onChange={(e) => setFormData({ ...formData, legacyLocationId: e.target.value })}
                   className="text-lg h-12"
                 />
               </div>
@@ -353,7 +353,7 @@ export default function FieldInspector() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
-                      <div className="font-medium">{reading.vesselTag} - {reading.cmlNumber}</div>
+                      <div className="font-medium">{reading.vesselTag} - {reading.legacyLocationId}</div>
                       <div className="text-sm text-muted-foreground">
                         {reading.location && <span>{reading.location} • </span>}
                         <span className="font-mono">{reading.thickness}"</span>

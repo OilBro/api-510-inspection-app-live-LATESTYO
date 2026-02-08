@@ -41,7 +41,7 @@ export interface MappedInspectionData {
   };
   thicknessMeasurements: Array<{
     cml?: string;
-    cmlNumber?: string;
+    legacyLocationId?: string;
     component?: string;
     componentType?: string;
     location?: string;
@@ -126,7 +126,7 @@ ${JSON.stringify(extracted, null, 2)}
 
 TASK: Map this data to the following schema. Use your intelligence to:
 1. Identify which extracted fields correspond to which schema fields
-2. Handle variations in naming (e.g., "CML #" = "cmlNumber", "Shell Thk" = "thickness")
+2. Handle variations in naming (e.g., "CML #" = "legacyLocationId", "Shell Thk" = "thickness")
 3. Convert units if needed
 4. Provide a confidence score (0-100) for each mapped item
 5. Put any data you can't confidently map into "unmatchedData"
@@ -155,7 +155,7 @@ Schema to map to:
   "thicknessMeasurements": [
     {
       "cml": "string - CML identifier (can be CML#, TML#, Location#, etc.)",
-      "cmlNumber": "string - normalized CML number",
+      "legacyLocationId": "string - normalized CML number",
       "component": "string - component name (Shell, Head, Nozzle, etc.)",
       "componentType": "string - standardized component type",
       "location": "string - physical location on vessel",
@@ -184,7 +184,7 @@ Schema to map to:
 }
 
 IMPORTANT MAPPING RULES:
-- For thickness measurements: If you see "CML", "TML", "Location", or similar, map to both "cml" and "cmlNumber"
+- For thickness measurements: If you see "CML", "TML", "Location", or similar, map to both "cml" and "legacyLocationId"
 - Component names: Map variations like "Shell", "Vessel Shell", "Body" → "componentType": "Vessel Shell"
 - Location: Look for grid references, clock positions, or physical descriptions
 - If multiple thickness readings exist (T1, T2, T3, T4), map to tml1, tml2, tml3, tml4

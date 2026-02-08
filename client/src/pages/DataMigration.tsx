@@ -14,7 +14,7 @@ import { Link } from "wouter";
 import { toast } from "sonner";
 
 interface AngleDataRow {
-  cmlNumber: string;
+  legacyLocationId: string;
   compId: string;      // Component ID (componentType)
   location: string;    // Physical location
   type: string;        // Reading type
@@ -92,7 +92,7 @@ export default function DataMigration() {
       const cells = lines[i].split(",").map(c => c.trim());
       if (cells.length >= 2) {
         rows.push({
-          cmlNumber: cells[0] || "",
+          legacyLocationId: cells[0] || "",
           compId: cells[1] || "",
           location: cells[2] || "",
           type: cells[3] || "",
@@ -166,7 +166,7 @@ export default function DataMigration() {
     setAngleData([
       ...angleData,
       { 
-        cmlNumber: "", 
+        legacyLocationId: "", 
         compId: "", 
         location: "", 
         type: "", 
@@ -256,9 +256,9 @@ export default function DataMigration() {
     try {
       // Map angle data to TML reading updates including location, size, and componentType
       const updates = angleData
-        .filter(row => row.cmlNumber)
+        .filter(row => row.legacyLocationId)
         .map(row => ({
-          cmlNumber: row.cmlNumber,
+          legacyLocationId: row.legacyLocationId,
           location: row.location || undefined,
           size: row.size || undefined,
           componentType: row.compId || undefined,
@@ -287,10 +287,10 @@ export default function DataMigration() {
 
     // Helper function to extract numeric value from CML number for sorting
     // Handles formats like: "1", "10", "1-45", "N1", "N1-90", "2'", "2' East Head"
-    const extractNumericValue = (cmlNumber: string): number => {
-      if (!cmlNumber) return Infinity;
+    const extractNumericValue = (legacyLocationId: string): number => {
+      if (!legacyLocationId) return Infinity;
       // Remove common prefixes like N, CML, TML
-      const cleaned = cmlNumber.replace(/^(N|CML|TML|cml|tml|n)/i, '');
+      const cleaned = legacyLocationId.replace(/^(N|CML|TML|cml|tml|n)/i, '');
       // Extract the first number (including decimals)
       const match = cleaned.match(/^([\d.]+)/);
       if (match) {
@@ -301,8 +301,8 @@ export default function DataMigration() {
     };
 
     // Extract secondary sort value (angle portion like -45, -90, etc.)
-    const extractAngleValue = (cmlNumber: string): number => {
-      const match = cmlNumber.match(/-(\d+)/);
+    const extractAngleValue = (legacyLocationId: string): number => {
+      const match = legacyLocationId.match(/-(\d+)/);
       if (match) {
         return parseInt(match[1], 10);
       }
@@ -324,7 +324,7 @@ export default function DataMigration() {
         const calculatedTActual = readings.length > 0 ? Math.min(...readings) : null;
         
         return {
-          cmlNumber: tml.cmlNumber || "",
+          legacyLocationId: tml.legacyLocationId || "",
           compId: tml.componentType || tml.component || "",
           location: tml.location || "",
           type: tml.readingType || "",
@@ -341,12 +341,12 @@ export default function DataMigration() {
       })
       // Sort by numeric value first, then by angle value
       .sort((a, b) => {
-        const numA = extractNumericValue(a.cmlNumber);
-        const numB = extractNumericValue(b.cmlNumber);
+        const numA = extractNumericValue(a.legacyLocationId);
+        const numB = extractNumericValue(b.legacyLocationId);
         if (numA !== numB) return numA - numB;
         // If same base number, sort by angle
-        const angleA = extractAngleValue(a.cmlNumber);
-        const angleB = extractAngleValue(b.cmlNumber);
+        const angleA = extractAngleValue(a.legacyLocationId);
+        const angleB = extractAngleValue(b.legacyLocationId);
         return angleA - angleB;
       });
 
@@ -592,7 +592,7 @@ export default function DataMigration() {
                         />
                       </TableCell>
                       <TableCell className="font-mono text-sm">
-                        {row.cmlNumber || "-"}
+                        {row.legacyLocationId || "-"}
                       </TableCell>
                       <TableCell>
                         <Select

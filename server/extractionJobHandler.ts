@@ -106,7 +106,7 @@ export async function processExtractionJob(
       },
       tmlReadings: (parsedData.tmlReadings || []).map((tml: any, idx: number) => ({
         id: `tml-${idx}`,
-        cmlNumber: String(tml.cmlNumber || tml.cml || ''),
+        legacyLocationId: String(tml.legacyLocationId || tml.cml || ''),
         tmlId: String(tml.tmlId || ''),
         location: String(tml.location || ''),
         component: String(tml.component || ''),

@@ -72,7 +72,7 @@ describe("Anomaly Detection System", () => {
     await db.insert(tmlReadings).values({
       id: nanoid(),
       inspectionId: testInspectionId,
-      cmlNumber: "CML-1",
+      legacyLocationId: "CML-1",
       componentType: "Shell",
       location: "12 o'clock",
       tml1: "0.100", // Very thin - below minimum
@@ -151,7 +151,7 @@ describe("Anomaly Detection System", () => {
       await db.insert(tmlReadings).values({
         id: nanoid(),
         inspectionId: testInspectionId,
-        cmlNumber: "CML-2",
+        legacyLocationId: "CML-2",
         componentType: "Shell",
         component: "Vessel Shell",
         location: reading.location,

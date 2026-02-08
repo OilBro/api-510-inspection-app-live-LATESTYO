@@ -62,7 +62,7 @@ interface ReportInfo {
 
 interface TmlReading {
   id: string;
-  cmlNumber: string;
+  legacyLocationId: string;
   tmlId: string;
   location: string;
   component: string;
@@ -246,7 +246,7 @@ export default function ExtractionPreview({
     const newId = `tml-new-${Date.now()}`;
     setTmlReadings(prev => [...prev, {
       id: newId,
-      cmlNumber: '',
+      legacyLocationId: '',
       tmlId: '',
       location: '',
       component: '',
@@ -601,8 +601,8 @@ export default function ExtractionPreview({
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                           <EditableField
                             label="CML Number"
-                            value={tml.cmlNumber}
-                            onChange={(v) => updateTmlReading(tml.id, 'cmlNumber', v)}
+                            value={tml.legacyLocationId}
+                            onChange={(v) => updateTmlReading(tml.id, 'legacyLocationId', v)}
                           />
                           <EditableField
                             label="Component"

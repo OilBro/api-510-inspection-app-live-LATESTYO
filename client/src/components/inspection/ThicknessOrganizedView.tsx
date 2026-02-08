@@ -9,7 +9,7 @@ import { sortByCmlNumber } from "@/lib/cmlSort";
 
 interface TMLReading {
   id: string;
-  cmlNumber?: string | null;
+  legacyLocationId?: string | null;
   tmlId?: string | null;
   location?: string | null;
   component?: string | null;
@@ -181,7 +181,7 @@ export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedV
                 filteredReadings.map((reading, index) => (
                   <TableRow key={reading.id || index}>
                     <TableCell className="font-medium">
-                      {reading.cmlNumber || reading.tmlId || "-"}
+                      {reading.legacyLocationId || reading.tmlId || "-"}
                     </TableCell>
                     <TableCell>
                       <Badge className={getComponentColor(reading.normalizedComponent)}>

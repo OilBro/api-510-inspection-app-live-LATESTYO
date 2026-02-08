@@ -144,13 +144,13 @@ function mergeExtractionResults(textResult: any, visionResult: any): any {
     
     // Add text TMLs first (priority)
     for (const tml of textTmls) {
-      const key = tml.cmlNumber || tml.cml || tml.tmlId || '';
+      const key = tml.legacyLocationId || tml.cml || tml.tmlId || '';
       if (key) cmlMap.set(key.toLowerCase(), tml);
     }
     
     // Add vision TMLs if not already present
     for (const tml of visionTmls) {
-      const key = tml.cmlNumber || tml.cml || tml.tmlId || '';
+      const key = tml.legacyLocationId || tml.cml || tml.tmlId || '';
       if (key && !cmlMap.has(key.toLowerCase())) {
         cmlMap.set(key.toLowerCase(), tml);
         logger.info(`[Hybrid Parser] Added TML ${key} from vision`);

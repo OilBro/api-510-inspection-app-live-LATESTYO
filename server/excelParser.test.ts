@@ -65,7 +65,7 @@ describe('Excel Parser - Comprehensive Template Support', () => {
     expect(result.tmlReadings).toHaveLength(3);
     
     // Check first reading
-    expect(result.tmlReadings![0].cmlNumber).toBe('001');
+    expect(result.tmlReadings![0].legacyLocationId).toBe('001');
     expect(result.tmlReadings![0].tmlId).toBe('TML-001');
     expect(result.tmlReadings![0].location).toBe('7-0');
     expect(result.tmlReadings![0].component).toBe('Shell');
@@ -203,7 +203,7 @@ describe('Excel Parser - Comprehensive Template Support', () => {
     expect(result.yearBuilt).toBe(2015);
     
     expect(result.tmlReadings).toHaveLength(2);
-    expect(result.tmlReadings![0].cmlNumber).toBe('001');
+    expect(result.tmlReadings![0].legacyLocationId).toBe('001');
     
     expect(result.nozzles).toHaveLength(1);
     expect(result.nozzles![0].nozzleNumber).toBe('N1');

@@ -2889,3 +2889,19 @@ Test PDF: 54-11-067 2017.pdf
 - [ ] Which head types will be officially supported right now?
 - [ ] Is corrosion allowance included in t_required or treated separately?
 - [ ] Does static head apply to heads or shell only?
+
+## Full StationKey Migration (Option B - Rename cmlNumber)
+- [x] Execute database migration: ALTER TABLE to rename cmlNumber → legacyLocationId
+- [x] Add stationKey, componentGroup, sliceNumber, angleDeg, trueCmlId, schemaVersion columns
+- [x] Create indexes on stationKey and (sliceNumber, angleDeg)
+- [ ] Create unique constraint on (inspectionId, stationKey)
+- [x] Update drizzle/schema.ts to reflect new column names
+- [x] Update all TypeScript types (InsertTmlReading, etc.)
+- [x] Create backfill script to populate stationKey for existing data
+- [x] Run backfill script and verify results (1,124 readings processed: 970 updated, 154 skipped)
+- [x] Update all code references from cmlNumber to legacyLocationId (336 replacements across 45 files)
+- [x] Update PDF import router to generate stationKey (auto-generated via enrichTmlReadingWithStationKey)
+- [x] Update UT upload router to generate stationKey (auto-generated via enrichTmlReadingWithStationKey)
+- [ ] Update professional report calculation to use stationKey for pairing
+- [ ] Update all database queries to use stationKey
+- [x] Run all tests to verify migration success (857 tests passing)

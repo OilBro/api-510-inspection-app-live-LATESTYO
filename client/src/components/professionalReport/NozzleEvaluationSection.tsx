@@ -256,7 +256,7 @@ export default function NozzleEvaluationSection({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortByCmlNumber(nozzles.map(n => ({ ...n, cmlNumber: n.nozzleNumber }))).map((nozzle) => {
+              {sortByCmlNumber(nozzles.map(n => ({ ...n, legacyLocationId: n.nozzleNumber }))).map((nozzle) => {
                 const actual = nozzle.actualThickness
                   ? parseFloat(nozzle.actualThickness)
                   : null;

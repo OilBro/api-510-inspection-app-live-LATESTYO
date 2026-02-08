@@ -61,7 +61,7 @@ describe("TML Editor Comparison View", () => {
 
   describe("Changed fields detection", () => {
     interface FormData {
-      cmlNumber: string;
+      legacyLocationId: string;
       componentType: string;
       location: string;
       tml1: string;
@@ -76,7 +76,7 @@ describe("TML Editor Comparison View", () => {
 
     function getChangedFields(original: FormData, edited: FormData): string[] {
       const changes: string[] = [];
-      if (hasChanged(original.cmlNumber, edited.cmlNumber)) changes.push("CML Number");
+      if (hasChanged(original.legacyLocationId, edited.legacyLocationId)) changes.push("CML Number");
       if (hasChanged(original.componentType, edited.componentType)) changes.push("Component");
       if (hasChanged(original.location, edited.location)) changes.push("Location");
       if (hasChanged(original.tml1, edited.tml1)) changes.push("0° Reading");
@@ -92,7 +92,7 @@ describe("TML Editor Comparison View", () => {
 
     it("should return empty array when no changes", () => {
       const data: FormData = {
-        cmlNumber: "CML-1",
+        legacyLocationId: "CML-1",
         componentType: "Vessel Shell",
         location: "12 o'clock",
         tml1: "0.375",
@@ -109,7 +109,7 @@ describe("TML Editor Comparison View", () => {
 
     it("should detect single field change", () => {
       const original: FormData = {
-        cmlNumber: "CML-1",
+        legacyLocationId: "CML-1",
         componentType: "Vessel Shell",
         location: "12 o'clock",
         tml1: "0.375",
@@ -127,7 +127,7 @@ describe("TML Editor Comparison View", () => {
 
     it("should detect multiple field changes", () => {
       const original: FormData = {
-        cmlNumber: "CML-1",
+        legacyLocationId: "CML-1",
         componentType: "Vessel Shell",
         location: "12 o'clock",
         tml1: "0.375",
@@ -154,7 +154,7 @@ describe("TML Editor Comparison View", () => {
 
     it("should detect status change", () => {
       const original: FormData = {
-        cmlNumber: "CML-1",
+        legacyLocationId: "CML-1",
         componentType: "Vessel Shell",
         location: "",
         tml1: "",
@@ -172,7 +172,7 @@ describe("TML Editor Comparison View", () => {
 
     it("should detect all angle readings changed", () => {
       const original: FormData = {
-        cmlNumber: "CML-1",
+        legacyLocationId: "CML-1",
         componentType: "Vessel Shell",
         location: "",
         tml1: "",

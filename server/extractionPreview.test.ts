@@ -38,7 +38,7 @@ describe('Extraction Preview Feature', () => {
     it('should have correct TML reading structure', () => {
       const tmlReading = {
         id: 'tml-0',
-        cmlNumber: '1',
+        legacyLocationId: '1',
         tmlId: 'TML-001',
         location: 'Shell Course 1',
         component: 'Vessel Shell',
@@ -51,7 +51,7 @@ describe('Extraction Preview Feature', () => {
       };
 
       expect(tmlReading.id).toBeDefined();
-      expect(tmlReading.cmlNumber).toBeDefined();
+      expect(tmlReading.legacyLocationId).toBeDefined();
       expect(tmlReading.currentThickness).toBeDefined();
     });
 
@@ -104,9 +104,9 @@ describe('Extraction Preview Feature', () => {
           corrosionAllowance: '',
         },
         tmlReadings: [
-          { id: 'tml-0', cmlNumber: '1', currentThickness: '0.485' },
-          { id: 'tml-1', cmlNumber: '2', currentThickness: '0.490' },
-          { id: 'tml-2', cmlNumber: '3', currentThickness: '0.475' },
+          { id: 'tml-0', legacyLocationId: '1', currentThickness: '0.485' },
+          { id: 'tml-1', legacyLocationId: '2', currentThickness: '0.490' },
+          { id: 'tml-2', legacyLocationId: '3', currentThickness: '0.475' },
         ],
         nozzles: [
           { id: 'noz-0', nozzleNumber: 'N1' },
@@ -168,19 +168,19 @@ describe('Extraction Preview Feature', () => {
       const tmlReadings: any[] = [];
       
       // Filter out empty readings
-      const validReadings = tmlReadings.filter(tml => tml.cmlNumber || tml.currentThickness);
+      const validReadings = tmlReadings.filter(tml => tml.legacyLocationId || tml.currentThickness);
       
       expect(validReadings.length).toBe(0);
     });
 
     it('should filter out incomplete TML readings', () => {
       const tmlReadings = [
-        { id: 'tml-0', cmlNumber: '1', currentThickness: '0.485' },
-        { id: 'tml-1', cmlNumber: '', currentThickness: '' }, // Empty - should be filtered
-        { id: 'tml-2', cmlNumber: '3', currentThickness: '' }, // Has CML - should keep
+        { id: 'tml-0', legacyLocationId: '1', currentThickness: '0.485' },
+        { id: 'tml-1', legacyLocationId: '', currentThickness: '' }, // Empty - should be filtered
+        { id: 'tml-2', legacyLocationId: '3', currentThickness: '' }, // Has CML - should keep
       ];
 
-      const validReadings = tmlReadings.filter(tml => tml.cmlNumber || tml.currentThickness);
+      const validReadings = tmlReadings.filter(tml => tml.legacyLocationId || tml.currentThickness);
       
       expect(validReadings.length).toBe(2);
     });
@@ -233,8 +233,8 @@ describe('Extraction Preview Feature', () => {
 
     it('should update TML reading correctly', () => {
       const tmlReadings = [
-        { id: 'tml-0', cmlNumber: '1', currentThickness: '0.485' },
-        { id: 'tml-1', cmlNumber: '2', currentThickness: '0.490' },
+        { id: 'tml-0', legacyLocationId: '1', currentThickness: '0.485' },
+        { id: 'tml-1', legacyLocationId: '2', currentThickness: '0.490' },
       ];
 
       const updateTmlReading = (id: string, field: string, value: string) =>
@@ -250,9 +250,9 @@ describe('Extraction Preview Feature', () => {
 
     it('should delete TML reading correctly', () => {
       const tmlReadings = [
-        { id: 'tml-0', cmlNumber: '1' },
-        { id: 'tml-1', cmlNumber: '2' },
-        { id: 'tml-2', cmlNumber: '3' },
+        { id: 'tml-0', legacyLocationId: '1' },
+        { id: 'tml-1', legacyLocationId: '2' },
+        { id: 'tml-2', legacyLocationId: '3' },
       ];
 
       const deleteTmlReading = (id: string) =>
@@ -266,14 +266,14 @@ describe('Extraction Preview Feature', () => {
 
     it('should add new TML reading correctly', () => {
       const tmlReadings = [
-        { id: 'tml-0', cmlNumber: '1' },
+        { id: 'tml-0', legacyLocationId: '1' },
       ];
 
       const addTmlReading = () => {
         const newId = `tml-new-${Date.now()}`;
         return [...tmlReadings, {
           id: newId,
-          cmlNumber: '',
+          legacyLocationId: '',
           tmlId: '',
           location: '',
           component: '',

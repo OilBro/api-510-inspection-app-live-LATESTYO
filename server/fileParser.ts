@@ -67,7 +67,7 @@ export interface ParsedVesselData {
   
   // Thickness measurement locations
   tmlReadings?: Array<{
-    cmlNumber?: string;
+    legacyLocationId?: string;
     tmlId?: string;
     location?: string;
     component?: string;
@@ -290,7 +290,7 @@ function parseTmlReadingsSheet(data: any[][], result: ParsedVesselData): void {
     
     const reading: any = {};
     
-    if (cmlCol >= 0 && row[cmlCol] !== undefined) reading.cmlNumber = String(row[cmlCol]);
+    if (cmlCol >= 0 && row[cmlCol] !== undefined) reading.legacyLocationId = String(row[cmlCol]);
     if (tmlIdCol >= 0 && row[tmlIdCol] !== undefined) reading.tmlId = String(row[tmlIdCol]);
     if (locationCol >= 0 && row[locationCol] !== undefined) reading.location = String(row[locationCol]);
     if (componentCol >= 0 && row[componentCol] !== undefined) reading.component = String(row[componentCol]);
@@ -305,7 +305,7 @@ function parseTmlReadingsSheet(data: any[][], result: ParsedVesselData): void {
     if (statusCol >= 0 && row[statusCol] !== undefined) reading.status = String(row[statusCol]).toLowerCase();
     
     // Only add if we have at least a CML number or TML ID
-    if (reading.cmlNumber || reading.tmlId) {
+    if (reading.legacyLocationId || reading.tmlId) {
       result.tmlReadings?.push(reading);
     }
   }
@@ -410,7 +410,7 @@ Extract ALL available information and return it as JSON matching this schema:
   "recommendations": "string - Section 4.0 Recommendations",
   "tmlReadings": [
     {
-      "cmlNumber": "string - CML number",
+      "legacyLocationId": "string - CML number",
       "location": "string - location description",
       "component": "string - FULL component name (e.g., 'Vessel Shell', '2\" East Head Seam')",
       "componentType": "string - Shell/Head/Nozzle",
@@ -659,7 +659,7 @@ if (selectedParser === "vision") {
                   items: {
                     type: "object",
                     properties: {
-                      cmlNumber: { type: "string" },
+                      legacyLocationId: { type: "string" },
                       tmlId: { type: "string" },
                       location: { type: "string" },
                       component: { type: "string" },

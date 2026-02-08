@@ -5,7 +5,7 @@ describe('CML Deduplication', () => {
   it('should consolidate multi-angle readings into single record', () => {
     const readings = [
       {
-        cmlNumber: 'CML-001',
+        legacyLocationId: 'CML-001',
         component: 'Vessel Shell',
         location: '7-0',
         angle: '0°',
@@ -14,21 +14,21 @@ describe('CML Deduplication', () => {
         nominalThickness: 0.625,
       },
       {
-        cmlNumber: 'CML-001',
+        legacyLocationId: 'CML-001',
         component: 'Vessel Shell',
         location: '7-0',
         angle: '90°',
         currentThickness: 0.445,
       },
       {
-        cmlNumber: 'CML-001',
+        legacyLocationId: 'CML-001',
         component: 'Vessel Shell',
         location: '7-0',
         angle: '180°',
         currentThickness: 0.440,
       },
       {
-        cmlNumber: 'CML-001',
+        legacyLocationId: 'CML-001',
         component: 'Vessel Shell',
         location: '7-0',
         angle: '270°',
@@ -39,7 +39,7 @@ describe('CML Deduplication', () => {
     const result = consolidateTMLReadings(readings);
 
     expect(result).toHaveLength(1);
-    expect(result[0].cmlNumber).toBe('CML-001');
+    expect(result[0].legacyLocationId).toBe('CML-001');
     expect(result[0].tml1).toBe(0.450); // 0°
     expect(result[0].tml2).toBe(0.445); // 90°
     expect(result[0].tml3).toBe(0.440); // 180°
@@ -53,7 +53,7 @@ describe('CML Deduplication', () => {
   it('should handle readings without angles', () => {
     const readings = [
       {
-        cmlNumber: 'CML-002',
+        legacyLocationId: 'CML-002',
         component: 'East Head',
         location: '11B-C',
         currentThickness: 0.500,
@@ -64,7 +64,7 @@ describe('CML Deduplication', () => {
     const result = consolidateTMLReadings(readings);
 
     expect(result).toHaveLength(1);
-    expect(result[0].cmlNumber).toBe('CML-002');
+    expect(result[0].legacyLocationId).toBe('CML-002');
     expect(result[0].tml1).toBe(0.500);
     expect(result[0].tActual).toBe(0.500);
     expect(result[0].angles).toEqual(['N/A']);
@@ -73,13 +73,13 @@ describe('CML Deduplication', () => {
   it('should separate different CML numbers', () => {
     const readings = [
       {
-        cmlNumber: 'CML-001',
+        legacyLocationId: 'CML-001',
         component: 'Vessel Shell',
         location: '7-0',
         currentThickness: 0.450,
       },
       {
-        cmlNumber: 'CML-002',
+        legacyLocationId: 'CML-002',
         component: 'Vessel Shell',
         location: '7-45',
         currentThickness: 0.460,
@@ -89,20 +89,20 @@ describe('CML Deduplication', () => {
     const result = consolidateTMLReadings(readings);
 
     expect(result).toHaveLength(2);
-    expect(result[0].cmlNumber).toBe('CML-001');
-    expect(result[1].cmlNumber).toBe('CML-002');
+    expect(result[0].legacyLocationId).toBe('CML-001');
+    expect(result[1].legacyLocationId).toBe('CML-002');
   });
 
   it('should separate different component types', () => {
     const readings = [
       {
-        cmlNumber: 'CML-001',
+        legacyLocationId: 'CML-001',
         component: 'Vessel Shell',
         location: '7-0',
         currentThickness: 0.450,
       },
       {
-        cmlNumber: 'CML-001',
+        legacyLocationId: 'CML-001',
         component: 'East Head',
         location: '7-0',
         currentThickness: 0.460,
@@ -119,7 +119,7 @@ describe('CML Deduplication', () => {
   it('should detect nozzle service types', () => {
     const readings = [
       {
-        cmlNumber: 'N1',
+        legacyLocationId: 'N1',
         component: 'Manway',
         location: 'N1',
         readingType: 'nozzle',
@@ -127,7 +127,7 @@ describe('CML Deduplication', () => {
         currentThickness: 0.500,
       },
       {
-        cmlNumber: 'N2',
+        legacyLocationId: 'N2',
         component: 'Relief Valve',
         location: 'N2',
         readingType: 'nozzle',
@@ -148,14 +148,14 @@ describe('CML Deduplication', () => {
   it('should handle partial angle sets', () => {
     const readings = [
       {
-        cmlNumber: 'CML-003',
+        legacyLocationId: 'CML-003',
         component: 'West Head',
         location: '12-0',
         angle: '0°',
         currentThickness: 0.480,
       },
       {
-        cmlNumber: 'CML-003',
+        legacyLocationId: 'CML-003',
         component: 'West Head',
         location: '12-0',
         angle: '180°',
@@ -176,7 +176,7 @@ describe('CML Deduplication', () => {
   it('should handle string thickness values', () => {
     const readings = [
       {
-        cmlNumber: 'CML-004',
+        legacyLocationId: 'CML-004',
         component: 'Vessel Shell',
         location: '8-0',
         currentThickness: '0.450',
@@ -196,19 +196,19 @@ describe('CML Deduplication', () => {
   it('should handle missing or invalid thickness values', () => {
     const readings = [
       {
-        cmlNumber: 'CML-005',
+        legacyLocationId: 'CML-005',
         component: 'Vessel Shell',
         location: '9-0',
         currentThickness: null,
       },
       {
-        cmlNumber: 'CML-005',
+        legacyLocationId: 'CML-005',
         component: 'Vessel Shell',
         location: '9-0',
         currentThickness: undefined,
       },
       {
-        cmlNumber: 'CML-005',
+        legacyLocationId: 'CML-005',
         component: 'Vessel Shell',
         location: '9-0',
         currentThickness: '',
@@ -225,7 +225,7 @@ describe('CML Deduplication', () => {
   it('should preserve readingType metadata', () => {
     const readings = [
       {
-        cmlNumber: 'CML-006',
+        legacyLocationId: 'CML-006',
         component: 'Seam Weld',
         location: 'S1',
         readingType: 'seam',
@@ -242,7 +242,7 @@ describe('CML Deduplication', () => {
   it('should truncate long field values to database limits', () => {
     const readings = [
       {
-        cmlNumber: 'CML-VERY-LONG-NUMBER-EXCEEDING-10-CHARS',
+        legacyLocationId: 'CML-VERY-LONG-NUMBER-EXCEEDING-10-CHARS',
         component: 'A'.repeat(300), // Exceeds 255 char limit
         location: 'L'.repeat(100), // Exceeds 50 char limit
         currentThickness: 0.500,
@@ -252,7 +252,7 @@ describe('CML Deduplication', () => {
     const result = consolidateTMLReadings(readings);
 
     expect(result).toHaveLength(1);
-    expect(result[0].cmlNumber).toHaveLength(10); // Truncated to 10
+    expect(result[0].legacyLocationId).toHaveLength(10); // Truncated to 10
     expect(result[0].componentType).toHaveLength(255); // Truncated to 255
     expect(result[0].location).toHaveLength(50); // Truncated to 50
   });

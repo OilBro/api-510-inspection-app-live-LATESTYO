@@ -157,7 +157,7 @@ export const batchReprocessRouter = router({
             await db.insert(tmlReadings).values({
               id: tmlId,
               inspectionId: inspectionId,
-              cmlNumber: tml.cmlNumber || `CML-${tmlCount + 1}`,
+              legacyLocationId: tml.legacyLocationId || `CML-${tmlCount + 1}`,
               componentType: component,
               component: component,
               location: tml.location || component,
@@ -178,7 +178,7 @@ export const batchReprocessRouter = router({
                 await db.insert(nozzleEvaluations).values({
                   id: nanoid(),
                   inspectionId: inspectionId,
-                  nozzleNumber: tml.cmlNumber || `N${nozzleCount + 1}`,
+                  nozzleNumber: tml.legacyLocationId || `N${nozzleCount + 1}`,
                   nozzleDescription: description,
                   location: tml.location || null,
                   nominalSize: nominalSize,
@@ -397,7 +397,7 @@ export const batchReprocessRouter = router({
               await db.insert(tmlReadings).values({
                 id: nanoid(),
                 inspectionId: inspectionId,
-                cmlNumber: tml.cmlNumber || `CML-${tmlCount + 1}`,
+                legacyLocationId: tml.legacyLocationId || `CML-${tmlCount + 1}`,
                 componentType: component,
                 component: component,
                 location: tml.location || component,
@@ -416,7 +416,7 @@ export const batchReprocessRouter = router({
                 await db.insert(nozzleEvaluations).values({
                   id: nanoid(),
                   inspectionId: inspectionId,
-                  nozzleNumber: tml.cmlNumber || `N${nozzleCount + 1}`,
+                  nozzleNumber: tml.legacyLocationId || `N${nozzleCount + 1}`,
                   nozzleDescription: component.replace(/\d+\s*["']/g, '').trim(),
                   nominalSize: nominalSize,
                   actualThickness: tml.currentThickness?.toString() || null,

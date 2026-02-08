@@ -212,17 +212,19 @@ async function enrichTmlReadingWithStationKey(
     location: reading.location,
     sliceNumber: reading.sliceNumber,
     angleDeg: reading.angleDeg,
-    cmlNumber: reading.cmlNumber,
+    legacyLocationId: reading.legacyLocationId,
     service: reading.service,
   });
   
   return {
     ...reading,
     stationKey: result.stationKey,
+    componentGroup: result.componentGroup,
     sliceNumber: result.sliceNumber ?? reading.sliceNumber,
     angleDeg: result.angleDeg ?? reading.angleDeg,
     trueCmlId: result.trueCmlId ?? reading.trueCmlId,
     axialPosition: result.axialPosition ?? reading.axialPosition,
+    schemaVersion: 1,
   };
 }
 

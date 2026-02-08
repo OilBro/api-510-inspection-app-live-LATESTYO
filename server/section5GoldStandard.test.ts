@@ -377,7 +377,7 @@ describe('Location Matching Engine', () => {
     it('should return high score for exact match', () => {
       const existing: TmlLocation = {
         id: 'loc1',
-        cmlNumber: '2-45',
+        legacyLocationId: '2-45',
         componentType: 'shell',
         locationDescription: 'Shell slice 2',
         sliceNumber: 2,
@@ -385,7 +385,7 @@ describe('Location Matching Engine', () => {
       };
       
       const newLoc: TmlLocation = {
-        cmlNumber: '2-45',
+        legacyLocationId: '2-45',
         componentType: 'shell',
         locationDescription: 'Shell slice 2',
         sliceNumber: 2,
@@ -399,7 +399,7 @@ describe('Location Matching Engine', () => {
     it('should return 0 for component type mismatch', () => {
       const existing: TmlLocation = {
         id: 'loc1',
-        cmlNumber: '2-45',
+        legacyLocationId: '2-45',
         componentType: 'shell',
         locationDescription: 'Shell',
         sliceNumber: 2,
@@ -407,7 +407,7 @@ describe('Location Matching Engine', () => {
       };
       
       const newLoc: TmlLocation = {
-        cmlNumber: '2-45',
+        legacyLocationId: '2-45',
         componentType: 'head',
         locationDescription: 'Head',
         sliceNumber: 2,
@@ -421,7 +421,7 @@ describe('Location Matching Engine', () => {
     it('should give partial credit for adjacent circumferential positions', () => {
       const existing: TmlLocation = {
         id: 'loc1',
-        cmlNumber: '2-45',
+        legacyLocationId: '2-45',
         componentType: 'shell',
         locationDescription: 'Shell',
         sliceNumber: 2,
@@ -429,7 +429,7 @@ describe('Location Matching Engine', () => {
       };
       
       const newLoc: TmlLocation = {
-        cmlNumber: '2-90',
+        legacyLocationId: '2-90',
         componentType: 'shell',
         locationDescription: 'Shell',
         sliceNumber: 2,
@@ -444,16 +444,16 @@ describe('Location Matching Engine', () => {
   
   describe('matchTmlReadings', () => {
     const existingLocations: TmlLocation[] = [
-      { id: 'loc1', cmlNumber: '1-0', componentType: 'shell', locationDescription: 'Shell slice 1', sliceNumber: 1, circumferentialPosition: 0 },
-      { id: 'loc2', cmlNumber: '1-90', componentType: 'shell', locationDescription: 'Shell slice 1', sliceNumber: 1, circumferentialPosition: 90 },
-      { id: 'loc3', cmlNumber: '2-0', componentType: 'shell', locationDescription: 'Shell slice 2', sliceNumber: 2, circumferentialPosition: 0 },
-      { id: 'loc4', cmlNumber: 'H1', componentType: 'north_head', locationDescription: 'North Head', sliceNumber: 1 }
+      { id: 'loc1', legacyLocationId: '1-0', componentType: 'shell', locationDescription: 'Shell slice 1', sliceNumber: 1, circumferentialPosition: 0 },
+      { id: 'loc2', legacyLocationId: '1-90', componentType: 'shell', locationDescription: 'Shell slice 1', sliceNumber: 1, circumferentialPosition: 90 },
+      { id: 'loc3', legacyLocationId: '2-0', componentType: 'shell', locationDescription: 'Shell slice 2', sliceNumber: 2, circumferentialPosition: 0 },
+      { id: 'loc4', legacyLocationId: 'H1', componentType: 'north_head', locationDescription: 'North Head', sliceNumber: 1 }
     ];
     
     it('should match readings by location', () => {
       const newReadings: TmlReading[] = [
         {
-          location: { cmlNumber: '1-0', componentType: 'shell', locationDescription: 'Shell slice 1', sliceNumber: 1, circumferentialPosition: 0 },
+          location: { legacyLocationId: '1-0', componentType: 'shell', locationDescription: 'Shell slice 1', sliceNumber: 1, circumferentialPosition: 0 },
           thickness: 0.350,
           thicknessUnit: 'inches',
           measurementDate: new Date()
@@ -469,7 +469,7 @@ describe('Location Matching Engine', () => {
     it('should detect CML number changes', () => {
       const newReadings: TmlReading[] = [
         {
-          location: { cmlNumber: 'NEW-1', componentType: 'shell', locationDescription: 'Shell slice 1', sliceNumber: 1, circumferentialPosition: 0 },
+          location: { legacyLocationId: 'NEW-1', componentType: 'shell', locationDescription: 'Shell slice 1', sliceNumber: 1, circumferentialPosition: 0 },
           thickness: 0.350,
           thicknessUnit: 'inches',
           measurementDate: new Date()
@@ -486,7 +486,7 @@ describe('Location Matching Engine', () => {
     it('should report unmatched readings', () => {
       const newReadings: TmlReading[] = [
         {
-          location: { cmlNumber: '99-0', componentType: 'shell', locationDescription: 'New location', sliceNumber: 99, circumferentialPosition: 0 },
+          location: { legacyLocationId: '99-0', componentType: 'shell', locationDescription: 'New location', sliceNumber: 99, circumferentialPosition: 0 },
           thickness: 0.350,
           thicknessUnit: 'inches',
           measurementDate: new Date()
@@ -500,13 +500,13 @@ describe('Location Matching Engine', () => {
     it('should provide summary statistics', () => {
       const newReadings: TmlReading[] = [
         {
-          location: { cmlNumber: '1-0', componentType: 'shell', locationDescription: 'Shell', sliceNumber: 1, circumferentialPosition: 0 },
+          location: { legacyLocationId: '1-0', componentType: 'shell', locationDescription: 'Shell', sliceNumber: 1, circumferentialPosition: 0 },
           thickness: 0.350,
           thicknessUnit: 'inches',
           measurementDate: new Date()
         },
         {
-          location: { cmlNumber: '99-0', componentType: 'shell', locationDescription: 'New', sliceNumber: 99, circumferentialPosition: 0 },
+          location: { legacyLocationId: '99-0', componentType: 'shell', locationDescription: 'New', sliceNumber: 99, circumferentialPosition: 0 },
           thickness: 0.400,
           thicknessUnit: 'inches',
           measurementDate: new Date()
@@ -567,7 +567,7 @@ describe('Location Matching Engine', () => {
   describe('generateLocationId', () => {
     it('should generate unique IDs', () => {
       const loc: TmlLocation = {
-        cmlNumber: '2-45',
+        legacyLocationId: '2-45',
         componentType: 'shell',
         locationDescription: 'Shell slice 2'
       };
@@ -703,8 +703,8 @@ describe('Enhanced PDF Parser', () => {
   describe('Location Matching Integration', () => {
     it('should perform location matching when enabled', async () => {
       const existingLocations: TmlLocation[] = [
-        { id: 'loc1', cmlNumber: '1', componentType: 'shell', locationDescription: 'Shell', sliceNumber: 1 },
-        { id: 'loc2', cmlNumber: '2', componentType: 'north_head', locationDescription: 'North Head', sliceNumber: 2 }
+        { id: 'loc1', legacyLocationId: '1', componentType: 'shell', locationDescription: 'Shell', sliceNumber: 1 },
+        { id: 'loc2', legacyLocationId: '2', componentType: 'north_head', locationDescription: 'North Head', sliceNumber: 2 }
       ];
       
       const parser = new EnhancedPdfParser({
