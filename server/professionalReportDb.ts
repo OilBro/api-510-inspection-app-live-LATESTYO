@@ -1,6 +1,7 @@
 import { eq, or, and } from "drizzle-orm";
 import { logger } from "./_core/logger";
-import { getDb } from "./db";
+import { getDb } from './db';
+import { getCorrelatedTMLReadings } from './cmlCorrelationHelper';
 import {
   professionalReports,
   componentCalculations,
@@ -484,8 +485,33 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
     
     // Determine thicknesses (MINIMUM of relevant TMLs for conservative API 510 calculations)
     const validCurrent = relevantTMLs.map(t => parseFloat(t.tActual || t.currentThickness || '0')).filter(v => v > 0);
-    // CRITICAL FIX: Extract previousThickness from TML readings
-    const validPrev = relevantTMLs.map(t => parseFloat(t.previousThickness || '0')).filter(v => v > 0);
+    
+    // CRITICAL FIX: Use CML correlation mapping for accurate baseline comparison
+    let validPrev: number[] = [];
+    if (inspection.previousInspectionId) {
+      try {
+        // Use correlation mapping to match baseline locations to current locations
+        const correlatedPairs = await getCorrelatedTMLReadings(
+          inspection.id,
+          inspection.previousInspectionId,
+          name
+        );
+        
+        // Extract previous thickness from correlated baseline readings
+        validPrev = correlatedPairs
+          .map(pair => parseFloat(pair.baseline?.tActual || pair.baseline?.currentThickness || '0'))
+          .filter(v => v > 0);
+        
+        logger.info(`[CML Correlation] Found ${correlatedPairs.length} correlated pairs for ${name}, ${validPrev.length} with valid baseline thickness`);
+      } catch (e) {
+        logger.error('[CML Correlation] Error getting correlated readings:', e);
+        // Fallback to direct previousThickness field
+        validPrev = relevantTMLs.map(t => parseFloat(t.previousThickness || '0')).filter(v => v > 0);
+      }
+    } else {
+      // No baseline inspection - use previousThickness field from current TML readings
+      validPrev = relevantTMLs.map(t => parseFloat(t.previousThickness || '0')).filter(v => v > 0);
+    }
     const validNominal = relevantTMLs.map(t => parseFloat(t.nominalThickness || '0')).filter(v => v > 0);
     
     // Use MINIMUM thickness (most conservative for safety calculations)

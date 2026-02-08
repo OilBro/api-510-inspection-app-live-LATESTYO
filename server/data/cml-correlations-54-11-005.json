@@ -1,0 +1,394 @@
+[
+  {
+    "baselineCML": "CML 001",
+    "baselineDescription": "Shell @ 2 ft from West Head, 0°",
+    "currentCML": "Shell @ 2 ft from West Head",
+    "currentDescription": "Shell location 2 ft from West Head at 0°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 002",
+    "baselineDescription": "Shell @ 2 ft from West Head, 45°",
+    "currentCML": "Shell @ 2 ft from West Head",
+    "currentDescription": "Shell location 2 ft from West Head at 45°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 003",
+    "baselineDescription": "Shell @ 2 ft from West Head, 90°",
+    "currentCML": "Shell @ 2 ft from West Head",
+    "currentDescription": "Shell location 2 ft from West Head at 90°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 004",
+    "baselineDescription": "Shell @ 2 ft from West Head, 135°",
+    "currentCML": "Shell @ 2 ft from West Head",
+    "currentDescription": "Shell location 2 ft from West Head at 135°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 005",
+    "baselineDescription": "Shell @ 2 ft from West Head, 180°",
+    "currentCML": "Shell @ 2 ft from West Head",
+    "currentDescription": "Shell location 2 ft from West Head at 180°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 006",
+    "baselineDescription": "Shell @ 2 ft from West Head, 225°",
+    "currentCML": "Shell @ 2 ft from West Head",
+    "currentDescription": "Shell location 2 ft from West Head at 225°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 007",
+    "baselineDescription": "Shell @ 2 ft from West Head, 270°",
+    "currentCML": "Shell @ 2 ft from West Head",
+    "currentDescription": "Shell location 2 ft from West Head at 270°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 008",
+    "baselineDescription": "Shell @ 2 ft from West Head, 315°",
+    "currentCML": "Shell @ 2 ft from West Head",
+    "currentDescription": "Shell location 2 ft from West Head at 315°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 009",
+    "baselineDescription": "Shell @ 5 ft from West Head, 0°",
+    "currentCML": "Shell @ 5 ft from West Head",
+    "currentDescription": "Shell location 5 ft from West Head at 0°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 010",
+    "baselineDescription": "Shell @ 5 ft from West Head, 45°",
+    "currentCML": "Shell @ 5 ft from West Head",
+    "currentDescription": "Shell location 5 ft from West Head at 45°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 011",
+    "baselineDescription": "Shell @ 5 ft from West Head, 90°",
+    "currentCML": "Shell @ 5 ft from West Head",
+    "currentDescription": "Shell location 5 ft from West Head at 90°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 012",
+    "baselineDescription": "Shell @ 5 ft from West Head, 135°",
+    "currentCML": "Shell @ 5 ft from West Head",
+    "currentDescription": "Shell location 5 ft from West Head at 135°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 013",
+    "baselineDescription": "Shell @ 5 ft from West Head, 180°",
+    "currentCML": "Shell @ 5 ft from West Head",
+    "currentDescription": "Shell location 5 ft from West Head at 180°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 014",
+    "baselineDescription": "Shell @ 5 ft from West Head, 225°",
+    "currentCML": "Shell @ 5 ft from West Head",
+    "currentDescription": "Shell location 5 ft from West Head at 225°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 015",
+    "baselineDescription": "Shell @ 5 ft from West Head, 270°",
+    "currentCML": "Shell @ 5 ft from West Head",
+    "currentDescription": "Shell location 5 ft from West Head at 270°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 016",
+    "baselineDescription": "Shell @ 5 ft from West Head, 315°",
+    "currentCML": "Shell @ 5 ft from West Head",
+    "currentDescription": "Shell location 5 ft from West Head at 315°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 017",
+    "baselineDescription": "Shell @ 8 ft from West Head, 0°",
+    "currentCML": "Shell @ 8 ft from West Head",
+    "currentDescription": "Shell location 8 ft from West Head at 0°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 018",
+    "baselineDescription": "Shell @ 8 ft from West Head, 45°",
+    "currentCML": "Shell @ 8 ft from West Head",
+    "currentDescription": "Shell location 8 ft from West Head at 45°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 019",
+    "baselineDescription": "Shell @ 8 ft from West Head, 90°",
+    "currentCML": "Shell @ 8 ft from West Head",
+    "currentDescription": "Shell location 8 ft from West Head at 90°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 020",
+    "baselineDescription": "Shell @ 8 ft from West Head, 135°",
+    "currentCML": "Shell @ 8 ft from West Head",
+    "currentDescription": "Shell location 8 ft from West Head at 135°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 021",
+    "baselineDescription": "Shell @ 8 ft from West Head, 180°",
+    "currentCML": "Shell @ 8 ft from West Head",
+    "currentDescription": "Shell location 8 ft from West Head at 180°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 022",
+    "baselineDescription": "Shell @ 8 ft from West Head, 225°",
+    "currentCML": "Shell @ 8 ft from West Head",
+    "currentDescription": "Shell location 8 ft from West Head at 225°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 023",
+    "baselineDescription": "Shell @ 8 ft from West Head, 270°",
+    "currentCML": "Shell @ 8 ft from West Head",
+    "currentDescription": "Shell location 8 ft from West Head at 270°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 024",
+    "baselineDescription": "Shell @ 8 ft from West Head, 315°",
+    "currentCML": "Shell @ 8 ft from West Head",
+    "currentDescription": "Shell location 8 ft from West Head at 315°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 025",
+    "baselineDescription": "Shell @ 11 ft from West Head, 0°",
+    "currentCML": "Shell @ 11 ft from West Head",
+    "currentDescription": "Shell location 11 ft from West Head at 0°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 026",
+    "baselineDescription": "Shell @ 11 ft from West Head, 45°",
+    "currentCML": "Shell @ 11 ft from West Head",
+    "currentDescription": "Shell location 11 ft from West Head at 45°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 027",
+    "baselineDescription": "Shell @ 11 ft from West Head, 90°",
+    "currentCML": "Shell @ 11 ft from West Head",
+    "currentDescription": "Shell location 11 ft from West Head at 90°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 028",
+    "baselineDescription": "Shell @ 11 ft from West Head, 135°",
+    "currentCML": "Shell @ 11 ft from West Head",
+    "currentDescription": "Shell location 11 ft from West Head at 135°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 029",
+    "baselineDescription": "Shell @ 11 ft from West Head, 180°",
+    "currentCML": "Shell @ 11 ft from West Head",
+    "currentDescription": "Shell location 11 ft from West Head at 180°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 030",
+    "baselineDescription": "Shell @ 11 ft from West Head, 225°",
+    "currentCML": "Shell @ 11 ft from West Head",
+    "currentDescription": "Shell location 11 ft from West Head at 225°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 031",
+    "baselineDescription": "Shell @ 11 ft from West Head, 270°",
+    "currentCML": "Shell @ 11 ft from West Head",
+    "currentDescription": "Shell location 11 ft from West Head at 270°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 032",
+    "baselineDescription": "Shell @ 11 ft from West Head, 315°",
+    "currentCML": "Shell @ 11 ft from West Head",
+    "currentDescription": "Shell location 11 ft from West Head at 315°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 033",
+    "baselineDescription": "Shell @ 14 ft from West Head, 0°",
+    "currentCML": "Shell @ 14 ft from West Head",
+    "currentDescription": "Shell location 14 ft from West Head at 0°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 034",
+    "baselineDescription": "Shell @ 14 ft from West Head, 45°",
+    "currentCML": "Shell @ 14 ft from West Head",
+    "currentDescription": "Shell location 14 ft from West Head at 45°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 035",
+    "baselineDescription": "Shell @ 14 ft from West Head, 90°",
+    "currentCML": "Shell @ 14 ft from West Head",
+    "currentDescription": "Shell location 14 ft from West Head at 90°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 036",
+    "baselineDescription": "Shell @ 14 ft from West Head, 135°",
+    "currentCML": "Shell @ 14 ft from West Head",
+    "currentDescription": "Shell location 14 ft from West Head at 135°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 037",
+    "baselineDescription": "Shell @ 14 ft from West Head, 180°",
+    "currentCML": "Shell @ 14 ft from West Head",
+    "currentDescription": "Shell location 14 ft from West Head at 180°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 038",
+    "baselineDescription": "Shell @ 14 ft from West Head, 225°",
+    "currentCML": "Shell @ 14 ft from West Head",
+    "currentDescription": "Shell location 14 ft from West Head at 225°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 039",
+    "baselineDescription": "Shell @ 14 ft from West Head, 270°",
+    "currentCML": "Shell @ 14 ft from West Head",
+    "currentDescription": "Shell location 14 ft from West Head at 270°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 040",
+    "baselineDescription": "Shell @ 14 ft from West Head, 315°",
+    "currentCML": "Shell @ 14 ft from West Head",
+    "currentDescription": "Shell location 14 ft from West Head at 315°",
+    "correlationBasis": "Axial distance from West Head + orientation"
+  },
+  {
+    "baselineCML": "CML 041",
+    "baselineDescription": "East Head Crown, 0°",
+    "currentCML": "East Head Crown",
+    "currentDescription": "East Head crown region at 0°",
+    "correlationBasis": "Head region (crown) + orientation"
+  },
+  {
+    "baselineCML": "CML 042",
+    "baselineDescription": "East Head Crown, 90°",
+    "currentCML": "East Head Crown",
+    "currentDescription": "East Head crown region at 90°",
+    "correlationBasis": "Head region (crown) + orientation"
+  },
+  {
+    "baselineCML": "CML 043",
+    "baselineDescription": "East Head Crown, 180°",
+    "currentCML": "East Head Crown",
+    "currentDescription": "East Head crown region at 180°",
+    "correlationBasis": "Head region (crown) + orientation"
+  },
+  {
+    "baselineCML": "CML 044",
+    "baselineDescription": "East Head Crown, 270°",
+    "currentCML": "East Head Crown",
+    "currentDescription": "East Head crown region at 270°",
+    "correlationBasis": "Head region (crown) + orientation"
+  },
+  {
+    "baselineCML": "CML 045",
+    "baselineDescription": "East Head Knuckle, 0°",
+    "currentCML": "East Head Knuckle",
+    "currentDescription": "East Head knuckle region at 0°",
+    "correlationBasis": "Head region (knuckle) + orientation"
+  },
+  {
+    "baselineCML": "CML 046",
+    "baselineDescription": "East Head Knuckle, 90°",
+    "currentCML": "East Head Knuckle",
+    "currentDescription": "East Head knuckle region at 90°",
+    "correlationBasis": "Head region (knuckle) + orientation"
+  },
+  {
+    "baselineCML": "CML 047",
+    "baselineDescription": "East Head Knuckle, 180°",
+    "currentCML": "East Head Knuckle",
+    "currentDescription": "East Head knuckle region at 180°",
+    "correlationBasis": "Head region (knuckle) + orientation"
+  },
+  {
+    "baselineCML": "CML 048",
+    "baselineDescription": "East Head Knuckle, 270°",
+    "currentCML": "East Head Knuckle",
+    "currentDescription": "East Head knuckle region at 270°",
+    "correlationBasis": "Head region (knuckle) + orientation"
+  },
+  {
+    "baselineCML": "CML 049",
+    "baselineDescription": "West Head Crown, 0°",
+    "currentCML": "West Head Crown",
+    "currentDescription": "West Head crown region at 0°",
+    "correlationBasis": "Head region (crown) + orientation"
+  },
+  {
+    "baselineCML": "CML 050",
+    "baselineDescription": "West Head Crown, 90°",
+    "currentCML": "West Head Crown",
+    "currentDescription": "West Head crown region at 90°",
+    "correlationBasis": "Head region (crown) + orientation"
+  },
+  {
+    "baselineCML": "CML 051",
+    "baselineDescription": "West Head Crown, 180°",
+    "currentCML": "West Head Crown",
+    "currentDescription": "West Head crown region at 180°",
+    "correlationBasis": "Head region (crown) + orientation"
+  },
+  {
+    "baselineCML": "CML 052",
+    "baselineDescription": "West Head Crown, 270°",
+    "currentCML": "West Head Crown",
+    "currentDescription": "West Head crown region at 270°",
+    "correlationBasis": "Head region (crown) + orientation"
+  },
+  {
+    "baselineCML": "CML 053",
+    "baselineDescription": "West Head Knuckle, 0°",
+    "currentCML": "West Head Knuckle",
+    "currentDescription": "West Head knuckle region at 0°",
+    "correlationBasis": "Head region (knuckle) + orientation"
+  },
+  {
+    "baselineCML": "CML 054",
+    "baselineDescription": "West Head Knuckle, 90°",
+    "currentCML": "West Head Knuckle",
+    "currentDescription": "West Head knuckle region at 90°",
+    "correlationBasis": "Head region (knuckle) + orientation"
+  },
+  {
+    "baselineCML": "CML 055",
+    "baselineDescription": "West Head Knuckle, 180°",
+    "currentCML": "West Head Knuckle",
+    "currentDescription": "West Head knuckle region at 180°",
+    "correlationBasis": "Head region (knuckle) + orientation"
+  },
+  {
+    "baselineCML": "CML 056",
+    "baselineDescription": "West Head Knuckle, 270°",
+    "currentCML": "West Head Knuckle",
+    "currentDescription": "West Head knuckle region at 270°",
+    "correlationBasis": "Head region (knuckle) + orientation"
+  }
+]

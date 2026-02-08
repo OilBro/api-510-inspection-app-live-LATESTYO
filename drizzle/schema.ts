@@ -1543,3 +1543,26 @@ export const calculationResults = mysqlTable("calculationResults", {
 
 export type CalculationResult = typeof calculationResults.$inferSelect;
 export type InsertCalculationResult = typeof calculationResults.$inferInsert;
+
+// CML Correlations - Maps baseline CML locations to current inspection locations
+export const cmlCorrelations = mysqlTable("cmlCorrelations", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  inspectionId: varchar("inspectionId", { length: 64 }).notNull(), // Current inspection
+  
+  // Baseline (e.g., 2017) CML information
+  baselineCML: varchar("baselineCML", { length: 255 }).notNull(), // e.g., "CML 001-006"
+  baselineDescription: text("baselineDescription"), // e.g., "Shell near West Head (0–2 ft)"
+  
+  // Current (e.g., 2025) CML information
+  currentCML: varchar("currentCML", { length: 255 }).notNull(), // e.g., "Shell @ 2 ft from West Head"
+  currentDescription: text("currentDescription"), // e.g., "Shell @ 2 ft from West Head (0°,45°,90°...)"
+  
+  // Correlation basis
+  correlationBasis: text("correlationBasis"), // e.g., "Axial distance from West head"
+  
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+});
+
+export type CMLCorrelation = typeof cmlCorrelations.$inferSelect;
+export type InsertCMLCorrelation = typeof cmlCorrelations.$inferInsert;

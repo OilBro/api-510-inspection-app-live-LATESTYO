@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `cmlCorrelations` (\n  `id` varchar(64) NOT NULL,\n  `inspectionId` varchar(64) NOT NULL,\n  `baselineCML` varchar(255) NOT NULL,\n  `baselineDescription` text,\n  `currentCML` varchar(255) NOT NULL,\n  `currentDescription` text,\n  `correlationBasis` text,\n  `createdAt` timestamp DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute CREATE TABLE IF NOT EXISTS `cmlCorrelations` (\n  `id` varchar(64) NOT NULL,\n  `inspectionId` varchar(64) NOT NULL,\n  `baselineCML` varchar(255) NOT NULL,\n  `baselineDescription` text,\n  `currentCML` varchar(255) NOT NULL,\n  `currentDescription` text,\n  `correlationBasis` text,\n  `createdAt` timestamp DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 212
+}

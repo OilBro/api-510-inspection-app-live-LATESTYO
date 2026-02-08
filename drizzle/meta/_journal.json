@@ -218,6 +218,13 @@
       "when": 1769973877852,
       "tag": "0030_rich_miracleman",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "5",
+      "when": 1770469296445,
+      "tag": "0031_flawless_warlock",
+      "breakpoints": true
     }
   ]
 }

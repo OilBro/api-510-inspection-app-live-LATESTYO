@@ -399,6 +399,42 @@ Return JSON in this exact format:
           throw new Error(`Failed to extract from PDF: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
       }),
+
+    // Import CML correlations for an inspection
+    importCMLCorrelations: protectedProcedure
+      .input(z.object({
+        inspectionId: z.string(),
+        correlations: z.array(z.object({
+          baselineCML: z.string(),
+          baselineDescription: z.string().optional(),
+          currentCML: z.string(),
+          currentDescription: z.string().optional(),
+          correlationBasis: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { importCMLCorrelations } = await import('./cmlCorrelationHelper');
+        
+        // Verify inspection exists and user has access
+        const inspection = await db.getInspection(input.inspectionId);
+        if (!inspection) {
+          throw new Error('Inspection not found');
+        }
+        
+        // Admin can access any inspection, regular users only their own
+        if (ctx.user.role !== 'admin' && inspection.userId !== ctx.user.id) {
+          throw new Error('Unauthorized');
+        }
+        
+        const count = await importCMLCorrelations(input.inspectionId, input.correlations);
+        
+        logger.info(`[CML Correlation] Imported ${count} correlation mappings for inspection ${input.inspectionId}`);
+        
+        return {
+          success: true,
+          count,
+        };
+      }),
   }),
 
   calculations: router({

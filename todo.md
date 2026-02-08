@@ -2828,3 +2828,20 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Phase 2: Trace calculation engine data retrieval - COMPLETED
 - [x] Phase 3: Fix the data persistence issue - COMPLETED
 - [x] Phase 4: Test with user's exact values - COMPLETED
+
+## CML Correlation Mapping System (Feb 7, 2026)
+- [ ] Create cmlCorrelations database table
+- [ ] Create helper functions for CML correlation logic
+- [ ] Integrate mapping into corrosion rate calculations in professionalReportDb.ts
+- [ ] Import 54-11-005 correlation data (11 mappings)
+- [ ] Test and save checkpoint
+
+## CML Correlation Mapping System (Completed)
+- [x] Add cmlCorrelations table to database schema
+- [x] Create cmlCorrelationHelper.ts with getCorrelatedTMLReadings, importCMLCorrelations, findCMLMapping functions
+- [x] Integrate correlation mapping into professionalReportDb.ts corrosion rate calculation (line 494-510)
+- [x] Add importCMLCorrelations tRPC procedure to routers.ts
+- [x] Create 54-11-005 correlation data file (56 CML mappings from 2017 baseline to 2025 UT stations)
+- [x] Test TypeScript compilation (all errors resolved)
+- [x] Test suite passing (836 tests)
+- [x] Ready for checkpoint
