@@ -1,0 +1,13 @@
+{
+  "query": "\nSELECT COUNT(*) as total_readings\nFROM tmlReadings\nWHERE inspectionId IN (SELECT id FROM inspections WHERE vesselTagNumber = '54-11-001');\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute \nSELECT COUNT(*) as total_readings\nFROM tmlReadings\nWHERE inspectionId IN (SELECT id FROM inspections WHERE vesselTagNumber = '54-11-001');\n",
+  "rows": [
+    {
+      "total_readings": "89"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_readings\n89\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

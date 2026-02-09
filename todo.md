@@ -2941,3 +2941,20 @@ Test PDF: 54-11-067 2017.pdf
 - [ ] Add validation warnings for angle count mismatches
 - [ ] Add validation warnings for ambiguous numeric identifiers
 - [ ] Update tests to cover new stationKey patterns
+
+## Fix Nozzle Validation Error on Save
+- [ ] Investigate nozzle schema to identify all required boolean fields
+- [ ] Update import script to set default values for nozzle boolean fields (acceptable, etc.)
+- [ ] Re-import vessel 54-11-001 and test save functionality
+- [ ] Verify professional report generation works with fixed nozzle data
+
+## Critical StationKey Implementation Fixes (Code Review)
+- [x] Fix hardcoded "SHELL-" prefix - use componentGroup throughout (RULE 1, RULE 2)
+- [x] Fix trueCmlId - default to null, never populate from legacyLocationId (ALL RULES)
+- [x] Add angle support to nozzle stationKeys (NOZZLE-N1-A0, NOZZLE-N1-A90, etc.)
+- [x] Add angle support to seam-adjacent stationKeys (SEAM-SH-2IN-HEAD-A0, etc.)
+- [x] Disable RULE 2.6 (SHELL-${axialPos}) - prevents collisions when slice numbers available
+- [x] Fix correlation matching - use exact matches, not substring includes
+- [x] Create angle-per-row import script (separate rows for each slice-angle combination)
+- [x] Test with vessel 54-11-001: 89 readings, ZERO collisions ✓
+- [ ] Fix nozzle validation error (acceptable field null)

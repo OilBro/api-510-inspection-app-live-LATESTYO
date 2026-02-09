@@ -103,6 +103,7 @@ describe('stationKeyNormalization', () => {
   describe('generateStationKey', () => {
     it('should generate shell stationKey from explicit slice + angle', () => {
       const result = generateStationKey({
+        component: 'Vessel Shell',
         sliceNumber: 27,
         angleDeg: 0,
         legacyLocationId: '166',
@@ -111,13 +112,14 @@ describe('stationKeyNormalization', () => {
       expect(result.stationKey).toBe('SHELL-SLICE-27-A0');
       expect(result.sliceNumber).toBe(27);
       expect(result.angleDeg).toBe(0);
-      expect(result.trueCmlId).toBe('166');
+      expect(result.trueCmlId).toBeNull(); // trueCmlId never populated from legacyLocationId // OLD: expect(result.trueCmlId).toBe('166');
       expect(result.confidence).toBe('high');
       expect(result.method).toBe('explicit_slice_angle');
     });
 
     it('should generate shell stationKey from location format', () => {
       const result = generateStationKey({
+        component: 'Vessel Shell',
         location: '7-0',
         legacyLocationId: '14',
       });
@@ -125,7 +127,7 @@ describe('stationKeyNormalization', () => {
       expect(result.stationKey).toBe('SHELL-SLICE-7-A0');
       expect(result.sliceNumber).toBe(7);
       expect(result.angleDeg).toBe(0);
-      expect(result.trueCmlId).toBe('14');
+      expect(result.trueCmlId).toBeNull(); // trueCmlId never populated from legacyLocationId // OLD: expect(result.trueCmlId).toBe('14');
       expect(result.confidence).toBe('high');
       expect(result.method).toBe('parsed_slice_angle');
     });
@@ -140,7 +142,7 @@ describe('stationKeyNormalization', () => {
       expect(result.stationKey).toBe('SOUTH-HEAD-12-OCLOCK');
       expect(result.sliceNumber).toBeNull();
       expect(result.angleDeg).toBeNull();
-      expect(result.trueCmlId).toBe('1');
+      expect(result.trueCmlId).toBeNull(); // trueCmlId never populated from legacyLocationId // OLD: expect(result.trueCmlId).toBe('1');
       expect(result.confidence).toBe('high');
       expect(result.method).toBe('head_position');
     });
@@ -196,6 +198,7 @@ describe('stationKeyNormalization', () => {
       const result = await resolveStationKeyWithCorrelation({
         location: '7-0',
         legacyLocationId: '14',
+        component: 'Vessel Shell', // Add component so it normalizes to SHELL
       });
 
       expect(result.stationKey).toBe('SHELL-SLICE-7-A0');

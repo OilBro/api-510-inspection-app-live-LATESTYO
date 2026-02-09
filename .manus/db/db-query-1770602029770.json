@@ -1,0 +1,74 @@
+{
+  "query": "\nSELECT legacyLocationId, location, sliceNumber, angleDeg, stationKey, componentGroup\nFROM tmlReadings\nWHERE inspectionId IN (SELECT id FROM inspections WHERE vesselTagNumber = '54-11-001')\nAND legacyLocationId = '9'\nORDER BY angleDeg\nLIMIT 10;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute \nSELECT legacyLocationId, location, sliceNumber, angleDeg, stationKey, componentGroup\nFROM tmlReadings\nWHERE inspectionId IN (SELECT id FROM inspections WHERE vesselTagNumber = '54-11-001')\nAND legacyLocationId = '9'\nORDER BY angleDeg\nLIMIT 10;\n",
+  "rows": [
+    {
+      "legacyLocationId": "9",
+      "location": "2'",
+      "sliceNumber": "NULL",
+      "angleDeg": "NULL",
+      "stationKey": "SHELL-2FT",
+      "componentGroup": "SHELL"
+    },
+    {
+      "legacyLocationId": "9",
+      "location": "2'",
+      "sliceNumber": "NULL",
+      "angleDeg": "NULL",
+      "stationKey": "SHELL-2FT",
+      "componentGroup": "SHELL"
+    },
+    {
+      "legacyLocationId": "9",
+      "location": "2'",
+      "sliceNumber": "NULL",
+      "angleDeg": "NULL",
+      "stationKey": "SHELL-2FT",
+      "componentGroup": "SHELL"
+    },
+    {
+      "legacyLocationId": "9",
+      "location": "2'",
+      "sliceNumber": "NULL",
+      "angleDeg": "NULL",
+      "stationKey": "SHELL-2FT",
+      "componentGroup": "SHELL"
+    },
+    {
+      "legacyLocationId": "9",
+      "location": "2' from South Head",
+      "sliceNumber": "9",
+      "angleDeg": "0",
+      "stationKey": "SHELL-SLICE-9-A0",
+      "componentGroup": "SHELL"
+    },
+    {
+      "legacyLocationId": "9",
+      "location": "2' from South Head",
+      "sliceNumber": "9",
+      "angleDeg": "45",
+      "stationKey": "SHELL-SLICE-9-A45",
+      "componentGroup": "SHELL"
+    },
+    {
+      "legacyLocationId": "9",
+      "location": "2' from South Head",
+      "sliceNumber": "9",
+      "angleDeg": "90",
+      "stationKey": "SHELL-SLICE-9-A90",
+      "componentGroup": "SHELL"
+    },
+    {
+      "legacyLocationId": "9",
+      "location": "2' from South Head",
+      "sliceNumber": "9",
+      "angleDeg": "135",
+      "stationKey": "SHELL-SLICE-9-A135",
+      "componentGroup": "SHELL"
+    }
+  ],
+  "messages": [],
+  "stdout": "legacyLocationId\tlocation\tsliceNumber\tangleDeg\tstationKey\tcomponentGroup\n9\t2'\tNULL\tNULL\tSHELL-2FT\tSHELL\n9\t2'\tNULL\tNULL\tSHELL-2FT\tSHELL\n9\t2'\tNULL\tNULL\tSHELL-2FT\tSHELL\n9\t2'\tNULL\tNULL\tSHELL-2FT\tSHELL\n9\t2' from South Head\t9\t0\tSHELL-SLICE-9-A0\tSHELL\n9\t2' from South Head\t9\t45\tSHELL-SLICE-9-A45\tSHELL\n9\t2' from South Head\t9\t90\tSHELL-SLICE-9-A90\tSHELL\n9\t2' from South Head\t9\t135\tSHELL-SLICE-9-A135\tSHELL\n",
+  "stderr": "",
+  "execution_time_ms": 76
+}

@@ -67,16 +67,24 @@ export async function getCorrelatedTMLReadings(
     
     // PRIORITY 2: Use correlation mapping (for cases where stationKey changed)
     if (!baselineReading) {
-      const correlation = correlations.find((c) =>
-        currentReading.location?.includes(c.currentCML) ||
-        currentReading.legacyLocationId?.includes(c.currentCML)
-      );
+      // Use exact match on normalized strings to avoid false positives (e.g., N1 vs N10)
+      const normalizedLocation = currentReading.location?.trim().toUpperCase() || '';
+      const normalizedLegacyId = currentReading.legacyLocationId?.trim().toUpperCase() || '';
+      
+      const correlation = correlations.find((c) => {
+        const normalizedCurrentCML = c.currentCML.trim().toUpperCase();
+        return normalizedLocation === normalizedCurrentCML ||
+               normalizedLegacyId === normalizedCurrentCML;
+      });
       
       if (correlation) {
-        baselineReading = baselineReadings.find((b) =>
-          b.location?.includes(correlation.baselineCML) ||
-          b.legacyLocationId?.includes(correlation.baselineCML)
-        ) || null;
+        const normalizedBaselineCML = correlation.baselineCML.trim().toUpperCase();
+        baselineReading = baselineReadings.find((b) => {
+          const bLocation = b.location?.trim().toUpperCase() || '';
+          const bLegacyId = b.legacyLocationId?.trim().toUpperCase() || '';
+          return bLocation === normalizedBaselineCML ||
+                 bLegacyId === normalizedBaselineCML;
+        }) || null;
         
         if (baselineReading) {
           matchMethod = 'correlation';

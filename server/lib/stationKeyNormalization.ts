@@ -178,12 +178,13 @@ export function generateStationKey(input: StationKeyInput): StationKeyResult {
   
   // RULE 1: Explicit slice + angle (highest confidence)
   if (input.sliceNumber != null && input.angleDeg != null) {
+    const prefix = componentGroup || 'OTHER';
     return {
-      stationKey: `SHELL-SLICE-${input.sliceNumber}-A${input.angleDeg}`,
+      stationKey: `${prefix}-SLICE-${input.sliceNumber}-A${input.angleDeg}`,
       componentGroup,
       sliceNumber: input.sliceNumber,
       angleDeg: input.angleDeg,
-      trueCmlId: input.legacyLocationId || null,
+      trueCmlId: null, // Never populate from legacyLocationId
       axialPosition: parseAxialPosition(rawLocation),
       confidence: 'high',
       method: 'explicit_slice_angle',
@@ -193,12 +194,13 @@ export function generateStationKey(input: StationKeyInput): StationKeyResult {
   // RULE 2: Parse slice-angle from location (e.g., "7-0", "27-45")
   const parsed = parseSliceAngle(location);
   if (parsed.slice != null && parsed.angle != null) {
+    const prefix = componentGroup || 'OTHER';
     return {
-      stationKey: `SHELL-SLICE-${parsed.slice}-A${parsed.angle}`,
+      stationKey: `${prefix}-SLICE-${parsed.slice}-A${parsed.angle}`,
       componentGroup,
       sliceNumber: parsed.slice,
       angleDeg: parsed.angle,
-      trueCmlId: input.legacyLocationId || null,
+      trueCmlId: null, // Never populate from legacyLocationId
       axialPosition: parseAxialPosition(rawLocation),
       confidence: 'high',
       method: 'parsed_slice_angle',
@@ -220,32 +222,40 @@ export function generateStationKey(input: StationKeyInput): StationKeyResult {
                     location.includes('EH') ? 'EH' :
                     location.includes('WH') ? 'WH' : 'UNKNOWN';
     
+    // Include angle if provided (seam locations often have 8 angles)
+    const baseKey = `SEAM-${headRef}-${axialPos}`;
+    const stationKey = input.angleDeg != null ? `${baseKey}-A${input.angleDeg}` : baseKey;
+    
     return {
-      stationKey: `SEAM-${headRef}-${axialPos}`,
+      stationKey,
       componentGroup,
       sliceNumber: null,
-      angleDeg: null,
-      trueCmlId: input.legacyLocationId || null,
+      angleDeg: input.angleDeg || null,
+      trueCmlId: null, // Never populate from legacyLocationId
       axialPosition: axialPos,
       confidence: 'high',
       method: 'seam_adjacent',
     };
   }
   
-  // RULE 2.6: Shell readings with axial position (feet measurements)
-  // Examples: "2'", "6'", "24'"
+  // RULE 2.6: Shell readings with axial position (feet measurements) - DISABLED
+  // This rule is disabled because it causes collisions when slice numbers are available.
+  // Use slice-based keys (RULE 1/2) instead when slice numbers exist.
+  // Only enable this if you have datasets with NO slice numbers at all.
+  /*
   if (axialPos && axialPos.includes('FT') && componentGroup === 'SHELL') {
     return {
       stationKey: `SHELL-${axialPos}`,
       componentGroup,
       sliceNumber: null,
       angleDeg: null,
-      trueCmlId: input.legacyLocationId || null,
+      trueCmlId: null,
       axialPosition: axialPos,
-      confidence: 'high',
+      confidence: 'medium',
       method: 'shell_axial_position',
     };
   }
+  */
   
   // RULE 3: Head readings
   const headName = parseHeadName(component, location);
@@ -257,7 +267,7 @@ export function generateStationKey(input: StationKeyInput): StationKeyResult {
         componentGroup,
         sliceNumber: null,
         angleDeg: null,
-        trueCmlId: input.legacyLocationId || null,
+        trueCmlId: null, // Never populate from legacyLocationId
         axialPosition: null,
         confidence: 'high',
         method: 'head_position',
@@ -268,12 +278,16 @@ export function generateStationKey(input: StationKeyInput): StationKeyResult {
   // RULE 4: Nozzle readings
   if (component.includes('NOZZLE') || component.startsWith('N') || input.service) {
     const nozzleId = input.legacyLocationId || location || 'UNKNOWN';
+    const baseKey = `NOZZLE-${normalizeString(nozzleId)}`;
+    // Include angle if provided (nozzles often have 4 angles: 0°, 90°, 180°, 270°)
+    const stationKey = input.angleDeg != null ? `${baseKey}-A${input.angleDeg}` : baseKey;
+    
     return {
-      stationKey: `NOZZLE-${normalizeString(nozzleId)}`,
+      stationKey,
       componentGroup: 'NOZZLE',
       sliceNumber: null,
-      angleDeg: null,
-      trueCmlId: null,
+      angleDeg: input.angleDeg || null,
+      trueCmlId: null, // Never populate from legacyLocationId
       axialPosition: null,
       confidence: 'medium',
       method: 'nozzle_id',
