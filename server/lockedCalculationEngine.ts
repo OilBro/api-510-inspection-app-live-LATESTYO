@@ -47,8 +47,10 @@ export interface CalculationInput {
   currentThickness: number;    // inches
   previousThickness?: number;  // inches
   
-  // Corrosion allowance
-  corrosionAllowance: number;  // inches
+  // Corrosion allowance (OPTIONAL - derived as t_actual - t_required when not provided)
+  // Per API 510: CA is the difference between actual thickness and minimum required thickness
+  // It should NOT be a required user input - the engine derives it from t_actual and t_required
+  corrosionAllowance?: number;  // inches (optional, derived if omitted)
   
   // Head-specific parameters
   headType?: '2:1 Ellipsoidal' | 'Torispherical' | 'Hemispherical' | 'Flat';
@@ -1552,6 +1554,48 @@ export function performFullCalculation(input: CalculationInput, componentType: '
   const calculatedAt = new Date().toISOString();
   const warnings: string[] = [];
   
+  // ========================================================================
+  // VALIDATION GATES - Head-specific parameter checks
+  // Per ASME VIII-1 UG-32: Head calculations require specific geometry inputs
+  // ========================================================================
+  if (componentType === 'Head') {
+    // Gate 1: Torispherical heads REQUIRE crownRadius and knuckleRadius
+    // (engine will default them, but we warn if missing for audit trail)
+    if (input.headType === 'Torispherical') {
+      if (!input.crownRadius || input.crownRadius <= 0) {
+        warnings.push('VALIDATION: Torispherical head crownRadius (L) not provided - engine will default to L=D per UG-32(e)');
+      }
+      if (!input.knuckleRadius || input.knuckleRadius <= 0) {
+        warnings.push('VALIDATION: Torispherical head knuckleRadius (r) not provided - engine will default to r=0.06D per UG-32(e)');
+      }
+      // Validate L/r ratio if both provided
+      if (input.crownRadius && input.knuckleRadius && input.crownRadius > 0 && input.knuckleRadius > 0) {
+        const lrRatio = input.crownRadius / input.knuckleRadius;
+        if (lrRatio > 16.67) {
+          warnings.push(`VALIDATION: L/r ratio (${lrRatio.toFixed(2)}) exceeds ASME limit of 16.67 - review head geometry`);
+        }
+      }
+    }
+    
+    // Gate 2: Hemispherical heads need insideRadius (derived from diameter if missing)
+    if (input.headType === 'Hemispherical') {
+      if (!input.insideRadius && (!input.insideDiameter || input.insideDiameter <= 0)) {
+        warnings.push('VALIDATION: Hemispherical head requires insideRadius or insideDiameter');
+      }
+    }
+    
+    // Gate 3: Warn if head type is not specified
+    if (!input.headType) {
+      warnings.push('VALIDATION: Head type not specified - defaulting to 2:1 Ellipsoidal. Specify headType for accurate results.');
+    }
+  }
+  
+  // ========================================================================
+  // DERIVE corrosionAllowance if not provided
+  // CA = t_actual - t_required (computed AFTER t_required calculation)
+  // This makes corrosionAllowance a derived value, not a required input
+  // ========================================================================
+  
   // Calculate t_required based on component type
   let tRequiredResult: CalculationResult;
   
@@ -1573,6 +1617,18 @@ export function performFullCalculation(input: CalculationInput, componentType: '
         // Default to ellipsoidal if head type not specified
         tRequiredResult = calculateTRequiredEllipsoidalHead(input);
         warnings.push('Head type not specified - defaulting to 2:1 Ellipsoidal formula');
+    }
+  }
+  
+  // Derive corrosionAllowance if not explicitly provided
+  if (input.corrosionAllowance === undefined || input.corrosionAllowance === null) {
+    if (tRequiredResult.success && tRequiredResult.resultValue !== null && input.currentThickness > 0) {
+      const derivedCA = input.currentThickness - tRequiredResult.resultValue;
+      input = { ...input, corrosionAllowance: Math.max(0, derivedCA) };
+      warnings.push(`Corrosion allowance derived: CA = t_actual (${input.currentThickness.toFixed(4)}") - t_required (${tRequiredResult.resultValue.toFixed(4)}") = ${input.corrosionAllowance!.toFixed(4)}"`);
+    } else {
+      input = { ...input, corrosionAllowance: 0 };
+      warnings.push('Corrosion allowance could not be derived (missing t_required or t_actual) - defaulting to 0');
     }
   }
   

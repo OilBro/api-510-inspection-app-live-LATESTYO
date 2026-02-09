@@ -2958,3 +2958,24 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Create angle-per-row import script (separate rows for each slice-angle combination)
 - [x] Test with vessel 54-11-001: 89 readings, ZERO collisions ✓
 - [ ] Fix nozzle validation error (acceptable field null)
+
+## Priority 1 - Fix UT Import Router (Feb 2026)
+- [x] Replace CML-key matching with stationKey matching in uploadUTResults
+- [x] Fix "224°" → "225°" typo in extraction prompt and schema
+- [x] Remove Cr/RL calculations from import path (bypass locked engine)
+- [x] Expand all angles: 8 for shell (0,45,90,135,180,225,270,315), 4 for nozzles (0,90,180,270)
+- [x] Consolidate to ONE upload path (uploadUTResults with stationKey matching)
+- [x] Remove deprecated uploadUTResultsWithLocationMatching endpoint
+- [x] Client already points to consolidated uploadUTResults endpoint
+
+## Priority 2 - Fix Calculation Engine (Feb 2026)
+- [x] Make corrosionAllowance optional in CalculationInput (it's derived, not input)
+- [x] Derive CA = t_actual - t_required in performFullCalculation when not provided
+- [x] Add validation gates for head-specific parameters (torispherical L/r, hemispherical radius)
+- [x] Add stationKey to AuditContext interface
+- [x] Add stationKey logging to logCalculation function
+- [x] Create recomputeInspection() endpoint in calculationEngineRouter
+- [x] recomputeInspection processes all TMLs through locked calculation engine
+- [x] recomputeInspection logs stationKey for each TML in audit trail
+- [x] All 17 new tests passing (utImportAndCalcEngine.test.ts)
+- [x] All 874 existing tests still passing (0 regressions)

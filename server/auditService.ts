@@ -50,6 +50,8 @@ export interface AuditContext {
   userAgent?: string;
   sessionId?: string;
   justification?: string;
+  /** Station key for TML-level audit traceability (API 510 compliance) */
+  stationKey?: string;
 }
 
 /**
@@ -247,6 +249,26 @@ export async function logCalculation(
   codeReference: string
 ): Promise<void> {
   const entries: AuditEntry[] = [];
+  
+  // Log stationKey if provided (API 510 compliance - TML traceability)
+  if (context.stationKey) {
+    entries.push({
+      userId: context.userId,
+      userName: context.userName,
+      tableName,
+      recordId,
+      fieldName: 'stationKey',
+      oldValue: null,
+      newValue: context.stationKey,
+      actionType: 'CREATE',
+      justification: context.justification,
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+      sessionId: context.sessionId,
+      calculationVersion: CALCULATION_ENGINE_VERSION,
+      codeReference,
+    });
+  }
   
   // Log calculation type
   entries.push({

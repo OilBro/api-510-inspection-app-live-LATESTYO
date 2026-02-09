@@ -64,8 +64,8 @@ const calculationInputSchema = z.object({
   currentThickness: z.number().positive(),
   previousThickness: z.number().positive().optional(),
   
-  // Corrosion allowance
-  corrosionAllowance: z.number().min(0),
+  // Corrosion allowance (optional - derived as t_actual - t_required when omitted)
+  corrosionAllowance: z.number().min(0).optional(),
   
   // Head-specific parameters
   headType: z.enum(['2:1 Ellipsoidal', 'Torispherical', 'Hemispherical', 'Flat']).optional(),
@@ -605,6 +605,229 @@ export const calculationEngineRouter = router({
         version: APP_VERSION,
         engineInfo: getEngineInfo(),
         materialDbInfo: getDatabaseInfo(),
+      };
+    }),
+
+  /**
+   * Recompute all calculations for an inspection using the locked calculation engine.
+   * 
+   * This is the CORRECT way to recalculate after UT data import.
+   * The UT import router stores raw thickness data only - this endpoint
+   * runs the locked calculation engine to derive:
+   * - Corrosion rates (long-term and short-term)
+   * - Remaining life (API 510 §7.1.1)
+   * - Next inspection interval
+   * - Status determination
+   * 
+   * COMPLIANCE: All calculations go through the locked engine with full audit trail.
+   * Each TML's stationKey is logged for traceability.
+   */
+  recomputeInspection: protectedProcedure
+    .input(z.object({
+      inspectionId: z.string(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { getDb } = await import("../../server/db");
+      const { inspections, tmlReadings } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      const { logger } = await import("../../server/_core/logger");
+      
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // 1. Load the inspection
+      const [inspection] = await db
+        .select()
+        .from(inspections)
+        .where(eq(inspections.id, input.inspectionId));
+
+      if (!inspection) {
+        throw new Error("Inspection not found");
+      }
+
+      // 2. Load all TML readings for this inspection
+      const tmls = await db
+        .select()
+        .from(tmlReadings)
+        .where(eq(tmlReadings.inspectionId, input.inspectionId));
+
+      if (tmls.length === 0) {
+        return { success: false, message: "No TML readings found for this inspection" };
+      }
+
+      logger.info(`[RecomputeInspection] Processing ${tmls.length} TMLs for inspection ${input.inspectionId}`);
+
+      // 3. Get vessel parameters needed for calculation
+      const designPressure = inspection.designPressure ? parseFloat(String(inspection.designPressure)) : 0;
+      const designTemperature = inspection.designTemperature ? parseFloat(String(inspection.designTemperature)) : 0;
+      const insideDiameter = inspection.insideDiameter ? parseFloat(String(inspection.insideDiameter)) : 0;
+      const jointEfficiency = inspection.jointEfficiency ? parseFloat(String(inspection.jointEfficiency)) : 0.85;
+      const materialSpec = inspection.materialSpec || 'SA-516 Gr 70';
+      const yearBuilt = inspection.yearBuilt ? parseInt(String(inspection.yearBuilt), 10) : undefined;
+
+      if (designPressure <= 0 || insideDiameter <= 0) {
+        return {
+          success: false,
+          message: "Inspection missing required vessel parameters (designPressure, insideDiameter). Please complete vessel data first.",
+        };
+      }
+
+      // 4. Process each TML through the locked calculation engine
+      let updatedCount = 0;
+      const errors: string[] = [];
+      const auditEntries: Array<{ stationKey: string; cr: number | null; rl: number | null; status: string }> = [];
+
+      for (const tml of tmls) {
+        try {
+          const currentThickness = tml.tActual ? parseFloat(String(tml.tActual)) : (tml.currentThickness ? parseFloat(String(tml.currentThickness)) : 0);
+          const previousThickness = tml.previousThickness ? parseFloat(String(tml.previousThickness)) : undefined;
+          const nominalThickness = tml.nominalThickness ? parseFloat(String(tml.nominalThickness)) : currentThickness;
+
+          if (currentThickness <= 0) {
+            errors.push(`TML ${tml.stationKey || tml.id}: No current thickness`);
+            continue;
+          }
+
+          // Build calculation input
+          const calcInput: CalculationInput = {
+            insideDiameter,
+            designPressure,
+            designTemperature,
+            materialSpec,
+            jointEfficiency,
+            nominalThickness,
+            currentThickness,
+            previousThickness,
+            yearBuilt,
+            currentYear: new Date().getFullYear(),
+            previousInspectionDate: tml.previousInspectionDate ? new Date(tml.previousInspectionDate) : undefined,
+            currentInspectionDate: tml.currentInspectionDate ? new Date(tml.currentInspectionDate) : undefined,
+          };
+
+          // Determine component type
+          const componentGroup = (tml.componentGroup || 'SHELL').toUpperCase();
+          const componentType: 'Shell' | 'Head' = componentGroup.includes('HEAD') ? 'Head' : 'Shell';
+
+          // Set head type if applicable
+          if (componentType === 'Head' && inspection.headType) {
+            calcInput.headType = inspection.headType as any;
+          }
+
+          // Run the locked calculation engine
+          const result = performFullCalculation(calcInput, componentType);
+
+          if (!result.success) {
+            errors.push(`TML ${tml.stationKey || tml.id}: Calculation failed`);
+            continue;
+          }
+
+          // Extract results
+          const governingRate = result.summary.corrosionRate;
+          const remainingLife = result.summary.remainingLife;
+          const tRequired = result.summary.tRequired;
+          const status = result.summary.status;
+
+          // Determine corrosion rate type
+          let corrosionRateType: 'LT' | 'ST' | 'GOVERNING' | null = null;
+          if (result.summary.corrosionRateType) {
+            corrosionRateType = result.summary.corrosionRateType;
+          }
+
+          // Calculate long-term and short-term rates individually
+          const ltRate = result.corrosionRateLT?.resultValue ?? null;
+          const stRate = result.corrosionRateST?.resultValue ?? null;
+
+          // Update the TML record with calculated values
+          const updateData: Record<string, any> = {
+            tRequired: tRequired !== null ? String(tRequired) : null,
+            corrosionRate: governingRate !== null ? String(governingRate) : null,
+            corrosionRateType: corrosionRateType,
+            longTermRate: ltRate !== null ? String(ltRate) : null,
+            shortTermRate: stRate !== null ? String(stRate) : null,
+            corrosionRateMpy: governingRate !== null ? String(governingRate * 1000) : null,
+            remainingLife: remainingLife !== null ? String(remainingLife) : null,
+            status: status === 'unacceptable' ? 'critical' : status === 'marginal' ? 'monitor' : 'good',
+            updatedAt: new Date(),
+          };
+
+          // Calculate loss fields
+          if (nominalThickness > 0 && currentThickness > 0) {
+            const loss = nominalThickness - currentThickness;
+            updateData.loss = String(Math.max(0, loss));
+            updateData.lossPercent = String(((loss / nominalThickness) * 100).toFixed(2));
+          }
+
+          // Calculate next inspection date
+          if (remainingLife !== null && remainingLife > 0) {
+            const halfLife = remainingLife / 2;
+            const intervalYears = Math.min(halfLife, 10);
+            updateData.nextInspectionInterval = String(intervalYears);
+            const nextDate = new Date();
+            nextDate.setFullYear(nextDate.getFullYear() + Math.floor(intervalYears));
+            updateData.nextInspectionDate = nextDate;
+          }
+
+          await db.update(tmlReadings).set(updateData).where(eq(tmlReadings.id, tml.id));
+          updatedCount++;
+
+          auditEntries.push({
+            stationKey: tml.stationKey || tml.id,
+            cr: governingRate,
+            rl: remainingLife,
+            status,
+          });
+
+          // Log audit with stationKey
+          await logCalculation(
+            {
+              userId: String(ctx.user.id),
+              userName: ctx.user.name || undefined,
+              stationKey: tml.stationKey || undefined,
+            },
+            'tmlReadings',
+            tml.id,
+            `recompute_${componentType.toLowerCase()}`,
+            {
+              currentThickness,
+              previousThickness,
+              nominalThickness,
+              designPressure,
+              insideDiameter,
+              jointEfficiency,
+              materialSpec,
+              stationKey: tml.stationKey,
+            },
+            {
+              tRequired,
+              governingRate,
+              ltRate,
+              stRate,
+              remainingLife,
+              status,
+              corrosionRateType,
+            },
+            'API 510 §7.1.1 + ASME VIII-1'
+          );
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Unknown error';
+          errors.push(`TML ${tml.stationKey || tml.id}: ${msg}`);
+          logger.error(`[RecomputeInspection] Error processing TML ${tml.id}:`, err);
+        }
+      }
+
+      logger.info(`[RecomputeInspection] Complete: ${updatedCount}/${tmls.length} TMLs updated, ${errors.length} errors`);
+
+      return {
+        success: true,
+        message: `Recomputed ${updatedCount} of ${tmls.length} TMLs using locked calculation engine v${getEngineInfo().version}`,
+        summary: {
+          totalTMLs: tmls.length,
+          updatedTMLs: updatedCount,
+          errors: errors.length,
+          errorDetails: errors.slice(0, 20), // Limit error details
+          engineVersion: getEngineInfo().version,
+          auditSummary: auditEntries.slice(0, 10), // Sample for response
+        },
       };
     }),
 });
