@@ -3046,3 +3046,9 @@ Test PDF: 54-11-067 2017.pdf
 - [x] professionalReportDb already correctly stores headType (confirmed)
 - [x] All 946 tests passing, no regressions
 - [x] Run tests and save checkpoint
+
+## BUG: Import Data Page Loops (Feb 9, 2026)
+- [x] Diagnose import page looping back to parser selection after file upload
+  Root cause: extractionJobs table was defined in schema but never migrated to database
+- [x] Fix the root cause of the import loop (ran pnpm db:push to create table)
+- [x] Test import workflow — all 946 tests passing
