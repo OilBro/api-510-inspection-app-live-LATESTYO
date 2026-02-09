@@ -818,18 +818,45 @@ export const professionalReportRouter = router({
               }
             }
           } else {
-            // Head (hemispherical for this vessel): t_min = PL/(2SE - 0.2P) - NO CA added
-            // For hemispherical heads, L = R (crown radius = inside radius)
-            const L = R;
+            // Head calculation - use correct formula per head type
+            // Read head type from inspection data (default to ellipsoidal if not specified)
+            const headTypeStr = (inspection.headType || 'ellipsoidal').toLowerCase();
+            const D = insideDiameter; // Full inside diameter
             const denominator = 2 * S * E - 0.2 * P;
+            
             if (denominator > 0) {
-              minThickness = ((P * L) / denominator).toFixed(4);
+              if (headTypeStr.includes('torispherical')) {
+                // Torispherical: t = PLM / (2SE - 0.2P)
+                const crownRadius = parseFloat(inspection.crownRadius as any) || D;
+                const knuckleRadius = parseFloat(inspection.knuckleRadius as any) || (0.06 * D);
+                const M = 0.25 * (3 + Math.sqrt(crownRadius / knuckleRadius));
+                minThickness = ((P * crownRadius * M) / denominator).toFixed(4);
+              } else if (headTypeStr.includes('hemispherical')) {
+                // Hemispherical: t = PR / (2SE - 0.2P)  [UG-32(f)]
+                minThickness = ((P * R) / denominator).toFixed(4);
+              } else {
+                // 2:1 Ellipsoidal (default): t = PD / (2SE - 0.2P)  [UG-32(d)]
+                minThickness = ((P * D) / denominator).toFixed(4);
+              }
             }
-            // Head MAWP: MAWP = 2SEt/(L + 0.2t) using actual thickness
+            
+            // Head MAWP calculation per head type
             if (avgCurrent) {
               const t = parseFloat(avgCurrent);
               if (t > 0) {
-                calculatedMAWP = ((2 * S * E * t) / (L + 0.2 * t)).toFixed(1);
+                if (headTypeStr.includes('torispherical')) {
+                  // MAWP = 2SEt / (LM + 0.2t)
+                  const crownRadius = parseFloat(inspection.crownRadius as any) || D;
+                  const knuckleRadius = parseFloat(inspection.knuckleRadius as any) || (0.06 * D);
+                  const M = 0.25 * (3 + Math.sqrt(crownRadius / knuckleRadius));
+                  calculatedMAWP = ((2 * S * E * t) / (crownRadius * M + 0.2 * t)).toFixed(1);
+                } else if (headTypeStr.includes('hemispherical')) {
+                  // MAWP = 2SEt / (R + 0.2t)  [UG-32(f)]
+                  calculatedMAWP = ((2 * S * E * t) / (R + 0.2 * t)).toFixed(1);
+                } else {
+                  // 2:1 Ellipsoidal: MAWP = 2SEt / (D + 0.2t)  [UG-32(d)]
+                  calculatedMAWP = ((2 * S * E * t) / (D + 0.2 * t)).toFixed(1);
+                }
               }
             }
           }

@@ -3021,3 +3021,12 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Added fallback in recalculate function: TML readings → inspection-level nominal thickness
 - [x] Fixed all head naming references in PDF generator to use dynamic South/North Head names
 - [x] 930 tests passing, 0 TypeScript errors
+
+## Fix Head t_min Formula Bug (Critical Compliance)
+- [x] BUG: recalculate function hardcoded hemispherical formula (PL/(2SE-0.2P) with L=R) for ALL head types
+- [x] FIX: Now discriminates by head type — Ellipsoidal uses PD/(2SE-0.2P), Hemispherical uses PR/(2SE-0.2P), Torispherical uses PLM/(2SE-0.2P)
+- [x] ANALYSIS: Old report 0.421 does NOT match any standard ASME formula with S=20700 — likely used wrong S value or formula
+- [x] CORRECT VALUE: 2:1 Ellipsoidal with P=225, D=130.25, S=20700, E=1.0 → t_min = 0.7087"
+- [x] IMPLICATION: With t_actual=0.497 and t_min=0.7087, heads are BELOW minimum required thickness (negative CA)
+- [x] Head MAWP = 157.9 psi (below design pressure of 225 psi) — vessel may need re-rating per API 510 Section 7
+- [x] 16 new formula verification tests, 946 total tests passing, 0 regressions
