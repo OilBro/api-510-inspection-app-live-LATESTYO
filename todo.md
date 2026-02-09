@@ -3052,3 +3052,33 @@ Test PDF: 54-11-067 2017.pdf
   Root cause: extractionJobs table was defined in schema but never migrated to database
 - [x] Fix the root cause of the import loop (ran pnpm db:push to create table)
 - [x] Test import workflow — all 946 tests passing
+
+## FIX: OCR Parser & Matcher (Feb 9, 2026)
+- [ ] Audit current parser architecture (fileParser.ts, hybrid/vision/manus parsers)
+- [ ] Identify parsing failures and field matching issues
+- [ ] Fix OCR/vision parser for scanned PDFs
+- [ ] Fix hybrid parser logic and fallback chain
+- [ ] Fix data field matching to application fields
+- [ ] Test full import flow end-to-end with real PDF
+
+## FIX: OCR Parser Accuracy Improvement (Feb 9, 2026)
+- [ ] Audit full parser pipeline (fileParser.ts, vision, hybrid, manus parsers, LLM prompts)
+- [ ] Improve LLM extraction prompts for higher accuracy and complete field coverage
+- [ ] Fix field matching, normalization, and data cleaning logic
+- [ ] Ensure all API 510 fields are correctly extracted (vessel info, TMLs, nozzles, checklists, narratives)
+- [ ] Test with real PDF and verify accuracy
+
+## FIX: OCR Parser Accuracy Improvements (Feb 2026)
+- [x] Audit full parser pipeline (fileParser, manusParser, visionPdfParser, hybridPdfParser, extractionJobHandler)
+- [x] Increase text limit from 50K to 120K chars in manusParser for large reports
+- [x] Increase text limit from 60K to 120K chars in fileParser for large reports
+- [x] Increase text extraction limit from 500K to 1MB in manusParser parseWithManusAPI
+- [x] Add structured JSON schema (response_format) to vision parser for reliable output
+- [x] Add circumferential slice-angle grid extraction instructions to vision parser prompt
+- [x] Add nozzle angular reading extraction instructions to vision parser prompt
+- [x] Rewrite extractionJobHandler with normalizeParserOutput() to handle all parser output formats uniformly
+- [x] Rewrite hybridPdfParser with improved merge logic (parallel parsing, take larger dataset for arrays)
+- [x] Fix vision parser data mapping in fileParser.ts to handle both reportInfo and inspectionInfo field names
+- [x] Fix vision parser data mapping to handle clientInfo field names
+- [x] All 946 tests passing, no regressions
+- [x] TypeScript compiles clean

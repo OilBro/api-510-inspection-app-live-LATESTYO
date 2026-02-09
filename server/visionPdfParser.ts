@@ -210,6 +210,31 @@ CRITICAL INSTRUCTIONS:
    - Include: minimum required thickness, calculated MAWP
    - For multi-angle readings (0°, 90°, 180°, 270°), use tml1, tml2, tml3, tml4
 
+5a. CIRCUMFERENTIAL SLICE-ANGLE GRID READINGS - CRITICAL:
+   Many UT reports use a GRID FORMAT where:
+   - ROWS = slices/locations along the vessel (e.g., "2' from East Head", "4'", "6'")
+   - COLUMNS = angular positions: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°
+   - Each cell = a thickness reading at that slice+angle combination
+   
+   **MANDATORY: Create a SEPARATE TML reading for EACH CELL in the grid.**
+   For a table with 10 rows and 8 columns, you MUST extract 80 TML readings.
+   
+   For EACH cell:
+   - legacyLocationId: "SLICE-ANGLE" format (e.g., "2-0", "2-45", "2-90")
+   - location: Row description (e.g., "2' from East Head Seam")
+   - angle: Column header angle (e.g., "0°", "45°")
+   - component: "Shell" for shell readings
+   - currentThickness: The numeric value in that cell
+   
+   DO NOT summarize or combine readings. Extract EVERY SINGLE CELL.
+
+5b. NOZZLE ANGULAR READINGS - CRITICAL:
+   Nozzle readings often have 4 positions: 0°, 90°, 180°, 270°
+   **Create 4 SEPARATE TML readings for EACH NOZZLE.**
+   - legacyLocationId: "N1-0", "N1-90", "N1-180", "N1-270"
+   - location: Nozzle description (e.g., "N1 Manway")
+   - component: "Nozzle"
+
 6. NOZZLES:
    - Extract ALL nozzle data from nozzle schedule or evaluation tables
    - Include: nozzle number (N1, N2, MW-1, etc.)
@@ -325,12 +350,13 @@ Return the data in this JSON structure:
 }
 
 IMPORTANT: 
-- If a field is not present in the document, omit it from the JSON (do not use null or empty string)
-- Return ONLY valid JSON, no additional text, explanations, or markdown code blocks`;
+- If a field is not present in the document, use empty string for string fields and 0 for number fields
+- Extract EVERY thickness reading from EVERY page - do NOT stop early or summarize
+- For grid tables, create one TML reading per cell (rows x columns = total readings)`;
 
     logger.info('[Vision Parser] Sending PDF to LLM for comprehensive analysis...');
     
-    // Call LLM with PDF file URL
+    // Call LLM with PDF file URL and structured JSON schema
     const response = await invokeLLM({
       messages: [
         {
@@ -346,7 +372,143 @@ IMPORTANT:
             }
           ]
         }
-      ]
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'vision_inspection_data',
+          strict: true,
+          schema: {
+            type: 'object',
+            properties: {
+              reportInfo: {
+                type: 'object',
+                properties: {
+                  reportNumber: { type: 'string' },
+                  reportDate: { type: 'string' },
+                  inspectionDate: { type: 'string' },
+                  inspectionType: { type: 'string' },
+                  inspectionCompany: { type: 'string' },
+                  inspectorName: { type: 'string' },
+                  inspectorCert: { type: 'string' },
+                },
+                required: [],
+                additionalProperties: false,
+              },
+              clientInfo: {
+                type: 'object',
+                properties: {
+                  clientName: { type: 'string' },
+                  clientLocation: { type: 'string' },
+                  product: { type: 'string' },
+                },
+                required: [],
+                additionalProperties: false,
+              },
+              vesselInfo: {
+                type: 'object',
+                properties: {
+                  vesselTag: { type: 'string' },
+                  vesselDescription: { type: 'string' },
+                  manufacturer: { type: 'string' },
+                  serialNumber: { type: 'string' },
+                  yearBuilt: { type: 'string' },
+                  nbNumber: { type: 'string' },
+                  constructionCode: { type: 'string' },
+                  vesselType: { type: 'string' },
+                  vesselConfiguration: { type: 'string' },
+                  designPressure: { type: 'string' },
+                  designTemperature: { type: 'string' },
+                  operatingPressure: { type: 'string' },
+                  operatingTemperature: { type: 'string' },
+                  mdmt: { type: 'string' },
+                  product: { type: 'string' },
+                  corrosionAllowance: { type: 'string' },
+                  insideDiameter: { type: 'string' },
+                  overallLength: { type: 'string' },
+                  materialSpec: { type: 'string' },
+                  headType: { type: 'string' },
+                  insulationType: { type: 'string' },
+                  allowableStress: { type: 'string' },
+                  jointEfficiency: { type: 'string' },
+                  radiographyType: { type: 'string' },
+                  specificGravity: { type: 'string' },
+                  crownRadius: { type: 'string' },
+                  knuckleRadius: { type: 'string' },
+                },
+                required: [],
+                additionalProperties: false,
+              },
+              executiveSummary: { type: 'string' },
+              inspectionResults: { type: 'string' },
+              recommendations: { type: 'string' },
+              thicknessMeasurements: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    legacyLocationId: { type: 'string' },
+                    location: { type: 'string' },
+                    component: { type: 'string' },
+                    componentType: { type: 'string' },
+                    readingType: { type: 'string' },
+                    nozzleSize: { type: 'string' },
+                    angle: { type: 'string' },
+                    currentThickness: { type: 'number' },
+                    previousThickness: { type: 'number' },
+                    nominalThickness: { type: 'number' },
+                    minimumRequired: { type: 'number' },
+                    calculatedMAWP: { type: 'number' },
+                    tml1: { type: 'number' },
+                    tml2: { type: 'number' },
+                    tml3: { type: 'number' },
+                    tml4: { type: 'number' },
+                  },
+                  required: [],
+                  additionalProperties: false,
+                },
+              },
+              checklistItems: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    category: { type: 'string' },
+                    itemNumber: { type: 'string' },
+                    itemText: { type: 'string' },
+                    description: { type: 'string' },
+                    status: { type: 'string' },
+                    notes: { type: 'string' },
+                  },
+                  required: [],
+                  additionalProperties: false,
+                },
+              },
+              nozzles: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    nozzleNumber: { type: 'string' },
+                    service: { type: 'string' },
+                    size: { type: 'string' },
+                    schedule: { type: 'string' },
+                    actualThickness: { type: 'number' },
+                    nominalThickness: { type: 'number' },
+                    minimumRequired: { type: 'number' },
+                    acceptable: { type: 'boolean' },
+                    notes: { type: 'string' },
+                  },
+                  required: [],
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ['reportInfo', 'clientInfo', 'vesselInfo', 'executiveSummary', 'inspectionResults', 'recommendations', 'thicknessMeasurements', 'checklistItems', 'nozzles'],
+            additionalProperties: false,
+          },
+        },
+      },
     });
     
     // Check if response is valid

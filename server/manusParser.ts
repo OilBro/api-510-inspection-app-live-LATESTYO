@@ -68,7 +68,7 @@ export async function parseWithManusAPI(
     
     let fullText = '';
     const pages: Array<{ pageNumber: number; text: string }> = [];
-    const MAX_TEXT_LENGTH = 500000; // 500KB text limit
+    const MAX_TEXT_LENGTH = 1000000; // 1MB text limit
     
     for (let i = 1; i <= pagesToProcess; i++) {
       // Check if we've exceeded text limit
@@ -312,7 +312,7 @@ CRITICAL INSTRUCTIONS:
       },
       {
         role: "user",
-        content: `Extract vessel inspection data from this API 510 report:\n\n${fullText.substring(0, 50000)}`,
+        content: `Extract vessel inspection data from this API 510 report:\n\n${fullText.substring(0, 120000)}`,
       },
     ],
     response_format: {
