@@ -803,6 +803,8 @@ export const professionalReportRouter = router({
         
         let minThickness;
         let calculatedMAWP;
+        let headTypeUsed = 'Ellipsoidal';
+        let headFactorValue: number | null = null;
         if (P && R && S && E) {
           if (componentType === 'shell') {
             // Shell: t_min = PR/(SE - 0.6P) - NO CA added per API 510
@@ -827,15 +829,19 @@ export const professionalReportRouter = router({
             if (denominator > 0) {
               if (headTypeStr.includes('torispherical')) {
                 // Torispherical: t = PLM / (2SE - 0.2P)
+                headTypeUsed = 'Torispherical';
                 const crownRadius = parseFloat(inspection.crownRadius as any) || D;
                 const knuckleRadius = parseFloat(inspection.knuckleRadius as any) || (0.06 * D);
                 const M = 0.25 * (3 + Math.sqrt(crownRadius / knuckleRadius));
+                headFactorValue = M;
                 minThickness = ((P * crownRadius * M) / denominator).toFixed(4);
               } else if (headTypeStr.includes('hemispherical')) {
                 // Hemispherical: t = PR / (2SE - 0.2P)  [UG-32(f)]
+                headTypeUsed = 'Hemispherical';
                 minThickness = ((P * R) / denominator).toFixed(4);
               } else {
                 // 2:1 Ellipsoidal (default): t = PD / (2SE - 0.2P)  [UG-32(d)]
+                headTypeUsed = 'Ellipsoidal';
                 minThickness = ((P * D) / denominator).toFixed(4);
               }
             }
@@ -972,6 +978,11 @@ export const professionalReportRouter = router({
           allowableStress: inspection.allowableStress || '20000',
           jointEfficiency: inspection.jointEfficiency || '0.85',
           corrosionAllowance: CA.toString(),
+          // Head type metadata for PDF report
+          headType: componentType === 'head' ? headTypeUsed : undefined,
+          headFactor: componentType === 'head' && headFactorValue ? headFactorValue.toFixed(4) : undefined,
+          crownRadius: componentType === 'head' && inspection.crownRadius ? parseFloat(inspection.crownRadius as any).toFixed(3) : undefined,
+          knuckleRadius: componentType === 'head' && inspection.knuckleRadius ? parseFloat(inspection.knuckleRadius as any).toFixed(3) : undefined,
         });
         
         logger.info(`[Recalculate] Created ${componentName} calculation`);

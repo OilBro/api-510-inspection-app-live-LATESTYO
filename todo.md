@@ -3035,3 +3035,14 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Update head type from Ellipsoidal to Hemispherical in the database for vessel 54-11-001 (already set correctly in DB)
 - [x] Verify recalculation produces t_min = 0.3543" (correct per UG-32(f) for hemispherical) — CONFIRMED via Python calc
 - [x] Confirm old report's 0.421" is incorrect (used S=17,425 psi instead of correct S=20,700 psi for SA-612)
+
+## Fix Head Type Consistency in PDF Report (Feb 9, 2026)
+- [x] Analyze PDF report to identify all locations where head type is incorrectly listed (6 locations found)
+- [x] Fix PDF generator head spec table: use normalizeHeadType() with inspection.headType fallback
+- [x] Fix PDF generator formula section: show only applicable formula (not all 3)
+- [x] Fix PDF generator result labels: use normalized head type display
+- [x] Fix PDF generator MAWP labels: use normalized head type display
+- [x] Fix recalculate function to store headType, headFactor, crownRadius, knuckleRadius in component calculations
+- [x] professionalReportDb already correctly stores headType (confirmed)
+- [x] All 946 tests passing, no regressions
+- [x] Run tests and save checkpoint

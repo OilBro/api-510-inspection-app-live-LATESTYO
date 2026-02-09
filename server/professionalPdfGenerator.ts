@@ -1256,12 +1256,21 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   await addTable(doc, headInfoData[1], [headInfoData[2]], '', logoBuffer);
   doc.moveDown(1);
   
+  // Normalize head type display name
+  const normalizeHeadType = (ht: string) => {
+    const lower = ht.toLowerCase();
+    if (lower.includes('hemispherical')) return 'Hemispherical';
+    if (lower.includes('torispherical')) return 'Torispherical';
+    if (lower.includes('ellipsoidal')) return 'Ellipsoidal';
+    return ht.charAt(0).toUpperCase() + ht.slice(1);
+  };
+  
   // Head specifications table - use component calculation data
   const headSpecData = [
     ['Head ID', 'Head Type', 't nom', 'Material', 'S', 'SH', 'P'],
     [
       head1DisplayName,
-      eastHead?.headType || 'Ellipsoidal',
+      normalizeHeadType(eastHead?.headType || inspection?.headType || 'Ellipsoidal'),
       eastHead?.nominalThickness || (inspection as any)?.headNominalThickness || '-',
       inspection?.materialSpec || 'SA-516 Gr. 70',
       eastHead?.allowableStress || inspection?.allowableStress || '20000',
@@ -1270,7 +1279,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
     ],
     [
       head2DisplayName,
-      westHead?.headType || 'Ellipsoidal',
+      normalizeHeadType(westHead?.headType || inspection?.headType || 'Ellipsoidal'),
       westHead?.nominalThickness || (inspection as any)?.headNominalThickness || '-',
       inspection?.materialSpec || 'SA-516 Gr. 70',
       westHead?.allowableStress || inspection?.allowableStress || '20000',
@@ -1287,16 +1296,22 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   doc.text('Minimum Thickness Calculations', MARGIN, doc.y);
   doc.moveDown(0.5);
   
-  doc.font('Helvetica').fontSize(9);
-  doc.text('Internal; Hemispherical Head: PL/(2SE-0.2P) = t min', MARGIN, doc.y);
-  doc.text('2:1 Ellipsoidal Head: PD/(2SE-0.2P) = t min', MARGIN, doc.y);
-  doc.text('Torispherical Head: PLM/(2SE-0.2P) = t min, where M = 0.25(3+√(L/r))', MARGIN, doc.y);
+  // Determine head type from component data (both heads should be same type)
+  const eastHeadType = eastHead?.headType || inspection?.headType || 'Ellipsoidal';
+  const westHeadType = westHead?.headType || inspection?.headType || 'Ellipsoidal';
+  const eastHeadTypeDisplay = normalizeHeadType(eastHeadType);
+  const westHeadTypeDisplay = normalizeHeadType(westHeadType);
   
-  // Display head type and calculation for each head
-  const eastHeadType = eastHead?.headType || 'Ellipsoidal';
-  const westHeadType = westHead?.headType || 'Ellipsoidal';
-  const eastHeadTypeDisplay = eastHeadType.charAt(0).toUpperCase() + eastHeadType.slice(1);
-  const westHeadTypeDisplay = westHeadType.charAt(0).toUpperCase() + westHeadType.slice(1);
+  // Show only the applicable head type formula (not all three)
+  doc.font('Helvetica').fontSize(9);
+  const headTypeForFormula = eastHeadTypeDisplay; // Use east head type as representative
+  if (headTypeForFormula === 'Hemispherical') {
+    doc.text('Internal; Hemispherical Head: PR/(2SE-0.2P) = t min', MARGIN, doc.y);
+  } else if (headTypeForFormula === 'Torispherical') {
+    doc.text('Torispherical Head: PLM/(2SE-0.2P) = t min, where M = 0.25(3+\u221a(L/r))', MARGIN, doc.y);
+  } else {
+    doc.text('2:1 Ellipsoidal Head: PD/(2SE-0.2P) = t min', MARGIN, doc.y);
+  }
   
   doc.text(`${head1DisplayName}: ${eastHeadTypeDisplay} t min = ${eastHead?.minimumThickness || eastHead?.minimumRequired || '-'} (inch)`, MARGIN, doc.y);
   if (eastHead?.headFactor) {
