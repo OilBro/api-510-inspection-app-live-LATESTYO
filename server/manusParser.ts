@@ -410,8 +410,11 @@ CRITICAL INSTRUCTIONS:
               items: {
                 type: "object",
                 properties: {
+                  category: { type: "string" },
+                  itemNumber: { type: "string" },
                   itemText: { type: "string" },
                   status: { type: "string" },
+                  notes: { type: "string" },
                 },
                 required: ["itemText", "status"],
                 additionalProperties: false,

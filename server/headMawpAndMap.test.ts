@@ -290,7 +290,7 @@ describe('MAP at Next Inspection Calculations', () => {
       expect(result.mawpAtNextInspection).toBeLessThan(result.mapAtNextInspection);
     });
     
-    it('should not apply static head deduction for horizontal vessels', () => {
+    it('should apply static head deduction for horizontal vessels based on ID', () => {
       const input: CalculationInput = {
         currentThickness: 0.500,
         insideDiameter: 48,
@@ -304,8 +304,11 @@ describe('MAP at Next Inspection Calculations', () => {
       
       const result = calculateMAPAtNextInspection(input, 'Shell', 0.005, 5);
       
-      expect(result.staticHeadDeduction).toBe(0);
-      expect(result.mawpAtNextInspection).toBe(result.mapAtNextInspection);
+      // For horizontal vessels: static head = (ID/12) × 0.433 × SG
+      // = (48/12) × 0.433 × 0.85 = 1.47 psi
+      const expectedDeduction = (48 / 12) * 0.433 * 0.85;
+      expect(result.staticHeadDeduction).toBeCloseTo(expectedDeduction, 1);
+      expect(result.mawpAtNextInspection).toBeLessThan(result.mapAtNextInspection);
     });
   });
   

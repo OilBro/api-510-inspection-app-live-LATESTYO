@@ -3054,19 +3054,19 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Test import workflow — all 946 tests passing
 
 ## FIX: OCR Parser & Matcher (Feb 9, 2026)
-- [ ] Audit current parser architecture (fileParser.ts, hybrid/vision/manus parsers)
-- [ ] Identify parsing failures and field matching issues
-- [ ] Fix OCR/vision parser for scanned PDFs
-- [ ] Fix hybrid parser logic and fallback chain
-- [ ] Fix data field matching to application fields
-- [ ] Test full import flow end-to-end with real PDF
+- [x] Audit current parser architecture (fileParser.ts, hybrid/vision/manus parsers)
+- [x] Identify parsing failures and field matching issues
+- [x] Fix OCR/vision parser for scanned PDFs (added response_format)
+- [x] Fix hybrid parser logic and fallback chain (rewritten merge logic)
+- [x] Fix data field matching to application fields (uniform normalization)
+- [x] Test full import flow end-to-end with real PDF
 
 ## FIX: OCR Parser Accuracy Improvement (Feb 9, 2026)
-- [ ] Audit full parser pipeline (fileParser.ts, vision, hybrid, manus parsers, LLM prompts)
-- [ ] Improve LLM extraction prompts for higher accuracy and complete field coverage
-- [ ] Fix field matching, normalization, and data cleaning logic
-- [ ] Ensure all API 510 fields are correctly extracted (vessel info, TMLs, nozzles, checklists, narratives)
-- [ ] Test with real PDF and verify accuracy
+- [x] Audit full parser pipeline (fileParser.ts, vision, hybrid, manus parsers, LLM prompts)
+- [x] Improve LLM extraction prompts for higher accuracy and complete field coverage
+- [x] Fix field matching, normalization, and data cleaning logic
+- [x] Ensure all API 510 fields are correctly extracted (vessel info, TMLs, nozzles, checklists, narratives)
+- [x] Test with real PDF and verify accuracy
 
 ## FIX: OCR Parser Accuracy Improvements (Feb 2026)
 - [x] Audit full parser pipeline (fileParser, manusParser, visionPdfParser, hybridPdfParser, extractionJobHandler)
@@ -3084,7 +3084,25 @@ Test PDF: 54-11-067 2017.pdf
 - [x] TypeScript compiles clean
 
 ## BUG: Import Data Still Not Working (Feb 2026)
-- [ ] Check server logs for errors during import attempt
-- [ ] Reproduce the import failure
-- [ ] Identify and fix the root cause
-- [ ] Test end-to-end import flow
+- [x] Check server logs — user was testing on published version without latest fixes
+- [x] Resolved by creating checkpoint for publishing
+
+## Regulatory-Grade Calculation & Validation Improvements (Feb 2026)
+- [x] Verify Shell t_min formula: PR/(SE - 0.6P) per ASME UG-27(c)(1) — CONFIRMED CORRECT
+- [x] Verify Head t_min formula: PD/(2SE - 0.2P) for 2:1 ellipsoidal per UG-32(d) — CONFIRMED CORRECT
+- [x] Verify Hemispherical head formula: PR/(2SE - 0.2P) per UG-32(f) — CONFIRMED CORRECT
+- [x] Verify Torispherical head formula: PLM/(2SE - 0.2P) per UG-32(e) — CONFIRMED CORRECT
+- [x] Verify Shell MAWP formula: SEt/(R + 0.6t) per UG-27(c)(1) — CONFIRMED CORRECT
+- [x] Verify Head MAWP formula: 2SEt/(D + 0.2t) for ellipsoidal per UG-32(d) — CONFIRMED CORRECT
+- [x] Verify Hemispherical MAWP: 2SEt/(R + 0.2t) per UG-32(f) — CONFIRMED CORRECT
+- [x] Verify Torispherical MAWP: 2SEt/(LM + 0.2t) per UG-32(e) — CONFIRMED CORRECT
+- [x] Fix SA-240 304 SS fallback stress values (300°F=20000, 400°F=18700 psi)
+- [x] Fix SA-516 Gr 70 fallback stress values (20000 psi, not 17500)
+- [x] Add static head pressure for horizontal vessels: P_static = (SG × 62.4 × ID) / 144
+- [x] Add static head deduction for horizontal vessels in MAWP: (ID/12) × 0.433 × SG
+- [x] Update validation dashboard to dynamically read components from DB (not hardcoded)
+- [x] Update validation dashboard to auto-populate PDF values from extraction tableA data
+- [x] Add fuzzy component name matching for validation (Shell/Head/Nozzle patterns)
+- [x] Route manus parser through parseAndStandardizeWithManus for better accuracy
+- [x] Fix checklist schema in manusParser.ts (added category, itemNumber, notes fields)
+- [x] All 945 tests passing (1 unrelated Docupipe timeout), TypeScript compiles clean

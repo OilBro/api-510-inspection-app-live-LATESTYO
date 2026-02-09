@@ -587,7 +587,27 @@ if (selectedParser === "vision") {
       };
     }
     
-    // Use basic parsing + LLM extraction
+    // For manus parser, use the standardized parser which has a better prompt
+    if (selectedParser === "manus") {
+      logger.info("[PDF Parser] Using Manus standardized parser for structured extraction...");
+      try {
+        const manusResult = await parseAndStandardizeWithManus(buffer, "inspection-report.pdf");
+        if (manusResult && manusResult.vesselTagNumber) {
+          logger.info("[PDF Parser] Manus standardized parser succeeded:", {
+            vesselTag: manusResult.vesselTagNumber,
+            tmlReadings: manusResult.tmlReadings?.length || 0,
+            checklistItems: manusResult.checklistItems?.length || 0,
+            nozzles: manusResult.nozzles?.length || 0,
+          });
+          return manusResult;
+        }
+        logger.warn("[PDF Parser] Manus standardized parser returned empty result, falling back to basic extraction...");
+      } catch (err) {
+        logger.warn("[PDF Parser] Manus standardized parser failed, falling back to basic extraction:", err);
+      }
+    }
+
+    // Fallback: Use basic parsing + LLM extraction
     logger.info("[PDF Parser] Using basic parsing + LLM extraction...");
     
     const docResult = selectedParser === "manus" 

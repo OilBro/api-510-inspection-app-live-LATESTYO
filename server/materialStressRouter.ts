@@ -14,28 +14,41 @@ type StressRow = {
 
 // Fallback dataset so tests can run without a database connection
 const FALLBACK_STRESS_VALUES: StressRow[] = [
-  // SA-240 Type 304
+  // SA-240 Type 304 (ASME BPVC Section II Part D Table 1A, 2023 Edition - Standard Listing)
   { materialSpec: "SA-240 Type 304", materialGrade: "Type 304", materialCategory: "Stainless Steel", temperatureF: -20, allowableStress: 20000 },
   { materialSpec: "SA-240 Type 304", materialGrade: "Type 304", materialCategory: "Stainless Steel", temperatureF: 100, allowableStress: 20000 },
   { materialSpec: "SA-240 Type 304", materialGrade: "Type 304", materialCategory: "Stainless Steel", temperatureF: 200, allowableStress: 20000 },
-  { materialSpec: "SA-240 Type 304", materialGrade: "Type 304", materialCategory: "Stainless Steel", temperatureF: 300, allowableStress: 19000 },
-  { materialSpec: "SA-240 Type 304", materialGrade: "Type 304", materialCategory: "Stainless Steel", temperatureF: 400, allowableStress: 18000 },
-  { materialSpec: "SA-240 Type 304", materialGrade: "Type 304", materialCategory: "Stainless Steel", temperatureF: 800, allowableStress: 15000 },
+  { materialSpec: "SA-240 Type 304", materialGrade: "Type 304", materialCategory: "Stainless Steel", temperatureF: 300, allowableStress: 20000 },
+  { materialSpec: "SA-240 Type 304", materialGrade: "Type 304", materialCategory: "Stainless Steel", temperatureF: 400, allowableStress: 18700 },
+  { materialSpec: "SA-240 Type 304", materialGrade: "Type 304", materialCategory: "Stainless Steel", temperatureF: 500, allowableStress: 17500 },
+  { materialSpec: "SA-240 Type 304", materialGrade: "Type 304", materialCategory: "Stainless Steel", temperatureF: 600, allowableStress: 16600 },
+  { materialSpec: "SA-240 Type 304", materialGrade: "Type 304", materialCategory: "Stainless Steel", temperatureF: 650, allowableStress: 16200 },
+  { materialSpec: "SA-240 Type 304", materialGrade: "Type 304", materialCategory: "Stainless Steel", temperatureF: 700, allowableStress: 15800 },
+  { materialSpec: "SA-240 Type 304", materialGrade: "Type 304", materialCategory: "Stainless Steel", temperatureF: 800, allowableStress: 15200 },
 
-  // SA-516 Grade 70
-  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: -20, allowableStress: 17500 },
-  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 100, allowableStress: 17500 },
-  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 200, allowableStress: 17500 },
-  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 300, allowableStress: 17000 },
-  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 400, allowableStress: 16500 },
+  // SA-516 Grade 70 (ASME BPVC Section II Part D Table 1A, 2023 Edition)
+  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: -20, allowableStress: 20000 },
+  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 100, allowableStress: 20000 },
+  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 200, allowableStress: 20000 },
+  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 300, allowableStress: 20000 },
+  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 400, allowableStress: 20000 },
+  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 500, allowableStress: 20000 },
+  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 600, allowableStress: 18400 },
+  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 650, allowableStress: 17300 },
+  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 700, allowableStress: 15500 },
+  { materialSpec: "SA-516 Grade 70", materialGrade: "Grade 70", materialCategory: "Carbon Steel", temperatureF: 800, allowableStress: 10800 },
 
-  // SA-612 (High-strength carbon steel for moderate/lower temp service)
-  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: -40, allowableStress: 23800 },
-  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 100, allowableStress: 23800 },
-  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 200, allowableStress: 23800 },
-  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 400, allowableStress: 23800 },
-  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 600, allowableStress: 21300 },
-  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 700, allowableStress: 16400 },
+  // SA-612 (ASME BPVC Section II Part D Table 1A, 2023 Edition)
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: -50, allowableStress: 20700 },
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: -20, allowableStress: 20700 },
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 100, allowableStress: 20700 },
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 200, allowableStress: 20700 },
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 300, allowableStress: 20700 },
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 400, allowableStress: 20700 },
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 500, allowableStress: 20200 },
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 600, allowableStress: 18500 },
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 650, allowableStress: 16900 },
+  { materialSpec: "SA-612", materialGrade: null, materialCategory: "Carbon Steel", temperatureF: 700, allowableStress: 14300 },
 
   // SA-240 Type 316
   { materialSpec: "SA-240 Type 316", materialGrade: "Type 316", materialCategory: "Stainless Steel", temperatureF: -20, allowableStress: 20000 },

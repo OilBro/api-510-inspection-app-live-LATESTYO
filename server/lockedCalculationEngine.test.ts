@@ -151,10 +151,16 @@ describe('Shell Calculations (ASME VIII-1 UG-27)', () => {
       const result = calculateTRequiredShell(input);
       
       expect(result.success).toBe(true);
-      // Static head should be ZERO for horizontal vessels
-      expect(result.intermediateValues['P_static_head']).toBe(0);
-      expect(result.intermediateValues['P_total']).toBe(225); // No static head added
-      expect(result.assumptions).toContain('Static head = 0 psi (horizontal vessel orientation)');
+      // For horizontal vessels with SG provided, static head = (SG × 62.4 × ID) / 144
+      // = (0.73 × 62.4 × 130.25) / 144 = 41.20 psi
+      const expectedStaticHead = (0.73 * 62.4 * 130.25) / 144;
+      expect(result.intermediateValues['P_static_head']).toBeCloseTo(expectedStaticHead, 1);
+      expect(result.intermediateValues['P_total']).toBeCloseTo(225 + expectedStaticHead, 1);
+      expect(result.assumptions).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('horizontal vessel')
+        ])
+      );
     });
 
     it('should include static head pressure for vertical vessels', () => {

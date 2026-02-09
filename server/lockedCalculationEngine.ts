@@ -206,10 +206,18 @@ export function calculateTRequiredShell(input: CalculationInput): CalculationRes
   let staticHeadPressure = 0;
   
   if (input.vesselOrientation === 'horizontal') {
-    // For horizontal vessels, static head is zero or negligible
-    // The liquid level is at the same elevation as the shell/head centerline
-    staticHeadPressure = 0;
-    assumptions.push('Static head = 0 psi (horizontal vessel orientation)');
+    // For horizontal vessels, static head at the bottom of the shell
+    // equals the hydrostatic pressure from the liquid column equal to the vessel ID
+    // P_static = (SG × 62.4 lb/ft³ × D_inches) / (144 in²/ft²)
+    // This represents the worst-case (full vessel) static head at the lowest point
+    if (input.specificGravity && input.insideDiameter) {
+      staticHeadPressure = (input.specificGravity * 62.4 * input.insideDiameter) / 144;
+      totalPressure = input.designPressure + staticHeadPressure;
+      assumptions.push(`Static head pressure included: ${staticHeadPressure.toFixed(2)} psi (horizontal vessel, liquid height = ID = ${input.insideDiameter} in, SG = ${input.specificGravity})`);
+    } else {
+      staticHeadPressure = 0;
+      assumptions.push('Static head = 0 psi (horizontal vessel, no specific gravity provided)');
+    }
   } else if (input.specificGravity && input.liquidHeight && input.vesselOrientation === 'vertical') {
     // Static head = ρgh = (SG × 62.4 lb/ft³) × h / 144 in²/ft²
     // Only applies to vertical vessels where liquid column creates hydrostatic pressure
@@ -1171,11 +1179,17 @@ export function calculateMAPAtNextInspection(
   let staticHeadDeduction = 0;
   
   if (input.specificGravity && input.liquidHeight && input.vesselOrientation === 'vertical') {
+    // Vertical vessel: static head = liquid height in feet × 0.433 × SG
     const liquidHeightFeet = input.liquidHeight / 12;
     staticHeadDeduction = liquidHeightFeet * 0.433 * input.specificGravity;
-    assumptions.push(`Static head deduction: ${staticHeadDeduction.toFixed(2)} psi`);
+    assumptions.push(`Static head deduction: ${staticHeadDeduction.toFixed(2)} psi (vertical, liquid height = ${input.liquidHeight} in)`);
+  } else if (input.specificGravity && input.vesselOrientation === 'horizontal' && input.insideDiameter) {
+    // Horizontal vessel: static head at bottom = ID in feet × 0.433 × SG
+    const idFeet = input.insideDiameter / 12;
+    staticHeadDeduction = idFeet * 0.433 * input.specificGravity;
+    assumptions.push(`Static head deduction: ${staticHeadDeduction.toFixed(2)} psi (horizontal, liquid height = ID = ${input.insideDiameter} in)`);
   } else {
-    assumptions.push('No static head deduction (horizontal vessel or no liquid height specified)');
+    assumptions.push('No static head deduction (no specific gravity or liquid height specified)');
   }
   
   const mawpAtNextInspection = mapAtNextInspection - staticHeadDeduction;
