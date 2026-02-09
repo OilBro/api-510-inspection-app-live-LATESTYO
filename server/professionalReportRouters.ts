@@ -758,8 +758,10 @@ export const professionalReportRouter = router({
           return;
         }
         
+        // CRITICAL FIX: Read tActual first (new field), fall back to currentThickness (legacy field)
+        // Data Migration writes to tActual, old imports wrote to currentThickness
         const currentThicknesses = componentTMLs
-          .map((t: any) => parseFloat(t.currentThickness))
+          .map((t: any) => parseFloat(t.tActual || t.currentThickness))
           .filter((v: number) => !isNaN(v));
         const previousThicknesses = componentTMLs
           .map((t: any) => parseFloat(t.previousThickness))
@@ -871,11 +873,30 @@ export const professionalReportRouter = router({
           dataQualityStatus = rateResult.dataQualityStatus;
           dataQualityNotes = rateResult.dataQualityNotes;
           
-          corrosionAllowance = (currThick - minThick).toFixed(4);
-          
-          // Calculate remaining life using governing rate
-          const rl = calculateRemainingLife(currThick, minThick, rateResult.governingRate);
-          remainingLife = rl.toFixed(2);
+          // COMPLIANCE GUARD: Only compute CA and RL when minThickness is a real
+          // calculated value from ASME VIII-1 formulas — NOT a placeholder.
+          // If vessel parameters (P, R, S, E) are incomplete, minThick will be undefined
+          // and we must leave RL null and flag the gap.
+          if (minThick > 0 && P > 0 && R > 0 && S > 0 && E > 0) {
+            corrosionAllowance = (currThick - minThick).toFixed(4);
+            
+            // Calculate remaining life using governing rate
+            if (rateResult.governingRate > 0) {
+              const rl = calculateRemainingLife(currThick, minThick, rateResult.governingRate);
+              remainingLife = rl.toFixed(2);
+            } else {
+              // Zero corrosion rate — RL is effectively infinite, cap at 999
+              remainingLife = '999.00';
+            }
+          } else {
+            // Missing vessel parameters — cannot compute tRequired
+            // Leave RL null and flag in data quality notes
+            dataQualityNotes = (dataQualityNotes || '') + 
+              ' | WARNING: Remaining life not computed — missing vessel parameters for t_required calculation.' +
+              ' Verify designPressure, insideDiameter, allowableStress, and jointEfficiency.';
+            dataQualityStatus = 'incomplete';
+            logger.warn(`[Recalculate] ${componentName}: Cannot compute RL — missing vessel parameters (P=${P}, R=${R}, S=${S}, E=${E})`);
+          }
         }
         
         await professionalReportDb.createComponentCalculation({
@@ -902,7 +923,7 @@ export const professionalReportRouter = router({
           governingRateReason,
           
           // Data quality indicators
-          dataQualityStatus,
+          dataQualityStatus: dataQualityStatus as 'good' | 'anomaly' | 'growth_error' | 'below_minimum' | 'confirmed' | null | undefined,
           dataQualityNotes,
           
           remainingLife,
@@ -921,70 +942,82 @@ export const professionalReportRouter = router({
       };
       
       // Create Shell calculation
+      // CRITICAL FIX: Check BOTH component (legacy) and componentType (new) fields
       await createComponentCalc(
         'shell',
         'Shell',
-        (tml: any) => tml.component && tml.component.toLowerCase().includes('shell')
-      );
-      
-      // Create East Head calculation with improved detection
-      // Matches: 'east head', 'e head', 'head 1', 'head-1', 'left head', 'top head', 'north head'
-      // or any head without west/right/bottom/south keywords
-      // IMPORTANT: Also check location field for head identification
-      await createComponentCalc(
-        'head',
-        'East Head',
         (tml: any) => {
           const comp = (tml.component || '').toLowerCase();
           const compType = (tml.componentType || '').toLowerCase();
+          const combined = `${comp} ${compType}`;
+          return combined.includes('shell') || combined.includes('cylinder') || combined.includes('body');
+        }
+      );
+      
+      // Create South Head calculation
+      // Matches: 'south head', 'south', 'head 1', 'head-1', 'east head', 'e head', 'left head', 'top head'
+      // Also matches componentGroup 'SOUTHHEAD'
+      await createComponentCalc(
+        'head',
+        'South Head',
+        (tml: any) => {
+          const comp = (tml.component || '').toLowerCase();
+          const compType = (tml.componentType || '').toLowerCase();
+          const cg = (tml.componentGroup || '').toUpperCase();
           const loc = (tml.location || '').toLowerCase();
           const combined = `${comp} ${compType}`;
           
-          // Explicit east head matches (check location too)
-          if (combined.includes('east') || loc.includes('east head')) return true;
-          if (combined.includes('e head')) return true;
-          if (combined.includes('head 1') || combined.includes('head-1')) return true;
-          if (combined.includes('left head')) return true;
-          if (combined.includes('north head')) return true;
-          // For horizontal vessels, "Top Head" is often the first head (East)
-          if (combined.includes('top head')) return true;
+          // componentGroup is the canonical source of truth
+          if (cg === 'SOUTHHEAD') return true;
           
-          // If it's a head but not explicitly west/right/bottom/south, treat as east (first head)
-          // Exclude if location indicates west head
+          // Explicit south head matches
+          if (combined.includes('south head') || loc.includes('south head')) return true;
+          if (combined.includes('south') && combined.includes('head')) return true;
+          // Legacy east head naming (mapped to south)
+          if (combined.includes('east head') || combined.includes('e head')) return true;
+          if (combined.includes('head 1') || combined.includes('head-1')) return true;
+          if (combined.includes('left head') || combined.includes('top head')) return true;
+          
+          // Generic head without north/west/right/bottom keywords → default to south (first head)
           if ((combined.includes('head') && !combined.includes('shell')) &&
-              !combined.includes('west') && !combined.includes('w head') &&
-              !combined.includes('head 2') && !combined.includes('head-2') &&
-              !combined.includes('right') && !combined.includes('south') &&
+              !combined.includes('north') && !combined.includes('west') &&
+              !combined.includes('w head') && !combined.includes('head 2') &&
+              !combined.includes('head-2') && !combined.includes('right') &&
               !combined.includes('bottom') && !combined.includes('bttm') && !combined.includes('btm') &&
-              !loc.includes('west') && !loc.includes('south') && !loc.includes('bottom') && !loc.includes('bttm')) {
+              !loc.includes('north') && !loc.includes('west') && !loc.includes('bottom') && !loc.includes('bttm') &&
+              cg !== 'NORTHHEAD') {
             return true;
           }
           return false;
         }
       );
       
-      // Create West Head calculation with improved detection
-      // Matches: 'west head', 'w head', 'head 2', 'head-2', 'right head', 'bottom head', 'south head'
-      // IMPORTANT: Also check location field for head identification
+      // Create North Head calculation
+      // Matches: 'north head', 'north', 'head 2', 'head-2', 'west head', 'w head', 'right head', 'bottom head'
+      // Also matches componentGroup 'NORTHHEAD'
       await createComponentCalc(
         'head',
-        'West Head',
+        'North Head',
         (tml: any) => {
           const comp = (tml.component || '').toLowerCase();
           const compType = (tml.componentType || '').toLowerCase();
+          const cg = (tml.componentGroup || '').toUpperCase();
           const loc = (tml.location || '').toLowerCase();
           const combined = `${comp} ${compType}`;
           
-          // Explicit west head matches (check location too)
-          if (combined.includes('west') || loc.includes('west head')) return true;
-          if (combined.includes('w head')) return true;
+          // componentGroup is the canonical source of truth
+          if (cg === 'NORTHHEAD') return true;
+          
+          // Explicit north head matches
+          if (combined.includes('north head') || loc.includes('north head')) return true;
+          if (combined.includes('north') && combined.includes('head')) return true;
+          // Legacy west head naming (mapped to north)
+          if (combined.includes('west head') || combined.includes('w head')) return true;
           if (combined.includes('head 2') || combined.includes('head-2')) return true;
           if (combined.includes('right head')) return true;
-          if (combined.includes('south head')) return true;
-          // For horizontal vessels, "Bottom Head" is often the second head (West)
           if (combined.includes('bottom head') || combined.includes('bttm head') || combined.includes('btm head')) return true;
-          // Check location field for west indicators
-          if (loc.includes('west') || loc.includes('south') || loc.includes('bottom') || loc.includes('bttm')) return true;
+          // Check location field for north indicators
+          if (loc.includes('north') || loc.includes('west') || loc.includes('bottom') || loc.includes('bttm')) return true;
           
           return false;
         }

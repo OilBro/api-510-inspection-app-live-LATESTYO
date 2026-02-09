@@ -45,6 +45,9 @@ export default function DataMigration() {
   const [modifiedRows, setModifiedRows] = useState<Set<number>>(new Set());
   const [isRecalculating, setIsRecalculating] = useState(false);
 
+  // tRPC utils for cache invalidation
+  const utils = trpc.useUtils();
+
   // Get list of inspections
   const { data: inspections, isLoading: loadingInspections } = trpc.inspections.list.useQuery();
   
@@ -56,8 +59,16 @@ export default function DataMigration() {
 
   // Mutation to update TML readings with angle data
   const updateTmlMutation = trpc.tmlReadings.updateBatch.useMutation({
-    onSuccess: () => {
-      toast.success("Angle data updated successfully!");
+    onSuccess: async () => {
+      toast.success("Data saved — refreshing all views...");
+      // CRITICAL: Invalidate ALL caches that read TML data
+      // Without this, the Thickness tab and Calculations tab show stale values
+      await Promise.all([
+        utils.tmlReadings.list.invalidate({ inspectionId: selectedInspection }),
+        utils.inspections.get.invalidate({ id: selectedInspection }).catch(() => {}),
+        utils.inspections.list.invalidate().catch(() => {}),
+      ]);
+      // Also refetch the local query
       refetchTml();
       // Reset modified tracking after successful save
       setModifiedRows(new Set());
@@ -70,8 +81,15 @@ export default function DataMigration() {
 
   // Mutation to recalculate corrosion rates and remaining life
   const recalculateMutation = trpc.professionalReport.recalculate.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Calculations updated! Corrosion rates and remaining life recalculated.");
+      // Invalidate all caches so Thickness/Calculations tabs show fresh data
+      await Promise.all([
+        utils.tmlReadings.list.invalidate({ inspectionId: selectedInspection }),
+        utils.inspections.get.invalidate({ id: selectedInspection }).catch(() => {}),
+        utils.inspections.list.invalidate().catch(() => {}),
+      ]);
+      refetchTml();
       setIsRecalculating(false);
     },
     onError: (error: { message: string }) => {

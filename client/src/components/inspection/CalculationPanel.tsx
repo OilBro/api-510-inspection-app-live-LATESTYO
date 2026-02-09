@@ -58,31 +58,50 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     { enabled: !!materialSpec }
   );
   
-  // Group TML readings by component name (normalized: "Vessel Shell", "East Head", "West Head")
-  // Use the 'component' field which contains the normalized display name
+  // Group TML readings by component name (normalized: "Vessel Shell", "South Head", "North Head")
+  // PRIORITY: componentGroup (canonical) > componentType (new) > component (legacy)
   const componentGroups = useMemo(() => {
     if (!tmlReadings) return {};
     const groups: Record<string, typeof tmlReadings> = {};
     for (const reading of tmlReadings) {
-      // Use component field (normalized name) for grouping
-      // Fall back to componentType if component is empty
-      let groupKey = reading.component || reading.componentType || 'Unknown';
+      let groupKey = 'Unknown';
       
-      // Additional normalization for legacy data that wasn't normalized on import
-      const lower = groupKey.toLowerCase();
-      if (lower.includes('top head') || lower.includes('north head') || lower.includes('head 1') || lower.includes('e head')) {
-        groupKey = 'East Head';
-      } else if (lower.includes('bottom head') || lower.includes('bttm head') || lower.includes('south head') || lower.includes('head 2') || lower.includes('w head')) {
-        groupKey = 'West Head';
-      } else if (lower.includes('shell') || lower.includes('cylinder') || lower.includes('body')) {
+      // componentGroup is the canonical source of truth
+      const cg = ((reading as any).componentGroup || '').toUpperCase();
+      if (cg === 'SOUTHHEAD') {
+        groupKey = 'South Head';
+      } else if (cg === 'NORTHHEAD') {
+        groupKey = 'North Head';
+      } else if (cg === 'SHELL') {
         groupKey = 'Vessel Shell';
-      } else if (lower === 'head' && !lower.includes('east') && !lower.includes('west')) {
-        // Generic "head" without direction - check location field
+      } else if (cg === 'NOZZLE') {
+        groupKey = 'Nozzle';
+      } else {
+        // Fallback: text-based matching
+        const comp = (reading.component || reading.componentType || '').toLowerCase();
         const loc = (reading.location || '').toLowerCase();
-        if (loc.includes('west') || loc.includes('south') || loc.includes('bottom') || loc.includes('bttm')) {
-          groupKey = 'West Head';
+        
+        if (comp.includes('south head') || (comp.includes('south') && comp.includes('head'))) {
+          groupKey = 'South Head';
+        } else if (comp.includes('north head') || (comp.includes('north') && comp.includes('head'))) {
+          groupKey = 'North Head';
+        } else if (comp.includes('east') || comp.includes('head 1') || comp.includes('e head') || comp.includes('top head') || comp.includes('left head')) {
+          groupKey = 'South Head'; // Legacy east → south
+        } else if (comp.includes('west') || comp.includes('head 2') || comp.includes('w head') || comp.includes('bottom head') || comp.includes('bttm head') || comp.includes('right head')) {
+          groupKey = 'North Head'; // Legacy west → north
+        } else if (comp.includes('shell') || comp.includes('cylinder') || comp.includes('body')) {
+          groupKey = 'Vessel Shell';
+        } else if (comp.includes('nozzle') || comp.includes('manway') || comp.includes('relief') || comp.includes('inlet') || comp.includes('outlet')) {
+          groupKey = 'Nozzle';
+        } else if (comp.includes('head') && !comp.includes('shell')) {
+          // Generic head — check location for hints
+          if (loc.includes('north') || loc.includes('west') || loc.includes('bottom') || loc.includes('bttm')) {
+            groupKey = 'North Head';
+          } else {
+            groupKey = 'South Head'; // Default first head
+          }
         } else {
-          groupKey = 'East Head'; // Default to East Head
+          groupKey = 'Vessel Shell'; // Default
         }
       }
       

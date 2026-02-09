@@ -691,6 +691,7 @@ Return JSON in this exact format:
       }),
 
     // Batch update TML readings with angle data
+    // COMPLETE FIELD SYNCHRONIZATION: Every write keeps ALL related fields in sync
     updateBatch: protectedProcedure
       .input(z.object({
         inspectionId: z.string(),
@@ -704,10 +705,15 @@ Return JSON in this exact format:
           tml3: z.number().optional(),
           tml4: z.number().optional(),
           previousThickness: z.number().optional(),
+          angleDeg: z.number().optional(),
         })),
       }))
       .mutation(async ({ input }) => {
         const { inspectionId, updates } = input;
+        
+        // Import stationKey generator for recomputation
+        const { generateStationKey } = await import('./lib/stationKeyNormalization');
+        const { normalizeComponentGroup } = await import('./lib/componentGroupNormalizer');
         
         // Get existing TML readings for this inspection
         const existingReadings = await db.getTmlReadings(inspectionId);
@@ -732,24 +738,87 @@ Return JSON in this exact format:
               update.tml4,
             ].filter((v): v is number => v !== undefined && v !== null && !isNaN(v));
             
-            const tActual = readings.length > 0 ? Math.min(...readings) : undefined;
+            const newValue = readings.length > 0 ? Math.min(...readings) : undefined;
             
-            // Build update object
+            // Resolve final field values (update takes precedence over existing)
+            const finalComponentType = update.componentType ?? matching.componentType ?? matching.component ?? undefined;
+            const finalLocation = update.location ?? matching.location ?? undefined;
+            const finalAngleDeg = update.angleDeg ?? (matching.angleDeg != null ? Number(matching.angleDeg) : undefined);
+            
+            // Recompute componentGroup from componentType
+            const finalComponentGroup = finalComponentType 
+              ? normalizeComponentGroup(finalComponentType) 
+              : (matching.componentGroup || undefined);
+            
+            // Recompute stationKey from location + angle + componentType
+            let finalStationKey = matching.stationKey || undefined;
+            if (finalComponentType || finalLocation || finalAngleDeg != null) {
+              const skResult = generateStationKey({
+                component: finalComponentType,
+                componentType: finalComponentType,
+                location: finalLocation,
+                angleDeg: finalAngleDeg ?? null,
+                sliceNumber: matching.sliceNumber != null ? Number(matching.sliceNumber) : null,
+                legacyLocationId: matching.legacyLocationId || undefined,
+              });
+              finalStationKey = skResult.stationKey;
+            }
+            
+            // Build update object - COMPLETE FIELD SYNC
+            // Every related field pair stays in lockstep
             const updateData: Record<string, any> = {};
-            // Location, size, and component type updates
-            if (update.location !== undefined) updateData.location = update.location;
-            if (update.size !== undefined) updateData.nozzleSize = update.size;
-            if (update.componentType !== undefined) updateData.componentType = update.componentType;
-            // Thickness readings
+            
+            // --- Thickness fields: tActual = currentThickness = newValue ---
+            if (newValue !== undefined) {
+              updateData.tActual = newValue.toString();
+              updateData.currentThickness = newValue.toString();
+            }
+            
+            // --- Component fields: componentType = component = newComponent ---
+            if (update.componentType !== undefined) {
+              updateData.componentType = update.componentType;
+              updateData.component = update.componentType;
+            }
+            
+            // --- Location ---
+            if (update.location !== undefined) {
+              updateData.location = update.location;
+            }
+            
+            // --- Angle fields: angle string + angleDeg numeric ---
+            if (finalAngleDeg != null) {
+              updateData.angleDeg = finalAngleDeg;
+              updateData.angle = `${finalAngleDeg}°`;
+            }
+            
+            // --- StationKey + ComponentGroup (recomputed) ---
+            if (finalStationKey) {
+              updateData.stationKey = finalStationKey;
+            }
+            if (finalComponentGroup) {
+              updateData.componentGroup = finalComponentGroup;
+            }
+            
+            // --- Individual readings ---
             if (update.tml1 !== undefined) updateData.tml1 = update.tml1.toString();
             if (update.tml2 !== undefined) updateData.tml2 = update.tml2.toString();
             if (update.tml3 !== undefined) updateData.tml3 = update.tml3.toString();
             if (update.tml4 !== undefined) updateData.tml4 = update.tml4.toString();
-            if (tActual !== undefined) updateData.tActual = tActual.toString();
-            if (update.previousThickness !== undefined) updateData.previousThickness = update.previousThickness.toString();
+            
+            // --- Previous thickness ---
+            if (update.previousThickness !== undefined) {
+              updateData.previousThickness = update.previousThickness.toString();
+            }
+            
+            // --- Size ---
+            if (update.size !== undefined) {
+              updateData.nozzleSize = update.size;
+            }
             
             await db.updateTmlReading(matching.id, updateData);
             updatedCount++;
+            
+            logger.info(`[TML Batch Update] Updated CML ${update.legacyLocationId}: tActual=${newValue}, stationKey=${finalStationKey}, componentGroup=${finalComponentGroup}`);
           } else {
             notFoundCount++;
             logger.warn(`[TML Batch Update] CML ${update.legacyLocationId} not found in inspection ${inspectionId}`);

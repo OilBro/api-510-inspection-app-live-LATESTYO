@@ -2988,3 +2988,27 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Fix nozzle import: t_act is the current thickness (minimum of tml-1 through tml-4)
 - [x] Rewrite LLM extraction prompt to correctly interpret CML/CompID/Location/tml-1..4/t_act table structure
 - [x] All 898 tests passing (24 new UT import parsing tests, 0 regressions)
+
+## Fix Data Migration → Calculations/Thickness Propagation (Feb 2026)
+- [x] Investigate: corrections in Data Migration section don't update Calculations or Thickness sections
+- [x] Identify the data flow from Data Migration edits to TML readings and component calculations
+- [x] Implement propagation logic so edits in Data Migration trigger recalculation
+- [x] Test end-to-end: edit in Data Migration → verify Calculations and Thickness update
+
+## Complete Field Synchronization in updateBatch
+- [x] updateBatch must sync ALL fields on every write: tActual, currentThickness, componentType, component, location, angle, angleDeg, stationKey, componentGroup
+- [x] Use canonical accessor: Number(tml.tActual ?? tml.currentThickness ?? null)
+- [x] Recompute stationKey from location + angle + componentGroup on every update
+- [x] Recompute componentGroup from componentType on every update
+- [x] Sync angle string and angleDeg numeric fields
+- [x] Fix ALL thickness read paths to use tActual ?? currentThickness pattern
+- [x] Fix recalculate component filtering to check both component and componentType
+
+## Fix Data Propagation (User Reported Feb 9)
+- [x] Fix updateBatch: sync ALL fields on write (tActual, currentThickness, componentType, component, location, angle, angleDeg, stationKey, componentGroup)
+- [x] Fix DataMigration UI: invalidate tRPC cache after updateBatch succeeds (utils.tmlReadings.list.invalidate + utils.inspections.get.invalidate)
+- [x] Fix RL compliance: recompute must use real tRequired/minimumThickness, leave RL null and flag if missing
+- [x] Fix ThicknessOrganizedView: use canonical accessor and componentGroup-first classification
+- [x] Fix recalculate: use canonical accessor for thickness reads
+- [x] Fix recalculate: use componentGroup as canonical source, South/North Head naming
+- [x] All 930 tests passing (32 new data propagation tests, 0 regressions), 0 TypeScript errors

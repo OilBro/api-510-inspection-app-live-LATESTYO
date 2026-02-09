@@ -14,12 +14,14 @@ interface TMLReading {
   location?: string | null;
   component?: string | null;
   componentType?: string | null;
+  componentGroup?: string | null;
   readingType?: string | null;
   nozzleSize?: string | null;
   angle?: string | null;
   nominalThickness?: string | null;
   previousThickness?: string | null;
   currentThickness?: string | null;
+  tActual?: string | null;
   minimumRequired?: string | null;
   calculatedMAWP?: string | null;
   tml1?: string | null;
@@ -32,21 +34,38 @@ interface ThicknessOrganizedViewProps {
   readings: TMLReading[];
 }
 
-type ComponentFilter = "all" | "Shell" | "East Head" | "West Head" | "Nozzle";
+type ComponentFilter = "all" | "Shell" | "East Head" | "West Head" | "South Head" | "North Head" | "Nozzle";
 
 export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedViewProps) {
   const [filter, setFilter] = useState<ComponentFilter>("all");
 
   // Normalize component type from various fields
+  // PRIORITY: componentGroup (canonical) > componentType (new) > component (legacy)
   const getComponentType = (reading: TMLReading): string => {
-    const component = reading.component || reading.componentType || reading.location || "";
+    // componentGroup is the canonical source of truth (set by import and updateBatch)
+    const cg = (reading.componentGroup || '').toUpperCase();
+    if (cg === 'SOUTHHEAD') return 'South Head';
+    if (cg === 'NORTHHEAD') return 'North Head';
+    if (cg === 'SHELL') return 'Shell';
+    if (cg === 'NOZZLE') return 'Nozzle';
+    
+    // Fallback: check componentType and component text fields
+    const component = reading.componentType || reading.component || reading.location || "";
     const normalized = component.toLowerCase();
     
-    if (normalized.includes("east") || normalized.includes("north") || normalized.includes("head 1") || normalized.includes("left head")) {
-      return "East Head";
+    // Check specific head types first (South/North take priority)
+    if (normalized.includes("south head") || normalized.includes("south") && normalized.includes("head")) return "South Head";
+    if (normalized.includes("north head") || normalized.includes("north") && normalized.includes("head")) return "North Head";
+    // Legacy east/west mapping → south/north
+    if (normalized.includes("east") || normalized.includes("head 1") || normalized.includes("left head") || normalized.includes("top head")) {
+      return "South Head";
     }
-    if (normalized.includes("west") || normalized.includes("south") || normalized.includes("head 2") || normalized.includes("right head")) {
-      return "West Head";
+    if (normalized.includes("west") || normalized.includes("head 2") || normalized.includes("right head") || normalized.includes("bottom head")) {
+      return "North Head";
+    }
+    // Generic "head" without direction
+    if (normalized.includes("head") && !normalized.includes("shell")) {
+      return "South Head"; // Default to South Head (first head)
     }
     if (normalized.includes("nozzle") || normalized.includes("manway") || normalized.includes("relief") || 
         normalized.includes("inlet") || normalized.includes("outlet") || normalized.includes("drain") ||
@@ -70,13 +89,13 @@ export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedV
     return acc;
   }, {} as Record<string, (TMLReading & { normalizedComponent: string })[]>);
 
-  // Get counts for each component type
-  const componentCounts = {
-    Shell: groupedReadings["Shell"]?.length || 0,
-    "East Head": groupedReadings["East Head"]?.length || 0,
-    "West Head": groupedReadings["West Head"]?.length || 0,
-    Nozzle: groupedReadings["Nozzle"]?.length || 0,
-  };
+  // Get counts for each component type (dynamic based on what's in the data)
+  const componentCounts: Record<string, number> = {};
+  for (const [type, readings] of Object.entries(groupedReadings)) {
+    componentCounts[type] = readings.length;
+  }
+  // Ensure standard types always appear even if empty
+  if (!componentCounts["Shell"]) componentCounts["Shell"] = 0;
 
   // Filter readings based on selection and sort by CML number
   const filteredReadings = sortByCmlNumber(
@@ -100,8 +119,10 @@ export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedV
   const getComponentColor = (type: string) => {
     switch (type) {
       case "Shell": return "bg-blue-100 text-blue-800";
-      case "East Head": return "bg-purple-100 text-purple-800";
-      case "West Head": return "bg-indigo-100 text-indigo-800";
+      case "South Head": return "bg-purple-100 text-purple-800";
+      case "North Head": return "bg-indigo-100 text-indigo-800";
+      case "East Head": return "bg-purple-100 text-purple-800"; // Legacy
+      case "West Head": return "bg-indigo-100 text-indigo-800"; // Legacy
       case "Nozzle": return "bg-orange-100 text-orange-800";
       default: return "bg-gray-100 text-gray-800";
     }
@@ -123,10 +144,9 @@ export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedV
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Components ({readings.length})</SelectItem>
-                <SelectItem value="Shell">Shell ({componentCounts.Shell})</SelectItem>
-                <SelectItem value="East Head">East Head ({componentCounts["East Head"]})</SelectItem>
-                <SelectItem value="West Head">West Head ({componentCounts["West Head"]})</SelectItem>
-                <SelectItem value="Nozzle">Nozzles ({componentCounts.Nozzle})</SelectItem>
+                {Object.entries(componentCounts).map(([type, count]) => (
+                  <SelectItem key={type} value={type}>{type} ({count})</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -201,15 +221,15 @@ export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedV
                       {reading.previousThickness || "-"}
                     </TableCell>
                     <TableCell className="text-right font-mono font-medium">
-                      {reading.currentThickness || "-"}
+                      {reading.tActual || reading.currentThickness || "-"}
                     </TableCell>
                     <TableCell className="text-right font-mono">
                       {reading.minimumRequired || "-"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Badge className={getStatusColor(reading.currentThickness, reading.minimumRequired)}>
-                        {reading.currentThickness && reading.minimumRequired
-                          ? parseFloat(reading.currentThickness) >= parseFloat(reading.minimumRequired)
+                      <Badge className={getStatusColor(reading.tActual || reading.currentThickness, reading.minimumRequired)}>
+                        {(reading.tActual || reading.currentThickness) && reading.minimumRequired
+                          ? parseFloat(reading.tActual || reading.currentThickness || '0') >= parseFloat(reading.minimumRequired)
                             ? "OK"
                             : "Below Min"
                           : "-"}
