@@ -1,0 +1,90 @@
+{
+  "query": "SELECT inspectionId, stationKey, id, component, location, tActual\nFROM tmlReadings\nWHERE stationKey IS NOT NULL AND stationKey != ''\nAND (inspectionId, stationKey) IN (\n  SELECT inspectionId, stationKey\n  FROM tmlReadings\n  WHERE stationKey IS NOT NULL AND stationKey != ''\n  GROUP BY inspectionId, stationKey\n  HAVING COUNT(*) > 1\n  LIMIT 1\n)\nORDER BY inspectionId, stationKey\nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT inspectionId, stationKey, id, component, location, tActual\nFROM tmlReadings\nWHERE stationKey IS NOT NULL AND stationKey != ''\nAND (inspectionId, stationKey) IN (\n  SELECT inspectionId, stationKey\n  FROM tmlReadings\n  WHERE stationKey IS NOT NULL AND stationKey != ''\n  GROUP BY inspectionId, stationKey\n  HAVING COUNT(*) > 1\n  LIMIT 1\n)\nORDER BY inspectionId, stationKey\nLIMIT 10;",
+  "rows": [
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-N/A",
+      "id": "sDBERk2-xAJ4pgmyqmOy0",
+      "component": "Bttm Head",
+      "location": "N/A",
+      "tActual": "0.5160"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-N/A",
+      "id": "9stBJbsRIHGAGsHQ2-PE9",
+      "component": "Top Head",
+      "location": "N/A",
+      "tActual": "0.5260"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-N/A",
+      "id": "ajvjd25Ul_OagXkgXilOq",
+      "component": "Bttm Head",
+      "location": "N/A",
+      "tActual": "0.5280"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-N/A",
+      "id": "E9Vs78M78A__DihThU1jE",
+      "component": "Vessel Shell",
+      "location": "N/A",
+      "tActual": "0.0000"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-N/A",
+      "id": "ea3T0wZd68qjWG_HBBlo8",
+      "component": "Vessel Shell",
+      "location": "N/A",
+      "tActual": "0.0000"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-N/A",
+      "id": "iAOF6PYZ1DBRISK-7LRo_",
+      "component": "Bttm Head",
+      "location": "N/A",
+      "tActual": "0.5260"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-N/A",
+      "id": "j4wMb5bDfDz-TOmlxXlbQ",
+      "component": "Top Head",
+      "location": "N/A",
+      "tActual": "0.5230"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-N/A",
+      "id": "K72LvMG3TTgoyD4xhR7v1",
+      "component": "Vessel Shell",
+      "location": "N/A",
+      "tActual": "0.0000"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-N/A",
+      "id": "M-sA21mmaHEuyu6ChhDJO",
+      "component": "Vessel Shell",
+      "location": "N/A",
+      "tActual": "0.0000"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-N/A",
+      "id": "ML6PK27LPwqBGAUl40-_0",
+      "component": "Top Head",
+      "location": "N/A",
+      "tActual": "0.5250"
+    }
+  ],
+  "messages": [],
+  "stdout": "inspectionId\tstationKey\tid\tcomponent\tlocation\ttActual\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-N/A\tsDBERk2-xAJ4pgmyqmOy0\tBttm Head\tN/A\t0.5160\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-N/A\t9stBJbsRIHGAGsHQ2-PE9\tTop Head\tN/A\t0.5260\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-N/A\tajvjd25Ul_OagXkgXilOq\tBttm Head\tN/A\t0.5280\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-N/A\tE9Vs78M78A__DihThU1jE\tVessel Shell\tN/A\t0.0000\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-N/A\tea3T0wZd68qjWG_HBBlo8\tVessel Shell\tN/A\t0.0000\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-N/A\tiAOF6PYZ1DBRISK-7LRo_\tBttm Head\tN/A\t0.5260\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-N/A\tj4wMb5bDfDz-TOmlxXlbQ\tTop Head\tN/A\t0.5230\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-N/A\tK72LvMG3TTgoyD4xhR7v1\tVessel Shell\tN/A\t0.0000\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-N/A\tM-sA21mmaHEuyu6ChhDJO\tVessel Shell\tN/A\t0.0000\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-N/A\tML6PK27LPwqBGAUl40-_0\tTop Head\tN/A\t0.5250\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

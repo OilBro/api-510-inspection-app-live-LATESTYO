@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE tmlReadings \nADD UNIQUE INDEX idx_inspection_station (inspectionId, stationKey);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute ALTER TABLE tmlReadings \nADD UNIQUE INDEX idx_inspection_station (inspectionId, stationKey);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1062 (23000) at line 1: Duplicate entry '?' for key 'tmlReadings.idx_inspection_station'"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "query": "-- Delete TML readings for vessel 54-11-001\nDELETE t FROM tmlReadings t\nJOIN inspections i ON t.inspectionId = i.id\nWHERE i.vesselTagNumber = '54-11-001';\n\n-- Delete inspections for vessel 54-11-001\nDELETE FROM inspections WHERE vesselTagNumber = '54-11-001';\n\n-- Delete vessel 54-11-001\nDELETE FROM vessels WHERE vesselTagNumber = '54-11-001';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute -- Delete TML readings for vessel 54-11-001\nDELETE t FROM tmlReadings t\nJOIN inspections i ON t.inspectionId = i.id\nWHERE i.vesselTagNumber = '54-11-001';\n\n-- Delete inspections for vessel 54-11-001\nDELETE FROM inspections WHERE vesselTagNumber = '54-11-001';\n\n-- Delete vessel 54-11-001\nDELETE FROM vessels WHERE vesselTagNumber = '54-11-001';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 99
+}

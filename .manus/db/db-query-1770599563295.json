@@ -1,0 +1,190 @@
+{
+  "query": "SELECT \n  i.inspectionDate,\n  t.legacyLocationId,\n  t.component,\n  t.location,\n  t.stationKey,\n  t.componentGroup,\n  t.tActual\nFROM tmlReadings t\nJOIN inspections i ON t.inspectionId = i.id\nWHERE i.vesselTagNumber = '54-11-001'\nORDER BY i.inspectionDate, t.legacyLocationId\nLIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT \n  i.inspectionDate,\n  t.legacyLocationId,\n  t.component,\n  t.location,\n  t.stationKey,\n  t.componentGroup,\n  t.tActual\nFROM tmlReadings t\nJOIN inspections i ON t.inspectionId = i.id\nWHERE i.vesselTagNumber = '54-11-001'\nORDER BY i.inspectionDate, t.legacyLocationId\nLIMIT 20;",
+  "rows": [
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "1",
+      "component": "South Head",
+      "location": "South Head 12 O'Clock",
+      "stationKey": "SOUTH-HEAD-12-OCLOCK",
+      "componentGroup": "WESTHEAD",
+      "tActual": "0.5180"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "10",
+      "component": "Vessel Shell",
+      "location": "4'",
+      "stationKey": "LOCATION-4",
+      "componentGroup": "SHELL",
+      "tActual": "0.8090"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "11",
+      "component": "Vessel Shell",
+      "location": "6'",
+      "stationKey": "LOCATION-6",
+      "componentGroup": "SHELL",
+      "tActual": "0.8090"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "12",
+      "component": "Vessel Shell",
+      "location": "8'",
+      "stationKey": "LOCATION-8",
+      "componentGroup": "SHELL",
+      "tActual": "0.8070"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "13",
+      "component": "Vessel Shell",
+      "location": "10'",
+      "stationKey": "LOCATION-10",
+      "componentGroup": "SHELL",
+      "tActual": "0.8150"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "14",
+      "component": "Vessel Shell",
+      "location": "12'",
+      "stationKey": "LOCATION-12",
+      "componentGroup": "SHELL",
+      "tActual": "0.8170"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "15",
+      "component": "Vessel Shell",
+      "location": "14'",
+      "stationKey": "LOCATION-14",
+      "componentGroup": "SHELL",
+      "tActual": "0.8140"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "16",
+      "component": "Vessel Shell",
+      "location": "16'",
+      "stationKey": "LOCATION-16",
+      "componentGroup": "SHELL",
+      "tActual": "0.8040"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "17",
+      "component": "Vessel Shell",
+      "location": "18'",
+      "stationKey": "LOCATION-18",
+      "componentGroup": "SHELL",
+      "tActual": "0.8080"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "18",
+      "component": "Vessel Shell",
+      "location": "20'",
+      "stationKey": "LOCATION-20",
+      "componentGroup": "SHELL",
+      "tActual": "0.7970"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "19",
+      "component": "Vessel Shell",
+      "location": "22'",
+      "stationKey": "LOCATION-22",
+      "componentGroup": "SHELL",
+      "tActual": "0.8010"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "2",
+      "component": "South Head",
+      "location": "South Head 3 O'Clock",
+      "stationKey": "SOUTH-HEAD-3-OCLOCK",
+      "componentGroup": "WESTHEAD",
+      "tActual": "0.5260"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "20",
+      "component": "Vessel Shell",
+      "location": "24'",
+      "stationKey": "LOCATION-24",
+      "componentGroup": "SHELL",
+      "tActual": "0.8010"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "21",
+      "component": "Vessel Shell",
+      "location": "26'",
+      "stationKey": "LOCATION-26",
+      "componentGroup": "SHELL",
+      "tActual": "0.7970"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "22",
+      "component": "Vessel Shell",
+      "location": "28'",
+      "stationKey": "LOCATION-28",
+      "componentGroup": "SHELL",
+      "tActual": "0.8060"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "23",
+      "component": "Vessel Shell",
+      "location": "30'",
+      "stationKey": "LOCATION-30",
+      "componentGroup": "SHELL",
+      "tActual": "0.8040"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "24",
+      "component": "Vessel Shell",
+      "location": "2\" from North Head seam- Shell side",
+      "stationKey": "LOCATION-2 FROM NORTH HEAD SEAM- SHELL SIDE",
+      "componentGroup": "SHELL",
+      "tActual": "0.8010"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "25",
+      "component": "Vessel Shell",
+      "location": "2\" from North Head seam- Head side",
+      "stationKey": "LOCATION-2 FROM NORTH HEAD SEAM- HEAD SIDE",
+      "componentGroup": "SHELL",
+      "tActual": "0.4970"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "26",
+      "component": "North Head",
+      "location": "North Head 12 O'Clock",
+      "stationKey": "NORTH-HEAD-12-OCLOCK",
+      "componentGroup": "EASTHEAD",
+      "tActual": "0.5160"
+    },
+    {
+      "inspectionDate": "2017-06-20 00:00:00",
+      "legacyLocationId": "27",
+      "component": "North Head",
+      "location": "North Head 3 O'Clock",
+      "stationKey": "NORTH-HEAD-3-OCLOCK",
+      "componentGroup": "EASTHEAD",
+      "tActual": "0.5210"
+    }
+  ],
+  "messages": [],
+  "stdout": "inspectionDate\tlegacyLocationId\tcomponent\tlocation\tstationKey\tcomponentGroup\ttActual\n2017-06-20 00:00:00\t1\tSouth Head\tSouth Head 12 O'Clock\tSOUTH-HEAD-12-OCLOCK\tWESTHEAD\t0.5180\n2017-06-20 00:00:00\t10\tVessel Shell\t4'\tLOCATION-4\tSHELL\t0.8090\n2017-06-20 00:00:00\t11\tVessel Shell\t6'\tLOCATION-6\tSHELL\t0.8090\n2017-06-20 00:00:00\t12\tVessel Shell\t8'\tLOCATION-8\tSHELL\t0.8070\n2017-06-20 00:00:00\t13\tVessel Shell\t10'\tLOCATION-10\tSHELL\t0.8150\n2017-06-20 00:00:00\t14\tVessel Shell\t12'\tLOCATION-12\tSHELL\t0.8170\n2017-06-20 00:00:00\t15\tVessel Shell\t14'\tLOCATION-14\tSHELL\t0.8140\n2017-06-20 00:00:00\t16\tVessel Shell\t16'\tLOCATION-16\tSHELL\t0.8040\n2017-06-20 00:00:00\t17\tVessel Shell\t18'\tLOCATION-18\tSHELL\t0.8080\n2017-06-20 00:00:00\t18\tVessel Shell\t20'\tLOCATION-20\tSHELL\t0.7970\n2017-06-20 00:00:00\t19\tVessel Shell\t22'\tLOCATION-22\tSHELL\t0.8010\n2017-06-20 00:00:00\t2\tSouth Head\tSouth Head 3 O'Clock\tSOUTH-HEAD-3-OCLOCK\tWESTHEAD\t0.5260\n2017-06-20 00:00:00\t20\tVessel Shell\t24'\tLOCATION-24\tSHELL\t0.8010\n2017-06-20 00:00:00\t21\tVessel Shell\t26'\tLOCATION-26\tSHELL\t0.7970\n2017-06-20 00:00:00\t22\tVessel Shell\t28'\tLOCATION-28\tSHELL\t0.8060\n2017-06-20 00:00:00\t23\tVessel Shell\t30'\tLOCATION-30\tSHELL\t0.8040\n2017-06-20 00:00:00\t24\tVessel Shell\t2\" from North Head seam- Shell side\tLOCATION-2 FROM NORTH HEAD SEAM- SHELL SIDE\tSHELL\t0.8010\n2017-06-20 00:00:00\t25\tVessel Shell\t2\" from North Head seam- Head side\tLOCATION-2 FROM NORTH HEAD SEAM- HEAD SIDE\tSHELL\t0.4970\n2017-06-20 00:00:00\t26\tNorth Head\tNorth Head 12 O'Clock\tNORTH-HEAD-12-OCLOCK\tEASTHEAD\t0.5160\n2017-06-20 00:00:00\t27\tNorth Head\tNorth Head 3 O'Clock\tNORTH-HEAD-3-OCLOCK\tEASTHEAD\t0.5210\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

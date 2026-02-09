@@ -2916,3 +2916,28 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Add tests to verify stationKey-based pairing works correctly (5 tests created)
 - [ ] Fix cmlCorrelations table schema case sensitivity issue
 - [ ] Test with real vessel data to verify accurate corrosion rates
+
+## Complete StationKey Integration & Validation
+- [ ] Verify professional report calculation uses stationKey for pairing (check professionalReportDb.ts)
+- [ ] Add unique constraint on (inspectionId, stationKey) to tmlReadings table
+- [ ] Prepare vessel 54-11-001 test data (2017 baseline and 2025 UT readings)
+- [ ] Import 2017 baseline inspection data for vessel 54-11-001
+- [ ] Import 2025 UT readings for vessel 54-11-001
+- [ ] Apply CML correlation mappings for vessel 54-11-001
+- [ ] Generate professional report for vessel 54-11-001
+- [ ] Verify stationKey pairing produces accurate corrosion rates
+- [ ] Check match quality statistics (stationKey/correlation/legacyLocationId/none counts)
+- [ ] Document any issues or edge cases discovered during testing
+
+## Fix StationKey Generation and Import Parser for Production Readiness
+- [x] Fix stationKey generation for seam-adjacent shell/head locations (CML 7, 8, 24, 25)
+- [x] Fix parseAxialPosition to detect shell vs head side correctly
+- [x] Fix head reference detection precedence (NORTH before SH to avoid false matches)
+- [x] Add RULE 2.6 for shell readings with axial position (feet measurements)
+- [x] Separate CML 7 and 25 from shell readings (they are head seam readings)
+- [x] Re-import vessel 54-11-001 data with fixes
+- [x] Verify 29/29 matched pairs ✓ SUCCESS!
+- [ ] Add schema detection to import parser (nozzle table, shell grid, head spots)
+- [ ] Add validation warnings for angle count mismatches
+- [ ] Add validation warnings for ambiguous numeric identifiers
+- [ ] Update tests to cover new stationKey patterns

@@ -74,9 +74,15 @@ export function parseAxialPosition(description: string): string | null {
   }
   
   // Match inches: "2\"", "4\""
-  const inchMatch = trimmed.match(/(\d+)\s*"/);
+  const inchMatch = trimmed.match(/(\d+)\s*\"/);
   if (inchMatch) {
-    const side = trimmed.includes('HEAD') ? 'HEAD' : trimmed.includes('SHELL') ? 'SHELL' : '';
+    // Check for explicit "SHELL SIDE" or "HEAD SIDE" patterns
+    let side = '';
+    if (trimmed.includes('SHELL') && (trimmed.includes('SIDE') || trimmed.includes('SHELL'))) {
+      side = 'SHELL';
+    } else if (trimmed.includes('HEAD') && (trimmed.includes('SIDE') || trimmed.includes('HEAD'))) {
+      side = 'HEAD';
+    }
     return side ? `${inchMatch[1]}IN-${side}` : `${inchMatch[1]}IN`;
   }
   
@@ -166,7 +172,8 @@ export interface StationKeyResult {
 
 export function generateStationKey(input: StationKeyInput): StationKeyResult {
   const component = normalizeString(input.component || input.componentType || '');
-  const location = normalizeString(input.location || '');
+  const rawLocation = input.location || ''; // Keep raw location for parsing quotes
+  const location = normalizeString(rawLocation);
   const componentGroup = normalizeComponentGroup(input.component || input.componentType);
   
   // RULE 1: Explicit slice + angle (highest confidence)
@@ -177,7 +184,7 @@ export function generateStationKey(input: StationKeyInput): StationKeyResult {
       sliceNumber: input.sliceNumber,
       angleDeg: input.angleDeg,
       trueCmlId: input.legacyLocationId || null,
-      axialPosition: parseAxialPosition(location),
+      axialPosition: parseAxialPosition(rawLocation),
       confidence: 'high',
       method: 'explicit_slice_angle',
     };
@@ -192,9 +199,51 @@ export function generateStationKey(input: StationKeyInput): StationKeyResult {
       sliceNumber: parsed.slice,
       angleDeg: parsed.angle,
       trueCmlId: input.legacyLocationId || null,
-      axialPosition: parseAxialPosition(location),
+      axialPosition: parseAxialPosition(rawLocation),
       confidence: 'high',
       method: 'parsed_slice_angle',
+    };
+  }
+  
+  // RULE 2.5: Seam-adjacent locations (shell/head transition zones)
+  // Examples: "2\" from SH Shell", "2\" from SH Head", "2\" from NH Shell"
+  const axialPos = parseAxialPosition(rawLocation);
+  if (axialPos && (axialPos.includes('IN-SHELL') || axialPos.includes('IN-HEAD'))) {
+    // Determine which head based on component or location
+    // Check full names first to avoid false matches (e.g., "SHELL" contains "SH")
+    const headRef = location.includes('SOUTH') ? 'SH' :
+                    location.includes('NORTH') ? 'NH' :
+                    location.includes('EAST') ? 'EH' :
+                    location.includes('WEST') ? 'WH' :
+                    location.includes('SH') ? 'SH' :
+                    location.includes('NH') ? 'NH' :
+                    location.includes('EH') ? 'EH' :
+                    location.includes('WH') ? 'WH' : 'UNKNOWN';
+    
+    return {
+      stationKey: `SEAM-${headRef}-${axialPos}`,
+      componentGroup,
+      sliceNumber: null,
+      angleDeg: null,
+      trueCmlId: input.legacyLocationId || null,
+      axialPosition: axialPos,
+      confidence: 'high',
+      method: 'seam_adjacent',
+    };
+  }
+  
+  // RULE 2.6: Shell readings with axial position (feet measurements)
+  // Examples: "2'", "6'", "24'"
+  if (axialPos && axialPos.includes('FT') && componentGroup === 'SHELL') {
+    return {
+      stationKey: `SHELL-${axialPos}`,
+      componentGroup,
+      sliceNumber: null,
+      angleDeg: null,
+      trueCmlId: input.legacyLocationId || null,
+      axialPosition: axialPos,
+      confidence: 'high',
+      method: 'shell_axial_position',
     };
   }
   
@@ -239,7 +288,7 @@ export function generateStationKey(input: StationKeyInput): StationKeyResult {
     sliceNumber: null,
     angleDeg: null,
     trueCmlId: input.legacyLocationId || null,
-    axialPosition: parseAxialPosition(location),
+    axialPosition: parseAxialPosition(rawLocation),
     confidence: 'low',
     method: 'fallback_location',
   };

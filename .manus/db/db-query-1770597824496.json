@@ -1,0 +1,110 @@
+{
+  "query": "SELECT inspectionId, stationKey, COUNT(*) as count\nFROM tmlReadings\nWHERE stationKey IS NOT NULL AND stationKey != ''\nGROUP BY inspectionId, stationKey\nHAVING COUNT(*) > 1\nLIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT inspectionId, stationKey, COUNT(*) as count\nFROM tmlReadings\nWHERE stationKey IS NOT NULL AND stationKey != ''\nGROUP BY inspectionId, stationKey\nHAVING COUNT(*) > 1\nLIMIT 20;",
+  "rows": [
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-N/A",
+      "count": "14"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-SHELL COURSE 1",
+      "count": "36"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-SHELL COURSE 2",
+      "count": "24"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-SHELL COURSE 3",
+      "count": "24"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-SHELL COURSE 4",
+      "count": "18"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-SHELL COURSE 5",
+      "count": "18"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "LOCATION-TOP, SIDE, BTTM, SIDE (CLOCK WISE)",
+      "count": "16"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "NORTH-HEAD-12-OCLOCK",
+      "count": "6"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "NORTH-HEAD-3-OCLOCK",
+      "count": "6"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "NORTH-HEAD-6-OCLOCK",
+      "count": "6"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "NORTH-HEAD-9-OCLOCK",
+      "count": "6"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "NORTH-HEAD-CENTER",
+      "count": "6"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "SOUTH-HEAD-12-OCLOCK",
+      "count": "6"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "SOUTH-HEAD-3-OCLOCK",
+      "count": "6"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "SOUTH-HEAD-6-OCLOCK",
+      "count": "6"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "SOUTH-HEAD-9-OCLOCK",
+      "count": "6"
+    },
+    {
+      "inspectionId": "6sgLpcDg-jRGoGq98JDSl",
+      "stationKey": "SOUTH-HEAD-CENTER",
+      "count": "6"
+    },
+    {
+      "inspectionId": "bY9j6iYprmEAkjnzB-Xbz",
+      "stationKey": "LOCATION-NULL",
+      "count": "14"
+    },
+    {
+      "inspectionId": "gwrmMr5ZO4I1JS4eG2PK2",
+      "stationKey": "LOCATION-EAST END",
+      "count": "10"
+    },
+    {
+      "inspectionId": "gwrmMr5ZO4I1JS4eG2PK2",
+      "stationKey": "LOCATION-N/A",
+      "count": "12"
+    }
+  ],
+  "messages": [],
+  "stdout": "inspectionId\tstationKey\tcount\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-N/A\t14\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-SHELL COURSE 1\t36\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-SHELL COURSE 2\t24\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-SHELL COURSE 3\t24\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-SHELL COURSE 4\t18\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-SHELL COURSE 5\t18\n6sgLpcDg-jRGoGq98JDSl\tLOCATION-TOP, SIDE, BTTM, SIDE (CLOCK WISE)\t16\n6sgLpcDg-jRGoGq98JDSl\tNORTH-HEAD-12-OCLOCK\t6\n6sgLpcDg-jRGoGq98JDSl\tNORTH-HEAD-3-OCLOCK\t6\n6sgLpcDg-jRGoGq98JDSl\tNORTH-HEAD-6-OCLOCK\t6\n6sgLpcDg-jRGoGq98JDSl\tNORTH-HEAD-9-OCLOCK\t6\n6sgLpcDg-jRGoGq98JDSl\tNORTH-HEAD-CENTER\t6\n6sgLpcDg-jRGoGq98JDSl\tSOUTH-HEAD-12-OCLOCK\t6\n6sgLpcDg-jRGoGq98JDSl\tSOUTH-HEAD-3-OCLOCK\t6\n6sgLpcDg-jRGoGq98JDSl\tSOUTH-HEAD-6-OCLOCK\t6\n6sgLpcDg-jRGoGq98JDSl\tSOUTH-HEAD-9-OCLOCK\t6\n6sgLpcDg-jRGoGq98JDSl\tSOUTH-HEAD-CENTER\t6\nbY9j6iYprmEAkjnzB-Xbz\tLOCATION-NULL\t14\ngwrmMr5ZO4I1JS4eG2PK2\tLOCATION-EAST END\t10\ngwrmMr5ZO4I1JS4eG2PK2\tLOCATION-N/A\t12\n",
+  "stderr": "",
+  "execution_time_ms": 78
+}
