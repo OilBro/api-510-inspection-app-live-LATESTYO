@@ -3082,3 +3082,9 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Fix vision parser data mapping to handle clientInfo field names
 - [x] All 946 tests passing, no regressions
 - [x] TypeScript compiles clean
+
+## BUG: Import Data Still Not Working (Feb 2026)
+- [ ] Check server logs for errors during import attempt
+- [ ] Reproduce the import failure
+- [ ] Identify and fix the root cause
+- [ ] Test end-to-end import flow
