@@ -2,7 +2,14 @@
  * Component Group Normalizer
  * 
  * Normalizes component names into canonical groups for stationKey system.
- * Based on vessel 54-11-001 analysis and user requirements.
+ * 
+ * CRITICAL: Head names are PRESERVED as-is from the source data.
+ * South Head stays SOUTHHEAD, North Head stays NORTHHEAD.
+ * We do NOT remap South→West or North→East — that destroys traceability.
+ * 
+ * The vessel orientation (horizontal vs vertical) determines which heads
+ * are "top/bottom" vs "north/south" vs "east/west", but the NAMES in the
+ * inspection report are the canonical reference per API 510 §7.1.1.
  */
 
 /**
@@ -10,8 +17,10 @@
  * 
  * Groups:
  * - SHELL: Vessel shell/body
- * - EASTHEAD: East/top/north head
- * - WESTHEAD: West/bottom/south head
+ * - SOUTHHEAD: South head (preserves source identity)
+ * - NORTHHEAD: North head (preserves source identity)
+ * - EASTHEAD: East head (preserves source identity)
+ * - WESTHEAD: West head (preserves source identity)
  * - NOZZLE: All nozzles
  * - OTHER: Unknown or unclassified
  */
@@ -20,8 +29,8 @@ export function normalizeComponentGroup(componentType: string | null | undefined
   
   const normalized = componentType.trim().toUpperCase();
   
-  // Nozzle patterns
-  if (normalized.includes('NOZZLE') || normalized.match(/^N\d+/)) {
+  // Nozzle patterns - check first (nozzle types like "2\" Nozzle", "18\" MW")
+  if (normalized.includes('NOZZLE') || normalized.match(/^N\d+/) || normalized.includes(' MW')) {
     return 'NOZZLE';
   }
   
@@ -30,28 +39,40 @@ export function normalizeComponentGroup(componentType: string | null | undefined
     return 'SHELL';
   }
   
-  // East Head patterns (includes "top", "north")
-  if (
-    normalized.includes('EAST HEAD') ||
-    normalized.includes('TOP HEAD') ||
-    normalized.includes('NORTH HEAD')
-  ) {
+  // PRESERVE head names exactly as they appear in the source data
+  // South Head stays SOUTHHEAD (never mapped to West)
+  if (normalized.includes('SOUTH HEAD') || normalized.includes('SOUTH')) {
+    return 'SOUTHHEAD';
+  }
+  
+  // North Head stays NORTHHEAD (never mapped to East)
+  if (normalized.includes('NORTH HEAD') || normalized.includes('NORTH')) {
+    return 'NORTHHEAD';
+  }
+  
+  // East Head stays EASTHEAD
+  if (normalized.includes('EAST HEAD') || normalized.includes('EAST')) {
     return 'EASTHEAD';
   }
   
-  // West Head patterns (includes "bottom", "south", "bttm")
-  if (
-    normalized.includes('WEST HEAD') ||
-    normalized.includes('BOTTOM HEAD') ||
-    normalized.includes('BTTM HEAD') ||
-    normalized.includes('SOUTH HEAD')
-  ) {
+  // West Head stays WESTHEAD
+  if (normalized.includes('WEST HEAD') || normalized.includes('WEST')) {
     return 'WESTHEAD';
   }
   
-  // Generic "Head" - default to EASTHEAD
-  if (normalized === 'HEAD') {
+  // Top/Bottom heads - map to directional names
+  // These are orientation-dependent and should be mapped based on vessel orientation
+  // Default: Top → EASTHEAD, Bottom → WESTHEAD (horizontal vessel convention)
+  if (normalized.includes('TOP HEAD')) {
     return 'EASTHEAD';
+  }
+  if (normalized.includes('BOTTOM HEAD') || normalized.includes('BTTM HEAD')) {
+    return 'WESTHEAD';
+  }
+  
+  // Generic "Head" - default to OTHER (don't assume direction)
+  if (normalized === 'HEAD') {
+    return 'OTHER';
   }
   
   return 'OTHER';

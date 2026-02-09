@@ -283,41 +283,48 @@ export const pdfImportRouter = router({
       }
 
       // 3. Extract new readings from PDF using LLM
-      // FIXED: 225° (not 224°), correct angle counts (8 for shell, 4 for nozzles)
-      const extractionPrompt = `You are extracting ultrasonic thickness (UT) measurement data from a PDF.
+      // The prompt is designed to handle the STANDARD API 510 thickness record format:
+      // CML | Comp ID | Location | Service | tml-1 | tml-2 | tml-3 | tml-4 | t act
+      const extractionPrompt = `You are extracting ultrasonic thickness (UT) measurement data from an API 510 Pressure Vessel Component Thickness Record PDF.
 
-EXTRACT ALL THICKNESS READINGS in this exact JSON format:
+The PDF contains a table with these columns:
+- CML: Sequential CML number (e.g., 001, 002, ... 177)
+- Comp ID: Component identifier. For SHELL readings this is the ANGLE IN DEGREES (0, 45, 90, 135, 180, 225, 270, 315). For HEAD readings this is "South Head" or "North Head". For NOZZLE readings this is the nozzle size/type (e.g., "18\" MW", "2\" Nozzle", "1\" Nozzle", "3\" Nozzle").
+- Location: Physical position number. For heads: 1-5 (or similar sequential). For shell: a number representing the axial station along the vessel (e.g., 7, 8, 9, ..., 26). For nozzles: N1, N2, N3, etc.
+- Service: Service description (for nozzles: Manway, Vent, Temp. Indicator, Site Glass, Inlet, Outlet, Pressure Gauge, etc.)
+- tml-1, tml-2, tml-3, tml-4: Individual thickness readings (some may be empty)
+- t act: Actual thickness (minimum of the tml readings)
+
+EXTRACT ALL ROWS into this JSON format:
 {
-  "inspectionDate": "YYYY-MM-DD - date of inspection if found",
-  "technician": "string - technician name if found",
+  "inspectionDate": "YYYY-MM-DD",
+  "technician": "string or null",
+  "vesselId": "string or null - vessel number if found",
+  "reportNo": "string or null - report number if found",
   "readings": [
     {
-      "legacyLocationId": "string - CML number from the report",
-      "location": "string - FULL location description (e.g., '2\"', '4\"', 'East Head 12 O\'Clock', '2\" East Head Seam - Head Side')",
-      "component": "string - component type (Shell, East Head, West Head, Nozzle, etc.)",
-      "angularReadings": {
-        "0": "number or null - reading at 0 degrees",
-        "45": "number or null - reading at 45 degrees",
-        "90": "number or null - reading at 90 degrees",
-        "135": "number or null - reading at 135 degrees",
-        "180": "number or null - reading at 180 degrees",
-        "225": "number or null - reading at 225 degrees",
-        "270": "number or null - reading at 270 degrees",
-        "315": "number or null - reading at 315 degrees"
-      },
-      "singleReading": "number or null - for head readings that have only one value",
-      "tmin": "number or null - minimum required thickness if shown"
+      "cml": "string - the CML number exactly as shown (e.g., '001', '002')",
+      "compId": "string - the Comp ID exactly as shown (e.g., 'South Head', '0', '45', '135', '18\" MW', '2\" Nozzle')",
+      "location": "string - the Location value exactly as shown (e.g., '1', '7', 'N1')",
+      "service": "string or null - the Service description if present",
+      "tml1": "number or null",
+      "tml2": "number or null",
+      "tml3": "number or null",
+      "tml4": "number or null",
+      "tAct": "number or null - actual thickness"
     }
   ]
 }
 
 CRITICAL RULES:
-1. The LOCATION field is the most important - it must match exactly what's in the 'Desc.' or 'Description' column
-2. For SHELL readings: extract ALL 8 angular positions (0, 45, 90, 135, 180, 225, 270, 315)
-3. For NOZZLE readings: extract 4 angular positions (0, 90, 180, 270) - set 45, 135, 225, 315 to null
-4. For HEAD readings (East Head 12 O'Clock, etc.): use singleReading
-5. Extract EVERY row from the table - do not skip any
-6. Location examples: "2'", "4'", "6'", "East Head 12 O'Clock", "2\" East Head Seam - Shell Side"`;
+1. Extract EVERY row from the thickness table - do not skip any, even if all tml values are empty
+2. For shell CMLs: the Comp ID column contains the ANGLE (0, 45, 90, 135, 180, 225, 270, 315) - NOT a component name
+3. For shell CMLs: the Location column contains the AXIAL STATION number along the vessel
+4. Preserve the exact CML number with leading zeros (e.g., "001" not "1")
+5. If a tml column is empty/blank, set it to null
+6. The t act column is the minimum thickness - extract it if present
+7. Look for the inspection date, inspector name, vessel number, and report number in the header section
+8. There may be notes about axis orientation (e.g., "tml-1 N., tml-2 E., tml-3 S., tml-4 W.") - ignore these for extraction but they define the measurement positions`;
 
       const response = await invokeLLM({
         messages: [
@@ -340,32 +347,24 @@ CRITICAL RULES:
               properties: {
                 inspectionDate: { type: ["string", "null"] },
                 technician: { type: ["string", "null"] },
+                vesselId: { type: ["string", "null"] },
+                reportNo: { type: ["string", "null"] },
                 readings: {
                   type: "array",
                   items: {
                     type: "object",
                     properties: {
-                      legacyLocationId: { type: "string" },
+                      cml: { type: "string" },
+                      compId: { type: "string" },
                       location: { type: "string" },
-                      component: { type: "string" },
-                      angularReadings: {
-                        type: ["object", "null"],
-                        properties: {
-                          "0": { type: ["number", "null"] },
-                          "45": { type: ["number", "null"] },
-                          "90": { type: ["number", "null"] },
-                          "135": { type: ["number", "null"] },
-                          "180": { type: ["number", "null"] },
-                          "225": { type: ["number", "null"] },
-                          "270": { type: ["number", "null"] },
-                          "315": { type: ["number", "null"] }
-                        },
-                        additionalProperties: false
-                      },
-                      singleReading: { type: ["number", "null"] },
-                      tmin: { type: ["number", "null"] }
+                      service: { type: ["string", "null"] },
+                      tml1: { type: ["number", "null"] },
+                      tml2: { type: ["number", "null"] },
+                      tml3: { type: ["number", "null"] },
+                      tml4: { type: ["number", "null"] },
+                      tAct: { type: ["number", "null"] }
                     },
-                    required: ["legacyLocationId", "location", "component"],
+                    required: ["cml", "compId", "location"],
                     additionalProperties: false
                   }
                 }
@@ -378,7 +377,24 @@ CRITICAL RULES:
       });
 
       const messageContent = response.choices[0].message.content;
-      let extractedData: { inspectionDate?: string | null; technician?: string | null; readings: Array<{ legacyLocationId: string; location: string; component: string; angularReadings?: Record<string, number | null> | null; singleReading?: number | null; tmin?: number | null }> };
+      interface RawExtractedReading {
+        cml: string;
+        compId: string;
+        location: string;
+        service?: string | null;
+        tml1?: number | null;
+        tml2?: number | null;
+        tml3?: number | null;
+        tml4?: number | null;
+        tAct?: number | null;
+      }
+      let extractedData: {
+        inspectionDate?: string | null;
+        technician?: string | null;
+        vesselId?: string | null;
+        reportNo?: string | null;
+        readings: RawExtractedReading[];
+      };
       
       try {
         extractedData = JSON.parse(typeof messageContent === 'string' ? messageContent : "{}");
@@ -392,81 +408,168 @@ CRITICAL RULES:
         }
       }
 
-      const newReadings = extractedData.readings || [];
-      logger.info("[UT Upload] Extracted readings:", newReadings.length);
+      const rawReadings = extractedData.readings || [];
+      logger.info("[UT Upload] Raw extracted rows from PDF:", rawReadings.length);
 
       // 4. Import stationKey generator
       const { generateStationKey } = await import("../lib/stationKeyNormalization");
       const { normalizeComponentGroup } = await import("../lib/componentGroupNormalizer");
 
-      // 5. Expand angular readings into individual angle-per-row TMLs with stationKeys
+      // 5. Classify each row and generate proper stationKeys
+      // The PDF table format is: CML | Comp ID | Location | Service | tml-1..4 | t act
+      // For SHELL: CompID = angle (0,45,90,...315), Location = axial station (7,8,...26)
+      // For HEAD: CompID = "South Head" or "North Head", Location = position (1-5)
+      // For NOZZLE: CompID = nozzle type ("18\" MW", etc.), Location = N1, N2, etc.
       interface ExpandedReading {
-        legacyLocationId: string;
-        location: string;
-        component: string;
-        componentGroup: string;
-        angleDeg: number | null;
-        thickness: number;
-        tmin?: number;
-        stationKey: string;
+        legacyLocationId: string; // CML number from PDF
+        location: string;        // Full location description
+        component: string;       // Component type (Shell, South Head, North Head, Nozzle)
+        componentGroup: string;  // Normalized group
+        angleDeg: number | null; // Angle for shell/nozzle readings
+        thickness: number;       // t_act or individual tml reading
+        service?: string;        // Service description for nozzles
+        stationKey: string;      // Canonical location key
+        tmlReadings?: { tml1?: number | null; tml2?: number | null; tml3?: number | null; tml4?: number | null };
       }
       const expandedNewReadings: ExpandedReading[] = [];
 
-      for (const reading of newReadings) {
-        const componentGroup = normalizeComponentGroup(reading.component);
+      for (const row of rawReadings) {
+        const compIdUpper = (row.compId || '').trim().toUpperCase();
+        const locationStr = (row.location || '').trim();
+        const cml = (row.cml || '').trim();
         
-        // Handle single readings (head spot readings)
-        if (reading.singleReading !== null && reading.singleReading !== undefined) {
-          const skResult = generateStationKey({
-            component: reading.component,
-            location: reading.location,
-            legacyLocationId: reading.legacyLocationId,
-          });
-          expandedNewReadings.push({
-            legacyLocationId: reading.legacyLocationId || '',
-            location: reading.location || '',
-            component: reading.component || '',
-            componentGroup,
-            angleDeg: null,
-            thickness: reading.singleReading,
-            tmin: reading.tmin || undefined,
-            stationKey: skResult.stationKey,
-          });
+        // Determine the actual thickness: prefer tAct, fallback to min of tml readings
+        const tmlValues = [row.tml1, row.tml2, row.tml3, row.tml4].filter(
+          (v): v is number => v !== null && v !== undefined && v > 0
+        );
+        const thickness = row.tAct ?? (tmlValues.length > 0 ? Math.min(...tmlValues) : null);
+        
+        // Skip rows with no thickness data at all
+        if (thickness === null || thickness === undefined) {
+          logger.info(`[UT Upload] Skipping CML ${cml} - no thickness data`);
+          continue;
         }
 
-        // Handle angular readings - expand to angle-per-row
-        if (reading.angularReadings) {
-          // Determine correct angles based on component type
-          // SHELL: 8 angles (0, 45, 90, 135, 180, 225, 270, 315)
-          // NOZZLE: 4 angles (0, 90, 180, 270)
-          const isNozzle = componentGroup === 'NOZZLE';
-          const validAngles = isNozzle
-            ? ['0', '90', '180', '270']
-            : ['0', '45', '90', '135', '180', '225', '270', '315'];
+        // CLASSIFY the row based on Comp ID content
+        const isAngle = /^\d+$/.test(compIdUpper) && [0, 45, 90, 135, 180, 225, 270, 315].includes(parseInt(compIdUpper, 10));
+        const isHead = compIdUpper.includes('HEAD');
+        const isNozzle = locationStr.toUpperCase().startsWith('N') && /^N\d+$/i.test(locationStr);
+
+        if (isAngle) {
+          // SHELL reading: CompID is the angle, Location is the axial station
+          const angleDeg = parseInt(compIdUpper, 10);
+          const axialStation = locationStr;
+          const component = 'Shell';
+          const componentGroup = 'SHELL';
           
-          for (const angle of validAngles) {
-            const value = reading.angularReadings[angle];
-            if (value !== null && value !== undefined) {
-              const angleDeg = parseInt(angle, 10);
-              const skResult = generateStationKey({
-                component: reading.component,
-                location: reading.location,
-                legacyLocationId: reading.legacyLocationId,
-                angleDeg,
-                service: isNozzle ? reading.component : undefined,
-              });
+          // stationKey: SHELL-SLICE-{station}-A{angle}
+          const skResult = generateStationKey({
+            component: 'Shell',
+            sliceNumber: parseInt(axialStation, 10) || null,
+            angleDeg,
+          });
+          
+          expandedNewReadings.push({
+            legacyLocationId: cml,
+            location: `Station ${axialStation}, ${angleDeg}°`,
+            component,
+            componentGroup,
+            angleDeg,
+            thickness,
+            stationKey: skResult.stationKey,
+            tmlReadings: { tml1: row.tml1, tml2: row.tml2, tml3: row.tml3, tml4: row.tml4 },
+          });
+          
+        } else if (isHead) {
+          // HEAD reading: CompID is "South Head" or "North Head", Location is position number
+          const headName = compIdUpper.includes('SOUTH') ? 'South Head' : 
+                          compIdUpper.includes('NORTH') ? 'North Head' :
+                          compIdUpper.includes('EAST') ? 'East Head' :
+                          compIdUpper.includes('WEST') ? 'West Head' : row.compId;
+          const componentGroup = normalizeComponentGroup(headName);
+          const position = locationStr;
+          
+          // stationKey: {HEADGROUP}-POS-{position}
+          const headPrefix = componentGroup || 'HEAD';
+          const stationKey = `${headPrefix}-POS-${position}`;
+          
+          expandedNewReadings.push({
+            legacyLocationId: cml,
+            location: `${headName} Position ${position}`,
+            component: headName,
+            componentGroup,
+            angleDeg: null,
+            thickness,
+            stationKey,
+            tmlReadings: { tml1: row.tml1, tml2: row.tml2, tml3: row.tml3, tml4: row.tml4 },
+          });
+          
+        } else if (isNozzle) {
+          // NOZZLE reading: CompID is nozzle type, Location is N1/N2/etc.
+          // Nozzles have 4 tml readings (tml-1 through tml-4) representing 4 angular positions
+          const nozzleId = locationStr.toUpperCase(); // N1, N2, etc.
+          const nozzleType = row.compId; // "18\" MW", "2\" Nozzle", etc.
+          const service = row.service || '';
+          const componentGroup = 'NOZZLE';
+          
+          // For nozzles, each tml column represents a different angular position
+          // tml-1 = 0° (or Top/N), tml-2 = 90° (or E), tml-3 = 180° (or S/Bottom), tml-4 = 270° (or W)
+          const nozzleAngles: Array<{ angle: number; value: number | null | undefined }> = [
+            { angle: 0, value: row.tml1 },
+            { angle: 90, value: row.tml2 },
+            { angle: 180, value: row.tml3 },
+            { angle: 270, value: row.tml4 },
+          ];
+          
+          for (const na of nozzleAngles) {
+            if (na.value !== null && na.value !== undefined && na.value > 0) {
+              const stationKey = `NOZZLE-${nozzleId}-A${na.angle}`;
               expandedNewReadings.push({
-                legacyLocationId: reading.legacyLocationId || '',
-                location: reading.location || '',
-                component: reading.component || '',
+                legacyLocationId: cml,
+                location: `${nozzleType} (${nozzleId}) ${service}`.trim(),
+                component: nozzleType,
                 componentGroup,
-                angleDeg,
-                thickness: value,
-                tmin: reading.tmin || undefined,
-                stationKey: skResult.stationKey,
+                angleDeg: na.angle,
+                thickness: na.value,
+                service: service || undefined,
+                stationKey,
               });
             }
           }
+          
+          // Also create a t_act summary record for the nozzle (minimum reading)
+          const stationKey = `NOZZLE-${nozzleId}-TACT`;
+          expandedNewReadings.push({
+            legacyLocationId: cml,
+            location: `${nozzleType} (${nozzleId}) ${service}`.trim(),
+            component: nozzleType,
+            componentGroup,
+            angleDeg: null,
+            thickness,
+            service: service || undefined,
+            stationKey,
+            tmlReadings: { tml1: row.tml1, tml2: row.tml2, tml3: row.tml3, tml4: row.tml4 },
+          });
+          
+        } else {
+          // UNKNOWN/OTHER: Use fallback stationKey generation
+          const componentGroup = normalizeComponentGroup(row.compId);
+          const skResult = generateStationKey({
+            component: row.compId,
+            location: locationStr,
+            legacyLocationId: cml,
+          });
+          
+          expandedNewReadings.push({
+            legacyLocationId: cml,
+            location: `${row.compId} ${locationStr}`.trim(),
+            component: row.compId || 'Unknown',
+            componentGroup,
+            angleDeg: null,
+            thickness,
+            stationKey: skResult.stationKey,
+            tmlReadings: { tml1: row.tml1, tml2: row.tml2, tml3: row.tml3, tml4: row.tml4 },
+          });
         }
       }
 
@@ -596,7 +699,7 @@ CRITICAL RULES:
         input.targetInspectionId,
         input.fileName,
         {
-          extractedReadings: newReadings.length,
+          extractedReadings: rawReadings.length,
           expandedReadings: expandedNewReadings.length,
           updatedCMLs: updatedCount,
           createdCMLs: createdCount,
@@ -616,7 +719,7 @@ CRITICAL RULES:
         success: true,
         message: `Updated ${updatedCount} existing readings and created ${createdCount} new readings (stationKey: ${matchStats.stationKey}, correlation: ${matchStats.correlation}, legacy: ${matchStats.legacyLocationId}, new: ${matchStats.newRecord})`,
         summary: {
-          extractedReadings: newReadings.length,
+          extractedReadings: rawReadings.length,
           expandedReadings: expandedNewReadings.length,
           updatedCMLs: updatedCount,
           createdCMLs: createdCount,

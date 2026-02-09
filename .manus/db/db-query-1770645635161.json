@@ -1,0 +1,18 @@
+{
+  "query": "SHOW COLUMNS FROM tmlReadings LIKE 'componentGroup';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SHOW COLUMNS FROM tmlReadings LIKE 'componentGroup';",
+  "rows": [
+    {
+      "Field": "componentGroup",
+      "Type": "varchar(32)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "OTHER",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\ncomponentGroup\tvarchar(32)\tNO\t\tOTHER\t\n",
+  "stderr": "",
+  "execution_time_ms": 366
+}

@@ -4985,13 +4985,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "cmlNumber": {
-          "name": "cmlNumber",
-          "type": "varchar(10)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "componentType": {
           "name": "componentType",
           "type": "varchar(255)",
@@ -5008,7 +5001,7 @@
         },
         "stationKey": {
           "name": "stationKey",
-          "type": "varchar(100)",
+          "type": "varchar(128)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -5368,6 +5361,29 @@
           "autoincrement": false,
           "onUpdate": true,
           "default": "(now())"
+        },
+        "legacyLocationId": {
+          "name": "legacyLocationId",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "componentGroup": {
+          "name": "componentGroup",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'OTHER'"
+        },
+        "schemaVersion": {
+          "name": "schemaVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
         }
       },
       "indexes": {},

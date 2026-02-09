@@ -1,0 +1,8 @@
+{
+  "query": "SELECT Field, Type FROM information_schema.COLUMNS WHERE TABLE_NAME = 'tmlReadings' AND COLUMN_NAME IN ('legacyLocationId', 'componentGroup', 'schemaVersion', 'cmlNumber', 'stationKey');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT Field, Type FROM information_schema.COLUMNS WHERE TABLE_NAME = 'tmlReadings' AND COLUMN_NAME IN ('legacyLocationId', 'componentGroup', 'schemaVersion', 'cmlNumber', 'stationKey');",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'field' in 'field list'"
+  ]
+}

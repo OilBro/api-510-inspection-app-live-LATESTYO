@@ -235,7 +235,7 @@ export const tmlReadings = mysqlTable("tmlReadings", {
   // Canonical identifier for physical measurement location across inspections
   // Format: "SHELL-SLICE-{slice}-A{angle}" or "{HEAD}-{position}" or "NOZZLE-{id}"
   // Example: "SHELL-SLICE-27-A0", "SOUTH-HEAD-12-OCLOCK", "NOZZLE-N1"
-  componentGroup: varchar("componentGroup", { length: 32 }).notNull().default("OTHER"), // SHELL, EASTHEAD, WESTHEAD, NOZZLE, OTHER
+  componentGroup: varchar("componentGroup", { length: 32 }).notNull().default("OTHER"), // SHELL, SOUTHHEAD, NORTHHEAD, EASTHEAD, WESTHEAD, NOZZLE, OTHER
   schemaVersion: int("schemaVersion").notNull().default(1), // Schema version for migration tracking
   stationKey: varchar("stationKey", { length: 128 }), // Canonical location identifier
   sliceNumber: int("sliceNumber"), // Axial station/slice (7-27 for vessel 54-11-001)

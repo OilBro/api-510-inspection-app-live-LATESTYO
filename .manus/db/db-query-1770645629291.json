@@ -1,0 +1,18 @@
+{
+  "query": "SHOW COLUMNS FROM tmlReadings LIKE 'legacyLocationId';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SHOW COLUMNS FROM tmlReadings LIKE 'legacyLocationId';",
+  "rows": [
+    {
+      "Field": "legacyLocationId",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nlegacyLocationId\tvarchar(10)\tNO\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 492
+}

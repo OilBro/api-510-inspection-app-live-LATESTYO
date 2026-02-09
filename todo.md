@@ -2979,3 +2979,12 @@ Test PDF: 54-11-067 2017.pdf
 - [x] recomputeInspection logs stationKey for each TML in audit trail
 - [x] All 17 new tests passing (utImportAndCalcEngine.test.ts)
 - [x] All 874 existing tests still passing (0 regressions)
+
+## Fix UT Import - Incorrect Parsing (Feb 2026)
+- [x] Fix component mapping: South Head → South Head (not West Head), North Head → North Head (not East Head)
+- [x] Fix duplicate TML records - each CML should create ONE record, not two
+- [x] Fix shell CML parsing: Comp ID = angle (0,45,90,135,180,225,270,315), Location = foot position
+- [x] Fix stationKey generation: SHELL-SLICE-{station}-A{angle}, {HEADGROUP}-POS-{position}, NOZZLE-{N#}-A{angle}
+- [x] Fix nozzle import: t_act is the current thickness (minimum of tml-1 through tml-4)
+- [x] Rewrite LLM extraction prompt to correctly interpret CML/CompID/Location/tml-1..4/t_act table structure
+- [x] All 898 tests passing (24 new UT import parsing tests, 0 regressions)
