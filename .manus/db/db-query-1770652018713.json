@@ -1,0 +1,190 @@
+{
+  "query": "SELECT id, vesselName, headType, insideDiameter, designPressure, allowableStress, jointEfficiency FROM inspections LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, vesselName, headType, insideDiameter, designPressure, allowableStress, jointEfficiency FROM inspections LIMIT 20;",
+  "rows": [
+    {
+      "id": "_5tcNtfjKHF6aM5p298l8",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "NULL",
+      "designPressure": "NULL",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    },
+    {
+      "id": "_7bQebj02tAxVq5nQd_JN",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "NULL",
+      "designPressure": "250.00",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    },
+    {
+      "id": "_7rBZ5ugT57kehn5vMr6d",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "NULL",
+      "designPressure": "NULL",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    },
+    {
+      "id": "_hTZjAUwEx4VSK0y7MTT1",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "NULL",
+      "designPressure": "NULL",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    },
+    {
+      "id": "_lyoRElbS_YHR0KPrjqk1",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "70.75",
+      "designPressure": "250.00",
+      "allowableStress": "18800.00",
+      "jointEfficiency": "1.00"
+    },
+    {
+      "id": "_oAAJLE_BHFzkVKOp6TtC",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "headType": "NULL",
+      "insideDiameter": "48.00",
+      "designPressure": "150.00",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    },
+    {
+      "id": "_R_K0OVohUjZ2UG34Em9f",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "70.75",
+      "designPressure": "250.00",
+      "allowableStress": "20000.00",
+      "jointEfficiency": "0.85"
+    },
+    {
+      "id": "_SBoRK7Wgzf-YL1VB7ntv",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "70.75",
+      "designPressure": "250.00",
+      "allowableStress": "20000.00",
+      "jointEfficiency": "0.85"
+    },
+    {
+      "id": "_U7ZmGwrZAWWRrMKqcwYI",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "headType": "NULL",
+      "insideDiameter": "48.00",
+      "designPressure": "150.00",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    },
+    {
+      "id": "_UDLIeelPKC2SD4TworvR",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "headType": "NULL",
+      "insideDiameter": "48.00",
+      "designPressure": "150.00",
+      "allowableStress": "20000.00",
+      "jointEfficiency": "0.85"
+    },
+    {
+      "id": "_VsYGFo2hXRx4-e3jkljR",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "NULL",
+      "designPressure": "250.00",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    },
+    {
+      "id": "_yeei4-RU19ba6e0GrjNf",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "NULL",
+      "designPressure": "NULL",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    },
+    {
+      "id": "-dCYjk1YFQGQoz3Fm3BWN",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "NULL",
+      "designPressure": "NULL",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    },
+    {
+      "id": "-SCsSFAVKrArj37bFrzwS",
+      "vesselName": "NULL",
+      "headType": "Torispherical",
+      "insideDiameter": "70.75",
+      "designPressure": "150.00",
+      "allowableStress": "18800.00",
+      "jointEfficiency": "1.00"
+    },
+    {
+      "id": "-ugS7ASOs8_eAZHCwxI3P",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "NULL",
+      "designPressure": "250.00",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    },
+    {
+      "id": "0BH7O677oWuGJ6PKr2B1d",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "NULL",
+      "designPressure": "250.00",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    },
+    {
+      "id": "0dKKx1LhXL4KsV0n57OUl",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "NULL",
+      "designPressure": "NULL",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    },
+    {
+      "id": "0l6xdwOCgmzEvy7KX34gg",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "NULL",
+      "designPressure": "NULL",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    },
+    {
+      "id": "0lyAk9ur-Ka32JiU6W-M1",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "headType": "NULL",
+      "insideDiameter": "48.00",
+      "designPressure": "150.00",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    },
+    {
+      "id": "0qX0uxpJd7YxmmHQUmvHx",
+      "vesselName": "NULL",
+      "headType": "NULL",
+      "insideDiameter": "NULL",
+      "designPressure": "NULL",
+      "allowableStress": "NULL",
+      "jointEfficiency": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tvesselName\theadType\tinsideDiameter\tdesignPressure\tallowableStress\tjointEfficiency\n_5tcNtfjKHF6aM5p298l8\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n_7bQebj02tAxVq5nQd_JN\tNULL\tNULL\tNULL\t250.00\tNULL\tNULL\n_7rBZ5ugT57kehn5vMr6d\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n_hTZjAUwEx4VSK0y7MTT1\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n_lyoRElbS_YHR0KPrjqk1\tNULL\tNULL\t70.75\t250.00\t18800.00\t1.00\n_oAAJLE_BHFzkVKOp6TtC\tTest Vessel for Anomaly Detection\tNULL\t48.00\t150.00\tNULL\tNULL\n_R_K0OVohUjZ2UG34Em9f\tNULL\tNULL\t70.75\t250.00\t20000.00\t0.85\n_SBoRK7Wgzf-YL1VB7ntv\tNULL\tNULL\t70.75\t250.00\t20000.00\t0.85\n_U7ZmGwrZAWWRrMKqcwYI\tTest Vessel for Anomaly Detection\tNULL\t48.00\t150.00\tNULL\tNULL\n_UDLIeelPKC2SD4TworvR\tTest Vessel for Anomaly Detection\tNULL\t48.00\t150.00\t20000.00\t0.85\n_VsYGFo2hXRx4-e3jkljR\tNULL\tNULL\tNULL\t250.00\tNULL\tNULL\n_yeei4-RU19ba6e0GrjNf\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n-dCYjk1YFQGQoz3Fm3BWN\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n-SCsSFAVKrArj37bFrzwS\tNULL\tTorispherical\t70.75\t150.00\t18800.00\t1.00\n-ugS7ASOs8_eAZHCwxI3P\tNULL\tNULL\tNULL\t250.00\tNULL\tNULL\n0BH7O677oWuGJ6PKr2B1d\tNULL\tNULL\tNULL\t250.00\tNULL\tNULL\n0dKKx1LhXL4KsV0n57OUl\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n0l6xdwOCgmzEvy7KX34gg\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n0lyAk9ur-Ka32JiU6W-M1\tTest Vessel for Anomaly Detection\tNULL\t48.00\t150.00\tNULL\tNULL\n0qX0uxpJd7YxmmHQUmvHx\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 344
+}

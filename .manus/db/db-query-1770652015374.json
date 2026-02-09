@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, vesselName, headType, insideDiameter, designPressure, allowableStress, jointEfficiency FROM inspections WHERE vesselName LIKE '%54-11%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, vesselName, headType, insideDiameter, designPressure, allowableStress, jointEfficiency FROM inspections WHERE vesselName LIKE '%54-11%' LIMIT 10;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 388
+}

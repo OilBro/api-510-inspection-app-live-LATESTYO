@@ -3026,7 +3026,12 @@ Test PDF: 54-11-067 2017.pdf
 - [x] BUG: recalculate function hardcoded hemispherical formula (PL/(2SE-0.2P) with L=R) for ALL head types
 - [x] FIX: Now discriminates by head type — Ellipsoidal uses PD/(2SE-0.2P), Hemispherical uses PR/(2SE-0.2P), Torispherical uses PLM/(2SE-0.2P)
 - [x] ANALYSIS: Old report 0.421 does NOT match any standard ASME formula with S=20700 — likely used wrong S value or formula
-- [x] CORRECT VALUE: 2:1 Ellipsoidal with P=225, D=130.25, S=20700, E=1.0 → t_min = 0.7087"
-- [x] IMPLICATION: With t_actual=0.497 and t_min=0.7087, heads are BELOW minimum required thickness (negative CA)
-- [x] Head MAWP = 157.9 psi (below design pressure of 225 psi) — vessel may need re-rating per API 510 Section 7
+- [x] CORRECT VALUE: Hemispherical with P=225, R=65.125, S=20700, E=1.0 → t_min = 0.3543" (user confirmed head type)
+- [x] IMPLICATION: With t_actual=0.497 and t_min=0.3543, heads have positive CA = 0.143" — vessel is fit for service
+- [x] Head MAWP = 323.9 psi (above design pressure of 225 psi) — vessel passes
 - [x] 16 new formula verification tests, 946 total tests passing, 0 regressions
+
+## Head Type Correction - 54-11-001
+- [x] Update head type from Ellipsoidal to Hemispherical in the database for vessel 54-11-001 (already set correctly in DB)
+- [x] Verify recalculation produces t_min = 0.3543" (correct per UG-32(f) for hemispherical) — CONFIRMED via Python calc
+- [x] Confirm old report's 0.421" is incorrect (used S=17,425 psi instead of correct S=20,700 psi for SA-612)

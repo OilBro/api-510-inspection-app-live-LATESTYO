@@ -1,0 +1,110 @@
+{
+  "query": "SELECT id, vesselName, headType FROM inspections ORDER BY id DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, vesselName, headType FROM inspections ORDER BY id DESC LIMIT 20;",
+  "rows": [
+    {
+      "id": "Zyn8majZVlkDOLjS-rNzr",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "headType": "NULL"
+    },
+    {
+      "id": "ZsqL4pHEhIjJ6OQch1AX0",
+      "vesselName": "NULL",
+      "headType": "NULL"
+    },
+    {
+      "id": "ZOdJHMI1sqV29HxLdtW7R",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "headType": "NULL"
+    },
+    {
+      "id": "Zo4sZi7GezC8C97btrbZh",
+      "vesselName": "NULL",
+      "headType": "Hemispherical"
+    },
+    {
+      "id": "znJU_A7F_F41o81cmcsbT",
+      "vesselName": "NULL",
+      "headType": "NULL"
+    },
+    {
+      "id": "ZDCvhAFMBxgPRCdqNe5xy",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "headType": "NULL"
+    },
+    {
+      "id": "zcvD4LQuNofBfX28cJSlI",
+      "vesselName": "NULL",
+      "headType": "NULL"
+    },
+    {
+      "id": "zbDID4QVj1JuTKsoqA3K0",
+      "vesselName": "NULL",
+      "headType": "NULL"
+    },
+    {
+      "id": "Zamz4md2TKQTbgBl_iYt7",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "headType": "NULL"
+    },
+    {
+      "id": "z9wI4OcZTZVGFuIs0vM9M",
+      "vesselName": "NULL",
+      "headType": "NULL"
+    },
+    {
+      "id": "Z_NBjX_kAOhno5Ub1GdpP",
+      "vesselName": "NULL",
+      "headType": "NULL"
+    },
+    {
+      "id": "yZ4tiFsQIrRXIYG8JWx_3",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "headType": "NULL"
+    },
+    {
+      "id": "yR-9aC_yxfGB8FyA9jIbF",
+      "vesselName": "NULL",
+      "headType": "NULL"
+    },
+    {
+      "id": "yqwgrgaavaO3nTGK4IA6d",
+      "vesselName": "NULL",
+      "headType": "NULL"
+    },
+    {
+      "id": "YobBNvVNaGFmQfCiqjCBo",
+      "vesselName": "NULL",
+      "headType": "NULL"
+    },
+    {
+      "id": "ynadqhBQD3vZAtlPGnX8E",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "headType": "NULL"
+    },
+    {
+      "id": "yDdRVAbYoHPbf9p-AQtyh",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "headType": "NULL"
+    },
+    {
+      "id": "y7o_1jDOlbvPrKx7TdrZ9",
+      "vesselName": "NULL",
+      "headType": "NULL"
+    },
+    {
+      "id": "Y7K1Q139yBmMSrQgxdHPJ",
+      "vesselName": "NULL",
+      "headType": "NULL"
+    },
+    {
+      "id": "y5aPks56LaoFaMhsYqN0q",
+      "vesselName": "Test Vessel for Anomaly Detection",
+      "headType": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tvesselName\theadType\nZyn8majZVlkDOLjS-rNzr\tTest Vessel for Anomaly Detection\tNULL\nZsqL4pHEhIjJ6OQch1AX0\tNULL\tNULL\nZOdJHMI1sqV29HxLdtW7R\tTest Vessel for Anomaly Detection\tNULL\nZo4sZi7GezC8C97btrbZh\tNULL\tHemispherical\nznJU_A7F_F41o81cmcsbT\tNULL\tNULL\nZDCvhAFMBxgPRCdqNe5xy\tTest Vessel for Anomaly Detection\tNULL\nzcvD4LQuNofBfX28cJSlI\tNULL\tNULL\nzbDID4QVj1JuTKsoqA3K0\tNULL\tNULL\nZamz4md2TKQTbgBl_iYt7\tTest Vessel for Anomaly Detection\tNULL\nz9wI4OcZTZVGFuIs0vM9M\tNULL\tNULL\nZ_NBjX_kAOhno5Ub1GdpP\tNULL\tNULL\nyZ4tiFsQIrRXIYG8JWx_3\tTest Vessel for Anomaly Detection\tNULL\nyR-9aC_yxfGB8FyA9jIbF\tNULL\tNULL\nyqwgrgaavaO3nTGK4IA6d\tNULL\tNULL\nYobBNvVNaGFmQfCiqjCBo\tNULL\tNULL\nynadqhBQD3vZAtlPGnX8E\tTest Vessel for Anomaly Detection\tNULL\nyDdRVAbYoHPbf9p-AQtyh\tTest Vessel for Anomaly Detection\tNULL\ny7o_1jDOlbvPrKx7TdrZ9\tNULL\tNULL\nY7K1Q139yBmMSrQgxdHPJ\tNULL\tNULL\ny5aPks56LaoFaMhsYqN0q\tTest Vessel for Anomaly Detection\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 480
+}
