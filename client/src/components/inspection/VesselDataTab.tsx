@@ -31,6 +31,8 @@ export default function VesselDataTab({ inspection }: VesselDataTabProps) {
     radiographyType: inspection.radiographyType || "",
     specificGravity: inspection.specificGravity || "",
     vesselType: inspection.vesselType || "",
+    shellNominalThickness: inspection.shellNominalThickness || "",
+    headNominalThickness: inspection.headNominalThickness || "",
     insideDiameter: inspection.insideDiameter || "",
     overallLength: inspection.overallLength || "",
     headType: inspection.headType || "",
@@ -84,6 +86,8 @@ export default function VesselDataTab({ inspection }: VesselDataTabProps) {
         radiographyType: formData.radiographyType || undefined,
         specificGravity: formData.specificGravity || undefined,
         vesselType: formData.vesselType || undefined,
+        shellNominalThickness: formData.shellNominalThickness || undefined,
+        headNominalThickness: formData.headNominalThickness || undefined,
         insideDiameter: formData.insideDiameter || undefined,
         overallLength: formData.overallLength || undefined,
         headType: formData.headType || undefined,
@@ -313,6 +317,42 @@ export default function VesselDataTab({ inspection }: VesselDataTabProps) {
                   <SelectItem value="Separator">Separator</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t pt-6">
+          <h3 className="text-lg font-semibold mb-4">Nominal Design Thicknesses</h3>
+          <p className="text-sm text-muted-foreground mb-4">From vessel data sheet or nameplate. Required for corrosion rate and remaining life calculations.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="shellNominalThickness">
+                Shell Nominal Thickness (inches) <span className="text-amber-500">*</span>
+              </Label>
+              <Input
+                id="shellNominalThickness"
+                type="number"
+                step="0.0001"
+                placeholder="e.g., 0.8125"
+                value={formData.shellNominalThickness}
+                onChange={(e) => handleChange("shellNominalThickness", e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Original design thickness from nameplate or data sheet (e.g., 0.8125", 0.500")</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="headNominalThickness">
+                Head Nominal Thickness (inches) <span className="text-amber-500">*</span>
+              </Label>
+              <Input
+                id="headNominalThickness"
+                type="number"
+                step="0.0001"
+                placeholder="e.g., 0.5300"
+                value={formData.headNominalThickness}
+                onChange={(e) => handleChange("headNominalThickness", e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Original design thickness for both heads (e.g., 0.5300", 0.375")</p>
             </div>
           </div>
         </div>

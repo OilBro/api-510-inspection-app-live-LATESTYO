@@ -3154,6 +3154,20 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "shellNominalThickness": {
+          "name": "shellNominalThickness",
+          "type": "decimal(10,4)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "headNominalThickness": {
+          "name": "headNominalThickness",
+          "type": "decimal(10,4)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {},

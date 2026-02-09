@@ -776,8 +776,17 @@ export const professionalReportRouter = router({
           Math.min(...currentThicknesses).toFixed(4) : undefined;
         const avgPrevious = previousThicknesses.length > 0 ? 
           Math.min(...previousThicknesses).toFixed(4) : undefined;
-        const avgNominal = nominalThicknesses.length > 0 ? 
+        let avgNominal = nominalThicknesses.length > 0 ? 
           Math.min(...nominalThicknesses).toFixed(4) : undefined;
+        
+        // FALLBACK: If TML readings don't have nominalThickness, use inspection-level vessel data
+        if (!avgNominal && inspection) {
+          if (componentType === 'shell' && inspection.shellNominalThickness) {
+            avgNominal = parseFloat(String(inspection.shellNominalThickness)).toFixed(4);
+          } else if (componentType === 'head' && inspection.headNominalThickness) {
+            avgNominal = parseFloat(String(inspection.headNominalThickness)).toFixed(4);
+          }
+        }
         
         // Calculate minimum thickness
         const P = parseFloat(inspection.designPressure || '0');

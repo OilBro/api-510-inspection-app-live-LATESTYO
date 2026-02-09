@@ -54,6 +54,10 @@ export const inspections = mysqlTable("inspections", {
   insulationType: varchar("insulationType", { length: 255 }),
   nbNumber: varchar("nbNumber", { length: 255 }),
   
+  // Nominal design thicknesses (per-component, from vessel data sheet/nameplate)
+  shellNominalThickness: decimal("shellNominalThickness", { precision: 10, scale: 4 }), // Shell nominal thickness (inches)
+  headNominalThickness: decimal("headNominalThickness", { precision: 10, scale: 4 }), // Head nominal thickness (inches)
+  
   // Geometry
   insideDiameter: decimal("insideDiameter", { precision: 10, scale: 2 }),
   overallLength: decimal("overallLength", { precision: 10, scale: 2 }),

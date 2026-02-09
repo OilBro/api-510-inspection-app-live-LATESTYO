@@ -735,7 +735,7 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
   
   
   // Find the three main components with expanded pattern matching
-  // Handles legacy naming: Top/Bottom, North/South, as well as East/West
+  // Supports: South/North Head, East/West Head, Top/Bottom Head, Head 1/2
   const findComponent = (patterns: string[]) => {
     return componentCalcs.find(c => {
       const name = (c.componentName || '').toLowerCase();
@@ -745,10 +745,14 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
   };
   
   const shellCalc = findComponent(['shell', 'cylinder', 'body']);
-  // East Head patterns: east, top, north, head 1, left
-  const eastCalc = findComponent(['east', 'top head', 'north', 'head 1', 'head-1', 'left head']);
-  // West Head patterns: west, bottom, bttm, south, head 2, right
-  const westCalc = findComponent(['west', 'bottom', 'bttm', 'btm', 'south', 'head 2', 'head-2', 'right head']);
+  // Head 1 patterns: south, east, top, head 1, left (South Head is canonical)
+  const head1Calc = findComponent(['south', 'east', 'top head', 'head 1', 'head-1', 'left head']);
+  // Head 2 patterns: north, west, bottom, head 2, right (North Head is canonical)
+  const head2Calc = findComponent(['north', 'west', 'bottom', 'bttm', 'btm', 'head 2', 'head-2', 'right head']);
+  
+  // Derive display names from actual component data (not hardcoded)
+  const head1Name = head1Calc?.componentName || 'South Head';
+  const head2Name = head2Calc?.componentName || 'North Head';
   
   
   
@@ -762,21 +766,37 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
   };
   
   // Extract data from component calculations
-  const getComponentData = (calc: any) => {
-    if (!calc) return { tNom: '-', tActual: '-', tMin: '-', mawp: '-', rl: '>20' };
+  // Nominal thickness fallback: componentCalc → inspection-level vessel data
+  const getComponentData = (calc: any, componentType: 'shell' | 'head') => {
+    if (!calc) return { tNom: '-', tActual: '-', tMin: '-', mawp: '-', rl: '-' };
+    
+    // For nominalThickness: use the component calc value if available,
+    // otherwise try to derive from inspection-level vessel data
+    let tNom = formatValue(calc.nominalThickness);
+    if (tNom === '-' && inspection) {
+      // Fall back to inspection-level nominal thickness if available
+      // Shell and head may have different nominal thicknesses stored in vessel data
+      const inspNom = (inspection as any).shellNominalThickness || (inspection as any).nominalThickness;
+      const inspHeadNom = (inspection as any).headNominalThickness;
+      if (componentType === 'shell' && inspNom) {
+        tNom = formatValue(inspNom);
+      } else if (componentType === 'head' && (inspHeadNom || inspNom)) {
+        tNom = formatValue(inspHeadNom || inspNom);
+      }
+    }
     
     return {
-      tNom: formatValue(calc.nominalThickness),
+      tNom,
       tActual: formatValue(calc.actualThickness),
       tMin: formatValue(calc.minimumThickness),
       mawp: formatValue(calc.calculatedMAWP, 1),
-      rl: calc.remainingLife || '>20',
+      rl: calc.remainingLife != null && calc.remainingLife !== '' ? String(calc.remainingLife) : '-',
     };
   };
   
-  const shellData = getComponentData(shellCalc);
-  const eastData = getComponentData(eastCalc);
-  const westData = getComponentData(westCalc);
+  const shellData = getComponentData(shellCalc, 'shell');
+  const head1Data = getComponentData(head1Calc, 'head');
+  const head2Data = getComponentData(head2Calc, 'head');
   
   // Create table structure with aggregated data
   const tableHeaders = [
@@ -807,22 +827,22 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
       toStr(shellData.rl),
     ],
     [
-      'East Head',
-      toStr(eastData.tNom),
-      toStr(eastData.tActual),
-      toStr(eastData.tMin),
+      toStr(head1Name),
+      toStr(head1Data.tNom),
+      toStr(head1Data.tActual),
+      toStr(head1Data.tMin),
       toStr(inspection?.designPressure || '250'),
-      toStr(eastData.mawp),
-      toStr(eastData.rl),
+      toStr(head1Data.mawp),
+      toStr(head1Data.rl),
     ],
     [
-      'West Head',
-      toStr(westData.tNom),
-      toStr(westData.tActual),
-      toStr(westData.tMin),
+      toStr(head2Name),
+      toStr(head2Data.tNom),
+      toStr(head2Data.tActual),
+      toStr(head2Data.tMin),
       toStr(inspection?.designPressure || '250'),
-      toStr(westData.mawp),
-      toStr(westData.rl),
+      toStr(head2Data.mawp),
+      toStr(head2Data.rl),
     ],
   ];
   
@@ -851,9 +871,9 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
     // Fallback: Generate simple table with dashes
     const fallbackHeaders = ['Component', 'Nominal\nDesign\nThickness\n(in.)', 'Actual\nMeasured\nThickness\n(in.)', 'Minimum\nRequired\nThickness\n(in.)', 'Design\nMAWP\n(psi)\nInternal', 'Calculated\nMAWP\n(psi)\nInternal', 'Remaining\nLife\n(years)'];
     const fallbackRows = [
-      ['Vessel Shell', '-', '-', '-', inspection?.designPressure || '250', '-', '>20'],
-      ['East Head', '-', '-', '-', inspection?.designPressure || '250', '-', '>20'],
-      ['West Head', '-', '-', '-', inspection?.designPressure || '250', '-', '>20'],
+      ['Vessel Shell', '-', '-', '-', inspection?.designPressure || '250', '-', '-'],
+      ['South Head', '-', '-', '-', inspection?.designPressure || '250', '-', '-'],
+      ['North Head', '-', '-', '-', inspection?.designPressure || '250', '-', '-'],
     ];
     await addTable(doc, fallbackHeaders, fallbackRows, '', logoBuffer);
   }
@@ -1109,7 +1129,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       shellComp?.staticHead || '0',
       inspection?.specificGravity || '0.92',
       inspection?.insideDiameter || '70.750',
-      shellComp?.nominalThickness || inspection?.nominalThickness || '0.625'
+      shellComp?.nominalThickness || (inspection as any)?.shellNominalThickness || inspection?.nominalThickness || '0.625'
     ]
   ];
   
@@ -1145,7 +1165,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
     ['Vessel Shell', 't prev', 't act', 't min', 'y'],
     [
       'Values',
-      shellComp?.previousThickness || shellComp?.tPrevious || shellComp?.nominalThickness || '0.625',
+      shellComp?.previousThickness || shellComp?.tPrevious || shellComp?.nominalThickness || (inspection as any)?.shellNominalThickness || '0.625',
       shellComp?.actualThickness || shellComp?.tActual || '0.652',
       shellComp?.minimumThickness || shellComp?.minimumRequired || shellComp?.tMin || '0.530',
       shellComp?.timeSpan || '12.0'
@@ -1211,13 +1231,17 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
     });
   };
   
-  // East Head patterns: east, top, north, head 1, left
-  const eastHead = findHeadComponent(['east', 'top head', 'north', 'head 1', 'head-1', 'left head']);
-  // West Head patterns: west, bottom, bttm, south, head 2, right
-  const westHead = findHeadComponent(['west', 'bottom', 'bttm', 'btm', 'south', 'head 2', 'head-2', 'right head']);
+  // Head 1 patterns: south, east, top, head 1, left (South Head is canonical)
+  const eastHead = findHeadComponent(['south', 'east', 'top head', 'head 1', 'head-1', 'left head']);
+  // Head 2 patterns: north, west, bottom, head 2, right (North Head is canonical)
+  const westHead = findHeadComponent(['north', 'west', 'bottom', 'bttm', 'btm', 'head 2', 'head-2', 'right head']);
+  
+  // Derive display names from actual component data
+  const head1DisplayName = eastHead?.componentName || 'South Head';
+  const head2DisplayName = westHead?.componentName || 'North Head';
   
   const headInfoData = [
-    ['', 'East Head and West Head', '', '', '', ''],
+    ['', `${head1DisplayName} and ${head2DisplayName}`, '', '', '', ''],
     ['MAWP', 'D', 'T', 'E', 'SG1', 'SG2'],
     [
       inspection?.designPressure || '250',
@@ -1236,18 +1260,18 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   const headSpecData = [
     ['Head ID', 'Head Type', 't nom', 'Material', 'S', 'SH', 'P'],
     [
-      'East Head',
-      'Ellipsoidal',
-      eastHead?.nominalThickness || '0.500',
+      head1DisplayName,
+      eastHead?.headType || 'Ellipsoidal',
+      eastHead?.nominalThickness || (inspection as any)?.headNominalThickness || '-',
       inspection?.materialSpec || 'SA-516 Gr. 70',
       eastHead?.allowableStress || inspection?.allowableStress || '20000',
       eastHead?.staticHead || '0',
       eastHead?.designMAWP || inspection?.designPressure || '252.4'
     ],
     [
-      'West Head',
-      'Ellipsoidal',
-      westHead?.nominalThickness || '0.500',
+      head2DisplayName,
+      westHead?.headType || 'Ellipsoidal',
+      westHead?.nominalThickness || (inspection as any)?.headNominalThickness || '-',
       inspection?.materialSpec || 'SA-516 Gr. 70',
       westHead?.allowableStress || inspection?.allowableStress || '20000',
       westHead?.staticHead || '0',
@@ -1274,11 +1298,11 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   const eastHeadTypeDisplay = eastHeadType.charAt(0).toUpperCase() + eastHeadType.slice(1);
   const westHeadTypeDisplay = westHeadType.charAt(0).toUpperCase() + westHeadType.slice(1);
   
-  doc.text(`East Head: ${eastHeadTypeDisplay} t min = ${eastHead?.minimumThickness || eastHead?.minimumRequired || '0.526'} (inch)`, MARGIN, doc.y);
+  doc.text(`${head1DisplayName}: ${eastHeadTypeDisplay} t min = ${eastHead?.minimumThickness || eastHead?.minimumRequired || '-'} (inch)`, MARGIN, doc.y);
   if (eastHead?.headFactor) {
     doc.text(`  (M factor = ${eastHead.headFactor})`, MARGIN + 20, doc.y);
   }
-  doc.text(`West Head: ${westHeadTypeDisplay} t min = ${westHead?.minimumThickness || westHead?.minimumRequired || '0.526'} (inch)`, MARGIN, doc.y);
+  doc.text(`${head2DisplayName}: ${westHeadTypeDisplay} t min = ${westHead?.minimumThickness || westHead?.minimumRequired || '-'} (inch)`, MARGIN, doc.y);
   if (westHead?.headFactor) {
     doc.text(`  (M factor = ${westHead.headFactor})`, MARGIN + 20, doc.y);
   }
@@ -1290,10 +1314,10 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   doc.moveDown(0.5);
   
   const eastRLData = [
-    ['East Head', 't prev', 't act', 't min', 'y'],
+    [head1DisplayName, 't prev', 't act', 't min', 'y'],
     [
       '',
-      eastHead?.previousThickness || eastHead?.nominalThickness || '0.500',
+      eastHead?.previousThickness || eastHead?.nominalThickness || (inspection as any)?.headNominalThickness || '0.500',
       eastHead?.actualThickness || '0.555',
       eastHead?.minimumThickness || eastHead?.minimumRequired || '0.526',
       eastHead?.timeSpan || '10.0'
@@ -1316,10 +1340,10 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   doc.moveDown(1);
   
   const westRLData = [
-    ['West Head', 't prev', 't act', 't min', 'y'],
+    [head2DisplayName, 't prev', 't act', 't min', 'y'],
     [
       '',
-      westHead?.previousThickness || westHead?.nominalThickness || '0.500',
+      westHead?.previousThickness || westHead?.nominalThickness || (inspection as any)?.headNominalThickness || '0.500',
       westHead?.actualThickness || '0.552',
       westHead?.minimumThickness || westHead?.minimumRequired || '0.526',
       westHead?.timeSpan || '10.0'
@@ -1364,8 +1388,8 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   const eastP = eastMAWP;
   const westP = westMAWP;
   
-  doc.text(`East Head Ellipsoidal t = ${eastThickness} (inch) P= ${eastP} (psi) MAWP = ${eastMAWP} (psi)`, MARGIN, doc.y);
-  doc.text(`West Head Ellipsoidal t = ${westThickness} (inch) P= ${westP} (psi) MAWP = ${westMAWP} (psi)`, MARGIN, doc.y);
+  doc.text(`${head1DisplayName} ${eastHeadTypeDisplay} t = ${eastThickness} (inch) P= ${eastP} (psi) MAWP = ${eastMAWP} (psi)`, MARGIN, doc.y);
+  doc.text(`${head2DisplayName} ${westHeadTypeDisplay} t = ${westThickness} (inch) P= ${westP} (psi) MAWP = ${westMAWP} (psi)`, MARGIN, doc.y);
   doc.moveDown(1);
   
   doc.font('Helvetica').fontSize(10);

@@ -1,0 +1,110 @@
+{
+  "query": "SELECT id, componentName, componentType, nominalThickness, actualThickness, minimumThickness, calculatedMAWP, remainingLife FROM componentCalculations LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, componentName, componentType, nominalThickness, actualThickness, minimumThickness, calculatedMAWP, remainingLife FROM componentCalculations LIMIT 10;",
+  "rows": [
+    {
+      "id": "_EkpvaerMnmwKnbuu9lvU",
+      "componentName": "West Head",
+      "componentType": "head",
+      "nominalThickness": "0.5000",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "263.95",
+      "remainingLife": "20.00"
+    },
+    {
+      "id": "_gixalbJ-hXSoRBFoNzdh",
+      "componentName": "West Head",
+      "componentType": "head",
+      "nominalThickness": "0.5000",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "263.95",
+      "remainingLife": "20.00"
+    },
+    {
+      "id": "_hBao1MZcDpVGOmePnP3m",
+      "componentName": "East Head",
+      "componentType": "head",
+      "nominalThickness": "0.5000",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "263.95",
+      "remainingLife": "20.00"
+    },
+    {
+      "id": "_L01sqOUSO4wjWvsmR039",
+      "componentName": "West Head",
+      "componentType": "head",
+      "nominalThickness": "0.5000",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.4755",
+      "calculatedMAWP": "292.14",
+      "remainingLife": "20.00"
+    },
+    {
+      "id": "_M7AEiwVUDz9iKKKH37De",
+      "componentName": "West Head",
+      "componentType": "head",
+      "nominalThickness": "0.5000",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5080",
+      "calculatedMAWP": "164.08",
+      "remainingLife": "20.00"
+    },
+    {
+      "id": "_NHJovmfQ2yKp5zDLkLEY",
+      "componentName": "Shell",
+      "componentType": "shell",
+      "nominalThickness": "0.8130",
+      "actualThickness": "0.8000",
+      "minimumThickness": "NULL",
+      "calculatedMAWP": "NULL",
+      "remainingLife": "NULL"
+    },
+    {
+      "id": "_O3LsQuciLY2ob_6Hugv0",
+      "componentName": "East Head",
+      "componentType": "head",
+      "nominalThickness": "0.5000",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "263.95",
+      "remainingLife": "20.00"
+    },
+    {
+      "id": "_ODhZ9cY66Wt4xMu7Ne5U",
+      "componentName": "Vessel Shell",
+      "componentType": "shell",
+      "nominalThickness": "0.6250",
+      "actualThickness": "0.6520",
+      "minimumThickness": "0.5298",
+      "calculatedMAWP": "307.55",
+      "remainingLife": "20.00"
+    },
+    {
+      "id": "_oJ6Bpc7qdkmbJ9vSjlP-",
+      "componentName": "West Head",
+      "componentType": "head",
+      "nominalThickness": "0.5000",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5259",
+      "calculatedMAWP": "263.95",
+      "remainingLife": "20.00"
+    },
+    {
+      "id": "_pmxa2_GVZaq4ZkKhCgPv",
+      "componentName": "East Head",
+      "componentType": "head",
+      "nominalThickness": "0.5000",
+      "actualThickness": "0.5550",
+      "minimumThickness": "0.5080",
+      "calculatedMAWP": "164.08",
+      "remainingLife": "20.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcomponentName\tcomponentType\tnominalThickness\tactualThickness\tminimumThickness\tcalculatedMAWP\tremainingLife\n_EkpvaerMnmwKnbuu9lvU\tWest Head\thead\t0.5000\t0.5550\t0.5259\t263.95\t20.00\n_gixalbJ-hXSoRBFoNzdh\tWest Head\thead\t0.5000\t0.5550\t0.5259\t263.95\t20.00\n_hBao1MZcDpVGOmePnP3m\tEast Head\thead\t0.5000\t0.5550\t0.5259\t263.95\t20.00\n_L01sqOUSO4wjWvsmR039\tWest Head\thead\t0.5000\t0.5550\t0.4755\t292.14\t20.00\n_M7AEiwVUDz9iKKKH37De\tWest Head\thead\t0.5000\t0.5550\t0.5080\t164.08\t20.00\n_NHJovmfQ2yKp5zDLkLEY\tShell\tshell\t0.8130\t0.8000\tNULL\tNULL\tNULL\n_O3LsQuciLY2ob_6Hugv0\tEast Head\thead\t0.5000\t0.5550\t0.5259\t263.95\t20.00\n_ODhZ9cY66Wt4xMu7Ne5U\tVessel Shell\tshell\t0.6250\t0.6520\t0.5298\t307.55\t20.00\n_oJ6Bpc7qdkmbJ9vSjlP-\tWest Head\thead\t0.5000\t0.5550\t0.5259\t263.95\t20.00\n_pmxa2_GVZaq4ZkKhCgPv\tEast Head\thead\t0.5000\t0.5550\t0.5080\t164.08\t20.00\n",
+  "stderr": "",
+  "execution_time_ms": 388
+}

@@ -3012,3 +3012,12 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Fix recalculate: use canonical accessor for thickness reads
 - [x] Fix recalculate: use componentGroup as canonical source, South/North Head naming
 - [x] All 930 tests passing (32 new data propagation tests, 0 regressions), 0 TypeScript errors
+
+## Fix Nominal Design Thickness in PDF Report (Feb 2026)
+- [x] Nominal Design thickness shows "-" in Table A for all components — root cause: no inspection-level nominal thickness fields existed
+- [x] Added shellNominalThickness and headNominalThickness columns to inspections table
+- [x] Added input fields to Vessel Data tab (under "Nominal Design Thicknesses" section)
+- [x] Added fallback chain in PDF generator: componentCalc → inspection-level → placeholder
+- [x] Added fallback in recalculate function: TML readings → inspection-level nominal thickness
+- [x] Fixed all head naming references in PDF generator to use dynamic South/North Head names
+- [x] 930 tests passing, 0 TypeScript errors
