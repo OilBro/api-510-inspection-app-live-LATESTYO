@@ -3147,3 +3147,10 @@ Test PDF: 54-11-067 2017.pdf
 - [x] #D Verified: fraction-aware parseNumeric (convertFractionToDecimal) handles all 15 standard pressure vessel fractions (1/16 through 15/16)
 - [x] Sanitizer version bumped to 1.1.0
 - [x] 85 total sanitizer tests, 1064 total suite tests, 0 regressions
+
+## Production Bugs from Console Log (Feb 2026) ✅ COMPLETE
+- [x] Extraction job status polling stuck in infinite loop: added 3-layer protection:
+  - Server-side: 5-minute stale job auto-fail detection in getExtractionJobStatus
+  - Server-side: 4-minute timeout wrapper around parsePDFFile/parseExcelFile calls
+  - Client-side: 150-poll max (5 min) with timeout error message + cancel button
+- [x] CORS error on manifest.json: moved manifest.json route BEFORE OAuth/tRPC middleware, added fallback inline manifest, Cache-Control header

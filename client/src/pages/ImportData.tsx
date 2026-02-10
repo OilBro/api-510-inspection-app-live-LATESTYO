@@ -85,15 +85,46 @@ export default function ImportData() {
   const [extractionProgress, setExtractionProgress] = useState(0);
   const [extractionMessage, setExtractionMessage] = useState("");
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollCountRef = useRef<number>(0);
+  const MAX_POLL_COUNT = 150; // 150 polls × 2s = 5 minutes max
   
   const startJobMutation = trpc.importedFiles.startExtractionJob.useMutation();
   const confirmMutation = trpc.importedFiles.confirmExtraction.useMutation();
   const utils = trpc.useUtils();
 
+  // Cancel extraction helper
+  const cancelExtraction = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    pollCountRef.current = 0;
+    setExtractionJobId(null);
+    setExtractionProgress(0);
+    setExtractionMessage("");
+    setStep("upload");
+    toast.info("Extraction cancelled.");
+  };
+
   // Poll for job status
   useEffect(() => {
     if (extractionJobId && step === "extracting") {
+      pollCountRef.current = 0;
+      
       const pollStatus = async () => {
+        pollCountRef.current += 1;
+        
+        // Client-side timeout: stop polling after MAX_POLL_COUNT
+        if (pollCountRef.current > MAX_POLL_COUNT) {
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+          }
+          setStep("upload");
+          toast.error("Extraction timed out. The server may be overloaded. Please try again.");
+          return;
+        }
+        
         try {
           const status = await utils.importedFiles.getExtractionJobStatus.fetch({ jobId: extractionJobId });
           
@@ -106,6 +137,7 @@ export default function ImportData() {
               clearInterval(pollingIntervalRef.current);
               pollingIntervalRef.current = null;
             }
+            pollCountRef.current = 0;
             
             const data = status.extractedData as any;
             setPreviewData(data.preview);
@@ -118,12 +150,14 @@ export default function ImportData() {
               clearInterval(pollingIntervalRef.current);
               pollingIntervalRef.current = null;
             }
+            pollCountRef.current = 0;
             
             setStep("upload");
             toast.error(`Extraction failed: ${status.errorMessage || "Unknown error"}`);
           }
         } catch (error) {
           console.error("Error polling job status:", error);
+          // Don't stop polling on network errors — the server may be temporarily busy
         }
       };
       
@@ -281,10 +315,13 @@ export default function ImportData() {
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
     }
+    pollCountRef.current = 0;
     setStep("upload");
     setPreviewData(null);
     setPreviewSummary(null);
     setExtractionJobId(null);
+    setExtractionProgress(0);
+    setExtractionMessage("");
   };
 
   const handleReset = () => {
@@ -363,6 +400,11 @@ export default function ImportData() {
                 </div>
                 <p className="text-sm text-muted-foreground">
                   This may take a few minutes for large documents. Please don't close this page.
+                  {pollCountRef.current > 60 && (
+                    <span className="block mt-1 text-amber-600">
+                      Extraction is taking longer than usual. You can cancel and try again.
+                    </span>
+                  )}
                 </p>
                 <Button variant="outline" onClick={handleCancel}>
                   Cancel

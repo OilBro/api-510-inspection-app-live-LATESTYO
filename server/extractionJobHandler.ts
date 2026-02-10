@@ -205,6 +205,22 @@ function flattenForPreview(data: any): any {
   };
 }
 
+// Timeout helper: wraps a promise with a max duration
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${Math.round(ms / 1000)}s`));
+    }, ms);
+    promise.then(
+      (val) => { clearTimeout(timer); resolve(val); },
+      (err) => { clearTimeout(timer); reject(err); }
+    );
+  });
+}
+
+// Max time for the entire extraction job (4 minutes)
+const EXTRACTION_TIMEOUT_MS = 4 * 60 * 1000;
+
 /**
  * Process an extraction job in the background
  * This runs asynchronously and updates the job status in the database
@@ -242,12 +258,20 @@ export async function processExtractionJob(
       })
       .where(eq(extractionJobs.id, jobId));
 
-    // Parse based on file type
+    // Parse based on file type (with timeout to prevent silent hangs)
     let rawParsedData;
     if (fileType === "excel") {
-      rawParsedData = await parseExcelFile(fileBuffer);
+      rawParsedData = await withTimeout(
+        parseExcelFile(fileBuffer),
+        EXTRACTION_TIMEOUT_MS,
+        `Excel parsing for job ${jobId}`
+      );
     } else {
-      rawParsedData = await parsePDFFile(fileBuffer, parserType);
+      rawParsedData = await withTimeout(
+        parsePDFFile(fileBuffer, parserType),
+        EXTRACTION_TIMEOUT_MS,
+        `PDF parsing (${parserType || 'manus'}) for job ${jobId}`
+      );
     }
 
     // Update progress - normalization phase
