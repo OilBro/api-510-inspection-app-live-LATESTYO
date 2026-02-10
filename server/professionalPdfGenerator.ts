@@ -242,19 +242,34 @@ async function addTable(doc: PDFKit.PDFDocument, headers: string[], rows: string
       row.forEach((cell, colIndex) => {
         const cellText = String(cell || '-');
         const colW = colWidths[colIndex];
-        // Truncate text if it's too long to prevent overflow
-        const maxLength = Math.floor((colW - 10) / 5); // Approximate chars that fit
-        const displayText = cellText.length > maxLength ? cellText.substring(0, maxLength - 3) + '...' : cellText;
+        const cellPadding = 4;
+        const availableWidth = colW - (cellPadding * 2);
         
-        // Use text without width parameter to prevent automatic page breaks
-        const x = xOffset + 5;
+        // Use font metrics for accurate truncation instead of crude char count
+        let displayText = cellText;
+        const textWidth = doc.widthOfString(cellText);
+        if (textWidth > availableWidth) {
+          // Binary search for the right truncation point
+          let lo = 0, hi = cellText.length;
+          while (lo < hi) {
+            const mid = Math.ceil((lo + hi) / 2);
+            if (doc.widthOfString(cellText.substring(0, mid) + '…') <= availableWidth) {
+              lo = mid;
+            } else {
+              hi = mid - 1;
+            }
+          }
+          displayText = lo > 0 ? cellText.substring(0, lo) + '…' : cellText.substring(0, 1);
+        }
+        
+        const x = xOffset + cellPadding;
         const y = rowY + 5;
         
-        // Manually clip text to cell width
+        // Clip to cell boundary for safety
         doc.save();
         doc.rect(xOffset, rowY, colW, ROW_HEIGHT).clip();
         doc.text(displayText, x, y, {
-          lineBreak: false, // Prevent line breaks within cells
+          lineBreak: false,
           continued: false
         });
         doc.restore();
@@ -1675,8 +1690,17 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
 }
 
 async function generateThicknessReadings(doc: PDFKit.PDFDocument, readings: any[], logoBuffer?: Buffer) {
-  // Sort readings by CML number numerically
+  // Sort readings: group by component type (Shell → Head → Nozzle), then by CML number
+  const componentOrder = (r: any): number => {
+    const comp = ((r.componentType || r.component || '') as string).toLowerCase();
+    if (comp.includes('shell') || comp.includes('cylinder') || comp.includes('body')) return 0;
+    if (comp.includes('head')) return 1;
+    if (comp.includes('nozzle') || comp.includes('manway') || comp.includes('fitting')) return 2;
+    return 3; // Unknown → sort last
+  };
   const sortedReadings = [...(readings || [])].sort((a, b) => {
+    const groupDiff = componentOrder(a) - componentOrder(b);
+    if (groupDiff !== 0) return groupDiff;
     const aNum = extractCmlNumber(a.legacyLocationId || a.tmlId || '');
     const bNum = extractCmlNumber(b.legacyLocationId || b.tmlId || '');
     return aNum - bNum;

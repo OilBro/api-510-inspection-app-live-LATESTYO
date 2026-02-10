@@ -3154,3 +3154,11 @@ Test PDF: 54-11-067 2017.pdf
   - Server-side: 4-minute timeout wrapper around parsePDFFile/parseExcelFile calls
   - Client-side: 150-poll max (5 min) with timeout error message + cancel button
 - [x] CORS error on manifest.json: moved manifest.json route BEFORE OAuth/tRPC middleware, added fallback inline manifest, Cache-Control header
+
+## 5 Critical Architectural/Data-Flow Fixes (Feb 2026) ✅ COMPLETE
+- [x] #1 Nominal thickness resolver: 5-level authority hierarchy (Table A > TML > vessel-level > pipe schedule > HARD STOP) — created nominalThicknessResolver.ts with full audit trail, 31 tests
+- [x] #2 Findings/recommendations data flow: PDF generator already reads from inspection.inspectionResults + structured findings[]. Built full InspectionFindingsSection UI component (was a stub)
+- [x] #3 Freeze calculation authority: rewrote createComponentCalc to use performFullCalculation() from lockedCalculationEngine.ts with nominal resolver integration
+- [x] #4 PDF generator hardening: binary-search font-metric truncation, component-grouped CML sorting (Shell > Head > Nozzle > Other), improved cell padding
+- [x] #5 CML/location/component column semantics: verified consistent across schema, import pipeline, client display, and PDF generator
+- [x] 31 new nominal resolver tests, 1107 total suite tests, 0 regressions
