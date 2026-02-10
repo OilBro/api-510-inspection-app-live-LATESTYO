@@ -11,7 +11,7 @@ import {
   TmlLocation,
 } from './locationMatchingEngine';
 
-describe('Location Matching Engine - Angle Wraparound Logic', () => {
+describe('Location Matching Engine', () => {
   
   describe('parseCmlNamingConvention', () => {
     it('should parse slice-angle format correctly', () => {
@@ -175,7 +175,7 @@ describe('Location Matching Engine - Angle Wraparound Logic', () => {
       expect(result.reason).not.toContain('Adjacent');
     });
 
-    it('Edge case: 200° to 50° should NOT match (150° apart, or 210° the other way)', () => {
+    it('Edge case: 200° to 50° should NOT match (150° apart)', () => {
       const existing: TmlLocation = {
         legacyLocationId: '10-200',
         componentType: 'Shell',
