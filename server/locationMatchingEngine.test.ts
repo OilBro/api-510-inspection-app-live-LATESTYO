@@ -75,7 +75,7 @@ describe('Location Matching Engine - Angle Wraparound Logic', () => {
       expect(result.reason).toContain('Adjacent');
     });
 
-    it('CRITICAL: should handle wraparound at 0°/360° boundary (350° to 10°)', () => {
+    it('should handle wraparound at 0°/360° boundary (350° to 10°)', () => {
       const existing: TmlLocation = {
         legacyLocationId: '10-350',
         componentType: 'Shell',
@@ -99,13 +99,13 @@ describe('Location Matching Engine - Angle Wraparound Logic', () => {
       
       // The actual angular difference is min(|350-10|, 360-|350-10|) = min(340, 20) = 20°
       // This is within 45°, so it should get the adjacent position bonus
-      // CURRENT BUG: Math.abs(350-10) = 340, which is >= 315, so it SHOULD trigger the bonus
-      // But this is WRONG logic - 340° apart means they're actually only 20° apart!
+      // The code correctly handles this: Math.abs(350-10) = 340, and 340 >= 315 triggers the bonus
+      // because wraparound distance = 360-340 = 20° <= 45°
       expect(result.score).toBeGreaterThan(0.6); // Should get adjacent bonus
       expect(result.reason).toContain('Adjacent'); // Should mention adjacent position
     });
 
-    it('CRITICAL: should handle wraparound at 0°/360° boundary (315° to 0°)', () => {
+    it('should handle wraparound at 0°/360° boundary (315° to 0°)', () => {
       const existing: TmlLocation = {
         legacyLocationId: '8-315',
         componentType: 'Shell',
@@ -178,7 +178,7 @@ describe('Location Matching Engine - Angle Wraparound Logic', () => {
       expect(result.reason).not.toContain('Adjacent');
     });
 
-    it('BUG CASE: 200° to 50° should NOT match (150° apart, or 210° the other way)', () => {
+    it('Edge case: 200° to 50° should NOT match (150° apart, or 210° the other way)', () => {
       const existing: TmlLocation = {
         legacyLocationId: '10-200',
         componentType: 'Shell',
