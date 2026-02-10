@@ -3108,6 +3108,7 @@ Test PDF: 54-11-067 2017.pdf
 - [x] All 945 tests passing (1 unrelated Docupipe timeout), TypeScript compiles clean
 
 ## FIX: manifest.json CORS error and Sentry DSN warning (Feb 2026)
+<!-- Last checkpoint: Feb 10, 2026 -->
 - [x] Fix manifest.json being redirected to OAuth - added explicit Express route with CORS headers
 - [x] Remove unused Sentry integration entirely - removed @sentry/node, @sentry/react, @sentry/vite-plugin packages and all code references
 - [x] All 946 tests passing, TypeScript compiles clean, no Sentry warnings
