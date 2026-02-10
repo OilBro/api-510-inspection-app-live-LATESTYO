@@ -3112,3 +3112,17 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Fix manifest.json being redirected to OAuth - added explicit Express route with CORS headers
 - [x] Remove unused Sentry integration entirely - removed @sentry/node, @sentry/react, @sentry/vite-plugin packages and all code references
 - [x] All 946 tests passing, TypeScript compiles clean, no Sentry warnings
+
+## 7 Critical Parser Post-Processing Fixes for Audit Defensibility (Feb 2026) ✅ COMPLETE
+- [x] #1 reportNumber sanitization: regex-based extraction, prevent LLM thought-loop pollution
+- [x] #2 Checklist-to-vessel field hydration: extract NB number, serial, MAWP, MDMT, nominal thicknesses from checklist items
+- [x] #3 Head type from narrative: parse narrative text for head type assertions, flag validation warnings
+- [x] #4 Seam-adjacent CML handling: detect "from Seam" locations, generate proper stationKeys
+- [x] #5 Incomplete thickness flagging: hard-stop RL/CR calculations when currentThickness/tRequired/dates missing
+- [x] #6 Checklist status mapping: "A" → acceptable/checked, "N/A" → not_applicable, other → notes
+- [x] #7 Document provenance tracking: parser type, confidence, field overrides, raw header text
+- [x] Created extractionSanitizer.ts module (deterministic post-processor, runs after LLM extraction)
+- [x] Integrated sanitizer into extractionJobHandler.ts pipeline
+- [x] 53 comprehensive vitest tests (all passing)
+- [x] Provenance block includes: parser type, OCR flag, confidence scores, field overrides, validation warnings
+- [x] Sanitizer outputs: data quality metrics, hydrated fields, seam stationKeys, normalized statuses
