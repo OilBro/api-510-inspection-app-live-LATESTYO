@@ -94,9 +94,6 @@ describe('Location Matching Engine - Angle Wraparound Logic', () => {
       
       const result = calculateLocationSimilarity(existing, newLoc);
       
-      // Debug: log the actual result
-      console.log('350° to 10° match result:', JSON.stringify(result, null, 2));
-      
       // The actual angular difference is min(|350-10|, 360-|350-10|) = min(340, 20) = 20°
       // This is within 45°, so it should get the adjacent position bonus
       // The code correctly handles this: Math.abs(350-10) = 340, and 340 >= 315 triggers the bonus
@@ -196,8 +193,6 @@ describe('Location Matching Engine - Angle Wraparound Logic', () => {
       };
       
       const result = calculateLocationSimilarity(existing, newLoc);
-      
-      console.log('200° to 50° (150° apart) match result:', JSON.stringify(result, null, 2));
       
       // Actual difference: |200-50| = 150°
       // Circular distance: min(150, 210) = 150° - more than 45°
