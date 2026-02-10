@@ -360,7 +360,7 @@ describe("Fix #4: Seam-Adjacent CML Location Handling", () => {
     const { data: result } = sanitizeExtractedData(data, "manus");
     const tml = result.tmlReadings[0];
     expect(tml._metadata.isSeamAdjacent).toBe(true);
-    expect(tml._metadata.stationKey).toBe("SEAM-EH-2IN-0DEG");
+    expect(tml._metadata.stationKey).toBe("SEAM-EH-2IN-A0");
     expect(tml.readingType).toBe("seam");
   });
 
@@ -379,7 +379,7 @@ describe("Fix #4: Seam-Adjacent CML Location Handling", () => {
 
     const { data: result } = sanitizeExtractedData(data, "manus");
     const tml = result.tmlReadings[0];
-    expect(tml._metadata.stationKey).toBe("SEAM-WH-3IN-90DEG");
+    expect(tml._metadata.stationKey).toBe("SEAM-WH-3IN-A90");
   });
 
   it("should NOT modify non-seam shell readings", () => {
@@ -414,7 +414,7 @@ describe("Fix #4: Seam-Adjacent CML Location Handling", () => {
     });
 
     const { data: result } = sanitizeExtractedData(data, "manus");
-    expect(result.tmlReadings[0]._metadata.stationKey).toBe("SEAM-EH-2IN-180DEG");
+    expect(result.tmlReadings[0]._metadata.stationKey).toBe("SEAM-EH-2IN-A180");
   });
 });
 
@@ -593,7 +593,7 @@ describe("Fix #7: Document Provenance", () => {
     const { provenance } = sanitizeExtractedData(data, "manus");
     expect(provenance).toBeDefined();
     expect(provenance.parser).toBe("manus");
-    expect(provenance.sanitizerVersion).toBe("1.0.0");
+    expect(provenance.sanitizerVersion).toBe("1.1.0");
     expect(provenance.confidence).toBeDefined();
     expect(provenance.fieldOverrides).toBeInstanceOf(Array);
     expect(provenance.validationWarnings).toBeInstanceOf(Array);
@@ -751,7 +751,14 @@ describe("Integration: Full Pipeline (vessel 54-11-004)", () => {
           location: '2" from Seam w/East Head',
           component: "Shell",
           angle: "0°",
-          currentThickness: null, // Missing
+          currentThickness: null, // Missing — will be dropped as phantom (head quadrant + no thickness)
+        },
+        {
+          legacyLocationId: "6-135",
+          location: '2" East Head Seam - Head Side',
+          component: "Shell",
+          angle: "135°",
+          currentThickness: 0.580, // Has thickness — will be kept and tagged seam-adjacent
         },
         {
           legacyLocationId: "4-45",
@@ -781,12 +788,16 @@ describe("Integration: Full Pipeline (vessel 54-11-004)", () => {
     // Fix #3: Head type from narrative
     expect(result.vesselData.headType).toBe("Torispherical");
 
-    // Fix #4: Seam-adjacent CML tagged
-    expect(result.tmlReadings[0]._metadata.isSeamAdjacent).toBe(true);
-    expect(result.tmlReadings[0]._metadata.stationKey).toBe("SEAM-EH-2IN-0DEG");
+    // Fix #3B: Phantom row dropped (legacyId "1-0" + head location + no thickness)
+    // Original 3 rows → 2 rows after phantom removal
+    expect(result.tmlReadings.length).toBe(2);
 
-    // Fix #5: Incomplete thickness flagged
-    expect(result.tmlReadings[0]._metadata.dataStatus).toBe("incomplete");
+    // Fix #4: Seam-adjacent CML tagged (the kept seam reading)
+    expect(result.tmlReadings[0]._metadata.isSeamAdjacent).toBe(true);
+    expect(result.tmlReadings[0]._metadata.stationKey).toBe("SEAM-EH-2IN-A135");
+
+    // Fix #5: Thickness flagging on remaining rows
+    expect(result.tmlReadings[0]._metadata.dataStatus).toBe("complete");
     expect(result.tmlReadings[1]._metadata.dataStatus).toBe("complete");
     expect(result.tmlReadings[1].previousThickness).toBeNull(); // Zero nullified
 
@@ -913,5 +924,338 @@ describe("Bug Fix #8: ParserType naming consistency", () => {
     const { provenance } = sanitizeExtractedData(data, "docupipe");
     expect(provenance.parser).toBe("docupipe");
     expect(provenance.ocrApplied).toBe(false);
+  });
+});
+
+
+// ============================================================================
+// FIX #A: HEAD TYPE AUTHORITY HIERARCHY TESTS
+// ============================================================================
+
+describe("Fix #A: Head Type Authority Hierarchy", () => {
+  it("should keep nameplate headType when present (highest authority)", () => {
+    const data = buildTestData({
+      vesselData: { headType: "2:1 Ellipsoidal" },
+      inspectionResults: "The vessel heads are torispherical in design.",
+      inspectionChecklist: [
+        { itemText: "Head Type: Hemispherical", status: "A" },
+      ],
+    });
+
+    const { data: result, provenance } = sanitizeExtractedData(data, "manus");
+    expect(result.vesselData.headType).toBe("2:1 Ellipsoidal");
+    // Should warn about conflicts
+    const conflictWarnings = provenance.validationWarnings.filter(w =>
+      w.includes("Head type conflict")
+    );
+    expect(conflictWarnings.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("should use checklist headType when nameplate is empty", () => {
+    const data = buildTestData({
+      vesselData: { headType: "" },
+      inspectionChecklist: [
+        { itemText: "Head Type: 2:1 Ellipsoidal", status: "A" },
+      ],
+      inspectionResults: "The vessel heads are torispherical.",
+    });
+
+    const { data: result, provenance } = sanitizeExtractedData(data, "manus");
+    expect(result.vesselData.headType).toBe("2:1 Ellipsoidal");
+    // Should warn about checklist source
+    expect(provenance.validationWarnings.some(w =>
+      w.includes("extracted from checklist")
+    )).toBe(true);
+    // Should warn about conflict with narrative
+    expect(provenance.validationWarnings.some(w =>
+      w.includes("Head type conflict") && w.includes("narrative")
+    )).toBe(true);
+  });
+
+  it("should use narrative headType when both nameplate and checklist are empty", () => {
+    const data = buildTestData({
+      vesselData: { headType: "" },
+      inspectionResults: "The vessel has flanged and dished heads.",
+    });
+
+    const { data: result, provenance } = sanitizeExtractedData(data, "manus");
+    expect(result.vesselData.headType).toBe("Torispherical");
+    expect(provenance.validationWarnings.some(w =>
+      w.includes("lowest authority")
+    )).toBe(true);
+  });
+
+  it("should not modify headType when all sources are empty", () => {
+    const data = buildTestData({
+      vesselData: { headType: "" },
+      inspectionResults: "The vessel was inspected and found in good condition.",
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.vesselData.headType).toBe("");
+  });
+
+  it("should warn about torispherical missing crown/knuckle radii from any source", () => {
+    const data = buildTestData({
+      vesselData: { headType: "Torispherical", crownRadius: "", knuckleRadius: "" },
+    });
+
+    const { provenance } = sanitizeExtractedData(data, "manus");
+    expect(provenance.validationWarnings.some(w =>
+      w.includes("crownRadius")
+    )).toBe(true);
+    expect(provenance.validationWarnings.some(w =>
+      w.includes("knuckleRadius")
+    )).toBe(true);
+  });
+
+  it("should detect nameplate vs checklist conflict and warn", () => {
+    const data = buildTestData({
+      vesselData: { headType: "Hemispherical" },
+      inspectionChecklist: [
+        { itemText: "Head type is 2:1 ellipsoidal per design drawings", status: "A" },
+      ],
+    });
+
+    const { data: result, provenance } = sanitizeExtractedData(data, "manus");
+    // Nameplate wins
+    expect(result.vesselData.headType).toBe("Hemispherical");
+    // Conflict warning present
+    expect(provenance.validationWarnings.some(w =>
+      w.includes("Head type conflict") && w.includes("nameplate") && w.includes("checklist")
+    )).toBe(true);
+  });
+});
+
+// ============================================================================
+// FIX #B: PHANTOM NOZZLE TML ROW REMOVAL TESTS
+// ============================================================================
+
+describe("Fix #B: Phantom Nozzle TML Row Removal", () => {
+  it("should drop nozzle readingType rows with no thickness", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        { readingType: "nozzle", location: "Nozzle N1", legacyLocationId: "N1", currentThickness: null },
+        { readingType: "nozzle", location: "Nozzle N2", legacyLocationId: "N2", currentThickness: 0.375 },
+        { readingType: "shell", location: "Shell Slice 1", legacyLocationId: "1-0", currentThickness: 0.5 },
+      ],
+    });
+
+    const { data: result, provenance } = sanitizeExtractedData(data, "manus");
+    expect(result.tmlReadings.length).toBe(2);
+    // N1 dropped (nozzle + no thickness), N2 and shell kept
+    expect(result.tmlReadings[0].legacyLocationId).toBe("N2");
+    expect(result.tmlReadings[1].legacyLocationId).toBe("1-0");
+    expect(provenance.fieldOverrides.some(o => o.rule === "remove_phantom_nozzle_tml_rows")).toBe(true);
+  });
+
+  it("should drop head quadrant expansions with no thickness", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        { location: "East Head", legacyLocationId: "1-0", currentThickness: null },
+        { location: "East Head", legacyLocationId: "1-90", currentThickness: null },
+        { location: "East Head", legacyLocationId: "1-180", currentThickness: null },
+        { location: "East Head", legacyLocationId: "1-270", currentThickness: null },
+        { location: "East Head", legacyLocationId: "1-45", currentThickness: 0.420 },
+        { location: "Shell Slice 2", legacyLocationId: "2-0", currentThickness: 0.5 },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    // 4 phantom head quadrant rows dropped, 2 kept
+    expect(result.tmlReadings.length).toBe(2);
+    expect(result.tmlReadings[0].legacyLocationId).toBe("1-45");
+    expect(result.tmlReadings[1].legacyLocationId).toBe("2-0");
+  });
+
+  it("should NOT drop head quadrant rows that have thickness", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        { location: "East Head", legacyLocationId: "1-0", currentThickness: 0.450 },
+        { location: "East Head", legacyLocationId: "1-90", currentThickness: 0.448 },
+        { location: "East Head", legacyLocationId: "1-180", currentThickness: 0.452 },
+        { location: "East Head", legacyLocationId: "1-270", currentThickness: 0.449 },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.tmlReadings.length).toBe(4);
+  });
+
+  it("should dedupe by (location, legacyLocationId) keeping row with thickness", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        { location: "Shell Slice 1", legacyLocationId: "1-0", currentThickness: null },
+        { location: "Shell Slice 1", legacyLocationId: "1-0", currentThickness: 0.500 },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.tmlReadings.length).toBe(1);
+    expect(result.tmlReadings[0].currentThickness).toBe(0.500);
+  });
+
+  it("should keep all rows when no phantoms exist", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        { location: "Shell Slice 1", legacyLocationId: "1-0", currentThickness: 0.5, component: "Shell" },
+        { location: "Shell Slice 2", legacyLocationId: "2-0", currentThickness: 0.48, component: "Shell" },
+        { location: "Shell Slice 3", legacyLocationId: "3-0", currentThickness: 0.51, component: "Shell" },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.tmlReadings.length).toBe(3);
+  });
+
+  it("should report correct counts in warning message", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        { readingType: "nozzle", location: "Nozzle N1", legacyLocationId: "N1", currentThickness: null },
+        { readingType: "nozzle", location: "Nozzle N2", legacyLocationId: "N2", currentThickness: null },
+        { location: "East Head", legacyLocationId: "1-0", currentThickness: null },
+        { location: "Shell Slice 1", legacyLocationId: "1-0", currentThickness: 0.5, component: "Shell" },
+      ],
+    });
+
+    const { provenance } = sanitizeExtractedData(data, "manus");
+    const phantomWarning = provenance.validationWarnings.find(w => w.includes("phantom TML rows"));
+    expect(phantomWarning).toBeDefined();
+    expect(phantomWarning).toContain("2 nozzle rows");
+    expect(phantomWarning).toContain("1 head quadrant");
+  });
+});
+
+// ============================================================================
+// FIX #C: SEAM STATIONKEY ANGLE PRESERVATION TESTS
+// ============================================================================
+
+describe("Fix #C: Seam StationKey Angle Preservation", () => {
+  it("should extract angle from legacyLocationId suffix (6-135 → A135)", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        {
+          legacyLocationId: "6-135",
+          location: '2" from Seam w/East Head',
+          component: "Shell",
+          currentThickness: 0.580,
+        },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.tmlReadings[0]._metadata.stationKey).toBe("SEAM-EH-2IN-A135");
+    expect(result.tmlReadings[0]._metadata.isSeamAdjacent).toBe(true);
+  });
+
+  it("should use explicit angle field over legacyLocationId suffix", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        {
+          legacyLocationId: "6-135",
+          location: '2" from Seam w/East Head',
+          component: "Shell",
+          angle: "90",
+          currentThickness: 0.580,
+        },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    // Explicit angle=90 takes priority over legacyId suffix 135
+    expect(result.tmlReadings[0]._metadata.stationKey).toBe("SEAM-EH-2IN-A90");
+  });
+
+  it("should produce distinct stationKeys for different angles at same seam distance", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        { legacyLocationId: "6-0", location: '2" from Seam w/East Head', component: "Shell", currentThickness: 0.580 },
+        { legacyLocationId: "6-45", location: '2" from Seam w/East Head', component: "Shell", currentThickness: 0.575 },
+        { legacyLocationId: "6-90", location: '2" from Seam w/East Head', component: "Shell", currentThickness: 0.570 },
+        { legacyLocationId: "6-135", location: '2" from Seam w/East Head', component: "Shell", currentThickness: 0.565 },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    const keys = result.tmlReadings.map((t: any) => t._metadata.stationKey);
+    expect(keys).toEqual([
+      "SEAM-EH-2IN-A0",
+      "SEAM-EH-2IN-A45",
+      "SEAM-EH-2IN-A90",
+      "SEAM-EH-2IN-A135",
+    ]);
+    // All should be unique
+    expect(new Set(keys).size).toBe(4);
+  });
+
+  it("should not append angle when legacyLocationId has no angle suffix", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        {
+          legacyLocationId: "",
+          location: '2" from Seam w/East Head',
+          component: "Shell",
+          currentThickness: 0.580,
+        },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    // No angle from any source → no angle suffix
+    expect(result.tmlReadings[0]._metadata.stationKey).toBe("SEAM-EH-2IN");
+  });
+
+  it("should handle angle 0 correctly (not collapse to empty)", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        {
+          legacyLocationId: "6-0",
+          location: '2" from Seam w/East Head',
+          component: "Shell",
+          currentThickness: 0.580,
+        },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.tmlReadings[0]._metadata.stationKey).toBe("SEAM-EH-2IN-A0");
+  });
+});
+
+// ============================================================================
+// FIX #D: FRACTION-AWARE PARSERNUMERIC VERIFICATION TESTS
+// ============================================================================
+
+describe("Fix #D: Fraction-Aware parseNumeric Verification", () => {
+  it("should handle all common pressure vessel fractions", () => {
+    // These are the most common nominal thicknesses in pressure vessel work
+    const fractions: Record<string, number> = {
+      "1/16": 0.0625,
+      "1/8": 0.125,
+      "3/16": 0.1875,
+      "1/4": 0.25,
+      "5/16": 0.3125,
+      "3/8": 0.375,
+      "7/16": 0.4375,
+      "1/2": 0.5,
+      "9/16": 0.5625,
+      "5/8": 0.625,
+      "11/16": 0.6875,
+      "3/4": 0.75,
+      "13/16": 0.8125,
+      "7/8": 0.875,
+      "15/16": 0.9375,
+    };
+
+    for (const [fraction, expected] of Object.entries(fractions)) {
+      const result = convertFractionToDecimal(fraction);
+      expect(result).toBe(expected);
+    }
+  });
+
+  it("should handle mixed numbers common in vessel dimensions", () => {
+    expect(convertFractionToDecimal("1-1/2")).toBe(1.5);
+    expect(convertFractionToDecimal("2-1/4")).toBe(2.25);
+    expect(convertFractionToDecimal("1 1/2")).toBe(1.5);
   });
 });

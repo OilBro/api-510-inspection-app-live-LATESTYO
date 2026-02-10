@@ -3139,3 +3139,11 @@ Test PDF: 54-11-067 2017.pdf
 - [x] #9 Fix corrosion-rate helper: thickness increase now returns isValid:true, rate=0, warning="thickness increased"
 - [x] Added radiographyType hydration to checklist-to-vessel hydration (Fix #2 enhancement)
 - [x] 13 new tests added (66 total sanitizer tests, 1046 total suite tests, 0 failures)
+
+## 4 Additional Extraction Sanitizer Fixes (Feb 2026) ✅ COMPLETE
+- [x] #A Head type authority hierarchy: nameplate/checklist > narrative > empty; warn on conflict with provenance
+- [x] #B removePhantomNozzleTmlRows(): drop nozzle readingType rows with no thickness, drop head quadrant expansions with no thickness, dedupe by (location, legacyLocationId) keeping row with thickness
+- [x] #C Seam stationKey angle preservation: append -A{angle} when legacyLocationId contains angle suffix (e.g. 6-135 → SEAM-EH-2IN-A135), only collapse when no angle exists
+- [x] #D Verified: fraction-aware parseNumeric (convertFractionToDecimal) handles all 15 standard pressure vessel fractions (1/16 through 15/16)
+- [x] Sanitizer version bumped to 1.1.0
+- [x] 85 total sanitizer tests, 1064 total suite tests, 0 regressions

@@ -4,12 +4,13 @@
  * Deterministic post-processing pipeline that runs AFTER LLM extraction
  * and BEFORE data reaches the preview/import pipeline.
  * 
- * Implements 7 critical fixes for audit defensibility:
+ * Implements 7+ critical fixes for audit defensibility:
  * 
  * 1. Report field sanitization (regex-based, prevents LLM thought-loop pollution)
  * 2. Checklist-to-vessel field hydration (mines checklist items for missing vessel data)
- * 3. Head type extraction from narrative text
- * 4. Seam-adjacent CML location handling (proper stationKey generation)
+ * 3. Head type authority hierarchy (nameplate > checklist > narrative, conflict warnings)
+ * 3B. Phantom nozzle/head-quadrant TML row removal (prevents garbage stationKeys)
+ * 4. Seam-adjacent CML location handling (angle-aware stationKey generation)
  * 5. Incomplete thickness record flagging (prevents bad RL/CR calculations)
  * 6. Checklist status normalization ("A" → acceptable, "N/A" → not_applicable)
  * 7. Document provenance tracking (audit trail for parser, overrides, confidence)
@@ -537,82 +538,274 @@ function convertFractionToDecimal(value: string): number | null {
 }
 
 // ============================================================================
-// FIX #3: HEAD TYPE FROM NARRATIVE
+// FIX #3: HEAD TYPE AUTHORITY HIERARCHY
 // ============================================================================
 
 /**
- * Extract head type from narrative text (executive summary, inspection results).
- * If vesselData.headType is empty but narrative explicitly states head type,
- * use the narrative assertion and flag a validation warning.
+ * Head type patterns used for matching across all sources.
  */
-function extractHeadTypeFromNarrative(data: any, overrides: FieldOverride[], warnings: string[]): void {
-  const vesselData = data.vesselData || {};
-  
-  // Only hydrate if headType is missing
-  if (vesselData.headType && vesselData.headType.trim() !== "") return;
+const HEAD_TYPE_PATTERNS: Array<{ pattern: RegExp; type: string }> = [
+  { pattern: /(?:2\s*:\s*1\s+)?ellipsoidal/i, type: "2:1 Ellipsoidal" },
+  { pattern: /torispherical/i, type: "Torispherical" },
+  { pattern: /(?:F\s*&\s*D|flanged\s*(?:and|&)\s*dished)/i, type: "Torispherical" },
+  { pattern: /hemispherical/i, type: "Hemispherical" },
+  { pattern: /(?:flat|blind)\s*(?:head|plate|cover)/i, type: "Flat" },
+  { pattern: /conical/i, type: "Conical" },
+];
 
-  // Combine all narrative text
+/**
+ * Try to match a head type from a text string.
+ */
+function matchHeadType(text: string): string | null {
+  for (const { pattern, type } of HEAD_TYPE_PATTERNS) {
+    if (pattern.test(text)) return type;
+  }
+  return null;
+}
+
+/**
+ * Head type authority hierarchy:
+ *   1. vesselData.headType (nameplate/structured field) — HIGHEST authority
+ *   2. Checklist items mentioning head type
+ *   3. Narrative text (executive summary, inspection results)
+ *
+ * If sources conflict, keep the highest-authority source and add a
+ * provenance warning documenting the disagreement.
+ */
+function resolveHeadTypeAuthority(data: any, overrides: FieldOverride[], warnings: string[]): void {
+  const vesselData = data.vesselData || {};
+  const checklist = data.inspectionChecklist || data.checklistItems || [];
+
+  // --- Source 1: vesselData.headType (nameplate / structured) ---
+  const nameplateRaw = String(vesselData.headType || "").trim();
+  const nameplateType = nameplateRaw ? matchHeadType(nameplateRaw) || nameplateRaw : null;
+
+  // --- Source 2: Checklist ---
+  let checklistType: string | null = null;
+  for (const item of checklist) {
+    const text = `${item.itemText || ""} ${item.notes || ""} ${item.description || ""}`;
+    const match = matchHeadType(text);
+    if (match) { checklistType = match; break; }
+  }
+
+  // --- Source 3: Narrative ---
   const narrativeText = [
     data.executiveSummary || "",
     data.inspectionResults || "",
     data.recommendations || "",
-  ].join(" ").toLowerCase();
+  ].join(" ");
+  const narrativeType = matchHeadType(narrativeText);
 
-  if (!narrativeText.trim()) return;
+  // --- Resolve ---
+  let resolvedType: string | null = null;
+  let resolvedSource = "";
 
-  // Look for explicit head type assertions
-  const headTypePatterns: Array<{ pattern: RegExp; type: string }> = [
-    { pattern: /heads?\s+(?:are|is)\s+torispherical/i, type: "Torispherical" },
-    { pattern: /torispherical\s+(?:heads?|design)/i, type: "Torispherical" },
-    { pattern: /(?:F&D|flanged\s*(?:and|&)\s*dished)/i, type: "Torispherical" },
-    { pattern: /heads?\s+(?:are|is)\s+(?:2:1\s+)?ellipsoidal/i, type: "2:1 Ellipsoidal" },
-    { pattern: /(?:2:1\s+)?ellipsoidal\s+(?:heads?|design)/i, type: "2:1 Ellipsoidal" },
-    { pattern: /heads?\s+(?:are|is)\s+hemispherical/i, type: "Hemispherical" },
-    { pattern: /hemispherical\s+(?:heads?|design)/i, type: "Hemispherical" },
-    { pattern: /heads?\s+(?:are|is)\s+(?:flat|blind)/i, type: "Flat" },
-    { pattern: /(?:flat|blind)\s+(?:heads?|design)/i, type: "Flat" },
-    { pattern: /heads?\s+(?:are|is)\s+conical/i, type: "Conical" },
-  ];
+  if (nameplateType) {
+    resolvedType = nameplateType;
+    resolvedSource = "nameplate";
 
-  for (const { pattern, type } of headTypePatterns) {
-    if (pattern.test(narrativeText)) {
-      overrides.push({
-        field: "vesselData.headType",
-        from: "",
-        to: type,
-        rule: "narrative_head_type_extraction",
-        timestamp: new Date().toISOString(),
-      });
-      vesselData.headType = type;
-
-      // Flag validation warning
+    // Check for conflicts with other sources
+    if (checklistType && normalizeHeadLabel(checklistType) !== normalizeHeadLabel(nameplateType)) {
       warnings.push(
-        `Head type "${type}" was extracted from narrative text (not from vesselData). ` +
-        `Verify this matches nameplate/design data.`
+        `Head type conflict: nameplate says "${nameplateType}" but checklist says "${checklistType}". ` +
+        `Keeping nameplate value (highest authority). Verify against design drawings.`
       );
+    }
+    if (narrativeType && normalizeHeadLabel(narrativeType) !== normalizeHeadLabel(nameplateType)) {
+      warnings.push(
+        `Head type conflict: nameplate says "${nameplateType}" but narrative says "${narrativeType}". ` +
+        `Keeping nameplate value (highest authority). Verify against design drawings.`
+      );
+    }
+  } else if (checklistType) {
+    resolvedType = checklistType;
+    resolvedSource = "checklist";
 
-      // For torispherical, also warn about missing crown/knuckle radii
-      if (type === "Torispherical") {
-        if (!vesselData.crownRadius || vesselData.crownRadius === "") {
-          warnings.push(
-            `Torispherical head detected but crownRadius (L) is missing. ` +
-            `Standard F&D assumption: L = OD of vessel. ` +
-            `Calculations may be non-defensible without documented radii.`
-          );
-        }
-        if (!vesselData.knuckleRadius || vesselData.knuckleRadius === "") {
-          warnings.push(
-            `Torispherical head detected but knuckleRadius (r) is missing. ` +
-            `Standard F&D assumption: r = 0.06 × OD. ` +
-            `Calculations may be non-defensible without documented radii.`
-          );
-        }
+    overrides.push({
+      field: "vesselData.headType",
+      from: "",
+      to: checklistType,
+      rule: "checklist_head_type_hydration",
+      timestamp: new Date().toISOString(),
+    });
+    warnings.push(
+      `Head type "${checklistType}" was extracted from checklist (not from nameplate). ` +
+      `Verify this matches design data.`
+    );
+
+    if (narrativeType && normalizeHeadLabel(narrativeType) !== normalizeHeadLabel(checklistType)) {
+      warnings.push(
+        `Head type conflict: checklist says "${checklistType}" but narrative says "${narrativeType}". ` +
+        `Keeping checklist value (higher authority than narrative).`
+      );
+    }
+  } else if (narrativeType) {
+    resolvedType = narrativeType;
+    resolvedSource = "narrative";
+
+    overrides.push({
+      field: "vesselData.headType",
+      from: "",
+      to: narrativeType,
+      rule: "narrative_head_type_extraction",
+      timestamp: new Date().toISOString(),
+    });
+    warnings.push(
+      `Head type "${narrativeType}" was extracted from narrative text (lowest authority). ` +
+      `Verify this matches nameplate/design data.`
+    );
+  }
+
+  if (resolvedType) {
+    vesselData.headType = resolvedType;
+
+    // For torispherical, warn about missing crown/knuckle radii
+    if (normalizeHeadLabel(resolvedType) === "torispherical") {
+      if (!vesselData.crownRadius || vesselData.crownRadius === "") {
+        warnings.push(
+          `Torispherical head detected but crownRadius (L) is missing. ` +
+          `Standard F&D assumption: L = OD of vessel. ` +
+          `Calculations may be non-defensible without documented radii.`
+        );
       }
+      if (!vesselData.knuckleRadius || vesselData.knuckleRadius === "") {
+        warnings.push(
+          `Torispherical head detected but knuckleRadius (r) is missing. ` +
+          `Standard F&D assumption: r = 0.06 × OD. ` +
+          `Calculations may be non-defensible without documented radii.`
+        );
+      }
+    }
 
-      data.vesselData = vesselData;
-      return; // Use first match
+    data.vesselData = vesselData;
+  }
+}
+
+/**
+ * Normalize head type labels for comparison (case-insensitive, strip whitespace).
+ */
+function normalizeHeadLabel(label: string): string {
+  return label.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+// ============================================================================
+// FIX #3B: REMOVE PHANTOM NOZZLE TML ROWS
+// ============================================================================
+
+/**
+ * Remove phantom nozzle and head-quadrant TML entries that have no real thickness.
+ *
+ * Problem: The LLM sometimes expands nozzle objects into TML-like rows with
+ * readingType="nozzle" and legacyLocationIds like "1-0", "1-90", "1-180", "1-270"
+ * that duplicate a real head or nozzle point. These phantom rows:
+ *   - Have no currentThickness (or it's blank/null)
+ *   - Share the same location text as a real reading
+ *   - Create garbage stationKeys and mess up Tmin selection
+ *
+ * Rules:
+ *   1. If readingType === "nozzle" AND no parseable currentThickness → DROP
+ *   2. If location contains "Head" AND legacyLocationId matches /^\d+-(0|90|180|270)$/
+ *      AND no parseable currentThickness → DROP
+ *   3. Dedupe by (location, legacyLocationId): keep the row with thickness
+ */
+function removePhantomNozzleTmlRows(data: any, overrides: FieldOverride[], warnings: string[]): void {
+  const tmlReadings = data.tmlReadings || [];
+  if (!tmlReadings.length) return;
+
+  const originalCount = tmlReadings.length;
+  const kept: any[] = [];
+  let droppedNozzle = 0;
+  let droppedHeadQuadrant = 0;
+  let droppedDuplicate = 0;
+
+  // First pass: filter out phantom rows
+  for (const tml of tmlReadings) {
+    const readingType = String(tml.readingType || "").toLowerCase().trim();
+    const location = String(tml.location || "");
+    const legacyId = String(tml.legacyLocationId || "");
+    const hasThickness = hasParseableThickness(tml.currentThickness) || hasParseableThickness(tml.tActual);
+
+    // Rule 1: nozzle readingType with no thickness → drop
+    if (readingType === "nozzle" && !hasThickness) {
+      droppedNozzle++;
+      continue;
+    }
+
+    // Rule 2: head quadrant expansion with no thickness → drop
+    // Pattern: legacyId like "1-0", "1-90", "1-180", "1-270" AND location mentions "Head"
+    const isHeadQuadrant = /head/i.test(location) &&
+      /^\d+-(0|45|90|135|180|225|270|315)$/.test(legacyId);
+    if (isHeadQuadrant && !hasThickness) {
+      droppedHeadQuadrant++;
+      continue;
+    }
+
+    kept.push(tml);
+  }
+
+  // Second pass: dedupe by (location, legacyLocationId), keeping the one with thickness
+  const seen = new Map<string, any>();
+  const deduped: any[] = [];
+
+  for (const tml of kept) {
+    const key = `${String(tml.location || "").toLowerCase().trim()}||${String(tml.legacyLocationId || "")}`;
+    const existing = seen.get(key);
+
+    if (!existing) {
+      seen.set(key, tml);
+      deduped.push(tml);
+    } else {
+      // Keep the one with thickness; drop the other
+      const existingHasThickness = hasParseableThickness(existing.currentThickness) || hasParseableThickness(existing.tActual);
+      const newHasThickness = hasParseableThickness(tml.currentThickness) || hasParseableThickness(tml.tActual);
+
+      if (!existingHasThickness && newHasThickness) {
+        // Replace existing with new (new has thickness)
+        const idx = deduped.indexOf(existing);
+        if (idx >= 0) deduped[idx] = tml;
+        seen.set(key, tml);
+        droppedDuplicate++;
+      } else {
+        // Keep existing, drop new
+        droppedDuplicate++;
+      }
     }
   }
+
+  const totalDropped = droppedNozzle + droppedHeadQuadrant + droppedDuplicate;
+
+  if (totalDropped > 0) {
+    data.tmlReadings = deduped;
+
+    overrides.push({
+      field: "tmlReadings",
+      from: `${originalCount} rows`,
+      to: `${deduped.length} rows (removed ${totalDropped} phantom/duplicate)`,
+      rule: "remove_phantom_nozzle_tml_rows",
+      timestamp: new Date().toISOString(),
+    });
+
+    const details: string[] = [];
+    if (droppedNozzle > 0) details.push(`${droppedNozzle} nozzle rows without thickness`);
+    if (droppedHeadQuadrant > 0) details.push(`${droppedHeadQuadrant} head quadrant expansions without thickness`);
+    if (droppedDuplicate > 0) details.push(`${droppedDuplicate} duplicate (location, legacyId) rows`);
+
+    warnings.push(
+      `Removed ${totalDropped} phantom TML rows: ${details.join(", ")}. ` +
+      `Original: ${originalCount}, kept: ${deduped.length}.`
+    );
+
+    logger.info(`[Sanitizer] Removed ${totalDropped} phantom TML rows: ${details.join(", ")}`);
+  }
+}
+
+/**
+ * Check if a value can be parsed as a valid positive thickness number.
+ */
+function hasParseableThickness(value: any): boolean {
+  if (value === null || value === undefined || value === "") return false;
+  const num = parseFloat(String(value));
+  return !isNaN(num) && num > 0;
 }
 
 // ============================================================================
@@ -663,18 +856,28 @@ function fixSeamAdjacentLocations(data: any, overrides: FieldOverride[]): void {
       seamRef = "SEAM-WH"; // South → West convention
     }
 
-    // Extract angle if present
-    const angleMatch = String(tml.angle || "").match(/(\d+)/);
-    const angleStr = angleMatch ? angleMatch[1] : "";
+    // Extract angle: first from explicit angle field, then from legacyLocationId suffix
+    let angleStr = "";
+    const explicitAngle = String(tml.angle || "").match(/(\d+)/);
+    if (explicitAngle) {
+      angleStr = explicitAngle[1];
+    } else {
+      // Check legacyLocationId for angle suffix: "6-135" → angle=135, "6-0" → angle=0
+      const legacyAngleMatch = legacyId.match(/^\d+-(\d+)$/);
+      if (legacyAngleMatch) {
+        angleStr = legacyAngleMatch[1];
+      }
+    }
 
-    // Build proper stationKey
+    // Build proper stationKey — always include angle when present
+    // This prevents collapsing distinct circumferential UT points into one key
     let stationKey: string;
     if (distanceStr && angleStr) {
-      stationKey = `${seamRef}-${distanceStr}IN-${angleStr}DEG`;
+      stationKey = `${seamRef}-${distanceStr}IN-A${angleStr}`;
     } else if (distanceStr) {
       stationKey = `${seamRef}-${distanceStr}IN`;
     } else if (angleStr) {
-      stationKey = `${seamRef}-${angleStr}DEG`;
+      stationKey = `${seamRef}-A${angleStr}`;
     } else {
       stationKey = seamRef;
     }
@@ -970,7 +1173,7 @@ function buildProvenance(
       overall,
     },
     rawHeaderText: data._rawReportHeader || undefined,
-    sanitizerVersion: "1.0.0",
+    sanitizerVersion: "1.1.0",
   };
 }
 
@@ -1014,11 +1217,15 @@ export function sanitizeExtractedData(
   hydrateVesselFromChecklist(data, overrides);
   logger.info(`[Sanitizer] Fix #2 complete: ${overrides.length - preHydrateOverrides} fields hydrated from checklist`);
 
-  // Fix #3: Extract head type from narrative
-  extractHeadTypeFromNarrative(data, overrides, warnings);
+  // Fix #3: Resolve head type with authority hierarchy (nameplate > checklist > narrative)
+  resolveHeadTypeAuthority(data, overrides, warnings);
   logger.info(`[Sanitizer] Fix #3 complete: headType=${data.vesselData?.headType || "not found"}`);
 
-  // Fix #4: Fix seam-adjacent CML locations
+  // Fix #3B: Remove phantom nozzle/head-quadrant TML rows
+  removePhantomNozzleTmlRows(data, overrides, warnings);
+  logger.info(`[Sanitizer] Fix #3B complete: phantom TML rows removed, ${(data.tmlReadings || []).length} rows remaining`);
+
+  // Fix #4: Fix seam-adjacent CML locations (with angle-aware stationKeys)
   fixSeamAdjacentLocations(data, overrides);
   logger.info(`[Sanitizer] Fix #4 complete: seam-adjacent locations processed`);
 
