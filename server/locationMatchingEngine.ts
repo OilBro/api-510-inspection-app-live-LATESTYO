@@ -438,8 +438,8 @@ export function calculateCorrosionRate(
       thicknessLoss,
       timeSpan: timeSpanYears,
       timeUnit: 'years',
-      isValid: false,
-      warning: 'Negative thickness loss detected - current reading thicker than previous (possible measurement error or repair)'
+      isValid: true,
+      warning: 'Apparent thickness increase detected - rate set to 0 per engineering judgment (possible measurement variation, repair, or coating)'
     };
   }
   

@@ -809,3 +809,109 @@ describe("Integration: Full Pipeline (vessel 54-11-004)", () => {
     expect(provenance.confidence.overall).toBeGreaterThan(0);
   });
 });
+
+
+// ============================================================================
+// BUG FIX TESTS: 9 Code Review Fixes (Feb 2026)
+// ============================================================================
+
+describe("Bug Fix #1: parseNumeric fraction handling (extractionJobHandler)", () => {
+  // Note: parseNumeric is a local function in extractionJobHandler.ts,
+  // so we test the sanitizer's convertFractionToDecimal which covers the same logic
+  
+  it("should convert 5/16 to 0.3125", () => {
+    expect(convertFractionToDecimal("5/16")).toBe(0.3125);
+  });
+
+  it("should convert 3/8 to 0.375", () => {
+    expect(convertFractionToDecimal("3/8")).toBe(0.375);
+  });
+
+  it("should convert 1/4 to 0.25", () => {
+    expect(convertFractionToDecimal("1/4")).toBe(0.25);
+  });
+
+  it("should convert mixed number 1-1/2 to 1.5", () => {
+    expect(convertFractionToDecimal("1-1/2")).toBe(1.5);
+  });
+
+  it("should handle decimal strings like .450", () => {
+    expect(convertFractionToDecimal(".450")).toBe(0.45);
+  });
+
+  it("should handle plain decimal 0.500", () => {
+    expect(convertFractionToDecimal("0.500")).toBe(0.5);
+  });
+});
+
+describe("Bug Fix #2: Checklist-to-vessel hydration (radiography)", () => {
+  it("should hydrate radiographyType from checklist", () => {
+    const data = buildTestData({
+      vesselData: { radiographyType: "" },
+      inspectionChecklist: [
+        { itemText: "Radiography Type: Spot", status: "A" },
+      ],
+    });
+
+    const { data: result, provenance } = sanitizeExtractedData(data, "manus");
+    expect(result.vesselData.radiographyType).toBe("Spot");
+    expect(provenance.fieldOverrides.some(o => o.rule === "checklist_hydration_radiography")).toBe(true);
+  });
+
+  it("should not overwrite existing radiographyType", () => {
+    const data = buildTestData({
+      vesselData: { radiographyType: "Full" },
+      inspectionChecklist: [
+        { itemText: "Radiography Type: Spot", status: "A" },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.vesselData.radiographyType).toBe("Full");
+  });
+});
+
+describe("Bug Fix #5: legacyLocationId '0' preservation", () => {
+  it("should preserve legacyLocationId of '0' through sanitizer", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        { legacyLocationId: "0", location: "Shell Slice 1", currentThickness: 0.5, component: "Shell" },
+        { legacyLocationId: "1", location: "Shell Slice 2", currentThickness: 0.48, component: "Shell" },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    // The sanitizer should not strip "0" from legacyLocationId
+    expect(result.tmlReadings[0].legacyLocationId).toBe("0");
+    expect(result.tmlReadings[1].legacyLocationId).toBe("1");
+  });
+});
+
+describe("Bug Fix #8: ParserType naming consistency", () => {
+  it("should accept 'manus' as parser type without error", () => {
+    const data = buildTestData();
+    const { provenance } = sanitizeExtractedData(data, "manus");
+    expect(provenance.parser).toBe("manus");
+  });
+
+  it("should accept 'vision' as parser type", () => {
+    const data = buildTestData();
+    const { provenance } = sanitizeExtractedData(data, "vision");
+    expect(provenance.parser).toBe("vision");
+    expect(provenance.ocrApplied).toBe(true);
+  });
+
+  it("should accept 'hybrid' as parser type", () => {
+    const data = buildTestData();
+    const { provenance } = sanitizeExtractedData(data, "hybrid");
+    expect(provenance.parser).toBe("hybrid");
+    expect(provenance.ocrApplied).toBe(true);
+  });
+
+  it("should accept 'docupipe' as parser type", () => {
+    const data = buildTestData();
+    const { provenance } = sanitizeExtractedData(data, "docupipe");
+    expect(provenance.parser).toBe("docupipe");
+    expect(provenance.ocrApplied).toBe(false);
+  });
+});

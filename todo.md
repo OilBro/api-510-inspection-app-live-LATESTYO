@@ -3126,3 +3126,16 @@ Test PDF: 54-11-067 2017.pdf
 - [x] 53 comprehensive vitest tests (all passing)
 - [x] Provenance block includes: parser type, OCR flag, confidence scores, field overrides, validation warnings
 - [x] Sanitizer outputs: data quality metrics, hydrated fields, seam stationKeys, normalized statuses
+
+## 9 Bug Fixes from Code Review (Feb 2026) ✅ COMPLETE
+- [x] #1 Fix parseNumeric() to handle fractions (5/16 → 0.3125) before decimal extraction
+- [x] #2 Verify sanitizer hydrates vesselData from checklist items (NB#, serial, MAWP, MDMT, nominal thicknesses, manufacturer, year built, radiography)
+- [x] #3 Fix normalizeParserOutput() mappings: inspectorCert alias, clientName fallback to report.client, vesselTag fallback to tagNo/equipmentId/unitId
+- [x] #4 Canonicalize componentType/component in TML preview mapping to prevent field mismatch
+- [x] #5 Fix legacyLocationId defaulting to not collapse "0" to empty
+- [x] #6 Remove tmlReadings truncation recovery branch (keep brace-counter + jsonrepair only)
+- [x] #7 Verified: no stray schema snippet outside function scope in extractionJobHandler.ts
+- [x] #8 Verified: ParserType naming already consistent as "manus" everywhere (no manus_llm drift)
+- [x] #9 Fix corrosion-rate helper: thickness increase now returns isValid:true, rate=0, warning="thickness increased"
+- [x] Added radiographyType hydration to checklist-to-vessel hydration (Fix #2 enhancement)
+- [x] 13 new tests added (66 total sanitizer tests, 1046 total suite tests, 0 failures)

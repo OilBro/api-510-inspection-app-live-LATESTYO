@@ -564,31 +564,13 @@ CRITICAL INSTRUCTIONS:
       logger.info("[Manus Parser] Attempted to close open JSON structures");
     }
     
-    // Additional recovery: If still invalid, try to find the last complete object in tmlReadings array
-    // This handles the common case where LLM response is truncated mid-array
-    // Expected JSON structure: { ..., "tmlReadings": [{...}, {...}, {...}], ... }
-    if (repairedJson.includes('"tmlReadings"') && !repairedJson.includes('"tmlReadings":[]')) {
-      try {
-        JSON.parse(repairedJson);
-      } catch (e) {
-        // Find the last complete TML reading object
-        const tmlStartIndex = repairedJson.lastIndexOf('"tmlReadings":');
-        if (tmlStartIndex > 0) {
-          const afterTml = repairedJson.substring(tmlStartIndex);
-          const lastCompleteObject = afterTml.lastIndexOf('},');
-          if (lastCompleteObject > 0) {
-            const truncatePoint = tmlStartIndex + lastCompleteObject + 1;
-            // Count remaining closing braces needed (rough estimate based on what follows)
-            // This assumes structure: "tmlReadings": [{...}] } at top level
-            const closingBraces = (repairedJson.substring(truncatePoint).match(/}/g)?.length || 0);
-            const needsArrayClose = ']';
-            const needsObjectClose = '}'; // For top-level object
-            
-            repairedJson = repairedJson.substring(0, truncatePoint) + needsArrayClose + needsObjectClose;
-            logger.info("[Manus Parser] Recovered by truncating to last complete TML reading");
-          }
-        }
-      }
+    // Use jsonrepair library as final fallback for structural repair
+    try {
+      const { jsonrepair } = await import('jsonrepair');
+      repairedJson = jsonrepair(repairedJson);
+      logger.info("[Manus Parser] jsonrepair applied successfully");
+    } catch (repairErr) {
+      logger.warn("[Manus Parser] jsonrepair also failed, will use brace-counter result");
     }
     
     try {

@@ -38,15 +38,15 @@ function normalizeParserOutput(raw: any): any {
         inspectionType: raw.inspectionType || '',
         inspectionCompany: raw.inspectionCompany || '',
         inspectorName: raw.inspectorName || '',
-        inspectorCert: raw.inspectorCert || '',
+        inspectorCert: raw.inspectorCert || raw.inspectorCertification || '',
       },
       clientInfo: {
-        clientName: raw.clientName || '',
+        clientName: raw.clientName || raw.client || '',
         clientLocation: raw.clientLocation || '',
         product: raw.product || '',
       },
       vesselData: {
-        vesselTagNumber: raw.vesselTagNumber || '',
+        vesselTagNumber: raw.vesselTagNumber || raw.vesselTag || raw.tagNo || raw.equipmentId || raw.unitId || '',
         vesselName: raw.vesselName || '',
         manufacturer: raw.manufacturer || '',
         serialNumber: raw.serialNumber || '',
@@ -97,14 +97,15 @@ function normalizeParserOutput(raw: any): any {
       inspectionCompany: report.inspectionCompany || '',
       inspectorName: report.inspectorName || '',
       inspectorCert: report.inspectorCert || report.inspectorCertification || '',
+      inspectorCertification: report.inspectorCertification || report.inspectorCert || '',
     },
     clientInfo: {
-      clientName: client.clientName || report.clientName || '',
+      clientName: client.clientName || report.clientName || report.client || '',
       clientLocation: client.clientLocation || report.clientLocation || '',
       product: vessel.product || client.product || '',
     },
     vesselData: {
-      vesselTagNumber: vessel.vesselTagNumber || vessel.vesselTag || '',
+      vesselTagNumber: vessel.vesselTagNumber || vessel.vesselTag || vessel.tagNo || vessel.equipmentId || vessel.unitId || '',
       vesselName: vessel.vesselName || vessel.vesselDescription || '',
       manufacturer: vessel.manufacturer || '',
       serialNumber: vessel.serialNumber || '',
@@ -288,12 +289,31 @@ export async function processExtractionJob(
     });
 
     // Helper function to parse numeric values for display
+    // Fraction-aware: converts "5/16" → "0.3125", "3/8" → "0.375"
     const parseNumeric = (value: any): string | null => {
       if (value === null || value === undefined || value === '') return null;
       const str = String(value).trim();
-      // Handle negative numbers and decimals
-      const match = str.match(/-?[0-9]+\.?[0-9]*/);
-      return match ? match[0] : null;
+
+      // Fraction first: 5/16, 3/8, 1/4, etc.
+      const frac = str.match(/(-?\d+)\s*\/\s*(\d+)/);
+      if (frac) {
+        const num = parseInt(frac[1], 10);
+        const den = parseInt(frac[2], 10);
+        if (den !== 0) return String(Math.round((num / den) * 10000) / 10000);
+      }
+
+      // Mixed number: 1-1/2, 1 1/2
+      const mixed = str.match(/(-?\d+)[\s-](\d+)\/(\d+)/);
+      if (mixed) {
+        const whole = parseInt(mixed[1], 10);
+        const num = parseInt(mixed[2], 10);
+        const den = parseInt(mixed[3], 10);
+        if (den !== 0) return String(Math.round((whole + num / den) * 10000) / 10000);
+      }
+
+      // Then normal numbers (with optional minus + decimals)
+      const numMatch = str.match(/-?\d+(\.\d+)?/);
+      return numMatch ? numMatch[0] : null;
     };
 
     // Structure the preview data
@@ -335,11 +355,13 @@ export async function processExtractionJob(
       },
       tmlReadings: (parsedData.tmlReadings || []).map((tml: any, idx: number) => ({
         id: `tml-${idx}`,
-        legacyLocationId: String(tml.legacyLocationId || tml.cml || ''),
+        legacyLocationId: (tml.legacyLocationId !== null && tml.legacyLocationId !== undefined && String(tml.legacyLocationId).trim() !== '')
+          ? String(tml.legacyLocationId)
+          : String(tml.cml || ''),
         tmlId: String(tml.tmlId || ''),
         location: String(tml.location || tml.sliceLocation || ''),
-        component: String(tml.component || ''),
-        componentType: String(tml.componentType || ''),
+        component: String(tml.component || tml.componentType || ''),
+        componentType: String(tml.componentType || tml.component || ''),
         currentThickness: String(tml.currentThickness ?? tml.tActual ?? ''),
         previousThickness: String(tml.previousThickness ?? ''),
         nominalThickness: String(tml.nominalThickness ?? ''),

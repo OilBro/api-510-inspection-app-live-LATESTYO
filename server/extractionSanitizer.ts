@@ -440,6 +440,23 @@ function hydrateVesselFromChecklist(data: any, overrides: FieldOverride[]): void
     }
   }
 
+  // --- Radiography Type ---
+  if (!vesselData.radiographyType || vesselData.radiographyType === "") {
+    const radValue = searchChecklistForValue(checklistTexts, [
+      /(?:Radiography|Radiographic|RT|X-Ray)\s*(?:Type|Exam)?\s*:?\s*(Full|Spot|None|Partial|100%|Random)/i,
+    ]);
+    if (radValue) {
+      overrides.push({
+        field: "vesselData.radiographyType",
+        from: "",
+        to: radValue.trim(),
+        rule: "checklist_hydration_radiography",
+        timestamp: new Date().toISOString(),
+      });
+      vesselData.radiographyType = radValue.trim();
+    }
+  }
+
   // --- Material Spec ---
   if (!vesselData.materialSpec || vesselData.materialSpec === "") {
     const matValue = searchChecklistForValue(checklistTexts, [
