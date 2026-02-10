@@ -227,34 +227,85 @@ function mergeExtractionResults(textResult: any, visionResult: any): any {
     }
   }
 
-  // Merge TML readings - take the LARGER set, then fill gaps
+  // Merge TML readings - intelligently combine based on data completeness
   const textTmls = textResult.tmlReadings || textResult.thicknessMeasurements || [];
   const visionTmls = visionResult.thicknessMeasurements || visionResult.tmlReadings || [];
   
   if (visionTmls.length > 0 || textTmls.length > 0) {
-    // Use the larger set as base
-    const baseTmls = textTmls.length >= visionTmls.length ? textTmls : visionTmls;
-    const supplementTmls = textTmls.length >= visionTmls.length ? visionTmls : textTmls;
-    
     const cmlMap = new Map<string, any>();
     
-    // Add base TMLs first
-    for (const tml of baseTmls) {
-      const key = (tml.legacyLocationId || tml.cml || tml.tmlId || '').toString().toLowerCase().trim();
-      if (key) cmlMap.set(key, tml);
-    }
+    // Helper function to score TML completeness
+    const scoreTml = (tml: any): number => {
+      let score = 0;
+      if (tml.currentThickness) score += 10;
+      if (tml.previousThickness && tml.previousThickness !== 0) score += 5;
+      if (tml.nominalThickness) score += 3;
+      if (tml.minimumRequired) score += 3;
+      if (tml.location && tml.location.length > 5) score += 2;
+      if (tml.component && tml.component !== 'Unknown') score += 2;
+      if (tml.angle) score += 1;
+      if (tml.nozzleSize) score += 2;
+      return score;
+    };
     
-    // Add supplement TMLs if not already present
-    for (const tml of supplementTmls) {
+    // Add all TMLs from both sources, preferring higher-quality data
+    const allTmls = [...textTmls, ...visionTmls];
+    for (const tml of allTmls) {
       const key = (tml.legacyLocationId || tml.cml || tml.tmlId || '').toString().toLowerCase().trim();
-      if (key && !cmlMap.has(key)) {
+      if (!key) continue;
+      
+      const existing = cmlMap.get(key);
+      if (!existing) {
         cmlMap.set(key, tml);
-        logger.info(`[Hybrid Parser] Added TML ${key} from supplementary source`);
+      } else {
+        // Use scoring to determine which TML is more complete
+        const existingScore = scoreTml(existing);
+        const newScore = scoreTml(tml);
+        
+        // Merge fields, preferring non-null/non-zero values
+        // If new TML has higher score, use it as base, otherwise keep existing as base
+        const merged = newScore > existingScore ? { ...tml } : { ...existing };
+        const supplement = newScore > existingScore ? existing : tml;
+        
+        // Fill in missing fields from the supplementary source (prefer non-zero values)
+        if ((!merged.previousThickness || merged.previousThickness === 0) && 
+            supplement.previousThickness && supplement.previousThickness !== 0) {
+          merged.previousThickness = supplement.previousThickness;
+        }
+        if (!merged.nominalThickness && supplement.nominalThickness) {
+          merged.nominalThickness = supplement.nominalThickness;
+        }
+        if (!merged.minimumRequired && supplement.minimumRequired) {
+          merged.minimumRequired = supplement.minimumRequired;
+        }
+        if (!merged.nozzleSize && supplement.nozzleSize) {
+          merged.nozzleSize = supplement.nozzleSize;
+        }
+        if (!merged.angle && supplement.angle) {
+          merged.angle = supplement.angle;
+        }
+        
+        // Prefer longer/more complete text fields
+        if (supplement.location && (!merged.location || supplement.location.length > merged.location.length)) {
+          merged.location = supplement.location;
+        }
+        if (supplement.component && (!merged.component || merged.component === 'Unknown')) {
+          merged.component = supplement.component;
+        }
+        
+        cmlMap.set(key, merged);
       }
     }
     
     merged.tmlReadings = Array.from(cmlMap.values());
     logger.info(`[Hybrid Parser] Merged TMLs: ${merged.tmlReadings.length} (text: ${textTmls.length}, vision: ${visionTmls.length})`);
+    
+    // Log data quality metrics
+    const withPrevThickness = merged.tmlReadings.filter((t: any) => t.previousThickness && t.previousThickness !== 0).length;
+    const withNozzleSize = merged.tmlReadings.filter((t: any) => t.component === 'Nozzle' && t.nozzleSize).length;
+    const nozzleCount = merged.tmlReadings.filter((t: any) => t.component === 'Nozzle').length;
+    
+    logger.info(`[Hybrid Parser] Data quality: ${withPrevThickness}/${merged.tmlReadings.length} with previous thickness, ${withNozzleSize}/${nozzleCount} nozzles with size`);
   }
 
   // Merge checklist items - take the larger set

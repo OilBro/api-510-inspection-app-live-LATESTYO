@@ -157,15 +157,19 @@ CRITICAL EXTRACTION RULES AND REQUIREMENTS:
    - Each UNIQUE CML gets ONE entry with ALL readings in the 'readings' array
    - DEDUPLICATE: If CML-1 appears in multiple places, combine all readings
    - Do NOT create separate entries for 0°, 90°, 180°, 270° - COMBINE into one 'readings' array
-   - Extract FULL component names: '2 inch East Head Seam - Head Side' not just 'East Head'
+   - Extract FULL component names: '2 inch East Head Seam - Head Side' not just 'East Head' - DO NOT TRUNCATE
    - Location must be specific: '12 o'clock position' or 'Top weld seam' not just 'East End'
    - Include ALL thickness data from ALL tables in document
+   - PREVIOUS THICKNESS: Search for "Previous", "Prior", "t_prev", "Baseline" columns - CRITICAL for corrosion rate
+   - If no previous thickness found, use null (NOT 0.000)
 
 3. MULTI-PAGE TABLE HANDLING:
    - Tables may span multiple pages - collect ALL rows even if split across pages
    - Look for "Continued from previous page" or similar indicators
+   - Count row numbers (e.g., if CML goes 001-177, you MUST extract ALL 177 rows)
    - Combine nozzle data from multiple sections
    - Ensure no data is lost due to page breaks
+   - VERIFICATION: Before finishing, count total rows extracted and verify against expected count
 
 4. JOINT EFFICIENCY (E value):
    - CRITICAL for calculations - search everywhere
@@ -178,7 +182,12 @@ CRITICAL EXTRACTION RULES AND REQUIREMENTS:
    - Search for tables titled: "Nozzle Evaluation", "Appendix B", "TABLE B", "Nozzle Schedule", "Nozzle Data", "Nozzle Thickness", "Nozzle RL", "Remaining Life Calculations"
    - Look in Section 7.0 (Nozzle Evaluation), Appendix sections, and any tables with nozzle data
    - Common nozzle identifiers: N1, N2, N3, MW (Manway), RV (Relief Valve), Inlet, Outlet, Drain, Vent, Level, Gauge, Thermowell
-   - Include ALL sizes: 24", 18", 12", 8", 6", 4", 3", 2", 1", 3/4"
+   - NOZZLE SIZE EXTRACTION: Parse sizes from descriptions - extract NUMERIC VALUE separately
+     * "24\" Manway" → size: 24 (number)
+     * "N1 Manway 24" → size: 24 (number)
+     * "3\" Relief" → size: 3 (number)
+     * "2\" Inlet" → size: 2 (number)
+     * "1\" Drain" → size: 1 (number)
    - Extract ALL columns: CML, Noz ID/Number, Size, Material, Schedule, Age, t_prev, t_act, t_min, Ca, Cr, RL
    - If remaining life shows ">20" or "20+", use 999 as the number
    - Extract acceptability status (Pass/Fail, Acceptable/Unacceptable, Yes/No)
@@ -205,16 +214,18 @@ CRITICAL EXTRACTION RULES AND REQUIREMENTS:
 
 8. GENERAL RULES:
    - For missing values: use null, NOT zeros or guesses
+   - Zero thickness (0.000) is INVALID - use null instead
    - Search ENTIRE document - data scattered across multiple pages
    - If a field exists in document, extract it regardless of completeness
    - Dates must be in YYYY-MM-DD format
    - Numbers should be actual values without units in JSON
-   - PRESERVE ALL DATA EXACTLY as it appears
+   - PRESERVE ALL DATA EXACTLY as it appears - DO NOT TRUNCATE TEXT FIELDS
+   - Component names, locations, and descriptions must be COMPLETE, not abbreviated
 
 9. SECTION EXTRACTION:
-   - inspectionResults: COMPLETE Section 3.0 text - all findings for Shell, Heads, Nozzles, Supports
-   - recommendations: COMPLETE Section 4.0 text - all recommendations
-   - executiveSummary: Full summary including governing component`;
+   - inspectionResults: COMPLETE Section 3.0 text - all findings for Shell, Heads, Nozzles, Supports - FULL TEXT
+   - recommendations: COMPLETE Section 4.0 text - all recommendations - FULL TEXT
+   - executiveSummary: Full summary including governing component - FULL TEXT`;
 
 export const pdfImportRouter = router({
   /**
