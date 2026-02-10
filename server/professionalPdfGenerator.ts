@@ -864,7 +864,7 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
   
   
   } catch (error) {
-    // Error logged via Sentry in production
+    // Error logged in production
     
     
     

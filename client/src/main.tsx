@@ -1,5 +1,4 @@
 import { trpc } from "@/lib/trpc";
-import { initSentry } from "@/lib/sentry";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
@@ -9,8 +8,6 @@ import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
 
-// Initialize Sentry for error tracking
-initSentry();
 
 const queryClient = new QueryClient();
 
