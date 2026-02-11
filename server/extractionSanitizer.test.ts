@@ -593,7 +593,7 @@ describe("Fix #7: Document Provenance", () => {
     const { provenance } = sanitizeExtractedData(data, "manus");
     expect(provenance).toBeDefined();
     expect(provenance.parser).toBe("manus");
-    expect(provenance.sanitizerVersion).toBe("1.1.0");
+    expect(provenance.sanitizerVersion).toBe("1.2.0");
     expect(provenance.confidence).toBeDefined();
     expect(provenance.fieldOverrides).toBeInstanceOf(Array);
     expect(provenance.validationWarnings).toBeInstanceOf(Array);
@@ -1368,5 +1368,355 @@ describe("Pre-flight: Empty Data Warnings", () => {
       w.includes("No ") && w.includes("provided")
     );
     expect(preflightWarnings.length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+
+// ============================================================================
+// SCHEMA NORMALIZATION TESTS (Step 0)
+// ============================================================================
+
+describe("Step 0: Schema normalization", () => {
+  it("should normalize vesselInfo → vesselData when vesselData is absent", () => {
+    const data = {
+      vesselInfo: { manufacturer: "ACME Corp", serialNumber: "SN-123" },
+      reportInfo: { reportNumber: "54-11-004" },
+      tmlReadings: [],
+      inspectionChecklist: [],
+    };
+
+    const { data: result, provenance } = sanitizeExtractedData(data, "manus");
+    expect(result.vesselData).toBeDefined();
+    expect(result.vesselData.manufacturer).toBe("ACME Corp");
+    expect(result.vesselData.serialNumber).toBe("SN-123");
+    expect(result.vesselInfo).toBeUndefined();
+    // Should have a schema normalization override
+    const schemaOverride = provenance.fieldOverrides.find(o => o.field === "_schema");
+    expect(schemaOverride).toBeDefined();
+    expect(schemaOverride!.rule).toBe("schema_normalization");
+  });
+
+  it("should merge vesselInfo into vesselData when both exist (vesselData takes precedence)", () => {
+    const data = {
+      vesselInfo: { manufacturer: "OLD MFG", serialNumber: "SN-OLD" },
+      vesselData: { manufacturer: "NEW MFG" },
+      reportInfo: { reportNumber: "" },
+      tmlReadings: [],
+      inspectionChecklist: [],
+    };
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.vesselData.manufacturer).toBe("NEW MFG"); // vesselData wins
+    expect(result.vesselData.serialNumber).toBe("SN-OLD"); // merged from vesselInfo
+    expect(result.vesselInfo).toBeUndefined();
+  });
+
+  it("should normalize narratives.* → top-level fields", () => {
+    const data = {
+      narratives: {
+        executiveSummary: "The vessel was inspected on December 2, 2025.",
+        inspectionResults: "All readings within acceptable limits.",
+        recommendations: "Continue monitoring annually.",
+        scopeOfInspection: "Internal and external visual inspection.",
+      },
+      reportInfo: { reportNumber: "" },
+      vesselData: {},
+      tmlReadings: [],
+      inspectionChecklist: [],
+    };
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.executiveSummary).toBe("The vessel was inspected on December 2, 2025.");
+    expect(result.inspectionResults).toBe("All readings within acceptable limits.");
+    expect(result.recommendations).toBe("Continue monitoring annually.");
+    expect(result.scopeOfInspection).toBe("Internal and external visual inspection.");
+    expect(result.narratives).toBeUndefined();
+  });
+
+  it("should not overwrite existing top-level narratives with narratives.* values", () => {
+    const data = {
+      executiveSummary: "Existing top-level summary",
+      narratives: {
+        executiveSummary: "Should NOT overwrite",
+      },
+      reportInfo: { reportNumber: "" },
+      vesselData: {},
+      tmlReadings: [],
+      inspectionChecklist: [],
+    };
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.executiveSummary).toBe("Existing top-level summary");
+  });
+
+  it("should normalize checklistItems → inspectionChecklist", () => {
+    const data = {
+      checklistItems: [
+        { itemText: "Visual inspection", status: "A" },
+      ],
+      reportInfo: { reportNumber: "" },
+      vesselData: {},
+      tmlReadings: [],
+    };
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.inspectionChecklist).toBeDefined();
+    expect(result.inspectionChecklist.length).toBe(1);
+    expect(result.checklistItems).toBeUndefined();
+  });
+
+  it("should normalize readings → tmlReadings", () => {
+    const data = {
+      readings: [
+        { legacyLocationId: "1-0", currentThickness: 0.45 },
+      ],
+      reportInfo: { reportNumber: "" },
+      vesselData: {},
+      inspectionChecklist: [],
+    };
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.tmlReadings).toBeDefined();
+    expect(result.tmlReadings.length).toBe(1);
+    expect(result.readings).toBeUndefined();
+  });
+
+  it("should normalize report → reportInfo", () => {
+    const data = {
+      report: { reportNumber: "54-11-004", inspectionDate: "2025-12-02" },
+      vesselData: {},
+      tmlReadings: [],
+      inspectionChecklist: [],
+    };
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.reportInfo).toBeDefined();
+    expect(result.reportInfo.reportNumber).toBe("54-11-004");
+    expect(result.report).toBeUndefined();
+  });
+});
+
+// ============================================================================
+// INSPECTION DATE INFERENCE TESTS (Step 0B)
+// ============================================================================
+
+describe("Step 0B: Inspection date inference from narrative", () => {
+  it("should infer inspection date from 'inspection was performed on' pattern", () => {
+    const data = {
+      reportInfo: { reportNumber: "54-11-004", inspectionDate: "" },
+      executiveSummary: "The inspection was performed on December 2, 2025 at the facility.",
+      vesselData: {},
+      tmlReadings: [],
+      inspectionChecklist: [],
+    };
+
+    const { data: result, provenance } = sanitizeExtractedData(data, "manus");
+    expect(result.reportInfo.inspectionDate).toBe("2025-12-02");
+    const dateOverride = provenance.fieldOverrides.find(o => o.rule === "narrative_date_inference");
+    expect(dateOverride).toBeDefined();
+  });
+
+  it("should infer inspection date from 'inspected MM/DD/YYYY' pattern", () => {
+    const data = {
+      reportInfo: { reportNumber: "", inspectionDate: "" },
+      inspectionResults: "Vessel was inspected 12/02/2025 with satisfactory results.",
+      vesselData: {},
+      tmlReadings: [],
+      inspectionChecklist: [],
+    };
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.reportInfo.inspectionDate).toBe("2025-12-02");
+  });
+
+  it("should infer inspection date from 'inspection date: YYYY-MM-DD' pattern", () => {
+    const data = {
+      reportInfo: { reportNumber: "", inspectionDate: "" },
+      executiveSummary: "Inspection date: 2025-12-02. All components within limits.",
+      vesselData: {},
+      tmlReadings: [],
+      inspectionChecklist: [],
+    };
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.reportInfo.inspectionDate).toBe("2025-12-02");
+  });
+
+  it("should fall back to reportDate when no narrative date found", () => {
+    const data = {
+      reportInfo: { reportNumber: "", inspectionDate: "", reportDate: "2025-12-15" },
+      executiveSummary: "General summary with no dates mentioned.",
+      vesselData: {},
+      tmlReadings: [],
+      inspectionChecklist: [],
+    };
+
+    const { data: result, provenance } = sanitizeExtractedData(data, "manus");
+    expect(result.reportInfo.inspectionDate).toBe("2025-12-15");
+    const fallbackOverride = provenance.fieldOverrides.find(o => o.rule === "fallback_to_report_date");
+    expect(fallbackOverride).toBeDefined();
+  });
+
+  it("should NOT override existing inspectionDate", () => {
+    const data = {
+      reportInfo: { reportNumber: "", inspectionDate: "2025-01-15" },
+      executiveSummary: "Inspection was performed on December 2, 2025.",
+      vesselData: {},
+      tmlReadings: [],
+      inspectionChecklist: [],
+    };
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.reportInfo.inspectionDate).toBe("2025-01-15"); // unchanged
+  });
+});
+
+// ============================================================================
+// ELLIPTICAL HEAD TYPE REGEX FIX
+// ============================================================================
+
+describe("Elliptical head type regex", () => {
+  it("should match 'elliptical' as 2:1 Ellipsoidal", () => {
+    const data = buildTestData({
+      executiveSummary: "The vessel has elliptical heads on both ends.",
+      vesselData: { headType: "" },
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.vesselData.headType).toBe("2:1 Ellipsoidal");
+  });
+
+  it("should match 'Elliptical' (capitalized) as 2:1 Ellipsoidal", () => {
+    const data = buildTestData({
+      inspectionResults: "Both Elliptical heads were inspected and found satisfactory.",
+      vesselData: { headType: "" },
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.vesselData.headType).toBe("2:1 Ellipsoidal");
+  });
+
+  it("should still match 'ellipsoidal' as 2:1 Ellipsoidal", () => {
+    const data = buildTestData({
+      executiveSummary: "The vessel has 2:1 ellipsoidal heads.",
+      vesselData: { headType: "" },
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result.vesselData.headType).toBe("2:1 Ellipsoidal");
+  });
+});
+
+// ============================================================================
+// DUAL-WRITE CONVENTION TESTS (_stationKey / _dataStatus)
+// ============================================================================
+
+describe("Dual-write convention: _stationKey and _dataStatus", () => {
+  it("should write stationKey to both tml._stationKey and tml._metadata.stationKey", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        {
+          legacyLocationId: "6-135",
+          location: '2" from Seam w/East Head',
+          currentThickness: 0.312,
+          componentType: "Shell",
+        },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    const tml = result.tmlReadings[0];
+    expect(tml._stationKey).toBeDefined();
+    expect(tml._metadata.stationKey).toBeDefined();
+    expect(tml._stationKey).toBe(tml._metadata.stationKey);
+    expect(tml._stationKey).toContain("SEAM-EH");
+  });
+
+  it("should write dataStatus to both tml._dataStatus and tml._metadata.dataStatus for complete records", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        {
+          legacyLocationId: "1-0",
+          currentThickness: 0.45,
+          componentType: "Shell",
+        },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    const tml = result.tmlReadings[0];
+    expect(tml._dataStatus).toBe("complete");
+    expect(tml._metadata.dataStatus).toBe("complete");
+    expect(tml._dataStatus).toBe(tml._metadata.dataStatus);
+  });
+
+  it("should write dataStatus to both tml._dataStatus and tml._metadata.dataStatus for incomplete records", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        {
+          legacyLocationId: "1-0",
+          currentThickness: null,
+          componentType: "Shell",
+        },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    const tml = result.tmlReadings[0];
+    expect(tml._dataStatus).toBe("incomplete");
+    expect(tml._metadata.dataStatus).toBe("incomplete");
+    expect(tml._dataStatus).toBe(tml._metadata.dataStatus);
+  });
+});
+
+// ============================================================================
+// TML INCOMPLETE BEHAVIOR VERIFICATION
+// ============================================================================
+
+describe("TML incomplete behavior verification", () => {
+  it("should mark record as incomplete ONLY when currentThickness is missing/zero", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        { legacyLocationId: "1", currentThickness: 0.45, previousThickness: null },
+        { legacyLocationId: "2", currentThickness: null, previousThickness: 0.50 },
+        { legacyLocationId: "3", currentThickness: 0, previousThickness: 0.50 },
+        { legacyLocationId: "4", currentThickness: 0.40, previousThickness: 0 },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    
+    // Record 1: has currentThickness, no previous → complete
+    expect(result.tmlReadings[0]._metadata.dataStatus).toBe("complete");
+    expect(result.tmlReadings[0]._metadata.calculationReady).toBe(true);
+    
+    // Record 2: no currentThickness → incomplete
+    expect(result.tmlReadings[1]._metadata.dataStatus).toBe("incomplete");
+    expect(result.tmlReadings[1]._metadata.calculationReady).toBe(false);
+    
+    // Record 3: zero currentThickness → incomplete
+    expect(result.tmlReadings[2]._metadata.dataStatus).toBe("incomplete");
+    expect(result.tmlReadings[2]._metadata.calculationReady).toBe(false);
+    
+    // Record 4: has currentThickness, zero previous → complete (previous nullified, informational only)
+    expect(result.tmlReadings[3]._metadata.dataStatus).toBe("complete");
+    expect(result.tmlReadings[3]._metadata.calculationReady).toBe(true);
+    expect(result.tmlReadings[3].previousThickness).toBeNull(); // zero was nullified
+  });
+
+  it("should report correct tmlDataQuality metrics", () => {
+    const data = buildTestData({
+      tmlReadings: [
+        { legacyLocationId: "1", currentThickness: 0.45 },
+        { legacyLocationId: "2", currentThickness: 0.40 },
+        { legacyLocationId: "3", currentThickness: null },
+      ],
+    });
+
+    const { data: result } = sanitizeExtractedData(data, "manus");
+    expect(result._metadata.tmlDataQuality.total).toBe(3);
+    expect(result._metadata.tmlDataQuality.complete).toBe(2);
+    expect(result._metadata.tmlDataQuality.incomplete).toBe(1);
+    expect(result._metadata.tmlDataQuality.calculationReadyPercentage).toBe(67);
   });
 });

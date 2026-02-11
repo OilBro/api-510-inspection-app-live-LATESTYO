@@ -57,6 +57,173 @@ export interface SanitizedResult {
 }
 
 // ============================================================================
+// STEP 0: SCHEMA NORMALIZATION
+// ============================================================================
+
+/**
+ * Normalize LLM output field names to canonical schema BEFORE any other processing.
+ * 
+ * The LLM may return data under different field names depending on the prompt/model:
+ *   - vesselInfo → vesselData
+ *   - narratives.executiveSummary → executiveSummary (top-level)
+ *   - checklistItems → inspectionChecklist
+ *   - readings → tmlReadings
+ * 
+ * This function ensures all downstream sanitizer functions can rely on
+ * canonical field names without per-function alias checks.
+ */
+function normalizeSchemaFields(data: any, overrides: FieldOverride[]): void {
+  let normalizedCount = 0;
+
+  // --- vesselInfo → vesselData ---
+  if (data.vesselInfo && !data.vesselData) {
+    data.vesselData = data.vesselInfo;
+    delete data.vesselInfo;
+    normalizedCount++;
+  } else if (data.vesselInfo && data.vesselData) {
+    // Merge vesselInfo into vesselData (vesselData takes precedence)
+    data.vesselData = { ...data.vesselInfo, ...data.vesselData };
+    delete data.vesselInfo;
+    normalizedCount++;
+  }
+
+  // --- narratives.* → top-level ---
+  if (data.narratives && typeof data.narratives === 'object') {
+    if (data.narratives.executiveSummary && !data.executiveSummary) {
+      data.executiveSummary = data.narratives.executiveSummary;
+      normalizedCount++;
+    }
+    if (data.narratives.inspectionResults && !data.inspectionResults) {
+      data.inspectionResults = data.narratives.inspectionResults;
+      normalizedCount++;
+    }
+    if (data.narratives.recommendations && !data.recommendations) {
+      data.recommendations = data.narratives.recommendations;
+      normalizedCount++;
+    }
+    if (data.narratives.scopeOfInspection && !data.scopeOfInspection) {
+      data.scopeOfInspection = data.narratives.scopeOfInspection;
+      normalizedCount++;
+    }
+    delete data.narratives;
+  }
+
+  // --- checklistItems → inspectionChecklist ---
+  if (data.checklistItems && !data.inspectionChecklist) {
+    data.inspectionChecklist = data.checklistItems;
+    delete data.checklistItems;
+    normalizedCount++;
+  }
+
+  // --- readings → tmlReadings ---
+  if (data.readings && !data.tmlReadings) {
+    data.tmlReadings = data.readings;
+    delete data.readings;
+    normalizedCount++;
+  }
+
+  // --- report → reportInfo ---
+  if (data.report && !data.reportInfo) {
+    data.reportInfo = data.report;
+    delete data.report;
+    normalizedCount++;
+  }
+
+  if (normalizedCount > 0) {
+    overrides.push({
+      field: "_schema",
+      from: `${normalizedCount} non-canonical field names`,
+      to: "canonical schema (vesselData, inspectionChecklist, tmlReadings, reportInfo, top-level narratives)",
+      rule: "schema_normalization",
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+// ============================================================================
+// STEP 0B: INSPECTION DATE INFERENCE FROM NARRATIVE
+// ============================================================================
+
+/**
+ * When reportInfo.inspectionDate is blank, attempt to extract a date from
+ * narrative text (executive summary, inspection results, scope).
+ * 
+ * Common patterns:
+ *   - "Inspection was performed on December 2, 2025"
+ *   - "Inspected 12/02/2025"
+ *   - "Inspection date: 2025-12-02"
+ */
+function inferInspectionDateFromNarrative(data: any, overrides: FieldOverride[], warnings: string[]): void {
+  const reportInfo = data.reportInfo || {};
+  
+  // Only infer if inspectionDate is missing
+  if (reportInfo.inspectionDate && String(reportInfo.inspectionDate).trim() !== '') return;
+
+  // Build narrative corpus
+  const narrativeCorpus = [
+    data.executiveSummary || '',
+    data.inspectionResults || '',
+    data.scopeOfInspection || '',
+    data.recommendations || '',
+  ].join(' ');
+
+  if (!narrativeCorpus.trim()) return;
+
+  // Try to find date patterns near inspection-related keywords
+  const datePatterns = [
+    // "inspection was performed on December 2, 2025"
+    /inspect(?:ion|ed)\s+(?:was\s+)?(?:performed|conducted|completed|done)\s+(?:on\s+)?(?:the\s+)?(\d{1,2}[\/-]\d{1,2}[\/-]\d{4})/i,
+    /inspect(?:ion|ed)\s+(?:was\s+)?(?:performed|conducted|completed|done)\s+(?:on\s+)?(?:the\s+)?((?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},?\s+\d{4})/i,
+    // "inspection date: 2025-12-02"
+    /inspect(?:ion)?\s*date\s*:?\s*(\d{4}-\d{2}-\d{2})/i,
+    /inspect(?:ion)?\s*date\s*:?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{4})/i,
+    // Generic date near "inspection" keyword (within 50 chars)
+    /inspect[\s\S]{0,50}?(\d{4}-\d{2}-\d{2})/i,
+    /inspect[\s\S]{0,50}?(\d{1,2}[\/-]\d{1,2}[\/-]\d{4})/i,
+  ];
+
+  for (const pattern of datePatterns) {
+    const match = narrativeCorpus.match(pattern);
+    if (match && match[1]) {
+      const extracted = extractDate(match[1]);
+      if (extracted) {
+        reportInfo.inspectionDate = extracted;
+        data.reportInfo = reportInfo;
+        overrides.push({
+          field: 'reportInfo.inspectionDate',
+          from: '',
+          to: extracted,
+          rule: 'narrative_date_inference',
+          timestamp: new Date().toISOString(),
+        });
+        warnings.push(
+          `Inspection date "${extracted}" was inferred from narrative text (not from a structured field). ` +
+          `Verify this date matches the actual inspection date on the report.`
+        );
+        return;
+      }
+    }
+  }
+
+  // Fallback: use reportDate if available
+  if (reportInfo.reportDate && String(reportInfo.reportDate).trim() !== '') {
+    reportInfo.inspectionDate = reportInfo.reportDate;
+    data.reportInfo = reportInfo;
+    overrides.push({
+      field: 'reportInfo.inspectionDate',
+      from: '',
+      to: reportInfo.reportDate,
+      rule: 'fallback_to_report_date',
+      timestamp: new Date().toISOString(),
+    });
+    warnings.push(
+      `Inspection date was not found; using report date "${reportInfo.reportDate}" as fallback. ` +
+      `Verify this is the actual inspection date.`
+    );
+  }
+}
+
+// ============================================================================
 // FIX #1: REPORT FIELD SANITIZATION
 // ============================================================================
 
@@ -546,6 +713,7 @@ function convertFractionToDecimal(value: string): number | null {
  */
 const HEAD_TYPE_PATTERNS: Array<{ pattern: RegExp; type: string }> = [
   { pattern: /(?:2\s*:\s*1\s+)?ellipsoidal/i, type: "2:1 Ellipsoidal" },
+  { pattern: /elliptical/i, type: "2:1 Ellipsoidal" },
   { pattern: /torispherical/i, type: "Torispherical" },
   { pattern: /(?:F\s*&\s*D|flanged\s*(?:and|&)\s*dished)/i, type: "Torispherical" },
   { pattern: /hemispherical/i, type: "Hemispherical" },
@@ -886,11 +1054,13 @@ function fixSeamAdjacentLocations(data: any, overrides: FieldOverride[]): void {
     // that would be misinterpreted
     const looksLikeSliceAngle = /^\d+-\d+$/.test(legacyId);
     if (looksLikeSliceAngle || !legacyId) {
-      // Add stationKey as metadata, preserve original legacyLocationId
+      // Dual-write: both tml._stationKey (flat) and tml._metadata.stationKey (nested)
+      // so downstream consumers can use either convention
       if (!tml._metadata) tml._metadata = {};
       tml._metadata.stationKey = stationKey;
       tml._metadata.isSeamAdjacent = true;
       tml._metadata.originalLegacyId = legacyId;
+      tml._stationKey = stationKey;  // flat alias for direct access
       tml.readingType = tml.readingType || "seam";
       fixCount++;
     }
@@ -971,12 +1141,14 @@ function flagIncompleteThicknessRecords(data: any, warnings: string[]): void {
       tml._metadata.dataStatus = "incomplete";
       tml._metadata.dataIssues = allIssues;
       tml._metadata.calculationReady = false;
+      tml._dataStatus = "incomplete";  // flat alias for direct access
       incompleteCount++;
     } else {
       if (!tml._metadata) tml._metadata = {};
       tml._metadata.dataStatus = "complete";
       tml._metadata.dataIssues = infoIssues.length > 0 ? infoIssues : undefined;
       tml._metadata.calculationReady = true;
+      tml._dataStatus = "complete";  // flat alias for direct access
     }
   }
 
@@ -1173,7 +1345,7 @@ function buildProvenance(
       overall,
     },
     rawHeaderText: data._rawReportHeader || undefined,
-    sanitizerVersion: "1.1.0",
+    sanitizerVersion: "1.2.0",
   };
 }
 
@@ -1201,12 +1373,17 @@ export function sanitizeExtractedData(
   rawData: any,
   parserType: string = "manus"
 ): SanitizedResult {
-  logger.info(`[Sanitizer] Starting post-processing pipeline (parser: ${parserType})`);
+  logger.info(`[Sanitizer] Starting post-processing pipeline v1.2.0 (parser: ${parserType})`);
 
   // Deep clone to avoid mutating original
   const data = JSON.parse(JSON.stringify(rawData));
   const overrides: FieldOverride[] = [];
   const warnings: string[] = [];
+
+  // ── Step 0: Schema normalization ──
+  // Normalize field names BEFORE any other processing so all downstream
+  // functions can rely on canonical field names.
+  normalizeSchemaFields(data, overrides);
 
   // ── Pre-flight: warn about empty data sections ──
   // These warnings help inspectors understand why certain hydrations didn't run.
@@ -1235,6 +1412,9 @@ export function sanitizeExtractedData(
   // Fix #1: Sanitize report fields
   sanitizeReportFields(data, overrides);
   logger.info(`[Sanitizer] Fix #1 complete: ${overrides.length} report field overrides`);
+
+  // Fix #1B: Infer inspectionDate from narrative if blank
+  inferInspectionDateFromNarrative(data, overrides, warnings);
 
   // Fix #2: Hydrate vessel data from checklist
   const preHydrateOverrides = overrides.length;

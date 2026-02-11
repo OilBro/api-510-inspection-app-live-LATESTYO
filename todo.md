@@ -3186,3 +3186,12 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Show "Reconnecting..." status with amber spinner after 2 consecutive network failures
 - [x] Toast notification when connection restores ("Connection restored. Resuming extraction...")
 - [x] Reset networkErrorCountRef in handleCancel to prevent stale state
+
+## Sanitizer Schema Mismatch & Enhancement Fixes (Feb 2026) ✅ COMPLETE
+- [x] #1 Added normalizeSchemaFields() as Step 0: maps vesselInfo→vesselData, narratives.*→top-level, checklistItems→inspectionChecklist, readings→tmlReadings, report→reportInfo with override tracking
+- [x] #2 Added inferInspectionDateFromNarrative(): 6 regex patterns + reportDate fallback, with provenance warnings
+- [x] #3 Fixed elliptical regex: added /elliptical/i → "2:1 Ellipsoidal" to HEAD_TYPE_PATTERNS
+- [x] #4 Aligned _stationKey/_dataStatus convention: dual-write to both flat (tml._stationKey) and nested (tml._metadata.stationKey)
+- [x] #5 Verified TML incomplete: only missing/zero currentThickness marks as incomplete; zero previousThickness is informational only
+- [x] Sanitizer version bumped to 1.2.0
+- [x] 20 new tests added (112 total sanitizer tests, 1132 total suite tests, 0 regressions)
