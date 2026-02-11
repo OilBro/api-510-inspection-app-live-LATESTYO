@@ -3175,3 +3175,8 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Adapter layer in extractionJobHandler.ts normalizeParserOutput() handles all field name variations
 - [x] Added sanitizer pre-flight warnings for empty checklist/narratives/TMLs/vesselData
 - [x] 7 new pre-flight warning tests, 92 total sanitizer tests, 1123 total suite tests, 0 regressions
+
+## SEO Fixes for Home Page (Feb 2026) ✅ COMPLETE
+- [x] Add meta description (50-160 characters) to index.html
+- [x] Add meta keywords to index.html
+- [x] Add H2 headings to Home.tsx (Key Capabilities, Inspection Tools, Overview)
