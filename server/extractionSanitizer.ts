@@ -4,7 +4,7 @@
  * Deterministic post-processing pipeline that runs AFTER LLM extraction
  * and BEFORE data reaches the preview/import pipeline.
  * 
- * Implements 8+ critical fixes for audit defensibility:
+ * Implements 9+ critical fixes for audit defensibility:
  * 
  * 1. Report field sanitization (regex-based, prevents LLM thought-loop pollution)
  * 2. Checklist-to-vessel field hydration (mines checklist items for missing vessel data)
@@ -15,6 +15,7 @@
  * 6. Checklist status normalization ("A" → acceptable, "N/A" → not_applicable)
  * 7. Document provenance tracking (audit trail for parser, overrides, confidence)
  * 8. Narrative mining for vessel physical characteristics (configuration, material, insulation, coating)
+ * 9. Report info mining from narrative (clientLocation, inspectionType)
  * 
  * References:
  * - API 510 §7.1.1: Thickness Measurement Locations
@@ -1535,6 +1536,99 @@ function mineNarrativeForVesselCharacteristics(data: any, overrides: FieldOverri
 }
 
 // ============================================================================
+// FIX #9: MINE CLIENT LOCATION & INSPECTION TYPE FROM NARRATIVE
+// ============================================================================
+
+function mineReportInfoFromNarrative(
+  data: any,
+  overrides: FieldOverride[],
+  warnings: string[]
+): void {
+  const reportInfo = data.reportInfo || {};
+  const narrativeText = [
+    data.executiveSummary || '',
+    data.inspectionResults || '',
+    data.recommendations || '',
+  ].join(' ');
+
+  if (!narrativeText || narrativeText.length < 20) return;
+
+  let mineCount = 0;
+
+  // --- Client Location ---
+  // Executive summaries often say "located in CITY STATE" or "located at CITY, STATE"
+  if (!reportInfo.clientLocation || reportInfo.clientLocation === '') {
+    const locationPatterns: Array<{ pattern: RegExp; extract: (m: RegExpMatchArray) => string }> = [
+      // "located in CLEBURNE TX" or "located in Houston, Texas"
+      { pattern: /located\s+(?:in|at)\s+([A-Z][A-Za-z\s]+,?\s*(?:TX|CA|LA|OK|PA|OH|NJ|NY|IL|MI|WI|MN|IN|KY|TN|AL|MS|GA|FL|SC|NC|VA|WV|MD|DE|CT|RI|MA|VT|NH|ME|IA|MO|AR|KS|NE|SD|ND|MT|WY|CO|NM|AZ|UT|NV|ID|OR|WA|HI|AK|Texas|California|Louisiana|Oklahoma|Pennsylvania|Ohio|New\s+Jersey|New\s+York|Illinois|Michigan|Wisconsin|Minnesota|Indiana|Kentucky|Tennessee|Alabama|Mississippi|Georgia|Florida|South\s+Carolina|North\s+Carolina|Virginia|West\s+Virginia|Maryland|Delaware|Connecticut|Rhode\s+Island|Massachusetts|Vermont|New\s+Hampshire|Maine|Iowa|Missouri|Arkansas|Kansas|Nebraska|South\s+Dakota|North\s+Dakota|Montana|Wyoming|Colorado|New\s+Mexico|Arizona|Utah|Nevada|Idaho|Oregon|Washington|Hawaii|Alaska))/i, extract: (m) => m[1].trim().replace(/,\s*$/, '') },
+      // "located in CITY, ST" (2-letter state code)
+      { pattern: /located\s+(?:in|at)\s+([A-Z][A-Za-z\s]+,\s*[A-Z]{2})\b/i, extract: (m) => m[1].trim() },
+      // "facility in CITY" (less specific)
+      { pattern: /facility\s+(?:in|at|located\s+in)\s+([A-Z][A-Za-z\s]+,?\s*[A-Z]{2})\b/i, extract: (m) => m[1].trim() },
+    ];
+    for (const { pattern, extract } of locationPatterns) {
+      const match = narrativeText.match(pattern);
+      if (match) {
+        const location = extract(match);
+        // Sanity check: location should be reasonable length
+        if (location.length >= 3 && location.length <= 60) {
+          reportInfo.clientLocation = location;
+          overrides.push({
+            field: 'reportInfo.clientLocation',
+            from: '',
+            to: location,
+            rule: 'narrative_mining_client_location',
+            timestamp: new Date().toISOString(),
+          });
+          mineCount++;
+          break;
+        }
+      }
+    }
+  }
+
+  // --- Inspection Type ---
+  // Determine from narrative context whether this was External, Internal, or On-Stream
+  if (!reportInfo.inspectionType || reportInfo.inspectionType === '') {
+    const narrativeLower = narrativeText.toLowerCase();
+    let inspectionType = '';
+    
+    // Look for explicit mentions — ORDER MATTERS: check compound phrases first
+    if (/\bin-?lieu-?of\s+internal/i.test(narrativeText)) {
+      // "in-lieu-of internal inspection" means they did an external with UT instead of internal
+      inspectionType = 'External (In-Lieu-of Internal)';
+    } else if (/\b(on-?stream|on\s+stream\s+inspection)\b/i.test(narrativeText)) {
+      inspectionType = 'On-Stream';
+    } else if (/\b(internal\s+inspection|internal\s+visual|internal\s+examination)\b/i.test(narrativeText)) {
+      inspectionType = 'Internal';
+    } else if (/\b(external\s+inspection|external\s+visual|external\s+examination)\b/i.test(narrativeText)) {
+      inspectionType = 'External';
+    } else if (/\b(ut\s+(?:thickness|scan|inspection)|ultrasonic\s+thickness)/i.test(narrativeText) &&
+               !/\binternal\b/i.test(narrativeText)) {
+      // UT-based inspection without internal access suggests external
+      inspectionType = 'External';
+    }
+    
+    if (inspectionType) {
+      reportInfo.inspectionType = inspectionType;
+      overrides.push({
+        field: 'reportInfo.inspectionType',
+        from: '',
+        to: inspectionType,
+        rule: 'narrative_mining_inspection_type',
+        timestamp: new Date().toISOString(),
+      });
+      mineCount++;
+    }
+  }
+
+  if (mineCount > 0) {
+    data.reportInfo = reportInfo;
+    logger.info(`[Sanitizer] Fix #9: Mined ${mineCount} report info fields from narrative`);
+  }
+}
+
+// ============================================================================
 // FIX #7: DOCUMENT PROVENANCE
 // ============================================================================
 
@@ -1705,6 +1799,10 @@ export function sanitizeExtractedData(
   // Fix #8: Mine narrative for vessel physical characteristics
   mineNarrativeForVesselCharacteristics(data, overrides, warnings);
   logger.info(`[Sanitizer] Fix #8 complete: narrative mining for vessel characteristics`);
+
+  // Fix #9: Mine report info (clientLocation, inspectionType) from narrative
+  mineReportInfoFromNarrative(data, overrides, warnings);
+  logger.info(`[Sanitizer] Fix #9 complete: report info mining from narrative`);
 
   // Fix #7: Build provenance
   const provenance = buildProvenance(data, parserType, overrides, warnings);

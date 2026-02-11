@@ -602,7 +602,65 @@ CRITICAL INSTRUCTIONS:
     hasInspectionResults: !!(extractedData.inspectionResults && extractedData.inspectionResults.length > 10),
     hasRecommendations: !!(extractedData.recommendations && extractedData.recommendations.length > 10),
   });
+
+  // ═══════════════════════════════════════════════════════════════════
+  // RESCUE PASS: TML Readings
+  // If the main extraction returned suspiciously few TML readings but
+  // the narrative mentions thickness measurements, run a focused second
+  // LLM call that ONLY extracts TML data. This handles output-token
+  // truncation where the LLM ran out of tokens generating the full JSON.
+  // ═══════════════════════════════════════════════════════════════════
+  const tmlCount = extractedData.tmlReadings?.length || 0;
+  const narrativeText = [
+    extractedData.inspectionResults || '',
+    extractedData.recommendations || '',
+    extractedData.executiveSummary || '',
+  ].join(' ').toLowerCase();
+  const narrativeMentionsThickness = /\b(thickness|ut |tml|cml|ultrasonic|readings|measurements|mils?)\b/i.test(narrativeText);
   
+  if (tmlCount < 5 && narrativeMentionsThickness && fullText.length > 500) {
+    logger.warn(`[Manus Parser] TML RESCUE: Only ${tmlCount} TML readings but narrative mentions thickness data. Running focused TML extraction...`);
+    try {
+      const rescueTmls = await extractTmlReadingsOnly(fullText);
+      if (rescueTmls && rescueTmls.length > tmlCount) {
+        logger.info(`[Manus Parser] TML RESCUE SUCCESS: Recovered ${rescueTmls.length} TML readings (was ${tmlCount})`);
+        extractedData.tmlReadings = rescueTmls;
+        // Tag the rescue for provenance
+        extractedData._tmlRescueApplied = true;
+        extractedData._tmlRescueOriginalCount = tmlCount;
+      } else {
+        logger.info(`[Manus Parser] TML RESCUE: No improvement (rescue returned ${rescueTmls?.length || 0}, keeping original ${tmlCount})`);
+      }
+    } catch (rescueErr) {
+      logger.warn("[Manus Parser] TML RESCUE FAILED:", rescueErr);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // RESCUE PASS: Checklist Items
+  // Same logic — if the narrative describes inspection findings for
+  // foundation, shell, heads, appurtenances but we only got 0-2 items
+  // ═══════════════════════════════════════════════════════════════════
+  const checklistCount = extractedData.inspectionChecklist?.length || 0;
+  const narrativeMentionsChecklist = /\b(foundation|shell|head|appurtenance|nozzle|coating|insulation|satisfactory|unsatisfactory)\b/i.test(narrativeText);
+  
+  if (checklistCount < 3 && narrativeMentionsChecklist && fullText.length > 500) {
+    logger.warn(`[Manus Parser] CHECKLIST RESCUE: Only ${checklistCount} items but narrative describes inspection findings. Running focused checklist extraction...`);
+    try {
+      const rescueChecklist = await extractChecklistOnly(fullText);
+      if (rescueChecklist && rescueChecklist.length > checklistCount) {
+        logger.info(`[Manus Parser] CHECKLIST RESCUE SUCCESS: Recovered ${rescueChecklist.length} items (was ${checklistCount})`);
+        extractedData.inspectionChecklist = rescueChecklist;
+        extractedData._checklistRescueApplied = true;
+        extractedData._checklistRescueOriginalCount = checklistCount;
+      } else {
+        logger.info(`[Manus Parser] CHECKLIST RESCUE: No improvement (rescue returned ${rescueChecklist?.length || 0}, keeping original ${checklistCount})`);
+      }
+    } catch (rescueErr) {
+      logger.warn("[Manus Parser] CHECKLIST RESCUE FAILED:", rescueErr);
+    }
+  }
+
   // Validate critical data extraction
   if (extractedData.tmlReadings && extractedData.tmlReadings.length > 0) {
     const withPreviousThickness = extractedData.tmlReadings.filter((t: any) => 
@@ -629,6 +687,189 @@ CRITICAL INSTRUCTIONS:
   logger.info("[Manus Parser] Structured data extracted successfully");
 
   return extractedData;
+}
+
+/**
+ * RESCUE PASS: Extract TML readings only
+ * Focused LLM call with a simplified schema that only asks for thickness data.
+ * Uses a smaller output schema to avoid token truncation.
+ */
+async function extractTmlReadingsOnly(fullText: string): Promise<any[]> {
+  const MAX_CHARS = 200000;
+  const textToSend = fullText.substring(0, MAX_CHARS);
+  
+  const llmResponse = await invokeLLM({
+    messages: [
+      {
+        role: "system",
+        content: `You are an expert at extracting thickness measurement data from API 510 pressure vessel inspection reports.
+
+Your ONLY task is to extract ALL thickness measurement readings (TML/CML data) from this document.
+Do NOT extract vessel info, narratives, or other data — ONLY thickness readings.
+
+CRITICAL RULES:
+1. Extract EVERY thickness reading in the document — search ALL pages
+2. Multi-page tables: Continue reading through ALL pages, do not stop at the first page
+3. Grid format tables (slices × angles): Create a SEPARATE reading for EACH cell
+   - For a table with 10 rows × 8 angle columns = 80 readings
+   - Use legacyLocationId format "SLICE-ANGLE" (e.g., "2-0", "2-45", "2-90")
+4. Nozzle readings: Create 4 readings per nozzle (0°, 90°, 180°, 270°)
+   - Use legacyLocationId format "N1-0", "N1-90", etc.
+5. Previous thickness: Extract if available. Use null (not 0) if not present.
+6. Count your readings and verify against any row numbers in the tables.
+
+Return a JSON object with a single "tmlReadings" array.`
+      },
+      {
+        role: "user",
+        content: `Extract ALL thickness measurement readings from this API 510 report:\n\n${textToSend}`
+      }
+    ],
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "tml_readings_only",
+        strict: true,
+        schema: {
+          type: "object",
+          properties: {
+            tmlReadings: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  legacyLocationId: { type: "string" },
+                  location: { type: "string" },
+                  component: { type: "string" },
+                  readingType: { type: "string" },
+                  nozzleSize: { type: "string" },
+                  angle: { type: "string" },
+                  sliceLocation: { type: "string" },
+                  nominalThickness: { type: "number" },
+                  previousThickness: { type: "number" },
+                  currentThickness: { type: "number" },
+                  minimumRequired: { type: "number" },
+                },
+                required: [],
+                additionalProperties: false,
+              },
+            },
+          },
+          required: ["tmlReadings"],
+          additionalProperties: false,
+        },
+      },
+    },
+  });
+
+  const content = llmResponse.choices[0].message.content;
+  const text = typeof content === 'string' ? content : JSON.stringify(content);
+  
+  let parsed;
+  try {
+    parsed = JSON.parse(text || '{}');
+  } catch {
+    // Try JSON repair
+    try {
+      const { jsonrepair } = await import('jsonrepair');
+      parsed = JSON.parse(jsonrepair(text || '{}'));
+    } catch {
+      logger.error("[Manus Parser] TML RESCUE: JSON parse failed");
+      return [];
+    }
+  }
+  
+  return parsed.tmlReadings || [];
+}
+
+/**
+ * RESCUE PASS: Extract checklist items only
+ * Focused LLM call that generates checklist items from the inspection results narrative.
+ * When the LLM fails to extract structured checklist data, this pass mines the
+ * Section 3.0 narrative for inspection findings and converts them to checklist format.
+ */
+async function extractChecklistOnly(fullText: string): Promise<any[]> {
+  const MAX_CHARS = 200000;
+  const textToSend = fullText.substring(0, MAX_CHARS);
+  
+  const llmResponse = await invokeLLM({
+    messages: [
+      {
+        role: "system",
+        content: `You are an expert at extracting inspection checklist data from API 510 pressure vessel inspection reports.
+
+Your ONLY task is to extract ALL inspection checklist items from this document.
+Do NOT extract vessel info, thickness readings, or narratives — ONLY checklist items.
+
+Look for:
+1. Formal checklist tables with pass/fail or satisfactory/unsatisfactory columns
+2. Section 3.0 Inspection Results — convert each finding into a checklist item:
+   - Foundation findings → category: "Foundation"
+   - Shell findings → category: "Shell"
+   - Head findings → category: "Heads"
+   - Appurtenance findings → category: "Appurtenances"
+   - Nozzle findings → category: "Nozzles"
+   - Coating/painting findings → category: "Coating"
+   - Insulation findings → category: "Insulation"
+3. Each sub-section (3.1.1, 3.1.2, 3.2.1, etc.) should be a separate checklist item
+4. Extract the FULL text of each finding
+5. Status should be: "satisfactory", "unsatisfactory", "needs_attention", or "n/a"
+
+Return a JSON object with a single "inspectionChecklist" array.`
+      },
+      {
+        role: "user",
+        content: `Extract ALL inspection checklist items from this API 510 report:\n\n${textToSend}`
+      }
+    ],
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "checklist_only",
+        strict: true,
+        schema: {
+          type: "object",
+          properties: {
+            inspectionChecklist: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  category: { type: "string" },
+                  itemNumber: { type: "string" },
+                  itemText: { type: "string" },
+                  status: { type: "string" },
+                  notes: { type: "string" },
+                },
+                required: ["itemText", "status"],
+                additionalProperties: false,
+              },
+            },
+          },
+          required: ["inspectionChecklist"],
+          additionalProperties: false,
+        },
+      },
+    },
+  });
+
+  const content = llmResponse.choices[0].message.content;
+  const text = typeof content === 'string' ? content : JSON.stringify(content);
+  
+  let parsed;
+  try {
+    parsed = JSON.parse(text || '{}');
+  } catch {
+    try {
+      const { jsonrepair } = await import('jsonrepair');
+      parsed = JSON.parse(jsonrepair(text || '{}'));
+    } catch {
+      logger.error("[Manus Parser] CHECKLIST RESCUE: JSON parse failed");
+      return [];
+    }
+  }
+  
+  return parsed.inspectionChecklist || [];
 }
 
 /**

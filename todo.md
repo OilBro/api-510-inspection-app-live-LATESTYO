@@ -3213,3 +3213,18 @@ Test PDF: 54-11-067 2017.pdf
 - [x] #4 Date conflict detection: anchored_date_override_conflict rule overrides LLM date with narrative-anchored date + INSPECTION DATE CONFLICT warning
 - [x] Sanitizer version bumped to 1.3.0
 - [x] 29 new tests added (141 sanitizer tests, 1161 total suite tests, 0 regressions)
+
+## Extraction Quality Crisis — 54-11-067 Baseline (2017) Report (Feb 2026) ✅ CORE FIXES COMPLETE
+- [x] #1 LLM extraction returned only 1 TML reading — FIXED: Added TML rescue pass (focused 2nd LLM call when <5 TMLs detected)
+- [x] #2 LLM extraction returned only 1 checklist item — FIXED: Added checklist rescue pass (focused 2nd LLM call when <3 items)
+- [x] #3 inspectionDate blank despite narrative saying "conducted on 10/8/17" — Already handled by sanitizer v1.3.0 anchored date inference
+- [ ] #4 All design parameters blank (designPressure, designTemperature, etc.) — Requires better LLM prompt or dedicated extraction pass
+- [x] #5 clientLocation blank — FIXED: Added Fix #9 narrative mining for clientLocation ("located in CLEBURNE TX")
+- [ ] #6 tableA is null — no Table A data extracted (deferred — requires dedicated extraction pass)
+- [x] #7 Diagnose root cause: LLM output token truncation causes JSON to be cut off mid-array; JSON repair closes truncated arrays with 1-2 items
+- [x] #8 Fix root cause: Multi-pass rescue extraction in manusParser.ts — TML rescue + checklist rescue
+- [x] #9 Add sanitizer mining for clientLocation from narrative ("CLEBURNE TX") — Fix #9 in sanitizer
+- [x] #10 Fix vesselTagNumber check in fileParser.ts — was checking flat format but manus parser returns nested format
+- [x] #11 Add sanitizer mining for inspectionType from narrative (External/Internal/On-Stream/In-Lieu-of)
+- [x] Sanitizer version: 1.3.0 → 9 fixes now
+- [x] 12 new tests added for Fix #9 (153 sanitizer tests, 1184 total suite tests, 0 regressions)

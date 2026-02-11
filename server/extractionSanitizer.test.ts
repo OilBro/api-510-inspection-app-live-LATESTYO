@@ -2175,3 +2175,151 @@ describe("Global img onError handling", () => {
     expect(true).toBe(true);
   });
 });
+
+// ============================================================================
+// FIX #9: REPORT INFO MINING (clientLocation, inspectionType)
+// ============================================================================
+
+describe("Fix #9: Report Info Mining from Narrative", () => {
+  // --- Client Location ---
+  describe("Client Location", () => {
+    it("should extract 'CLEBURNE TX' from 'located in CLEBURNE TX'", () => {
+      const data = buildTestData({
+        executiveSummary: "An API Standard 510 inspection of pressure vessel 54-11-067 located in CLEBURNE TX, was conducted on 10/08/2025.",
+        reportInfo: { clientLocation: "" },
+      });
+
+      const { data: result, provenance } = sanitizeExtractedData(data, "manus");
+      expect(result.reportInfo.clientLocation).toContain("CLEBURNE");
+      const override = provenance.fieldOverrides.find(o => o.rule === "narrative_mining_client_location");
+      expect(override).toBeDefined();
+    });
+
+    it("should extract 'Houston, TX' from 'located in Houston, TX'", () => {
+      const data = buildTestData({
+        executiveSummary: "The vessel is located in Houston, TX and serves as a storage tank.",
+        reportInfo: { clientLocation: "" },
+      });
+
+      const { data: result } = sanitizeExtractedData(data, "manus");
+      expect(result.reportInfo.clientLocation).toContain("Houston");
+      expect(result.reportInfo.clientLocation).toContain("TX");
+    });
+
+    it("should extract location with full state name", () => {
+      const data = buildTestData({
+        executiveSummary: "The facility located in Baton Rouge, Louisiana operates a refinery.",
+        reportInfo: { clientLocation: "" },
+      });
+
+      const { data: result } = sanitizeExtractedData(data, "manus");
+      expect(result.reportInfo.clientLocation).toBeTruthy();
+      expect(result.reportInfo.clientLocation).toContain("Baton Rouge");
+    });
+
+    it("should NOT override existing clientLocation", () => {
+      const data = buildTestData({
+        executiveSummary: "The vessel is located in Houston, TX.",
+        reportInfo: { clientLocation: "Dallas, TX" },
+      });
+
+      const { data: result } = sanitizeExtractedData(data, "manus");
+      expect(result.reportInfo.clientLocation).toBe("Dallas, TX");
+    });
+  });
+
+  // --- Inspection Type ---
+  describe("Inspection Type", () => {
+    it("should extract 'External' from 'external inspection'", () => {
+      const data = buildTestData({
+        executiveSummary: "An external inspection was conducted on the vessel.",
+        reportInfo: { inspectionType: "" },
+      });
+
+      const { data: result, provenance } = sanitizeExtractedData(data, "manus");
+      expect(result.reportInfo.inspectionType).toBe("External");
+      const override = provenance.fieldOverrides.find(o => o.rule === "narrative_mining_inspection_type");
+      expect(override).toBeDefined();
+    });
+
+    it("should extract 'Internal' from 'internal visual'", () => {
+      const data = buildTestData({
+        inspectionResults: "An internal visual examination was performed on the vessel.",
+        reportInfo: { inspectionType: "" },
+      });
+
+      const { data: result } = sanitizeExtractedData(data, "manus");
+      expect(result.reportInfo.inspectionType).toBe("Internal");
+    });
+
+    it("should extract 'On-Stream' from 'on-stream inspection'", () => {
+      const data = buildTestData({
+        executiveSummary: "An on-stream inspection was performed while the vessel remained in service.",
+        reportInfo: { inspectionType: "" },
+      });
+
+      const { data: result } = sanitizeExtractedData(data, "manus");
+      expect(result.reportInfo.inspectionType).toBe("On-Stream");
+    });
+
+    it("should extract 'External (In-Lieu-of Internal)' from in-lieu-of pattern", () => {
+      const data = buildTestData({
+        executiveSummary: "An in-lieu-of internal inspection was conducted using UT thickness measurements.",
+        reportInfo: { inspectionType: "" },
+      });
+
+      const { data: result } = sanitizeExtractedData(data, "manus");
+      expect(result.reportInfo.inspectionType).toBe("External (In-Lieu-of Internal)");
+    });
+
+    it("should infer 'External' from UT-only inspection without internal access", () => {
+      const data = buildTestData({
+        inspectionResults: "UT thickness measurements were taken at all CML locations.",
+        reportInfo: { inspectionType: "" },
+      });
+
+      const { data: result } = sanitizeExtractedData(data, "manus");
+      expect(result.reportInfo.inspectionType).toBe("External");
+    });
+
+    it("should NOT override existing inspectionType", () => {
+      const data = buildTestData({
+        executiveSummary: "An external inspection was conducted.",
+        reportInfo: { inspectionType: "Internal" },
+      });
+
+      const { data: result } = sanitizeExtractedData(data, "manus");
+      // Fix #1 may uppercase the value, but it should NOT be replaced with "External"
+      expect(result.reportInfo.inspectionType.toLowerCase()).toBe("internal");
+    });
+
+    it("should prefer 'Internal' over 'External' when both mentioned but internal comes first", () => {
+      const data = buildTestData({
+        inspectionResults: "An internal inspection was performed. External coating was also examined.",
+        reportInfo: { inspectionType: "" },
+      });
+
+      const { data: result } = sanitizeExtractedData(data, "manus");
+      expect(result.reportInfo.inspectionType).toBe("Internal");
+    });
+  });
+
+  // --- Full real-world case ---
+  describe("Real-world: Vessel 54-11-067 report info mining", () => {
+    it("should extract location and infer inspection type from 54-11-067 data", () => {
+      const data = buildTestData({
+        executiveSummary: "An API Standard 510 inspection of pressure vessel 54-11-067 located in CLEBURNE TX, was conducted on 10/08/2025.",
+        inspectionResults: "3.2 Shell: 3.2.1 The shell is un-insulated, Stainless steel with 20 to 30 mils epoxy external coating. UT thickness measurements were taken at all CML locations.",
+        reportInfo: { clientLocation: "", inspectionType: "" },
+      });
+
+      const { data: result, provenance } = sanitizeExtractedData(data, "manus");
+      
+      // Client location
+      expect(result.reportInfo.clientLocation).toContain("CLEBURNE");
+      
+      // Inspection type (UT measurements without internal access → External)
+      expect(result.reportInfo.inspectionType).toBeTruthy();
+    });
+  });
+});
