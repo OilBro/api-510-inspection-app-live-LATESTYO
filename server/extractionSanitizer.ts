@@ -1208,6 +1208,30 @@ export function sanitizeExtractedData(
   const overrides: FieldOverride[] = [];
   const warnings: string[] = [];
 
+  // ── Pre-flight: warn about empty data sections ──
+  // These warnings help inspectors understand why certain hydrations didn't run.
+  const checklist = data.inspectionChecklist || data.checklistItems || [];
+  const tmlReadings = data.tmlReadings || [];
+  const hasNarratives = !!(data.executiveSummary || data.inspectionResults || data.recommendations);
+  const hasVesselData = data.vesselData && Object.values(data.vesselData).some((v: any) => v && String(v).trim() !== '');
+
+  if (!checklist.length) {
+    warnings.push('No checklist items provided; vessel hydration from checklist will be skipped.');
+    logger.info('[Sanitizer] Pre-flight: empty checklist — hydration will be limited');
+  }
+  if (!hasNarratives) {
+    warnings.push('No narrative text provided (executive summary, inspection results, recommendations); head type extraction from narrative will be skipped.');
+    logger.info('[Sanitizer] Pre-flight: empty narratives — head type narrative extraction will be limited');
+  }
+  if (!tmlReadings.length) {
+    warnings.push('No TML readings provided; seam-adjacent processing, phantom removal, and thickness flagging will be skipped.');
+    logger.info('[Sanitizer] Pre-flight: empty TML readings — thickness processing will be skipped');
+  }
+  if (!hasVesselData) {
+    warnings.push('No vessel data provided; vessel field validation will be limited.');
+    logger.info('[Sanitizer] Pre-flight: empty vessel data');
+  }
+
   // Fix #1: Sanitize report fields
   sanitizeReportFields(data, overrides);
   logger.info(`[Sanitizer] Fix #1 complete: ${overrides.length} report field overrides`);

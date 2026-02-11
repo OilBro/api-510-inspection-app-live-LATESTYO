@@ -73,13 +73,13 @@ function normalizeParserOutput(raw: any): any {
         insulationType: raw.insulationType || '',
         corrosionAllowance: raw.corrosionAllowance || '',
       },
-      executiveSummary: raw.executiveSummary || '',
-      inspectionResults: raw.inspectionResults || '',
-      recommendations: raw.recommendations || '',
-      tmlReadings: raw.tmlReadings || raw.thicknessMeasurements || [],
-      inspectionChecklist: raw.checklistItems || raw.inspectionChecklist || [],
-      nozzles: raw.nozzles || [],
-      tableA: raw.tableA || null,
+    executiveSummary: raw.executiveSummary || raw.narratives?.executiveSummary || '',
+    inspectionResults: raw.inspectionResults || raw.narratives?.inspectionResults || '',
+    recommendations: raw.recommendations || raw.narratives?.recommendations || '',
+    tmlReadings: raw.tmlReadings || raw.thicknessMeasurements || [],
+    inspectionChecklist: raw.checklistItems || raw.inspectionChecklist || [],
+    nozzles: raw.nozzles || [],
+    tableA: raw.tableA || null,
     };
   }
   
@@ -87,6 +87,8 @@ function normalizeParserOutput(raw: any): any {
   const vessel = { ...(raw.vesselData || {}), ...(raw.vesselInfo || {}) };
   const report = raw.reportInfo || {};
   const client = raw.clientInfo || {};
+  // Narratives may be top-level OR nested under raw.narratives.*
+  const narratives = raw.narratives || {};
   
   const normalized: any = {
     reportInfo: {
@@ -132,9 +134,10 @@ function normalizeParserOutput(raw: any): any {
       insulationType: vessel.insulationType || '',
       corrosionAllowance: vessel.corrosionAllowance || '',
     },
-    executiveSummary: raw.executiveSummary || '',
-    inspectionResults: raw.inspectionResults || '',
-    recommendations: raw.recommendations || '',
+    // Narratives: check top-level first, then nested narratives.* object
+    executiveSummary: raw.executiveSummary || narratives.executiveSummary || '',
+    inspectionResults: raw.inspectionResults || narratives.inspectionResults || '',
+    recommendations: raw.recommendations || narratives.recommendations || '',
     tmlReadings: raw.tmlReadings || raw.thicknessMeasurements || [],
     inspectionChecklist: raw.checklistItems || raw.inspectionChecklist || [],
     nozzles: raw.nozzles || [],

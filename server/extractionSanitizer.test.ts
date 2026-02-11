@@ -1259,3 +1259,114 @@ describe("Fix #D: Fraction-Aware parseNumeric Verification", () => {
     expect(convertFractionToDecimal("1 1/2")).toBe(1.5);
   });
 });
+
+
+// ============================================================================
+// FIELD-NAME MISMATCH: EMPTY DATA PRE-FLIGHT WARNINGS
+// ============================================================================
+
+describe("Pre-flight: Empty Data Warnings", () => {
+  it("should warn when checklist is empty", () => {
+    const data = buildTestData({
+      inspectionChecklist: [],
+    });
+
+    const { provenance } = sanitizeExtractedData(data, "manus");
+    expect(provenance.validationWarnings.some(w =>
+      w.includes("No checklist items provided")
+    )).toBe(true);
+  });
+
+  it("should warn when all narratives are empty", () => {
+    const data = buildTestData({
+      executiveSummary: "",
+      inspectionResults: "",
+      recommendations: "",
+    });
+
+    const { provenance } = sanitizeExtractedData(data, "manus");
+    expect(provenance.validationWarnings.some(w =>
+      w.includes("No narrative text provided")
+    )).toBe(true);
+  });
+
+  it("should NOT warn about narratives when at least one is present", () => {
+    const data = buildTestData({
+      executiveSummary: "Vessel inspected and found acceptable.",
+      inspectionResults: "",
+      recommendations: "",
+    });
+
+    const { provenance } = sanitizeExtractedData(data, "manus");
+    expect(provenance.validationWarnings.some(w =>
+      w.includes("No narrative text provided")
+    )).toBe(false);
+  });
+
+  it("should warn when TML readings are empty", () => {
+    const data = buildTestData({
+      tmlReadings: [],
+    });
+
+    const { provenance } = sanitizeExtractedData(data, "manus");
+    expect(provenance.validationWarnings.some(w =>
+      w.includes("No TML readings provided")
+    )).toBe(true);
+  });
+
+  it("should warn when vessel data is entirely empty", () => {
+    // Build with all vessel fields as empty strings
+    const data = buildTestData({
+      vesselData: {
+        vesselTagNumber: "",
+        vesselName: "",
+        manufacturer: "",
+        serialNumber: "",
+        nbNumber: "",
+        designPressure: "",
+        designTemperature: "",
+        headType: "",
+      },
+    });
+
+    const { provenance } = sanitizeExtractedData(data, "manus");
+    expect(provenance.validationWarnings.some(w =>
+      w.includes("No vessel data provided")
+    )).toBe(true);
+  });
+
+  it("should NOT warn about vessel data when at least one field is populated", () => {
+    const data = buildTestData({
+      vesselData: {
+        vesselTagNumber: "V-101",
+        vesselName: "",
+        manufacturer: "",
+      },
+    });
+
+    const { provenance } = sanitizeExtractedData(data, "manus");
+    expect(provenance.validationWarnings.some(w =>
+      w.includes("No vessel data provided")
+    )).toBe(false);
+  });
+
+  it("should produce multiple warnings when all sections are empty", () => {
+    const data = {
+      reportInfo: { reportNumber: "" },
+      clientInfo: {},
+      vesselData: {},
+      executiveSummary: "",
+      inspectionResults: "",
+      recommendations: "",
+      tmlReadings: [],
+      inspectionChecklist: [],
+    };
+
+    const { provenance } = sanitizeExtractedData(data, "manus");
+    // Should have at least 3 warnings: checklist, narratives, TML, vessel
+    const preflightWarnings = provenance.validationWarnings.filter(w =>
+      w.includes("No ") && w.includes("provided")
+    );
+    expect(preflightWarnings.length).toBeGreaterThanOrEqual(3);
+  });
+});

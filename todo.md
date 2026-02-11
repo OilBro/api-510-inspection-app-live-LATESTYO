@@ -3168,3 +3168,10 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Fix: Removed <link rel="manifest"> from index.html — not needed (not a PWA), eliminates the unauthenticated fetch entirely
 - [x] Kept Express manifest.json route as fallback for any direct requests
 - [x] Theme color preserved via <meta name="theme-color"> tag
+
+## Field-Name Mismatch: Sanitizer vs LLM Extraction Output (Feb 2026) ✅ COMPLETE
+- [x] Fix vesselInfo→vesselData mismatch: normalizer already merges both shapes correctly (verified)
+- [x] Fix narratives.* mismatch: added raw.narratives?.executiveSummary/inspectionResults/recommendations fallbacks in both flat and nested normalizer paths
+- [x] Adapter layer in extractionJobHandler.ts normalizeParserOutput() handles all field name variations
+- [x] Added sanitizer pre-flight warnings for empty checklist/narratives/TMLs/vesselData
+- [x] 7 new pre-flight warning tests, 92 total sanitizer tests, 1123 total suite tests, 0 regressions
