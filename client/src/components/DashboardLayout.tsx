@@ -67,6 +67,7 @@ export default function DashboardLayout({
                   src={APP_LOGO}
                   alt={APP_TITLE}
                   className="h-20 w-20 rounded-xl object-cover shadow"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
               </div>
             </div>
@@ -176,6 +177,7 @@ function DashboardLayoutContent({
                     src={APP_LOGO}
                     className="h-8 w-8 rounded-md object-cover ring-1 ring-border"
                     alt="Logo"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                   <button
                     onClick={toggleSidebar}
@@ -191,6 +193,7 @@ function DashboardLayoutContent({
                       src={APP_LOGO}
                       className="h-8 w-8 rounded-md object-cover ring-1 ring-border shrink-0"
                       alt="Logo"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                     <span className="font-semibold tracking-tight truncate">
                       {APP_TITLE}

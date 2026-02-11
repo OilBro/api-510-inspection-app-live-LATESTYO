@@ -4,7 +4,7 @@
  * Deterministic post-processing pipeline that runs AFTER LLM extraction
  * and BEFORE data reaches the preview/import pipeline.
  * 
- * Implements 7+ critical fixes for audit defensibility:
+ * Implements 8+ critical fixes for audit defensibility:
  * 
  * 1. Report field sanitization (regex-based, prevents LLM thought-loop pollution)
  * 2. Checklist-to-vessel field hydration (mines checklist items for missing vessel data)
@@ -14,6 +14,7 @@
  * 5. Incomplete thickness record flagging (prevents bad RL/CR calculations)
  * 6. Checklist status normalization ("A" → acceptable, "N/A" → not_applicable)
  * 7. Document provenance tracking (audit trail for parser, overrides, confidence)
+ * 8. Narrative mining for vessel physical characteristics (configuration, material, insulation, coating)
  * 
  * References:
  * - API 510 §7.1.1: Thickness Measurement Locations
@@ -141,85 +142,160 @@ function normalizeSchemaFields(data: any, overrides: FieldOverride[]): void {
 }
 
 // ============================================================================
-// STEP 0B: INSPECTION DATE INFERENCE FROM NARRATIVE
+// STEP 0B: INSPECTION DATE VALIDATION & INFERENCE FROM NARRATIVE
 // ============================================================================
 
 /**
- * When reportInfo.inspectionDate is blank, attempt to extract a date from
- * narrative text (executive summary, inspection results, scope).
- * 
- * Common patterns:
- *   - "Inspection was performed on December 2, 2025"
- *   - "Inspected 12/02/2025"
- *   - "Inspection date: 2025-12-02"
+ * ANCHORED date patterns — only match dates near "conducted on", "inspected on",
+ * "inspection date", "performed on" etc. These are high-confidence indicators
+ * of the ACTUAL inspection date (not due dates or next-inspection dates).
  */
-function inferInspectionDateFromNarrative(data: any, overrides: FieldOverride[], warnings: string[]): void {
-  const reportInfo = data.reportInfo || {};
-  
-  // Only infer if inspectionDate is missing
-  if (reportInfo.inspectionDate && String(reportInfo.inspectionDate).trim() !== '') return;
+const ANCHORED_INSPECTION_DATE_PATTERNS = [
+  // "conducted on 10/08/2025" or "conducted on October 8, 2025"
+  /(?:conducted|performed|completed|done)\s+(?:on\s+)?(?:the\s+)?(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4})/i,
+  /(?:conducted|performed|completed|done)\s+(?:on\s+)?(?:the\s+)?((?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?\s+\d{1,2},?\s+\d{4})/i,
+  // "inspection was conducted on ..."
+  /inspect(?:ion|ed)\s+(?:was\s+)?(?:performed|conducted|completed|done)\s+(?:on\s+)?(?:the\s+)?(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4})/i,
+  /inspect(?:ion|ed)\s+(?:was\s+)?(?:performed|conducted|completed|done)\s+(?:on\s+)?(?:the\s+)?((?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?\s+\d{1,2},?\s+\d{4})/i,
+  // "inspection date: 2025-12-02" or "inspection date: 12/02/2025"
+  /inspect(?:ion)?\s*date\s*:?\s*(\d{4}-\d{2}-\d{2})/i,
+  /inspect(?:ion)?\s*date\s*:?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4})/i,
+];
 
-  // Build narrative corpus
-  const narrativeCorpus = [
+/**
+ * "Due by" / "next inspection" date patterns — these should NEVER be used
+ * as inspectionDate. They are extracted into separate fields.
+ */
+const NEXT_INSPECTION_DUE_PATTERNS: Array<{ field: string; pattern: RegExp }> = [
+  { field: 'nextExternalInspectionDue', pattern: /next\s+external\s+(?:inspection\s+)?(?:is\s+)?due\s+(?:by)?\s*:?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}|\d{4}-\d{2}-\d{2}|(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?\s+\d{1,2},?\s+\d{4})/i },
+  { field: 'nextInternalInspectionDue', pattern: /next\s+internal\s+(?:inspection\s+)?(?:is\s+)?due\s+(?:by)?\s*:?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}|\d{4}-\d{2}-\d{2}|(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?\s+\d{1,2},?\s+\d{4})/i },
+  { field: 'nextUTInspectionDue', pattern: /next\s+(?:UT|ultrasonic|thickness)\s+(?:inspection\s+)?(?:is\s+)?due\s+(?:by)?\s*:?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}|\d{4}-\d{2}-\d{2}|(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?\s+\d{1,2},?\s+\d{4})/i },
+  // Generic "due by" / "due date" for any inspection type
+  { field: 'nextExternalInspectionDue', pattern: /external\s+(?:inspection\s+)?(?:due\s+)?(?:date)?\s*:?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}|\d{4}-\d{2}-\d{2})/i },
+  { field: 'nextInternalInspectionDue', pattern: /internal\s+(?:inspection\s+)?(?:due\s+)?(?:date)?\s*:?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}|\d{4}-\d{2}-\d{2})/i },
+];
+
+/**
+ * Validates and corrects inspectionDate using anchored narrative parsing.
+ * 
+ * CRITICAL FIX: The LLM sometimes returns a "next inspection due" date
+ * (e.g., 2030-10-08) instead of the actual inspection date (e.g., 2025-10-08).
+ * This function:
+ * 1. ALWAYS extracts anchored dates from narratives ("conducted on", "inspected on")
+ * 2. If the LLM date conflicts with the anchored date, OVERRIDES with the anchored date
+ * 3. If no LLM date exists, infers from narrative
+ * 4. Extracts "next inspection due" dates into separate fields
+ */
+function validateAndInferInspectionDate(data: any, overrides: FieldOverride[], warnings: string[]): void {
+  const reportInfo = data.reportInfo || {};
+  const existingDate = reportInfo.inspectionDate ? String(reportInfo.inspectionDate).trim() : '';
+
+  // Build narrative corpus from executive summary and inspection results
+  // EXCLUDE recommendations to avoid picking up "due by" dates
+  const inspectionNarrative = [
     data.executiveSummary || '',
     data.inspectionResults || '',
     data.scopeOfInspection || '',
+  ].join(' ');
+
+  // Full corpus including recommendations (for due date extraction)
+  const fullNarrative = [
+    inspectionNarrative,
     data.recommendations || '',
   ].join(' ');
 
-  if (!narrativeCorpus.trim()) return;
-
-  // Try to find date patterns near inspection-related keywords
-  const datePatterns = [
-    // "inspection was performed on December 2, 2025"
-    /inspect(?:ion|ed)\s+(?:was\s+)?(?:performed|conducted|completed|done)\s+(?:on\s+)?(?:the\s+)?(\d{1,2}[\/-]\d{1,2}[\/-]\d{4})/i,
-    /inspect(?:ion|ed)\s+(?:was\s+)?(?:performed|conducted|completed|done)\s+(?:on\s+)?(?:the\s+)?((?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},?\s+\d{4})/i,
-    // "inspection date: 2025-12-02"
-    /inspect(?:ion)?\s*date\s*:?\s*(\d{4}-\d{2}-\d{2})/i,
-    /inspect(?:ion)?\s*date\s*:?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{4})/i,
-    // Generic date near "inspection" keyword (within 50 chars)
-    /inspect[\s\S]{0,50}?(\d{4}-\d{2}-\d{2})/i,
-    /inspect[\s\S]{0,50}?(\d{1,2}[\/-]\d{1,2}[\/-]\d{4})/i,
-  ];
-
-  for (const pattern of datePatterns) {
-    const match = narrativeCorpus.match(pattern);
-    if (match && match[1]) {
-      const extracted = extractDate(match[1]);
-      if (extracted) {
-        reportInfo.inspectionDate = extracted;
-        data.reportInfo = reportInfo;
-        overrides.push({
-          field: 'reportInfo.inspectionDate',
-          from: '',
-          to: extracted,
-          rule: 'narrative_date_inference',
-          timestamp: new Date().toISOString(),
-        });
-        warnings.push(
-          `Inspection date "${extracted}" was inferred from narrative text (not from a structured field). ` +
-          `Verify this date matches the actual inspection date on the report.`
-        );
-        return;
+  // --- Step 1: Extract anchored inspection date from narrative ---
+  let anchoredDate: string | null = null;
+  if (inspectionNarrative.trim()) {
+    for (const pattern of ANCHORED_INSPECTION_DATE_PATTERNS) {
+      const match = inspectionNarrative.match(pattern);
+      if (match && match[1]) {
+        const extracted = extractDate(match[1]);
+        if (extracted) {
+          anchoredDate = extracted;
+          break;
+        }
       }
     }
   }
 
-  // Fallback: use reportDate if available
-  if (reportInfo.reportDate && String(reportInfo.reportDate).trim() !== '') {
-    reportInfo.inspectionDate = reportInfo.reportDate;
-    data.reportInfo = reportInfo;
-    overrides.push({
-      field: 'reportInfo.inspectionDate',
-      from: '',
-      to: reportInfo.reportDate,
-      rule: 'fallback_to_report_date',
-      timestamp: new Date().toISOString(),
-    });
-    warnings.push(
-      `Inspection date was not found; using report date "${reportInfo.reportDate}" as fallback. ` +
-      `Verify this is the actual inspection date.`
-    );
+  // --- Step 2: Validate/correct the inspectionDate ---
+  if (anchoredDate) {
+    if (!existingDate) {
+      // No LLM date — use anchored date
+      reportInfo.inspectionDate = anchoredDate;
+      data.reportInfo = reportInfo;
+      overrides.push({
+        field: 'reportInfo.inspectionDate',
+        from: '',
+        to: anchoredDate,
+        rule: 'anchored_inspection_date_inference',
+        timestamp: new Date().toISOString(),
+      });
+      warnings.push(
+        `Inspection date "${anchoredDate}" was inferred from anchored narrative text ("conducted on" / "performed on"). ` +
+        `Verify this date matches the actual inspection date on the report.`
+      );
+    } else if (existingDate !== anchoredDate) {
+      // LLM date CONFLICTS with anchored date — override with anchored
+      overrides.push({
+        field: 'reportInfo.inspectionDate',
+        from: existingDate,
+        to: anchoredDate,
+        rule: 'anchored_date_override_conflict',
+        timestamp: new Date().toISOString(),
+      });
+      warnings.push(
+        `INSPECTION DATE CONFLICT: LLM returned "${existingDate}" but narrative says inspection was ` +
+        `"conducted on ${anchoredDate}". Overriding with anchored date. The LLM date may be a ` +
+        `"next inspection due" date — verify in the original report.`
+      );
+      reportInfo.inspectionDate = anchoredDate;
+      data.reportInfo = reportInfo;
+    }
+    // else: existingDate === anchoredDate — no action needed, dates agree
+  } else if (!existingDate) {
+    // No anchored date found AND no LLM date — try reportDate fallback
+    if (reportInfo.reportDate && String(reportInfo.reportDate).trim() !== '') {
+      reportInfo.inspectionDate = reportInfo.reportDate;
+      data.reportInfo = reportInfo;
+      overrides.push({
+        field: 'reportInfo.inspectionDate',
+        from: '',
+        to: reportInfo.reportDate,
+        rule: 'fallback_to_report_date',
+        timestamp: new Date().toISOString(),
+      });
+      warnings.push(
+        `Inspection date was not found in narrative or structured fields; using report date ` +
+        `"${reportInfo.reportDate}" as fallback. Verify this is the actual inspection date.`
+      );
+    }
+  }
+
+  // --- Step 3: Extract "next inspection due" dates into separate fields ---
+  if (fullNarrative.trim()) {
+    if (!data._nextInspectionDates) {
+      data._nextInspectionDates = {};
+    }
+    for (const { field, pattern } of NEXT_INSPECTION_DUE_PATTERNS) {
+      // Don't overwrite if already extracted
+      if (data._nextInspectionDates[field]) continue;
+      const match = fullNarrative.match(pattern);
+      if (match && match[1]) {
+        const extracted = extractDate(match[1]);
+        if (extracted) {
+          data._nextInspectionDates[field] = extracted;
+          overrides.push({
+            field: `_nextInspectionDates.${field}`,
+            from: '',
+            to: extracted,
+            rule: 'next_inspection_due_extraction',
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+    }
   }
 }
 
@@ -1274,6 +1350,191 @@ function normalizeChecklistStatuses(data: any, overrides: FieldOverride[]): void
 }
 
 // ============================================================================
+// FIX #8: NARRATIVE MINING — VESSEL PHYSICAL CHARACTERISTICS
+// ============================================================================
+
+/**
+ * Mine narrative text for vessel physical characteristics that the LLM missed.
+ * 
+ * The inspection results section often contains rich physical descriptions:
+ *   - Vessel configuration (horizontal, vertical, sphere)
+ *   - Shell/head material (carbon steel, stainless steel, SA-516 Gr 70)
+ *   - Insulation status (un-insulated, fiberglass, calcium silicate)
+ *   - External coating (epoxy, paint, galvanized)
+ *   - Orientation/mounting (horizontal storage tank, vertical column)
+ * 
+ * Authority: Narrative is LOWEST authority — only fills empty fields.
+ * If vesselData already has a value, narrative does NOT override.
+ */
+function mineNarrativeForVesselCharacteristics(data: any, overrides: FieldOverride[], warnings: string[]): void {
+  const vesselData = data.vesselData || {};
+  const narrativeText = [
+    data.executiveSummary || '',
+    data.inspectionResults || '',
+    data.scopeOfInspection || '',
+  ].join(' ');
+
+  if (!narrativeText.trim()) return;
+
+  let mineCount = 0;
+
+  // --- Vessel Configuration ---
+  if (!vesselData.vesselConfiguration || vesselData.vesselConfiguration === '') {
+    const configPatterns: Array<{ pattern: RegExp; config: string }> = [
+      { pattern: /horizontal\s+(?:storage\s+)?(?:tank|vessel|drum|accumulator|receiver)/i, config: 'Horizontal' },
+      { pattern: /vertical\s+(?:storage\s+)?(?:tank|vessel|drum|column|tower|accumulator|receiver)/i, config: 'Vertical' },
+      { pattern: /(?:sphere|spherical)\s+(?:storage\s+)?(?:tank|vessel)/i, config: 'Sphere' },
+      // Fallback: just "horizontal" or "vertical" near vessel-related words
+      { pattern: /\b(?:the\s+)?(?:vessel|tank|drum)\s+(?:is\s+)?(?:a\s+)?horizontal\b/i, config: 'Horizontal' },
+      { pattern: /\b(?:the\s+)?(?:vessel|tank|drum)\s+(?:is\s+)?(?:a\s+)?vertical\b/i, config: 'Vertical' },
+    ];
+    for (const { pattern, config } of configPatterns) {
+      if (pattern.test(narrativeText)) {
+        vesselData.vesselConfiguration = config;
+        overrides.push({
+          field: 'vesselData.vesselConfiguration',
+          from: '',
+          to: config,
+          rule: 'narrative_mining_vessel_configuration',
+          timestamp: new Date().toISOString(),
+        });
+        mineCount++;
+        break;
+      }
+    }
+  }
+
+  // --- Shell Material ---
+  // Only fill if materialSpec is empty. Narrative often says "carbon steel" or "stainless steel"
+  // but may not give the SA- spec. We store what we find.
+  if (!vesselData.materialSpec || vesselData.materialSpec === '') {
+    const materialPatterns: Array<{ pattern: RegExp; extract: (m: RegExpMatchArray) => string }> = [
+      // SA-spec with grade: "SA-516 Gr 70", "SA-240 Type 304"
+      { pattern: /(SA-\d+\s*(?:Gr\.?\s*\d+|Type\s*\d+[A-Za-z]*))/i, extract: (m) => m[1] },
+      // Generic material near "shell": "The shell is ... stainless steel"
+      { pattern: /(?:shell|body|cylinder)\s+(?:is\s+)?(?:un-?insulated,?\s*)?(?:(?:\d+\s*(?:ga(?:uge)?|mm|inch|")?\s*)?)?((?:carbon|stainless|alloy|chrome-?moly|duplex|inconel|monel|hastelloy|clad)\s*steel(?:\s*\d+[A-Za-z]*)?)/i, extract: (m) => m[1] },
+      // Material near "head": "heads are ... carbon steel"
+      { pattern: /head(?:s)?\s+(?:are|is)\s+[^.]*?((?:carbon|stainless|alloy|chrome-?moly|duplex)\s*steel(?:\s*\d+[A-Za-z]*)?)/i, extract: (m) => m[1] },
+    ];
+    for (const { pattern, extract } of materialPatterns) {
+      const match = narrativeText.match(pattern);
+      if (match) {
+        const material = extract(match).trim();
+        vesselData.materialSpec = material;
+        overrides.push({
+          field: 'vesselData.materialSpec',
+          from: '',
+          to: material,
+          rule: 'narrative_mining_material_spec',
+          timestamp: new Date().toISOString(),
+        });
+        warnings.push(
+          `Material spec "${material}" was extracted from narrative text (lowest authority). ` +
+          `This may not be the full SA- specification. Verify against nameplate/MTR.`
+        );
+        mineCount++;
+        break;
+      }
+    }
+  }
+
+  // --- Insulation Type ---
+  if (!vesselData.insulationType || vesselData.insulationType === '') {
+    const insulationPatterns: Array<{ pattern: RegExp; extract: (m: RegExpMatchArray) => string }> = [
+      // "un-insulated" or "uninsulated"
+      { pattern: /\b(un-?insulated)\b/i, extract: () => 'None (un-insulated)' },
+      // Specific insulation types
+      { pattern: /(?:insulated\s+with|insulation\s+(?:is|type)?:?\s*)(fiberglass|calcium\s*silicate|mineral\s*wool|polyurethane|foam\s*glass|perlite|ceramic\s*fiber|rockwool)/i, extract: (m) => m[1] },
+      // "X insulation" pattern
+      { pattern: /(fiberglass|calcium\s*silicate|mineral\s*wool|polyurethane|foam\s*glass|perlite|ceramic\s*fiber|rockwool)\s+insulation/i, extract: (m) => m[1] },
+    ];
+    for (const { pattern, extract } of insulationPatterns) {
+      const match = narrativeText.match(pattern);
+      if (match) {
+        const insulation = extract(match).trim();
+        vesselData.insulationType = insulation;
+        overrides.push({
+          field: 'vesselData.insulationType',
+          from: '',
+          to: insulation,
+          rule: 'narrative_mining_insulation_type',
+          timestamp: new Date().toISOString(),
+        });
+        mineCount++;
+        break;
+      }
+    }
+  }
+
+  // --- External Coating ---
+  // Store in a _hydratedFields bucket since coating isn't a standard vesselData field
+  if (!data._hydratedFields) data._hydratedFields = {};
+  if (!data._hydratedFields.externalCoating) {
+    const coatingPatterns: Array<{ pattern: RegExp; extract: (m: RegExpMatchArray) => string }> = [
+      // "20 to 30 mils epoxy external coating"
+      { pattern: /(\d+\s*(?:to|-)\s*\d+\s*mils?\s+(?:epoxy|polyurethane|paint|zinc|primer|galvanized|phenolic)[^.]*(?:coating|paint))/i, extract: (m) => m[1] },
+      // "epoxy external coating" or "external epoxy coating"
+      { pattern: /((?:epoxy|polyurethane|zinc\s*rich|primer|galvanized|phenolic|alkyd|acrylic)\s+(?:external\s+)?coating)/i, extract: (m) => m[1] },
+      // "external coating" with preceding description
+      { pattern: /(?:with|has)\s+(\d+[^.]*(?:external\s+)?coating)/i, extract: (m) => m[1] },
+    ];
+    for (const { pattern, extract } of coatingPatterns) {
+      const match = narrativeText.match(pattern);
+      if (match) {
+        const coating = extract(match).trim();
+        data._hydratedFields.externalCoating = coating;
+        overrides.push({
+          field: '_hydratedFields.externalCoating',
+          from: '',
+          to: coating,
+          rule: 'narrative_mining_external_coating',
+          timestamp: new Date().toISOString(),
+        });
+        mineCount++;
+        break;
+      }
+    }
+  }
+
+  // --- Vessel Type (if empty) ---
+  if (!vesselData.vesselType || vesselData.vesselType === '') {
+    const typePatterns: Array<{ pattern: RegExp; vesselType: string }> = [
+      { pattern: /\bstorage\s+tank\b/i, vesselType: 'Storage Tank' },
+      { pattern: /\bpressure\s+vessel\b/i, vesselType: 'Pressure Vessel' },
+      { pattern: /\bheat\s+exchanger\b/i, vesselType: 'Heat Exchanger' },
+      { pattern: /\breactor\b/i, vesselType: 'Reactor' },
+      { pattern: /\bcolumn\b/i, vesselType: 'Column' },
+      { pattern: /\btower\b/i, vesselType: 'Tower' },
+      { pattern: /\baccumulator\b/i, vesselType: 'Accumulator' },
+      { pattern: /\bseparator\b/i, vesselType: 'Separator' },
+      { pattern: /\bdryer\b/i, vesselType: 'Dryer' },
+      { pattern: /\bfilter\b/i, vesselType: 'Filter' },
+      { pattern: /\breceiver\b/i, vesselType: 'Receiver' },
+      { pattern: /\bdrum\b/i, vesselType: 'Drum' },
+    ];
+    for (const { pattern, vesselType } of typePatterns) {
+      if (pattern.test(narrativeText)) {
+        vesselData.vesselType = vesselType;
+        overrides.push({
+          field: 'vesselData.vesselType',
+          from: '',
+          to: vesselType,
+          rule: 'narrative_mining_vessel_type',
+          timestamp: new Date().toISOString(),
+        });
+        mineCount++;
+        break;
+      }
+    }
+  }
+
+  if (mineCount > 0) {
+    data.vesselData = vesselData;
+    logger.info(`[Sanitizer] Fix #8: Mined ${mineCount} vessel characteristics from narrative`);
+  }
+}
+
+// ============================================================================
 // FIX #7: DOCUMENT PROVENANCE
 // ============================================================================
 
@@ -1345,7 +1606,7 @@ function buildProvenance(
       overall,
     },
     rawHeaderText: data._rawReportHeader || undefined,
-    sanitizerVersion: "1.2.0",
+    sanitizerVersion: "1.3.0",
   };
 }
 
@@ -1373,7 +1634,7 @@ export function sanitizeExtractedData(
   rawData: any,
   parserType: string = "manus"
 ): SanitizedResult {
-  logger.info(`[Sanitizer] Starting post-processing pipeline v1.2.0 (parser: ${parserType})`);
+  logger.info(`[Sanitizer] Starting post-processing pipeline v1.3.0 (parser: ${parserType})`);
 
   // Deep clone to avoid mutating original
   const data = JSON.parse(JSON.stringify(rawData));
@@ -1414,7 +1675,7 @@ export function sanitizeExtractedData(
   logger.info(`[Sanitizer] Fix #1 complete: ${overrides.length} report field overrides`);
 
   // Fix #1B: Infer inspectionDate from narrative if blank
-  inferInspectionDateFromNarrative(data, overrides, warnings);
+  validateAndInferInspectionDate(data, overrides, warnings);
 
   // Fix #2: Hydrate vessel data from checklist
   const preHydrateOverrides = overrides.length;
@@ -1440,6 +1701,10 @@ export function sanitizeExtractedData(
   // Fix #6: Normalize checklist statuses
   normalizeChecklistStatuses(data, overrides);
   logger.info(`[Sanitizer] Fix #6 complete: checklist statuses normalized`);
+
+  // Fix #8: Mine narrative for vessel physical characteristics
+  mineNarrativeForVesselCharacteristics(data, overrides, warnings);
+  logger.info(`[Sanitizer] Fix #8 complete: narrative mining for vessel characteristics`);
 
   // Fix #7: Build provenance
   const provenance = buildProvenance(data, parserType, overrides, warnings);

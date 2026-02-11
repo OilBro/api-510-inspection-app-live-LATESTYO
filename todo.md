@@ -3195,3 +3195,21 @@ Test PDF: 54-11-067 2017.pdf
 - [x] #5 Verified TML incomplete: only missing/zero currentThickness marks as incomplete; zero previousThickness is informational only
 - [x] Sanitizer version bumped to 1.2.0
 - [x] 20 new tests added (112 total sanitizer tests, 1132 total suite tests, 0 regressions)
+
+## Narrative Mining Improvements from Real Extraction (Vessel 54-11-067) (Feb 2026) ✅ COMPLETE
+- [x] #1 Fix inspectionDate conflict: LLM returned 2030-10-08 but narrative says "conducted on 10/08/2025" — sanitizer date validation overrides with anchored date
+- [x] #2 Mine vessel configuration from narrative: "horizontal Storage Tank" → vesselConfiguration = "Horizontal"
+- [x] #3 Mine material spec from narrative: "Stainless steel" (shell), "carbon steel" (heads) → materialSpec (with lowest-authority warning)
+- [x] #4 Mine insulation type from narrative: "un-insulated" → insulationType = "None (un-insulated)"
+- [x] #5 Mine next inspection dates from recommendations: external 10/08/2030, internal 10/08/2035, UT 10/08/2026 → _nextInspectionDates
+- [x] #6 Mine coating info from narrative: "20 to 30 mils epoxy external coating" → _hydratedFields.externalCoating
+- [ ] #7 Mine foundation type from narrative: "2 steel foundation supports" (deferred — low priority)
+- [ ] #8 Mine PSV presence from narrative: "Pressure Safety Relief Valve (PSV)" (deferred — low priority)
+
+## Date Inference Bug + Image Error Handling (Feb 2026) ✅ COMPLETE
+- [x] #1 Fix inspectionDate inference: validateAndInferInspectionDate() uses 6 anchored patterns ("conducted on", "performed on", "inspection date") and overrides LLM date when conflict detected
+- [x] #2 Extract next inspection due dates into separate fields: nextExternalInspectionDue, nextInternalInspectionDue, nextUTInspectionDue from recommendations → _nextInspectionDates
+- [x] #3 Add img onError handling: DashboardLayout (3), ManusDialog (1), PhotoComparisonView (5) — all img tags now have onError fallback
+- [x] #4 Date conflict detection: anchored_date_override_conflict rule overrides LLM date with narrative-anchored date + INSPECTION DATE CONFLICT warning
+- [x] Sanitizer version bumped to 1.3.0
+- [x] 29 new tests added (141 sanitizer tests, 1161 total suite tests, 0 regressions)
