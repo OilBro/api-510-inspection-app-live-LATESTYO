@@ -3,12 +3,17 @@ import { parseExcelFile, parsePDFFile } from "./fileParser";
 import { getDb } from "./db";
 import { extractionJobs } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { sanitizeExtractedData } from "./extractionSanitizer";
 
 type ParserType = "docupipe" | "manus" | "vision" | "hybrid" | undefined;
 
 /**
- * Normalize parsed data from any parser into a consistent flat structure.
+ * Normalize parsed data from any parser into a consistent structure.
  * Handles differences between manus, vision, hybrid, and docupipe output formats.
+ * 
+ * IMPORTANT: This normalizer produces a structure compatible with the sanitizer.
+ * The sanitizer expects nested format: { reportInfo, vesselData, tmlReadings, inspectionChecklist }
+ * For flat data (from fileParser.ts), we re-nest it so the sanitizer can process it uniformly.
  */
 function normalizeParserOutput(raw: any): any {
   // The parsers return data in different shapes:
@@ -23,26 +28,138 @@ function normalizeParserOutput(raw: any): any {
   const hasNestedReportInfo = raw.reportInfo && typeof raw.reportInfo === 'object';
   const hasNestedClientInfo = raw.clientInfo && typeof raw.clientInfo === 'object';
   
-  // If it's already flat (from fileParser.ts parsePDFFile), return as-is
+  // If it's already flat (from fileParser.ts parsePDFFile), convert to nested for sanitizer
   if (!hasNestedVesselInfo && !hasNestedVesselData && !hasNestedReportInfo) {
-    return raw;
+    return {
+      reportInfo: {
+        reportNumber: raw.reportNumber || '',
+        reportDate: raw.reportDate || '',
+        inspectionDate: raw.inspectionDate || '',
+        inspectionType: raw.inspectionType || '',
+        inspectionCompany: raw.inspectionCompany || '',
+        inspectorName: raw.inspectorName || '',
+        inspectorCert: raw.inspectorCert || '',
+      },
+      clientInfo: {
+        clientName: raw.clientName || '',
+        clientLocation: raw.clientLocation || '',
+        product: raw.product || '',
+      },
+      vesselData: {
+        vesselTagNumber: raw.vesselTagNumber || '',
+        vesselName: raw.vesselName || '',
+        manufacturer: raw.manufacturer || '',
+        serialNumber: raw.serialNumber || '',
+        yearBuilt: raw.yearBuilt,
+        nbNumber: raw.nbNumber || '',
+        designPressure: raw.designPressure || '',
+        designTemperature: raw.designTemperature || '',
+        operatingPressure: raw.operatingPressure || '',
+        operatingTemperature: raw.operatingTemperature || '',
+        mdmt: raw.mdmt || '',
+        materialSpec: raw.materialSpec || '',
+        allowableStress: raw.allowableStress || '',
+        jointEfficiency: raw.jointEfficiency || '',
+        radiographyType: raw.radiographyType || '',
+        specificGravity: raw.specificGravity || '',
+        vesselType: raw.vesselType || '',
+        vesselConfiguration: raw.vesselConfiguration || '',
+        insideDiameter: raw.insideDiameter || '',
+        overallLength: raw.overallLength || '',
+        headType: raw.headType || '',
+        crownRadius: raw.crownRadius || '',
+        knuckleRadius: raw.knuckleRadius || '',
+        constructionCode: raw.constructionCode || '',
+        insulationType: raw.insulationType || '',
+        corrosionAllowance: raw.corrosionAllowance || '',
+      },
+      executiveSummary: raw.executiveSummary || '',
+      inspectionResults: raw.inspectionResults || '',
+      recommendations: raw.recommendations || '',
+      tmlReadings: raw.tmlReadings || raw.thicknessMeasurements || [],
+      inspectionChecklist: raw.checklistItems || raw.inspectionChecklist || [],
+      nozzles: raw.nozzles || [],
+      tableA: raw.tableA || null,
+    };
   }
   
-  // Merge nested structures into flat format
+  // Merge nested structures into consistent nested format for sanitizer
   const vessel = { ...(raw.vesselData || {}), ...(raw.vesselInfo || {}) };
   const report = raw.reportInfo || {};
   const client = raw.clientInfo || {};
   
   const normalized: any = {
-    // Vessel identification - try multiple field names
-    vesselTagNumber: vessel.vesselTagNumber || vessel.vesselTag || '',
-    vesselName: vessel.vesselName || vessel.vesselDescription || '',
+    reportInfo: {
+      reportNumber: report.reportNumber || '',
+      reportDate: report.reportDate || '',
+      inspectionDate: report.inspectionDate || '',
+      inspectionType: report.inspectionType || '',
+      inspectionCompany: report.inspectionCompany || '',
+      inspectorName: report.inspectorName || '',
+      inspectorCert: report.inspectorCert || report.inspectorCertification || '',
+    },
+    clientInfo: {
+      clientName: client.clientName || report.clientName || '',
+      clientLocation: client.clientLocation || report.clientLocation || '',
+      product: vessel.product || client.product || '',
+    },
+    vesselData: {
+      vesselTagNumber: vessel.vesselTagNumber || vessel.vesselTag || '',
+      vesselName: vessel.vesselName || vessel.vesselDescription || '',
+      manufacturer: vessel.manufacturer || '',
+      serialNumber: vessel.serialNumber || '',
+      yearBuilt: vessel.yearBuilt ? (typeof vessel.yearBuilt === 'number' ? vessel.yearBuilt : parseInt(vessel.yearBuilt, 10)) : undefined,
+      nbNumber: vessel.nbNumber || '',
+      designPressure: vessel.designPressure || '',
+      designTemperature: vessel.designTemperature || '',
+      operatingPressure: vessel.operatingPressure || '',
+      operatingTemperature: vessel.operatingTemperature || '',
+      mdmt: vessel.mdmt || '',
+      materialSpec: vessel.materialSpec || '',
+      allowableStress: vessel.allowableStress || '',
+      jointEfficiency: vessel.jointEfficiency || '',
+      radiographyType: vessel.radiographyType || '',
+      specificGravity: vessel.specificGravity || '',
+      vesselType: vessel.vesselType || '',
+      vesselConfiguration: vessel.vesselConfiguration || '',
+      insideDiameter: vessel.insideDiameter || '',
+      overallLength: vessel.overallLength || '',
+      headType: vessel.headType || '',
+      crownRadius: vessel.crownRadius || '',
+      knuckleRadius: vessel.knuckleRadius || '',
+      constructionCode: vessel.constructionCode || '',
+      insulationType: vessel.insulationType || '',
+      corrosionAllowance: vessel.corrosionAllowance || '',
+    },
+    executiveSummary: raw.executiveSummary || '',
+    inspectionResults: raw.inspectionResults || '',
+    recommendations: raw.recommendations || '',
+    tmlReadings: raw.tmlReadings || raw.thicknessMeasurements || [],
+    inspectionChecklist: raw.checklistItems || raw.inspectionChecklist || [],
+    nozzles: raw.nozzles || [],
+    tableA: raw.tableA || null,
+  };
+  
+  return normalized;
+}
+
+/**
+ * Flatten sanitized nested data back to the format expected by the preview builder.
+ * The sanitizer works on nested format; the preview builder expects flat fields.
+ */
+function flattenForPreview(data: any): any {
+  const vessel = data.vesselData || {};
+  const report = data.reportInfo || {};
+  const client = data.clientInfo || {};
+  
+  return {
+    // Vessel fields
+    vesselTagNumber: vessel.vesselTagNumber || '',
+    vesselName: vessel.vesselName || '',
     manufacturer: vessel.manufacturer || '',
     serialNumber: vessel.serialNumber || '',
-    yearBuilt: vessel.yearBuilt ? (typeof vessel.yearBuilt === 'number' ? vessel.yearBuilt : parseInt(vessel.yearBuilt, 10)) : undefined,
+    yearBuilt: vessel.yearBuilt,
     nbNumber: vessel.nbNumber || '',
-    
-    // Design specs
     designPressure: vessel.designPressure || '',
     designTemperature: vessel.designTemperature || '',
     operatingPressure: vessel.operatingPressure || '',
@@ -53,8 +170,6 @@ function normalizeParserOutput(raw: any): any {
     jointEfficiency: vessel.jointEfficiency || '',
     radiographyType: vessel.radiographyType || '',
     specificGravity: vessel.specificGravity || '',
-    
-    // Geometry
     vesselType: vessel.vesselType || '',
     vesselConfiguration: vessel.vesselConfiguration || '',
     insideDiameter: vessel.insideDiameter || '',
@@ -62,45 +177,31 @@ function normalizeParserOutput(raw: any): any {
     headType: vessel.headType || '',
     crownRadius: vessel.crownRadius || '',
     knuckleRadius: vessel.knuckleRadius || '',
-    
-    // Service
-    product: vessel.product || client.product || '',
     constructionCode: vessel.constructionCode || '',
     insulationType: vessel.insulationType || '',
     corrosionAllowance: vessel.corrosionAllowance || '',
-    
-    // Report info
+    // Report fields
     reportNumber: report.reportNumber || '',
     reportDate: report.reportDate || '',
     inspectionDate: report.inspectionDate || '',
     inspectionType: report.inspectionType || '',
     inspectionCompany: report.inspectionCompany || '',
     inspectorName: report.inspectorName || '',
-    inspectorCert: report.inspectorCert || report.inspectorCertification || '',
-    
-    // Client info
-    clientName: client.clientName || report.clientName || '',
-    clientLocation: client.clientLocation || report.clientLocation || '',
-    
+    inspectorCert: report.inspectorCert || '',
+    // Client fields
+    clientName: client.clientName || '',
+    clientLocation: client.clientLocation || '',
+    product: client.product || '',
     // Narratives
-    executiveSummary: raw.executiveSummary || '',
-    inspectionResults: raw.inspectionResults || '',
-    recommendations: raw.recommendations || '',
-    
-    // TML readings - normalize from multiple possible field names
-    tmlReadings: raw.tmlReadings || raw.thicknessMeasurements || [],
-    
-    // Checklist - normalize from multiple possible field names
-    checklistItems: raw.checklistItems || raw.inspectionChecklist || [],
-    
-    // Nozzles
-    nozzles: raw.nozzles || [],
-    
-    // Table A
-    tableA: raw.tableA || null,
+    executiveSummary: data.executiveSummary || '',
+    inspectionResults: data.inspectionResults || '',
+    recommendations: data.recommendations || '',
+    // Arrays
+    tmlReadings: data.tmlReadings || [],
+    checklistItems: data.inspectionChecklist || data.checklistItems || [],
+    nozzles: data.nozzles || [],
+    tableA: data.tableA || null,
   };
-  
-  return normalized;
 }
 
 /**
@@ -148,23 +249,42 @@ export async function processExtractionJob(
       rawParsedData = await parsePDFFile(fileBuffer, parserType);
     }
 
-    // Update progress
+    // Update progress - normalization phase
     await db!.update(extractionJobs)
       .set({
-        progress: 70,
-        progressMessage: "Structuring extracted data...",
+        progress: 60,
+        progressMessage: "Normalizing extracted data...",
       })
       .where(eq(extractionJobs.id, jobId));
 
-    // Normalize parser output to consistent flat format
-    const parsedData = normalizeParserOutput(rawParsedData);
+    // Normalize parser output to consistent nested format
+    const normalizedData = normalizeParserOutput(rawParsedData);
     
-    logger.info(`[Extraction Job ${jobId}] Normalized data:`, {
+    // Update progress - sanitization phase
+    await db!.update(extractionJobs)
+      .set({
+        progress: 75,
+        progressMessage: "Running post-processing sanitizer (7 audit fixes)...",
+      })
+      .where(eq(extractionJobs.id, jobId));
+
+    // Run the 7-fix sanitizer pipeline for audit defensibility
+    const { data: sanitizedData, provenance } = sanitizeExtractedData(
+      normalizedData,
+      parserType || 'manus'
+    );
+    
+    // Flatten sanitized data for preview builder
+    const parsedData = flattenForPreview(sanitizedData);
+    
+    logger.info(`[Extraction Job ${jobId}] Sanitized data (confidence: ${provenance.confidence.overall}):`, {
       vesselTag: parsedData.vesselTagNumber,
       tmlCount: parsedData.tmlReadings?.length || 0,
       nozzleCount: parsedData.nozzles?.length || 0,
       checklistCount: parsedData.checklistItems?.length || 0,
       hasNarratives: !!(parsedData.executiveSummary || parsedData.inspectionResults),
+      overrides: provenance.fieldOverrides.length,
+      warnings: provenance.validationWarnings.length,
     });
 
     // Helper function to parse numeric values for display
@@ -225,6 +345,10 @@ export async function processExtractionJob(
         nominalThickness: String(tml.nominalThickness ?? ''),
         angle: String(tml.angle || ''),
         readingType: String(tml.readingType || ''),
+        // Include sanitizer metadata for downstream use
+        _dataStatus: tml._metadata?.dataStatus || 'unknown',
+        _stationKey: tml._metadata?.stationKey || null,
+        _isSeamAdjacent: tml._metadata?.isSeamAdjacent || false,
       })),
       nozzles: (parsedData.nozzles || []).map((noz: any, idx: number) => ({
         id: `noz-${idx}`,
@@ -243,7 +367,7 @@ export async function processExtractionJob(
         category: item.category || '',
         itemNumber: item.itemNumber || '',
         itemText: item.itemText || item.description || '',
-        checked: item.checked || (item.status && (item.status.toLowerCase() === 'satisfactory' || item.status.toLowerCase() === 'pass')),
+        checked: item.checked ?? false,
         notes: item.notes || '',
         status: item.status || '',
       })),
@@ -254,6 +378,10 @@ export async function processExtractionJob(
       },
       tableA: parsedData.tableA || null,
       rawParsedData: rawParsedData,
+      // Include provenance and hydrated fields for audit trail
+      provenance: provenance,
+      hydratedFields: sanitizedData._hydratedFields || null,
+      dataQuality: sanitizedData._metadata?.tmlDataQuality || null,
     };
 
     // Count extracted items for summary
@@ -264,6 +392,11 @@ export async function processExtractionJob(
       nozzlesCount: previewData.nozzles.length,
       checklistItemsCount: previewData.checklistItems.length,
       hasNarratives: !!(previewData.narratives.executiveSummary || previewData.narratives.inspectionResults),
+      // Sanitizer metrics
+      sanitizerOverrides: provenance.fieldOverrides.length,
+      sanitizerWarnings: provenance.validationWarnings.length,
+      dataConfidence: provenance.confidence.overall,
+      tmlDataQuality: sanitizedData._metadata?.tmlDataQuality?.calculationReadyPercentage || 0,
     };
 
     // Update job as completed
@@ -271,7 +404,7 @@ export async function processExtractionJob(
       .set({
         status: "completed",
         progress: 100,
-        progressMessage: "Extraction complete",
+        progressMessage: `Extraction complete (confidence: ${Math.round(provenance.confidence.overall * 100)}%)`,
         extractedData: {
           preview: previewData,
           summary: extractionSummary,

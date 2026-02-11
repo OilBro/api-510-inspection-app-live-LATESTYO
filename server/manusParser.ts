@@ -144,10 +144,12 @@ Extract all available information and return it as structured JSON matching this
 CRITICAL INSTRUCTIONS:
 
 1. MULTI-PAGE TABLES: Thickness measurement tables often span MULTIPLE PAGES.
-   - Continue reading ALL pages of the document
+   - Continue reading ALL pages of the document from start to finish
    - Look for table continuations ("continued", "cont'd", page breaks in tables)
    - Extract EVERY row from thickness tables, even if they span 5+ pages
    - Do NOT stop at the first page of a table
+   - Count the total rows extracted and verify against row numbers if present
+   - If you see "CML 001" through "CML 177", you MUST extract ALL 177 rows
 
 8. CIRCUMFERENTIAL SLICE-ANGLE READINGS - CRITICAL: Many UT inspection reports use a GRID FORMAT where:
    - ROWS represent "slices" or locations along the vessel (e.g., "2' from East Head", "4'", "6'", "8'", "10'", "12'", "14'", "16'")
@@ -158,24 +160,26 @@ CRITICAL INSTRUCTIONS:
    For a table with 10 rows and 8 columns, you MUST extract 80 TML readings.
    
    For EACH cell in the grid:
-   - legacyLocationId: Use format "SLICE-ANGLE" where SLICE is the row number (e.g., "2-0", "2-45", "2-90", "2-135", "2-180", "2-225", "2-270", "2-315" for the 2' slice)
+   - legacyLocationId: Use format "SLICE-ANGLE" where SLICE is the row identifier (e.g., "2-0", "2-45", "2-90", "2-135", "2-180", "2-225", "2-270", "2-315" for the 2' slice)
    - location: Include the row description (e.g., "2' from East Head Seam - Shell side")
    - angle: The column header angle (e.g., "0°", "45°", "90°", "135°", "180°", "225°", "270°", "315°")
+   - sliceLocation: The distance marker (e.g., "2'", "4'", "6'")
    - component: "Shell" for shell readings
    - currentThickness: The numeric value in that cell
    
    EXAMPLE: For a row labeled "2' from East Head" with readings [0.66, 0.658, 0.66, 0.659, 0.658, 0.659, 0.671, 0.659] across 8 columns:
    You MUST create these 8 TML readings:
-   { legacyLocationId: "2-0", location: "2' from East Head Seam", angle: "0°", currentThickness: 0.66, component: "Shell" }
-   { legacyLocationId: "2-45", location: "2' from East Head Seam", angle: "45°", currentThickness: 0.658, component: "Shell" }
-   { legacyLocationId: "2-90", location: "2' from East Head Seam", angle: "90°", currentThickness: 0.66, component: "Shell" }
-   { legacyLocationId: "2-135", location: "2' from East Head Seam", angle: "135°", currentThickness: 0.659, component: "Shell" }
-   { legacyLocationId: "2-180", location: "2' from East Head Seam", angle: "180°", currentThickness: 0.658, component: "Shell" }
-   { legacyLocationId: "2-225", location: "2' from East Head Seam", angle: "225°", currentThickness: 0.659, component: "Shell" }
-   { legacyLocationId: "2-270", location: "2' from East Head Seam", angle: "270°", currentThickness: 0.671, component: "Shell" }
-   { legacyLocationId: "2-315", location: "2' from East Head Seam", angle: "315°", currentThickness: 0.659, component: "Shell" }
+   { legacyLocationId: "2-0", location: "2' from East Head Seam", angle: "0°", sliceLocation: "2'", currentThickness: 0.66, component: "Shell" }
+   { legacyLocationId: "2-45", location: "2' from East Head Seam", angle: "45°", sliceLocation: "2'", currentThickness: 0.658, component: "Shell" }
+   { legacyLocationId: "2-90", location: "2' from East Head Seam", angle: "90°", sliceLocation: "2'", currentThickness: 0.66, component: "Shell" }
+   { legacyLocationId: "2-135", location: "2' from East Head Seam", angle: "135°", sliceLocation: "2'", currentThickness: 0.659, component: "Shell" }
+   { legacyLocationId: "2-180", location: "2' from East Head Seam", angle: "180°", sliceLocation: "2'", currentThickness: 0.658, component: "Shell" }
+   { legacyLocationId: "2-225", location: "2' from East Head Seam", angle: "225°", sliceLocation: "2'", currentThickness: 0.659, component: "Shell" }
+   { legacyLocationId: "2-270", location: "2' from East Head Seam", angle: "270°", sliceLocation: "2'", currentThickness: 0.671, component: "Shell" }
+   { legacyLocationId: "2-315", location: "2' from East Head Seam", angle: "315°", sliceLocation: "2'", currentThickness: 0.659, component: "Shell" }
    
    DO NOT summarize or combine readings. Extract EVERY SINGLE CELL as a separate TML reading.
+   VERIFICATION: Count your extracted readings. If the grid has M rows × 8 columns, you MUST have M × 8 readings.
 
 9. NOZZLE ANGULAR READINGS - CRITICAL: Nozzle readings often have 4 positions: 0°, 90°, 180°, 270°
    **MANDATORY: You MUST create 4 SEPARATE TML readings for EACH NOZZLE.**
@@ -184,18 +188,29 @@ CRITICAL INSTRUCTIONS:
    For EACH nozzle and EACH angle:
    - legacyLocationId: Use format "N1-0", "N1-90", "N1-180", "N1-270" for nozzle N1
    - location: Nozzle description (e.g., "N1 Manway")
-   - nozzleSize: Size from table (e.g., "24", "3", "2", "1")
+   - nozzleSize: Size from table (e.g., "24", "3", "2", "1") - NUMERIC VALUE ONLY
    - minimumRequired: tmin value from table
    - component: "Nozzle"
    - currentThickness: The reading value for that angle
+   - readingType: "nozzle"
    
-   EXAMPLE: For nozzle "N1 Manway 24" with readings [0.574, 0.576, 0.578, 0.578] and tmin 0.375:
-   { legacyLocationId: "N1-0", location: "N1 Manway", nozzleSize: "24", angle: "0°", currentThickness: 0.574, minimumRequired: 0.375, component: "Nozzle" }
-   { legacyLocationId: "N1-90", location: "N1 Manway", nozzleSize: "24", angle: "90°", currentThickness: 0.576, minimumRequired: 0.375, component: "Nozzle" }
-   { legacyLocationId: "N1-180", location: "N1 Manway", nozzleSize: "24", angle: "180°", currentThickness: 0.578, minimumRequired: 0.375, component: "Nozzle" }
-   { legacyLocationId: "N1-270", location: "N1 Manway", nozzleSize: "24", angle: "270°", currentThickness: 0.578, minimumRequired: 0.375, component: "Nozzle" }
+   EXAMPLE: For nozzle "N1 Manway 24" with readings [0.574, 0.576, 0.578, 0.578] at 0°/90°/180°/270° and tmin 0.375:
+   { legacyLocationId: "N1-0", location: "N1 Manway", nozzleSize: "24", angle: "0°", currentThickness: 0.574, minimumRequired: 0.375, component: "Nozzle", readingType: "nozzle" }
+   { legacyLocationId: "N1-90", location: "N1 Manway", nozzleSize: "24", angle: "90°", currentThickness: 0.576, minimumRequired: 0.375, component: "Nozzle", readingType: "nozzle" }
+   { legacyLocationId: "N1-180", location: "N1 Manway", nozzleSize: "24", angle: "180°", currentThickness: 0.578, minimumRequired: 0.375, component: "Nozzle", readingType: "nozzle" }
+   { legacyLocationId: "N1-270", location: "N1 Manway", nozzleSize: "24", angle: "270°", currentThickness: 0.578, minimumRequired: 0.375, component: "Nozzle", readingType: "nozzle" }
+   
+   VERIFICATION: Count your nozzle readings. If there are N nozzles with 4 angles each, you MUST have N × 4 nozzle readings.
 
-2. HEADS: Most pressure vessels have TWO heads (one at each end). Look for:
+2. PREVIOUS THICKNESS DATA - CRITICAL FOR CORROSION RATE CALCULATIONS:
+   - Search for "Previous Thickness", "Prior Thickness", "t_prev", "Last Inspection", "Baseline" columns
+   - Previous thickness may be in a separate column or in historical data tables
+   - Look for comparison tables showing "Current vs Previous" or "2025 vs 2017" data
+   - Extract ALL previous thickness values - these are ESSENTIAL for corrosion rate calculations
+   - If no previous data exists, only then set to null (NOT zero)
+   - Zero thickness values (0.000") are INVALID - use null instead
+
+3. HEADS: Most pressure vessels have TWO heads (one at each end). Look for:
    - North Head / South Head (common naming)
    - East Head / West Head (alternative naming)
    - Head 1 / Head 2 (numbered naming)
@@ -213,19 +228,28 @@ CRITICAL INSTRUCTIONS:
 4. NOZZLES: Look for nozzle schedules, nozzle thickness tables, or nozzle evaluation sections.
    Common nozzles: Manway, Relief Valve, Inlet, Outlet, Drain, Vent, Level Gauge, etc.
    Extract ALL nozzles found in the document.
-   IMPORTANT: Parse nozzle SIZE from descriptions (e.g., "24\" Manway" → size: "24\"", service: "Manway")
-   Common size patterns: 24\", 18\", 12\", 8\", 6\", 4\", 3\", 2\", 1\", 3/4\"
+   IMPORTANT: Parse nozzle SIZE from descriptions using these patterns:
+   - "24\" Manway" → nozzleSize: "24\"" or "24", service: "Manway"
+   - "3\" Relief" → nozzleSize: "3\"" or "3", service: "Relief"
+   - "2\" Inlet" → nozzleSize: "2\"" or "2", service: "Inlet"
+   - "1\" Drain" → nozzleSize: "1\"" or "1", service: "Drain"
+   - "N1 Manway 24" → nozzleSize: "24", nozzleNumber: "N1", service: "Manway"
+   Common size patterns: 24, 18, 12, 8, 6, 4, 3, 2, 1, 0.75, 3/4
+   ALWAYS extract the numeric size value separately from the service type
    
 5. CHECKLIST: Look for inspection checklists, examination items, or condition assessments.
    These may be in tables with checkboxes, pass/fail columns, or satisfactory/unsatisfactory status.
+   Extract the FULL text of each checklist item - do NOT truncate or abbreviate
 
 6. INSPECTION RESULTS (Section 3.0): Extract ALL findings from the inspection results section.
    Include: foundation condition, shell condition, head condition, appurtenances, corrosion findings, etc.
    This is typically a narrative section describing what was found during inspection.
+   Extract the COMPLETE text, preserving all details
 
 7. RECOMMENDATIONS (Section 4.0): Extract ALL recommendations from the recommendations section.
    Include: repair recommendations, replacement needs, next inspection date, continued service approval, etc.
    This is typically a narrative section with action items and future planning.
+   Extract the COMPLETE text, preserving all details
 
 {
   "reportInfo": {
@@ -312,7 +336,20 @@ CRITICAL INSTRUCTIONS:
       },
       {
         role: "user",
-        content: `Extract vessel inspection data from this API 510 report:\n\n${fullText.substring(0, 120000)}`,
+        content: (() => {
+          // Character limit calculation:
+          // - OpenAI GPT-4 Turbo max context: ~128K tokens (~500K chars with avg 4 chars/token)
+          // - Using gpt-4-turbo-preview or newer models with extended context windows
+          // - Safe limit for prompt + response: 200K chars input + 100K chars response = 300K total
+          // - This allows processing ~50 page PDFs with detailed tables
+          const MAX_CHARS = 200000; // Increased from 120000 to handle larger documents
+          const textToSend = fullText.substring(0, MAX_CHARS);
+          if (fullText.length > MAX_CHARS) {
+            logger.warn(`[Manus Parser] Text truncated from ${fullText.length} to ${MAX_CHARS} chars for LLM processing`);
+            logger.info(`[Manus Parser] IMPORTANT: Multi-page tables may be incomplete if document exceeds ${MAX_CHARS} chars`);
+          }
+          return `Extract vessel inspection data from this API 510 report:\n\n${textToSend}`;
+        })(),
       },
     ],
     response_format: {
@@ -527,6 +564,33 @@ CRITICAL INSTRUCTIONS:
       logger.info("[Manus Parser] Attempted to close open JSON structures");
     }
     
+    // Additional recovery: If still invalid, try to find the last complete object in tmlReadings array
+    // This handles the common case where LLM response is truncated mid-array
+    // Expected JSON structure: { ..., "tmlReadings": [{...}, {...}, {...}], ... }
+    if (repairedJson.includes('"tmlReadings"') && !repairedJson.includes('"tmlReadings":[]')) {
+      try {
+        JSON.parse(repairedJson);
+      } catch (e) {
+        // Find the last complete TML reading object
+        const tmlStartIndex = repairedJson.lastIndexOf('"tmlReadings":');
+        if (tmlStartIndex > 0) {
+          const afterTml = repairedJson.substring(tmlStartIndex);
+          const lastCompleteObject = afterTml.lastIndexOf('},');
+          if (lastCompleteObject > 0) {
+            const truncatePoint = tmlStartIndex + lastCompleteObject + 1;
+            // Count remaining closing braces needed (rough estimate based on what follows)
+            // This assumes structure: "tmlReadings": [{...}] } at top level
+            const closingBraces = (repairedJson.substring(truncatePoint).match(/}/g)?.length || 0);
+            const needsArrayClose = ']';
+            const needsObjectClose = '}'; // For top-level object
+            
+            repairedJson = repairedJson.substring(0, truncatePoint) + needsArrayClose + needsObjectClose;
+            logger.info("[Manus Parser] Recovered by truncating to last complete TML reading");
+          }
+        }
+      }
+    }
+    
     try {
       extractedData = JSON.parse(repairedJson);
       logger.info("[Manus Parser] JSON recovery successful");
@@ -544,6 +608,39 @@ CRITICAL INSTRUCTIONS:
         inspectionChecklist: [],
         nozzles: []
       };
+    }
+  }
+  
+  // Log extraction metrics for quality assurance
+  logger.info("[Manus Parser] Extraction metrics:", {
+    tmlReadings: extractedData.tmlReadings?.length || 0,
+    nozzles: extractedData.nozzles?.length || 0,
+    checklistItems: extractedData.inspectionChecklist?.length || 0,
+    hasVesselData: !!(extractedData.vesselData && Object.keys(extractedData.vesselData).length > 0),
+    hasInspectionResults: !!(extractedData.inspectionResults && extractedData.inspectionResults.length > 10),
+    hasRecommendations: !!(extractedData.recommendations && extractedData.recommendations.length > 10),
+  });
+  
+  // Validate critical data extraction
+  if (extractedData.tmlReadings && extractedData.tmlReadings.length > 0) {
+    const withPreviousThickness = extractedData.tmlReadings.filter((t: any) => 
+      t.previousThickness !== null && t.previousThickness !== undefined && t.previousThickness !== 0
+    ).length;
+    const withNozzleSize = extractedData.tmlReadings.filter((t: any) => 
+      t.component === 'Nozzle' && t.nozzleSize
+    ).length;
+    const nozzleReadings = extractedData.tmlReadings.filter((t: any) => t.component === 'Nozzle').length;
+    
+    logger.info("[Manus Parser] TML data quality:", {
+      totalReadings: extractedData.tmlReadings.length,
+      withPreviousThickness: withPreviousThickness,
+      nozzleReadings: nozzleReadings,
+      nozzleReadingsWithSize: withNozzleSize,
+      previousThicknessPercentage: `${((withPreviousThickness / extractedData.tmlReadings.length) * 100).toFixed(1)}%`,
+    });
+    
+    if (withPreviousThickness === 0 && extractedData.tmlReadings.length > 0) {
+      logger.warn("[Manus Parser] WARNING: No previous thickness data extracted - corrosion rate calculations will be affected");
     }
   }
   
