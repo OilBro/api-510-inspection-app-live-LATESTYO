@@ -144,12 +144,10 @@ Extract all available information and return it as structured JSON matching this
 CRITICAL INSTRUCTIONS:
 
 1. MULTI-PAGE TABLES: Thickness measurement tables often span MULTIPLE PAGES.
-   - Continue reading ALL pages of the document from start to finish
+   - Continue reading ALL pages of the document
    - Look for table continuations ("continued", "cont'd", page breaks in tables)
    - Extract EVERY row from thickness tables, even if they span 5+ pages
    - Do NOT stop at the first page of a table
-   - Count the total rows extracted and verify against row numbers if present
-   - If you see "CML 001" through "CML 177", you MUST extract ALL 177 rows
 
 8. CIRCUMFERENTIAL SLICE-ANGLE READINGS - CRITICAL: Many UT inspection reports use a GRID FORMAT where:
    - ROWS represent "slices" or locations along the vessel (e.g., "2' from East Head", "4'", "6'", "8'", "10'", "12'", "14'", "16'")
@@ -160,26 +158,24 @@ CRITICAL INSTRUCTIONS:
    For a table with 10 rows and 8 columns, you MUST extract 80 TML readings.
    
    For EACH cell in the grid:
-   - legacyLocationId: Use format "SLICE-ANGLE" where SLICE is the row identifier (e.g., "2-0", "2-45", "2-90", "2-135", "2-180", "2-225", "2-270", "2-315" for the 2' slice)
+   - legacyLocationId: Use format "SLICE-ANGLE" where SLICE is the row number (e.g., "2-0", "2-45", "2-90", "2-135", "2-180", "2-225", "2-270", "2-315" for the 2' slice)
    - location: Include the row description (e.g., "2' from East Head Seam - Shell side")
    - angle: The column header angle (e.g., "0°", "45°", "90°", "135°", "180°", "225°", "270°", "315°")
-   - sliceLocation: The distance marker (e.g., "2'", "4'", "6'")
    - component: "Shell" for shell readings
    - currentThickness: The numeric value in that cell
    
    EXAMPLE: For a row labeled "2' from East Head" with readings [0.66, 0.658, 0.66, 0.659, 0.658, 0.659, 0.671, 0.659] across 8 columns:
    You MUST create these 8 TML readings:
-   { legacyLocationId: "2-0", location: "2' from East Head Seam", angle: "0°", sliceLocation: "2'", currentThickness: 0.66, component: "Shell" }
-   { legacyLocationId: "2-45", location: "2' from East Head Seam", angle: "45°", sliceLocation: "2'", currentThickness: 0.658, component: "Shell" }
-   { legacyLocationId: "2-90", location: "2' from East Head Seam", angle: "90°", sliceLocation: "2'", currentThickness: 0.66, component: "Shell" }
-   { legacyLocationId: "2-135", location: "2' from East Head Seam", angle: "135°", sliceLocation: "2'", currentThickness: 0.659, component: "Shell" }
-   { legacyLocationId: "2-180", location: "2' from East Head Seam", angle: "180°", sliceLocation: "2'", currentThickness: 0.658, component: "Shell" }
-   { legacyLocationId: "2-225", location: "2' from East Head Seam", angle: "225°", sliceLocation: "2'", currentThickness: 0.659, component: "Shell" }
-   { legacyLocationId: "2-270", location: "2' from East Head Seam", angle: "270°", sliceLocation: "2'", currentThickness: 0.671, component: "Shell" }
-   { legacyLocationId: "2-315", location: "2' from East Head Seam", angle: "315°", sliceLocation: "2'", currentThickness: 0.659, component: "Shell" }
+   { legacyLocationId: "2-0", location: "2' from East Head Seam", angle: "0°", currentThickness: 0.66, component: "Shell" }
+   { legacyLocationId: "2-45", location: "2' from East Head Seam", angle: "45°", currentThickness: 0.658, component: "Shell" }
+   { legacyLocationId: "2-90", location: "2' from East Head Seam", angle: "90°", currentThickness: 0.66, component: "Shell" }
+   { legacyLocationId: "2-135", location: "2' from East Head Seam", angle: "135°", currentThickness: 0.659, component: "Shell" }
+   { legacyLocationId: "2-180", location: "2' from East Head Seam", angle: "180°", currentThickness: 0.658, component: "Shell" }
+   { legacyLocationId: "2-225", location: "2' from East Head Seam", angle: "225°", currentThickness: 0.659, component: "Shell" }
+   { legacyLocationId: "2-270", location: "2' from East Head Seam", angle: "270°", currentThickness: 0.671, component: "Shell" }
+   { legacyLocationId: "2-315", location: "2' from East Head Seam", angle: "315°", currentThickness: 0.659, component: "Shell" }
    
    DO NOT summarize or combine readings. Extract EVERY SINGLE CELL as a separate TML reading.
-   VERIFICATION: Count your extracted readings. If the grid has M rows × 8 columns, you MUST have M × 8 readings.
 
 9. NOZZLE ANGULAR READINGS - CRITICAL: Nozzle readings often have 4 positions: 0°, 90°, 180°, 270°
    **MANDATORY: You MUST create 4 SEPARATE TML readings for EACH NOZZLE.**
@@ -188,29 +184,18 @@ CRITICAL INSTRUCTIONS:
    For EACH nozzle and EACH angle:
    - legacyLocationId: Use format "N1-0", "N1-90", "N1-180", "N1-270" for nozzle N1
    - location: Nozzle description (e.g., "N1 Manway")
-   - nozzleSize: Size from table (e.g., "24", "3", "2", "1") - NUMERIC VALUE ONLY
+   - nozzleSize: Size from table (e.g., "24", "3", "2", "1")
    - minimumRequired: tmin value from table
    - component: "Nozzle"
    - currentThickness: The reading value for that angle
-   - readingType: "nozzle"
    
-   EXAMPLE: For nozzle "N1 Manway 24" with readings [0.574, 0.576, 0.578, 0.578] at 0°/90°/180°/270° and tmin 0.375:
-   { legacyLocationId: "N1-0", location: "N1 Manway", nozzleSize: "24", angle: "0°", currentThickness: 0.574, minimumRequired: 0.375, component: "Nozzle", readingType: "nozzle" }
-   { legacyLocationId: "N1-90", location: "N1 Manway", nozzleSize: "24", angle: "90°", currentThickness: 0.576, minimumRequired: 0.375, component: "Nozzle", readingType: "nozzle" }
-   { legacyLocationId: "N1-180", location: "N1 Manway", nozzleSize: "24", angle: "180°", currentThickness: 0.578, minimumRequired: 0.375, component: "Nozzle", readingType: "nozzle" }
-   { legacyLocationId: "N1-270", location: "N1 Manway", nozzleSize: "24", angle: "270°", currentThickness: 0.578, minimumRequired: 0.375, component: "Nozzle", readingType: "nozzle" }
-   
-   VERIFICATION: Count your nozzle readings. If there are N nozzles with 4 angles each, you MUST have N × 4 nozzle readings.
+   EXAMPLE: For nozzle "N1 Manway 24" with readings [0.574, 0.576, 0.578, 0.578] and tmin 0.375:
+   { legacyLocationId: "N1-0", location: "N1 Manway", nozzleSize: "24", angle: "0°", currentThickness: 0.574, minimumRequired: 0.375, component: "Nozzle" }
+   { legacyLocationId: "N1-90", location: "N1 Manway", nozzleSize: "24", angle: "90°", currentThickness: 0.576, minimumRequired: 0.375, component: "Nozzle" }
+   { legacyLocationId: "N1-180", location: "N1 Manway", nozzleSize: "24", angle: "180°", currentThickness: 0.578, minimumRequired: 0.375, component: "Nozzle" }
+   { legacyLocationId: "N1-270", location: "N1 Manway", nozzleSize: "24", angle: "270°", currentThickness: 0.578, minimumRequired: 0.375, component: "Nozzle" }
 
-2. PREVIOUS THICKNESS DATA - CRITICAL FOR CORROSION RATE CALCULATIONS:
-   - Search for "Previous Thickness", "Prior Thickness", "t_prev", "Last Inspection", "Baseline" columns
-   - Previous thickness may be in a separate column or in historical data tables
-   - Look for comparison tables showing "Current vs Previous" or "2025 vs 2017" data
-   - Extract ALL previous thickness values - these are ESSENTIAL for corrosion rate calculations
-   - If no previous data exists, only then set to null (NOT zero)
-   - Zero thickness values (0.000") are INVALID - use null instead
-
-3. HEADS: Most pressure vessels have TWO heads (one at each end). Look for:
+2. HEADS: Most pressure vessels have TWO heads (one at each end). Look for:
    - North Head / South Head (common naming)
    - East Head / West Head (alternative naming)
    - Head 1 / Head 2 (numbered naming)
@@ -228,28 +213,19 @@ CRITICAL INSTRUCTIONS:
 4. NOZZLES: Look for nozzle schedules, nozzle thickness tables, or nozzle evaluation sections.
    Common nozzles: Manway, Relief Valve, Inlet, Outlet, Drain, Vent, Level Gauge, etc.
    Extract ALL nozzles found in the document.
-   IMPORTANT: Parse nozzle SIZE from descriptions using these patterns:
-   - "24\" Manway" → nozzleSize: "24\"" or "24", service: "Manway"
-   - "3\" Relief" → nozzleSize: "3\"" or "3", service: "Relief"
-   - "2\" Inlet" → nozzleSize: "2\"" or "2", service: "Inlet"
-   - "1\" Drain" → nozzleSize: "1\"" or "1", service: "Drain"
-   - "N1 Manway 24" → nozzleSize: "24", nozzleNumber: "N1", service: "Manway"
-   Common size patterns: 24, 18, 12, 8, 6, 4, 3, 2, 1, 0.75, 3/4
-   ALWAYS extract the numeric size value separately from the service type
+   IMPORTANT: Parse nozzle SIZE from descriptions (e.g., "24\" Manway" → size: "24\"", service: "Manway")
+   Common size patterns: 24\", 18\", 12\", 8\", 6\", 4\", 3\", 2\", 1\", 3/4\"
    
 5. CHECKLIST: Look for inspection checklists, examination items, or condition assessments.
    These may be in tables with checkboxes, pass/fail columns, or satisfactory/unsatisfactory status.
-   Extract the FULL text of each checklist item - do NOT truncate or abbreviate
 
 6. INSPECTION RESULTS (Section 3.0): Extract ALL findings from the inspection results section.
    Include: foundation condition, shell condition, head condition, appurtenances, corrosion findings, etc.
    This is typically a narrative section describing what was found during inspection.
-   Extract the COMPLETE text, preserving all details
 
 7. RECOMMENDATIONS (Section 4.0): Extract ALL recommendations from the recommendations section.
    Include: repair recommendations, replacement needs, next inspection date, continued service approval, etc.
    This is typically a narrative section with action items and future planning.
-   Extract the COMPLETE text, preserving all details
 
 {
   "reportInfo": {
@@ -336,20 +312,7 @@ CRITICAL INSTRUCTIONS:
       },
       {
         role: "user",
-        content: (() => {
-          // Character limit calculation:
-          // - OpenAI GPT-4 Turbo max context: ~128K tokens (~500K chars with avg 4 chars/token)
-          // - Using gpt-4-turbo-preview or newer models with extended context windows
-          // - Safe limit for prompt + response: 200K chars input + 100K chars response = 300K total
-          // - This allows processing ~50 page PDFs with detailed tables
-          const MAX_CHARS = 200000; // Increased from 120000 to handle larger documents
-          const textToSend = fullText.substring(0, MAX_CHARS);
-          if (fullText.length > MAX_CHARS) {
-            logger.warn(`[Manus Parser] Text truncated from ${fullText.length} to ${MAX_CHARS} chars for LLM processing`);
-            logger.info(`[Manus Parser] IMPORTANT: Multi-page tables may be incomplete if document exceeds ${MAX_CHARS} chars`);
-          }
-          return `Extract vessel inspection data from this API 510 report:\n\n${textToSend}`;
-        })(),
+        content: `Extract vessel inspection data from this API 510 report:\n\n${fullText.substring(0, 120000)}`,
       },
     ],
     response_format: {
@@ -564,15 +527,6 @@ CRITICAL INSTRUCTIONS:
       logger.info("[Manus Parser] Attempted to close open JSON structures");
     }
     
-    // Use jsonrepair library as final fallback for structural repair
-    try {
-      const { jsonrepair } = await import('jsonrepair');
-      repairedJson = jsonrepair(repairedJson);
-      logger.info("[Manus Parser] jsonrepair applied successfully");
-    } catch (repairErr) {
-      logger.warn("[Manus Parser] jsonrepair also failed, will use brace-counter result");
-    }
-    
     try {
       extractedData = JSON.parse(repairedJson);
       logger.info("[Manus Parser] JSON recovery successful");
@@ -593,283 +547,9 @@ CRITICAL INSTRUCTIONS:
     }
   }
   
-  // Log extraction metrics for quality assurance
-  logger.info("[Manus Parser] Extraction metrics:", {
-    tmlReadings: extractedData.tmlReadings?.length || 0,
-    nozzles: extractedData.nozzles?.length || 0,
-    checklistItems: extractedData.inspectionChecklist?.length || 0,
-    hasVesselData: !!(extractedData.vesselData && Object.keys(extractedData.vesselData).length > 0),
-    hasInspectionResults: !!(extractedData.inspectionResults && extractedData.inspectionResults.length > 10),
-    hasRecommendations: !!(extractedData.recommendations && extractedData.recommendations.length > 10),
-  });
-
-  // ═══════════════════════════════════════════════════════════════════
-  // RESCUE PASS: TML Readings
-  // If the main extraction returned suspiciously few TML readings but
-  // the narrative mentions thickness measurements, run a focused second
-  // LLM call that ONLY extracts TML data. This handles output-token
-  // truncation where the LLM ran out of tokens generating the full JSON.
-  // ═══════════════════════════════════════════════════════════════════
-  const tmlCount = extractedData.tmlReadings?.length || 0;
-  const narrativeText = [
-    extractedData.inspectionResults || '',
-    extractedData.recommendations || '',
-    extractedData.executiveSummary || '',
-  ].join(' ').toLowerCase();
-  const narrativeMentionsThickness = /\b(thickness|ut |tml|cml|ultrasonic|readings|measurements|mils?)\b/i.test(narrativeText);
-  
-  if (tmlCount < 5 && narrativeMentionsThickness && fullText.length > 500) {
-    logger.warn(`[Manus Parser] TML RESCUE: Only ${tmlCount} TML readings but narrative mentions thickness data. Running focused TML extraction...`);
-    try {
-      const rescueTmls = await extractTmlReadingsOnly(fullText);
-      if (rescueTmls && rescueTmls.length > tmlCount) {
-        logger.info(`[Manus Parser] TML RESCUE SUCCESS: Recovered ${rescueTmls.length} TML readings (was ${tmlCount})`);
-        extractedData.tmlReadings = rescueTmls;
-        // Tag the rescue for provenance
-        extractedData._tmlRescueApplied = true;
-        extractedData._tmlRescueOriginalCount = tmlCount;
-      } else {
-        logger.info(`[Manus Parser] TML RESCUE: No improvement (rescue returned ${rescueTmls?.length || 0}, keeping original ${tmlCount})`);
-      }
-    } catch (rescueErr) {
-      logger.warn("[Manus Parser] TML RESCUE FAILED:", rescueErr);
-    }
-  }
-
-  // ═══════════════════════════════════════════════════════════════════
-  // RESCUE PASS: Checklist Items
-  // Same logic — if the narrative describes inspection findings for
-  // foundation, shell, heads, appurtenances but we only got 0-2 items
-  // ═══════════════════════════════════════════════════════════════════
-  const checklistCount = extractedData.inspectionChecklist?.length || 0;
-  const narrativeMentionsChecklist = /\b(foundation|shell|head|appurtenance|nozzle|coating|insulation|satisfactory|unsatisfactory)\b/i.test(narrativeText);
-  
-  if (checklistCount < 3 && narrativeMentionsChecklist && fullText.length > 500) {
-    logger.warn(`[Manus Parser] CHECKLIST RESCUE: Only ${checklistCount} items but narrative describes inspection findings. Running focused checklist extraction...`);
-    try {
-      const rescueChecklist = await extractChecklistOnly(fullText);
-      if (rescueChecklist && rescueChecklist.length > checklistCount) {
-        logger.info(`[Manus Parser] CHECKLIST RESCUE SUCCESS: Recovered ${rescueChecklist.length} items (was ${checklistCount})`);
-        extractedData.inspectionChecklist = rescueChecklist;
-        extractedData._checklistRescueApplied = true;
-        extractedData._checklistRescueOriginalCount = checklistCount;
-      } else {
-        logger.info(`[Manus Parser] CHECKLIST RESCUE: No improvement (rescue returned ${rescueChecklist?.length || 0}, keeping original ${checklistCount})`);
-      }
-    } catch (rescueErr) {
-      logger.warn("[Manus Parser] CHECKLIST RESCUE FAILED:", rescueErr);
-    }
-  }
-
-  // Validate critical data extraction
-  if (extractedData.tmlReadings && extractedData.tmlReadings.length > 0) {
-    const withPreviousThickness = extractedData.tmlReadings.filter((t: any) => 
-      t.previousThickness !== null && t.previousThickness !== undefined && t.previousThickness !== 0
-    ).length;
-    const withNozzleSize = extractedData.tmlReadings.filter((t: any) => 
-      t.component === 'Nozzle' && t.nozzleSize
-    ).length;
-    const nozzleReadings = extractedData.tmlReadings.filter((t: any) => t.component === 'Nozzle').length;
-    
-    logger.info("[Manus Parser] TML data quality:", {
-      totalReadings: extractedData.tmlReadings.length,
-      withPreviousThickness: withPreviousThickness,
-      nozzleReadings: nozzleReadings,
-      nozzleReadingsWithSize: withNozzleSize,
-      previousThicknessPercentage: `${((withPreviousThickness / extractedData.tmlReadings.length) * 100).toFixed(1)}%`,
-    });
-    
-    if (withPreviousThickness === 0 && extractedData.tmlReadings.length > 0) {
-      logger.warn("[Manus Parser] WARNING: No previous thickness data extracted - corrosion rate calculations will be affected");
-    }
-  }
-  
   logger.info("[Manus Parser] Structured data extracted successfully");
 
   return extractedData;
-}
-
-/**
- * RESCUE PASS: Extract TML readings only
- * Focused LLM call with a simplified schema that only asks for thickness data.
- * Uses a smaller output schema to avoid token truncation.
- */
-async function extractTmlReadingsOnly(fullText: string): Promise<any[]> {
-  const MAX_CHARS = 200000;
-  const textToSend = fullText.substring(0, MAX_CHARS);
-  
-  const llmResponse = await invokeLLM({
-    messages: [
-      {
-        role: "system",
-        content: `You are an expert at extracting thickness measurement data from API 510 pressure vessel inspection reports.
-
-Your ONLY task is to extract ALL thickness measurement readings (TML/CML data) from this document.
-Do NOT extract vessel info, narratives, or other data — ONLY thickness readings.
-
-CRITICAL RULES:
-1. Extract EVERY thickness reading in the document — search ALL pages
-2. Multi-page tables: Continue reading through ALL pages, do not stop at the first page
-3. Grid format tables (slices × angles): Create a SEPARATE reading for EACH cell
-   - For a table with 10 rows × 8 angle columns = 80 readings
-   - Use legacyLocationId format "SLICE-ANGLE" (e.g., "2-0", "2-45", "2-90")
-4. Nozzle readings: Create 4 readings per nozzle (0°, 90°, 180°, 270°)
-   - Use legacyLocationId format "N1-0", "N1-90", etc.
-5. Previous thickness: Extract if available. Use null (not 0) if not present.
-6. Count your readings and verify against any row numbers in the tables.
-
-Return a JSON object with a single "tmlReadings" array.`
-      },
-      {
-        role: "user",
-        content: `Extract ALL thickness measurement readings from this API 510 report:\n\n${textToSend}`
-      }
-    ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "tml_readings_only",
-        strict: true,
-        schema: {
-          type: "object",
-          properties: {
-            tmlReadings: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  legacyLocationId: { type: "string" },
-                  location: { type: "string" },
-                  component: { type: "string" },
-                  readingType: { type: "string" },
-                  nozzleSize: { type: "string" },
-                  angle: { type: "string" },
-                  sliceLocation: { type: "string" },
-                  nominalThickness: { type: "number" },
-                  previousThickness: { type: "number" },
-                  currentThickness: { type: "number" },
-                  minimumRequired: { type: "number" },
-                },
-                required: [],
-                additionalProperties: false,
-              },
-            },
-          },
-          required: ["tmlReadings"],
-          additionalProperties: false,
-        },
-      },
-    },
-  });
-
-  const content = llmResponse.choices[0].message.content;
-  const text = typeof content === 'string' ? content : JSON.stringify(content);
-  
-  let parsed;
-  try {
-    parsed = JSON.parse(text || '{}');
-  } catch {
-    // Try JSON repair
-    try {
-      const { jsonrepair } = await import('jsonrepair');
-      parsed = JSON.parse(jsonrepair(text || '{}'));
-    } catch {
-      logger.error("[Manus Parser] TML RESCUE: JSON parse failed");
-      return [];
-    }
-  }
-  
-  return parsed.tmlReadings || [];
-}
-
-/**
- * RESCUE PASS: Extract checklist items only
- * Focused LLM call that generates checklist items from the inspection results narrative.
- * When the LLM fails to extract structured checklist data, this pass mines the
- * Section 3.0 narrative for inspection findings and converts them to checklist format.
- */
-async function extractChecklistOnly(fullText: string): Promise<any[]> {
-  const MAX_CHARS = 200000;
-  const textToSend = fullText.substring(0, MAX_CHARS);
-  
-  const llmResponse = await invokeLLM({
-    messages: [
-      {
-        role: "system",
-        content: `You are an expert at extracting inspection checklist data from API 510 pressure vessel inspection reports.
-
-Your ONLY task is to extract ALL inspection checklist items from this document.
-Do NOT extract vessel info, thickness readings, or narratives — ONLY checklist items.
-
-Look for:
-1. Formal checklist tables with pass/fail or satisfactory/unsatisfactory columns
-2. Section 3.0 Inspection Results — convert each finding into a checklist item:
-   - Foundation findings → category: "Foundation"
-   - Shell findings → category: "Shell"
-   - Head findings → category: "Heads"
-   - Appurtenance findings → category: "Appurtenances"
-   - Nozzle findings → category: "Nozzles"
-   - Coating/painting findings → category: "Coating"
-   - Insulation findings → category: "Insulation"
-3. Each sub-section (3.1.1, 3.1.2, 3.2.1, etc.) should be a separate checklist item
-4. Extract the FULL text of each finding
-5. Status should be: "satisfactory", "unsatisfactory", "needs_attention", or "n/a"
-
-Return a JSON object with a single "inspectionChecklist" array.`
-      },
-      {
-        role: "user",
-        content: `Extract ALL inspection checklist items from this API 510 report:\n\n${textToSend}`
-      }
-    ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "checklist_only",
-        strict: true,
-        schema: {
-          type: "object",
-          properties: {
-            inspectionChecklist: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  category: { type: "string" },
-                  itemNumber: { type: "string" },
-                  itemText: { type: "string" },
-                  status: { type: "string" },
-                  notes: { type: "string" },
-                },
-                required: ["itemText", "status"],
-                additionalProperties: false,
-              },
-            },
-          },
-          required: ["inspectionChecklist"],
-          additionalProperties: false,
-        },
-      },
-    },
-  });
-
-  const content = llmResponse.choices[0].message.content;
-  const text = typeof content === 'string' ? content : JSON.stringify(content);
-  
-  let parsed;
-  try {
-    parsed = JSON.parse(text || '{}');
-  } catch {
-    try {
-      const { jsonrepair } = await import('jsonrepair');
-      parsed = JSON.parse(jsonrepair(text || '{}'));
-    } catch {
-      logger.error("[Manus Parser] CHECKLIST RESCUE: JSON parse failed");
-      return [];
-    }
-  }
-  
-  return parsed.inspectionChecklist || [];
 }
 
 /**

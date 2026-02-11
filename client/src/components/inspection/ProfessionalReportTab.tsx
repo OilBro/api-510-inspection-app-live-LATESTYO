@@ -15,7 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import FindingsSection from "../professionalReport/FindingsSection";
 import RecommendationsSection from "../professionalReport/RecommendationsSection";
-import InspectionFindingsSection from "../professionalReport/InspectionFindingsSection";
 import PhotosSection from "../professionalReport/PhotosSection";
 import ChecklistSection from "../professionalReport/ChecklistSection";
 import FfsAssessmentSection from "../professionalReport/FfsAssessmentSection";
@@ -1911,7 +1910,15 @@ function ComponentCalculationForm({
 }
 
 // Placeholder sections (to be implemented)
-// InspectionFindingsSection is now imported from ../professionalReport/InspectionFindingsSection
+function InspectionFindingsSection({ reportId }: { reportId: string }) {
+  return (
+    <Card>
+      <CardContent className="p-8 text-center text-muted-foreground">
+        Inspection findings section - Coming soon
+      </CardContent>
+    </Card>
+  );
+}
 
 
 

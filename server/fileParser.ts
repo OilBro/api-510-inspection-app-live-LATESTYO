@@ -592,19 +592,12 @@ if (selectedParser === "vision") {
       logger.info("[PDF Parser] Using Manus standardized parser for structured extraction...");
       try {
         const manusResult = await parseAndStandardizeWithManus(buffer, "inspection-report.pdf");
-        // The manus parser returns nested format: vesselData.vesselTagNumber
-        // Check both nested and flat formats for the vessel tag
-        const vesselTag = manusResult?.vesselData?.vesselTagNumber 
-          || manusResult?.vesselTagNumber 
-          || manusResult?.vesselInfo?.vesselTagNumber 
-          || '';
-        if (manusResult && vesselTag) {
+        if (manusResult && manusResult.vesselTagNumber) {
           logger.info("[PDF Parser] Manus standardized parser succeeded:", {
-            vesselTag: vesselTag,
+            vesselTag: manusResult.vesselTagNumber,
             tmlReadings: manusResult.tmlReadings?.length || 0,
-            checklistItems: manusResult.inspectionChecklist?.length || manusResult.checklistItems?.length || 0,
+            checklistItems: manusResult.checklistItems?.length || 0,
             nozzles: manusResult.nozzles?.length || 0,
-            format: manusResult.vesselData ? 'nested' : 'flat',
           });
           return manusResult;
         }

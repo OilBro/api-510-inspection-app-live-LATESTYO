@@ -34,29 +34,6 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  // Serve manifest.json FIRST (before any auth/OAuth middleware) to prevent CORS redirect
-  app.get('/manifest.json', (_req, res) => {
-    const manifestPath = process.env.NODE_ENV === 'development'
-      ? path.resolve(import.meta.dirname, '../../client/public/manifest.json')
-      : path.resolve(import.meta.dirname, 'public/manifest.json');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Content-Type', 'application/manifest+json');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    res.sendFile(manifestPath, (err) => {
-      if (err) {
-        // If file not found, return a minimal manifest inline
-        res.status(200).json({
-          name: process.env.VITE_APP_TITLE || 'API 510 Pressure Vessel Inspection App',
-          short_name: 'API 510',
-          start_url: '/',
-          display: 'standalone',
-          background_color: '#ffffff',
-          theme_color: '#2563eb',
-        });
-      }
-    });
-  });
-
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   // tRPC API
@@ -67,6 +44,15 @@ async function startServer() {
       createContext,
     })
   );
+  // Serve manifest.json explicitly with CORS headers to prevent OAuth proxy redirect
+  app.get('/manifest.json', (_req, res) => {
+    const manifestPath = process.env.NODE_ENV === 'development'
+      ? path.resolve(import.meta.dirname, '../../client/public/manifest.json')
+      : path.resolve(import.meta.dirname, 'public/manifest.json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Content-Type', 'application/manifest+json');
+    res.sendFile(manifestPath);
+  });
 
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {

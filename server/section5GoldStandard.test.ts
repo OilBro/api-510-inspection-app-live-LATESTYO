@@ -533,16 +533,14 @@ describe('Location Matching Engine', () => {
       expect(result.timeSpan).toBeCloseTo(5, 1);
     });
     
-    it('should return isValid:true with rate=0 and warning for apparent thickness increase', () => {
+    it('should warn for negative thickness loss', () => {
       const result = calcCorrosionRate(
         { thickness: 0.350, date: new Date('2020-01-01') },
         { thickness: 0.375, date: new Date('2025-01-01') }
       );
       
-      // Per API 510 engineering judgment: thickness increase → rate = 0, still valid
-      expect(result.isValid).toBe(true);
-      expect(result.rate).toBe(0);
-      expect(result.warning).toContain('thickness increase');
+      expect(result.isValid).toBe(false);
+      expect(result.warning).toContain('Negative thickness loss');
     });
     
     it('should reject short time spans', () => {

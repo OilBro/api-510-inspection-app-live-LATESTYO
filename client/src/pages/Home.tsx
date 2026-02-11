@@ -46,8 +46,7 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          <h2 className="mt-8 mb-4 text-xl font-semibold text-gray-800 text-center">Key Capabilities</h2>
-          <div className="grid grid-cols-2 gap-4 text-center">
+          <div className="mt-8 grid grid-cols-2 gap-4 text-center">
             <div className="p-4 bg-white rounded-lg shadow-sm">
               <Calculator className="h-8 w-8 text-primary mx-auto mb-2" />
               <p className="text-sm font-medium">ASME Calculations</p>
@@ -92,7 +91,6 @@ export default function Home() {
           <p className="text-gray-600">Manage your pressure vessel inspections and generate reports</p>
         </div>
 
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Inspection Tools</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <Link href="/inspections">
@@ -219,7 +217,6 @@ export default function Home() {
           </Card>
         </div>
 
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Overview</h2>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Anomaly Statistics */}
           <AnomalyStats />

@@ -11,9 +11,7 @@ import { inspections, tmlReadings, cmlCorrelations } from '../drizzle/schema';
 import { getCorrelatedTMLReadings } from './cmlCorrelationHelper';
 import { nanoid } from 'nanoid';
 
-describe.skip('CML Correlation Helper - StationKey Pairing', () => { 
-  // SKIP: Database not available in test environment - needs proper test database setup
-  // These tests require a live MySQL/TiDB instance to run
+describe.skip('CML Correlation Helper - StationKey Pairing', () => { // SKIP: cmlCorrelations table case sensitivity issue
   let baselineInspectionId: string;
   let currentInspectionId: string;
 

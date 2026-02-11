@@ -100,7 +100,6 @@ export default function PhotoComparisonView({
                         src={previousPhoto.url}
                         alt={previousPhoto.caption}
                         className="w-full h-auto rounded"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
                       <p className="text-sm text-center mt-2 text-muted-foreground">
                         {previousPhoto.caption}
@@ -117,7 +116,6 @@ export default function PhotoComparisonView({
                         src={currentPhoto.url}
                         alt={currentPhoto.caption}
                         className="w-full h-auto rounded"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
                       <p className="text-sm text-center mt-2 text-muted-foreground">
                         {currentPhoto.caption}
@@ -138,7 +136,6 @@ export default function PhotoComparisonView({
                         src={previousPhoto.url}
                         alt="Previous"
                         className="w-full h-auto"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
                       
                       {/* Current photo (overlay with clip) */}
@@ -150,7 +147,6 @@ export default function PhotoComparisonView({
                           src={currentPhoto.url}
                           alt="Current"
                           className="w-full h-auto"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                         />
                       </div>
 
@@ -217,7 +213,6 @@ export default function PhotoComparisonView({
                     src={currentPhoto.url}
                     alt={currentPhoto.caption}
                     className="max-w-full h-auto mx-auto rounded"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                   <p className="text-sm mt-2">{currentPhoto.caption}</p>
                 </div>

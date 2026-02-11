@@ -1048,32 +1048,6 @@ Return JSON in this exact format:
           throw new Error("Unauthorized");
         }
 
-        // Stale job detection: if processing for more than 5 minutes, auto-fail
-        const STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
-        if (job.status === "processing" && job.startedAt) {
-          const elapsed = Date.now() - new Date(job.startedAt).getTime();
-          if (elapsed > STALE_THRESHOLD_MS) {
-            // Auto-mark as failed
-            await drizzleDb.update(extractionJobs)
-              .set({
-                status: "failed",
-                progress: 0,
-                progressMessage: "Extraction timed out",
-                errorMessage: `Extraction job timed out after ${Math.round(elapsed / 60000)} minutes. The LLM extraction may have failed silently. Please try again.`,
-                completedAt: new Date(),
-              })
-              .where(eq(extractionJobs.id, input.jobId));
-
-            return {
-              status: "failed" as const,
-              progress: 0,
-              progressMessage: "Extraction timed out",
-              extractedData: null,
-              errorMessage: `Extraction timed out after ${Math.round(elapsed / 60000)} minutes. Please try again.`,
-            };
-          }
-        }
-
         return {
           status: job.status,
           progress: job.progress,

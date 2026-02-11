@@ -68,8 +68,6 @@ import {
 } from "./professionalReportDb";
 import { generateProfessionalPDF } from "./professionalPdfGenerator";
 import { evaluateShell, evaluateHead, ShellCalculationInputs, HeadCalculationInputs } from "./professionalCalculations";
-import { performFullCalculation, CALCULATION_ENGINE_VERSION, type CalculationInput, type FullCalculationResult } from "./lockedCalculationEngine";
-import { resolveNominalThickness, type NominalResolution } from "./nominalThicknessResolver";
 
 // ============================================================================
 // Professional Report Router
@@ -752,7 +750,6 @@ export const professionalReportRouter = router({
       const tmlReadings = await db.getTmlReadings(input.inspectionId);
       
       // Helper function to create component calculation
-      // USES LOCKED CALCULATION ENGINE for audit traceability
       const createComponentCalc = async (componentType: 'shell' | 'head', componentName: string, filter: (tml: any) => boolean) => {
         const componentTMLs = tmlReadings.filter(filter);
         
@@ -762,6 +759,7 @@ export const professionalReportRouter = router({
         }
         
         // CRITICAL FIX: Read tActual first (new field), fall back to currentThickness (legacy field)
+        // Data Migration writes to tActual, old imports wrote to currentThickness
         const currentThicknesses = componentTMLs
           .map((t: any) => parseFloat(t.tActual || t.currentThickness))
           .filter((v: number) => !isNaN(v));
@@ -772,153 +770,175 @@ export const professionalReportRouter = router({
           .map((t: any) => parseFloat(t.nominalThickness))
           .filter((v: number) => !isNaN(v));
         
-        // API 510 COMPLIANCE: Use MINIMUM thickness (conservative)
-        const minCurrent = currentThicknesses.length > 0 ? Math.min(...currentThicknesses) : NaN;
-        const minPrevious = previousThicknesses.length > 0 ? Math.min(...previousThicknesses) : NaN;
+        // API 510 COMPLIANCE: Use MINIMUM thickness (not average) for conservative calculations
+        // This ensures the calculation reflects the worst-case (thinnest) location
+        const avgCurrent = currentThicknesses.length > 0 ? 
+          Math.min(...currentThicknesses).toFixed(4) : undefined;
+        const avgPrevious = previousThicknesses.length > 0 ? 
+          Math.min(...previousThicknesses).toFixed(4) : undefined;
+        let avgNominal = nominalThicknesses.length > 0 ? 
+          Math.min(...nominalThicknesses).toFixed(4) : undefined;
         
-        if (isNaN(minCurrent)) {
-          logger.warn(`[Recalculate] ${componentName}: No valid current thickness readings — skipping`);
-          return;
+        // FALLBACK: If TML readings don't have nominalThickness, use inspection-level vessel data
+        if (!avgNominal && inspection) {
+          if (componentType === 'shell' && inspection.shellNominalThickness) {
+            avgNominal = parseFloat(String(inspection.shellNominalThickness)).toFixed(4);
+          } else if (componentType === 'head' && inspection.headNominalThickness) {
+            avgNominal = parseFloat(String(inspection.headNominalThickness)).toFixed(4);
+          }
         }
         
-        // ================================================================
-        // FIX #1: Nominal Thickness Resolver — authority hierarchy
-        // ================================================================
-        const nominalResolution: NominalResolution = resolveNominalThickness({
-          componentType,
-          componentName,
-          tmlNominals: nominalThicknesses,
-          vesselNominal: componentType === 'shell'
-            ? (inspection.shellNominalThickness ? parseFloat(String(inspection.shellNominalThickness)) : null)
-            : (inspection.headNominalThickness ? parseFloat(String(inspection.headNominalThickness)) : null),
-        });
-        
-        const resolvedNominal = nominalResolution.value;
-        
-        // ================================================================
-        // FIX #3: Use LOCKED calculation engine for audit traceability
-        // ================================================================
+        // Calculate minimum thickness
         const P = parseFloat(inspection.designPressure || '0');
         const insideDiameter = parseFloat(inspection.insideDiameter || '0');
+        // Radius calculation: R = D/2 (inside radius)
+        // Note: For corroded vessels, some engineers use R = (D/2) - t_nom, but standard practice is R = D/2
+        const R = insideDiameter > 0 ? insideDiameter / 2 : 0;
+        // Use allowable stress from inspection data (SA-612 at 125°F = 20,000 psi)
         const S = parseFloat(inspection.allowableStress || '20000');
+        // Use joint efficiency from inspection data (E=1.0 for full RT, E=0.85 for spot RT)
         const E = parseFloat(inspection.jointEfficiency || '1.0');
-        const designTemp = parseFloat(inspection.designTemperature || '0');
+        // CA is for reference only - NOT added to Tmin per API 510 formulas
+        const CA = 0.125;
         
-        // Determine head type for head components
-        let headTypeForEngine: '2:1 Ellipsoidal' | 'Torispherical' | 'Hemispherical' | undefined;
-        if (componentType === 'head') {
-          const headTypeStr = (inspection.headType || 'ellipsoidal').toLowerCase();
-          if (headTypeStr.includes('torispherical')) headTypeForEngine = 'Torispherical';
-          else if (headTypeStr.includes('hemispherical')) headTypeForEngine = 'Hemispherical';
-          else headTypeForEngine = '2:1 Ellipsoidal';
-        }
-        
-        // Get dates from TML readings
-        const tmlWithDates = componentTMLs.find((t: any) => t.previousInspectionDate && t.currentInspectionDate);
-        const previousDate = tmlWithDates?.previousInspectionDate ? new Date(tmlWithDates.previousInspectionDate) :
-          (inspection.inspectionDate ? new Date(inspection.inspectionDate) : undefined);
-        const currentDate = tmlWithDates?.currentInspectionDate ? new Date(tmlWithDates.currentInspectionDate) : new Date();
-        const yearBuilt = inspection.yearBuilt ? parseInt(String(inspection.yearBuilt)) : undefined;
-        
-        // Build locked engine input
-        const calcInput: CalculationInput = {
-          insideDiameter,
-          designPressure: P,
-          designTemperature: designTemp || 100, // Default 100°F if not specified
-          materialSpec: inspection.materialSpec || 'SA-516 Gr 70',
-          allowableStress: S,
-          jointEfficiency: E,
-          nominalThickness: resolvedNominal || minCurrent, // Use current as fallback for engine (it will warn)
-          currentThickness: minCurrent,
-          previousThickness: isNaN(minPrevious) ? undefined : minPrevious,
-          headType: headTypeForEngine,
-          crownRadius: componentType === 'head' ? (parseFloat(inspection.crownRadius as any) || undefined) : undefined,
-          knuckleRadius: componentType === 'head' ? (parseFloat(inspection.knuckleRadius as any) || undefined) : undefined,
-          yearBuilt,
-          currentYear: new Date().getFullYear(),
-          previousInspectionDate: previousDate,
-          currentInspectionDate: currentDate,
-        };
-        
-        // Data quality tracking
-        let dataQualityStatus: string = 'good';
-        let dataQualityNotes: string = '';
-        let minThickness: string | undefined;
-        let calculatedMAWP: string | undefined;
-        let corrosionRate: string | undefined;
-        let corrosionRateLT: string | undefined;
-        let corrosionRateST: string | undefined;
-        let remainingLife: string | undefined;
-        let corrosionAllowance: string | undefined;
-        let governingRateType: string | undefined;
-        let governingRateReason: string | undefined;
-        let headTypeUsed = componentType === 'head' ? (headTypeForEngine || '2:1 Ellipsoidal') : undefined;
+        let minThickness;
+        let calculatedMAWP;
+        let headTypeUsed = 'Ellipsoidal';
         let headFactorValue: number | null = null;
-        
-        // Nominal resolution audit trail
-        dataQualityNotes += `Nominal: ${nominalResolution.source} (${nominalResolution.reason})`;
-        if (!nominalResolution.calculationReady) {
-          dataQualityStatus = 'incomplete';
-          dataQualityNotes += ' | HARD STOP: Nominal thickness unresolved — RL/CR calculations blocked';
-          logger.warn(`[Recalculate] ${componentName}: ${nominalResolution.reason}`);
+        if (P && R && S && E) {
+          if (componentType === 'shell') {
+            // Shell: t_min = PR/(SE - 0.6P) - NO CA added per API 510
+            const denominator = S * E - 0.6 * P;
+            if (denominator > 0) {
+              minThickness = ((P * R) / denominator).toFixed(4);
+            }
+            // Shell MAWP: MAWP = SEt/(R + 0.6t) using actual thickness
+            if (avgCurrent) {
+              const t = parseFloat(avgCurrent);
+              if (t > 0) {
+                calculatedMAWP = ((S * E * t) / (R + 0.6 * t)).toFixed(1);
+              }
+            }
+          } else {
+            // Head calculation - use correct formula per head type
+            // Read head type from inspection data (default to ellipsoidal if not specified)
+            const headTypeStr = (inspection.headType || 'ellipsoidal').toLowerCase();
+            const D = insideDiameter; // Full inside diameter
+            const denominator = 2 * S * E - 0.2 * P;
+            
+            if (denominator > 0) {
+              if (headTypeStr.includes('torispherical')) {
+                // Torispherical: t = PLM / (2SE - 0.2P)
+                headTypeUsed = 'Torispherical';
+                const crownRadius = parseFloat(inspection.crownRadius as any) || D;
+                const knuckleRadius = parseFloat(inspection.knuckleRadius as any) || (0.06 * D);
+                const M = 0.25 * (3 + Math.sqrt(crownRadius / knuckleRadius));
+                headFactorValue = M;
+                minThickness = ((P * crownRadius * M) / denominator).toFixed(4);
+              } else if (headTypeStr.includes('hemispherical')) {
+                // Hemispherical: t = PR / (2SE - 0.2P)  [UG-32(f)]
+                headTypeUsed = 'Hemispherical';
+                minThickness = ((P * R) / denominator).toFixed(4);
+              } else {
+                // 2:1 Ellipsoidal (default): t = PD / (2SE - 0.2P)  [UG-32(d)]
+                headTypeUsed = 'Ellipsoidal';
+                minThickness = ((P * D) / denominator).toFixed(4);
+              }
+            }
+            
+            // Head MAWP calculation per head type
+            if (avgCurrent) {
+              const t = parseFloat(avgCurrent);
+              if (t > 0) {
+                if (headTypeStr.includes('torispherical')) {
+                  // MAWP = 2SEt / (LM + 0.2t)
+                  const crownRadius = parseFloat(inspection.crownRadius as any) || D;
+                  const knuckleRadius = parseFloat(inspection.knuckleRadius as any) || (0.06 * D);
+                  const M = 0.25 * (3 + Math.sqrt(crownRadius / knuckleRadius));
+                  calculatedMAWP = ((2 * S * E * t) / (crownRadius * M + 0.2 * t)).toFixed(1);
+                } else if (headTypeStr.includes('hemispherical')) {
+                  // MAWP = 2SEt / (R + 0.2t)  [UG-32(f)]
+                  calculatedMAWP = ((2 * S * E * t) / (R + 0.2 * t)).toFixed(1);
+                } else {
+                  // 2:1 Ellipsoidal: MAWP = 2SEt / (D + 0.2t)  [UG-32(d)]
+                  calculatedMAWP = ((2 * S * E * t) / (D + 0.2 * t)).toFixed(1);
+                }
+              }
+            }
+          }
         }
         
-        // Run locked engine if vessel parameters are sufficient
-        if (P > 0 && insideDiameter > 0 && S > 0 && E > 0) {
-          try {
-            const engineType = componentType === 'shell' ? 'Shell' : 'Head';
-            const result: FullCalculationResult = performFullCalculation(calcInput, engineType);
+        // Calculate corrosion rate and remaining life using enhanced dual-rate system
+        let corrosionRate, corrosionRateLT, corrosionRateST, remainingLife, corrosionAllowance;
+        let governingRateType, governingRateReason, dataQualityStatus, dataQualityNotes;
+        
+        if (avgCurrent && minThickness) {
+          const currThick = parseFloat(avgCurrent);
+          const minThick = parseFloat(minThickness);
+          const prevThick = avgPrevious ? parseFloat(avgPrevious) : undefined;
+          const nomThick = avgNominal ? parseFloat(avgNominal) : undefined;
+          
+          // Import enhanced calculation engine
+          const { calculateDualCorrosionRates, calculateRemainingLife, calculateInspectionInterval } = 
+            await import('./enhancedCalculations');
+          
+          // Get dates from TML readings (more accurate than inspection-level dates)
+          const tmlWithDates = componentTMLs.find((t: any) => t.previousInspectionDate && t.currentInspectionDate);
+          const previousDate = tmlWithDates?.previousInspectionDate ? new Date(tmlWithDates.previousInspectionDate) : 
+            (inspection.inspectionDate ? new Date(inspection.inspectionDate) : undefined);
+          const currentDate = tmlWithDates?.currentInspectionDate ? new Date(tmlWithDates.currentInspectionDate) : new Date();
+          
+          // For initial date, use year built or a reasonable default
+          const yearBuilt = inspection.yearBuilt;
+          const initialDate = yearBuilt ? new Date(`${yearBuilt}-01-01`) : 
+            (inspection.createdAt ? new Date(inspection.createdAt) : undefined);
+          
+          // Prepare thickness data for dual corrosion rate calculation
+          const thicknessData = {
+            initialThickness: nomThick, // Use nominal as baseline if available
+            previousThickness: prevThick,
+            actualThickness: currThick,
+            minimumThickness: minThick,
+            initialDate: initialDate,
+            previousDate: previousDate,
+            currentDate: currentDate
+          };
+          
+          // Calculate dual corrosion rates with anomaly detection
+          const rateResult = calculateDualCorrosionRates(thicknessData);
+          
+          corrosionRateLT = rateResult.corrosionRateLongTerm.toFixed(6);
+          corrosionRateST = rateResult.corrosionRateShortTerm.toFixed(6);
+          corrosionRate = rateResult.governingRate.toFixed(6);
+          governingRateType = rateResult.governingRateType;
+          governingRateReason = rateResult.governingRateReason;
+          dataQualityStatus = rateResult.dataQualityStatus;
+          dataQualityNotes = rateResult.dataQualityNotes;
+          
+          // COMPLIANCE GUARD: Only compute CA and RL when minThickness is a real
+          // calculated value from ASME VIII-1 formulas — NOT a placeholder.
+          // If vessel parameters (P, R, S, E) are incomplete, minThick will be undefined
+          // and we must leave RL null and flag the gap.
+          if (minThick > 0 && P > 0 && R > 0 && S > 0 && E > 0) {
+            corrosionAllowance = (currThick - minThick).toFixed(4);
             
-            // Extract results from locked engine
-            if (result.tRequired.success && result.tRequired.resultValue !== null) {
-              minThickness = result.tRequired.resultValue.toFixed(4);
+            // Calculate remaining life using governing rate
+            if (rateResult.governingRate > 0) {
+              const rl = calculateRemainingLife(currThick, minThick, rateResult.governingRate);
+              remainingLife = rl.toFixed(2);
+            } else {
+              // Zero corrosion rate — RL is effectively infinite, cap at 999
+              remainingLife = '999.00';
             }
-            if (result.mawp.success && result.mawp.resultValue !== null) {
-              calculatedMAWP = result.mawp.resultValue.toFixed(1);
-            }
-            
-            // Corrosion rates from locked engine
-            if (result.corrosionRateLT?.success && result.corrosionRateLT.resultValue !== null) {
-              corrosionRateLT = result.corrosionRateLT.resultValue.toFixed(6);
-            }
-            if (result.corrosionRateST?.success && result.corrosionRateST.resultValue !== null) {
-              corrosionRateST = result.corrosionRateST.resultValue.toFixed(6);
-            }
-            
-            // Use summary for governing rate and remaining life
-            if (result.summary.corrosionRate !== null) {
-              corrosionRate = result.summary.corrosionRate.toFixed(6);
-              governingRateType = result.summary.corrosionRateType;
-              governingRateReason = `Locked engine ${CALCULATION_ENGINE_VERSION}: ${result.summary.corrosionRateType} rate governs`;
-            }
-            if (result.summary.remainingLife !== null) {
-              remainingLife = result.summary.remainingLife.toFixed(2);
-            }
-            if (result.summary.tRequired !== null && minCurrent > 0) {
-              corrosionAllowance = (minCurrent - result.summary.tRequired).toFixed(4);
-            }
-            
-            // Head factor from torispherical calculation
-            if (componentType === 'head' && result.tRequired.intermediateValues) {
-              const mFactor = result.tRequired.intermediateValues['M'] || result.tRequired.intermediateValues['m'];
-              if (typeof mFactor === 'number') headFactorValue = mFactor;
-            }
-            
-            // Capture engine warnings
-            if (result.warnings.length > 0) {
-              dataQualityNotes += ` | Engine warnings: ${result.warnings.join('; ')}`;
-            }
-            
-            logger.info(`[Recalculate] ${componentName}: Locked engine ${CALCULATION_ENGINE_VERSION} — tReq=${minThickness}, MAWP=${calculatedMAWP}, CR=${corrosionRate}, RL=${remainingLife}`);
-          } catch (engineErr) {
-            logger.error(`[Recalculate] ${componentName}: Locked engine error:`, engineErr);
+          } else {
+            // Missing vessel parameters — cannot compute tRequired
+            // Leave RL null and flag in data quality notes
+            dataQualityNotes = (dataQualityNotes || '') + 
+              ' | WARNING: Remaining life not computed — missing vessel parameters for t_required calculation.' +
+              ' Verify designPressure, insideDiameter, allowableStress, and jointEfficiency.';
             dataQualityStatus = 'incomplete';
-            dataQualityNotes += ` | Engine error: ${engineErr instanceof Error ? engineErr.message : 'Unknown'}`;
+            logger.warn(`[Recalculate] ${componentName}: Cannot compute RL — missing vessel parameters (P=${P}, R=${R}, S=${S}, E=${E})`);
           }
-        } else {
-          dataQualityStatus = 'incomplete';
-          dataQualityNotes += ` | WARNING: Missing vessel parameters (P=${P}, D=${insideDiameter}, S=${S}, E=${E}) — cannot compute tRequired`;
-          logger.warn(`[Recalculate] ${componentName}: Missing vessel parameters — calculations blocked`);
         }
         
         await professionalReportDb.createComponentCalculation({
@@ -932,16 +952,16 @@ export const professionalReportRouter = router({
           designMAWP: inspection.designPressure ? inspection.designPressure.toString() : undefined,
           calculatedMAWP,
           insideDiameter: inspection.insideDiameter ? inspection.insideDiameter.toString() : undefined,
-          nominalThickness: resolvedNominal?.toFixed(4),
-          previousThickness: isNaN(minPrevious) ? undefined : minPrevious.toFixed(4),
-          actualThickness: minCurrent.toFixed(4),
+          nominalThickness: avgNominal,
+          previousThickness: avgPrevious,
+          actualThickness: avgCurrent,
           minimumThickness: minThickness,
           
-          // Dual corrosion rate system from locked engine
+          // Enhanced dual corrosion rate system
           corrosionRateLongTerm: corrosionRateLT,
           corrosionRateShortTerm: corrosionRateST,
           corrosionRate,
-          governingRateType: governingRateType as 'long_term' | 'short_term' | 'nominal' | null | undefined,
+          governingRateType,
           governingRateReason,
           
           // Data quality indicators
@@ -957,7 +977,7 @@ export const professionalReportRouter = router({
           nextInspectionYears: remainingLife ? (parseFloat(remainingLife) * 0.5).toFixed(2) : '5',
           allowableStress: inspection.allowableStress || '20000',
           jointEfficiency: inspection.jointEfficiency || '0.85',
-          corrosionAllowance: corrosionAllowance || '0',
+          corrosionAllowance: CA.toString(),
           // Head type metadata for PDF report
           headType: componentType === 'head' ? headTypeUsed : undefined,
           headFactor: componentType === 'head' && headFactorValue ? headFactorValue.toFixed(4) : undefined,
@@ -965,7 +985,7 @@ export const professionalReportRouter = router({
           knuckleRadius: componentType === 'head' && inspection.knuckleRadius ? parseFloat(inspection.knuckleRadius as any).toFixed(3) : undefined,
         });
         
-        logger.info(`[Recalculate] Created ${componentName} calculation via ${CALCULATION_ENGINE_VERSION}`);
+        logger.info(`[Recalculate] Created ${componentName} calculation`);
       };
       
       // Create Shell calculation
