@@ -6,7 +6,9 @@
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <link rel="manifest" href="/manifest.json" />
+    <!-- manifest.json link removed: Manus deployment proxy intercepts unauthenticated
+         requests and redirects to OAuth, causing CORS errors. The manifest is not needed
+         since this is not a PWA. Theme color is preserved via meta tag below. -->
     <meta name="theme-color" content="#3b82f6" />
     <title>API 510 Pressure Vessel Inspection App</title>    
     <!-- THIS IS THE START OF A COMMENT BLOCK, BLOCK TO BE DELETED: Google Fonts here, example:

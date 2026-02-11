@@ -3162,3 +3162,9 @@ Test PDF: 54-11-067 2017.pdf
 - [x] #4 PDF generator hardening: binary-search font-metric truncation, component-grouped CML sorting (Shell > Head > Nozzle > Other), improved cell padding
 - [x] #5 CML/location/component column semantics: verified consistent across schema, import pipeline, client display, and PDF generator
 - [x] 31 new nominal resolver tests, 1107 total suite tests, 0 regressions
+
+## Production Bug: manifest.json CORS still failing (Feb 2026) ✅ COMPLETE
+- [x] Root cause: Manus deployment proxy intercepts unauthenticated requests BEFORE Express server, redirects to OAuth
+- [x] Fix: Removed <link rel="manifest"> from index.html — not needed (not a PWA), eliminates the unauthenticated fetch entirely
+- [x] Kept Express manifest.json route as fallback for any direct requests
+- [x] Theme color preserved via <meta name="theme-color"> tag
