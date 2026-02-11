@@ -3126,3 +3126,13 @@ Test PDF: 54-11-067 2017.pdf
 - [x] 53 comprehensive vitest tests (all passing)
 - [x] Provenance block includes: parser type, OCR flag, confidence scores, field overrides, validation warnings
 - [x] Sanitizer outputs: data quality metrics, hydrated fields, seam stationKeys, normalized statuses
+
+## P0 - CALCULATION BUG FIX (COMPLETED 2026-02-11)
+- [x] Fix calculation bug: minimum thickness values 10-18x too high due to incorrect joint efficiency
+- [x] Root cause: U-1 Data Sheet specifies Shell E=1.0 (Full RT) but Heads E=0.85 (Spot RT)
+- [x] Added headJointEfficiency field to inspections table schema
+- [x] Modified recalculate procedure to use component-specific joint efficiency for heads
+- [x] Verified fix: North Head t_min now 0.4169" (was 0.3543"), matches PDF 0.421" within 1%
+- [x] Shell t_min remains correct at 0.7125" (matches PDF 0.719")
+- [x] Database migration pushed successfully (drizzle/0033_massive_cammi.sql)
+- [x] Updated vessel 54-11-001 with headJointEfficiency = 0.85

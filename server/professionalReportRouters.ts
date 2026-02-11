@@ -797,7 +797,20 @@ export const professionalReportRouter = router({
         // Use allowable stress from inspection data (SA-612 at 125°F = 20,000 psi)
         const S = parseFloat(inspection.allowableStress || '20000');
         // Use joint efficiency from inspection data (E=1.0 for full RT, E=0.85 for spot RT)
-        const E = parseFloat(inspection.jointEfficiency || '1.0');
+        // CRITICAL FIX: Heads often have different joint efficiency than shell (Spot RT vs Full RT)
+        // Default to vessel-level E, but allow component-specific override
+        let E = parseFloat(inspection.jointEfficiency || '1.0');
+        
+        // Component-specific joint efficiency override
+        // For heads: Check if inspection has headJointEfficiency field, otherwise use vessel-level E
+        if (componentType === 'head') {
+          // If inspection has a separate headJointEfficiency field, use it
+          const headE = parseFloat((inspection as any).headJointEfficiency || '0');
+          if (headE > 0) {
+            E = headE;
+            logger.info(`[Recalculate] ${componentName}: Using head-specific E=${E} (vessel-level E=${inspection.jointEfficiency})`);
+          }
+        }
         // CA is for reference only - NOT added to Tmin per API 510 formulas
         const CA = 0.125;
         

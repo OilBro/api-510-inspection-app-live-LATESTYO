@@ -1,0 +1,18 @@
+{
+  "query": "SELECT vesselTagNumber, headType, insideDiameter, designPressure, allowableStress, jointEfficiency FROM inspections WHERE vesselTagNumber = '54-11-001';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT vesselTagNumber, headType, insideDiameter, designPressure, allowableStress, jointEfficiency FROM inspections WHERE vesselTagNumber = '54-11-001';",
+  "rows": [
+    {
+      "vesselTagNumber": "54-11-001",
+      "headType": "Hemispherical",
+      "insideDiameter": "130.25",
+      "designPressure": "225.00",
+      "allowableStress": "20700.00",
+      "jointEfficiency": "1.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "vesselTagNumber\theadType\tinsideDiameter\tdesignPressure\tallowableStress\tjointEfficiency\n54-11-001\tHemispherical\t130.25\t225.00\t20700.00\t1.00\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}
