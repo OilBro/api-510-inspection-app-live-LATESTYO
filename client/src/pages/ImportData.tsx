@@ -84,9 +84,12 @@ export default function ImportData() {
   const [extractionJobId, setExtractionJobId] = useState<string | null>(null);
   const [extractionProgress, setExtractionProgress] = useState(0);
   const [extractionMessage, setExtractionMessage] = useState("");
+  const [isReconnecting, setIsReconnecting] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const pollCountRef = useRef<number>(0);
+  const networkErrorCountRef = useRef<number>(0);
   const MAX_POLL_COUNT = 150; // 150 polls × 2s = 5 minutes max
+  const MAX_CONSECUTIVE_NETWORK_ERRORS = 15; // 15 × 2s = 30s of continuous network failure
   
   const startJobMutation = trpc.importedFiles.startExtractionJob.useMutation();
   const confirmMutation = trpc.importedFiles.confirmExtraction.useMutation();
@@ -128,6 +131,13 @@ export default function ImportData() {
         try {
           const status = await utils.importedFiles.getExtractionJobStatus.fetch({ jobId: extractionJobId });
           
+          // Network recovered — reset error counter
+          if (networkErrorCountRef.current > 0) {
+            networkErrorCountRef.current = 0;
+            setIsReconnecting(false);
+            toast.success("Connection restored. Resuming extraction...");
+          }
+          
           setExtractionProgress(status.progress || 0);
           setExtractionMessage(status.progressMessage || "Processing...");
           
@@ -156,8 +166,26 @@ export default function ImportData() {
             toast.error(`Extraction failed: ${status.errorMessage || "Unknown error"}`);
           }
         } catch (error) {
-          console.error("Error polling job status:", error);
-          // Don't stop polling on network errors — the server may be temporarily busy
+          networkErrorCountRef.current += 1;
+          console.error(`Network error during polling (attempt ${networkErrorCountRef.current}/${MAX_CONSECUTIVE_NETWORK_ERRORS}):`, error);
+          
+          // Show reconnecting status after 2 consecutive failures
+          if (networkErrorCountRef.current >= 2) {
+            setIsReconnecting(true);
+            setExtractionMessage("Connection lost. Reconnecting...");
+          }
+          
+          // Give up after too many consecutive network failures
+          if (networkErrorCountRef.current >= MAX_CONSECUTIVE_NETWORK_ERRORS) {
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+              pollingIntervalRef.current = null;
+            }
+            setIsReconnecting(false);
+            setStep("upload");
+            toast.error("Lost connection to the server. Please check your network and try again.");
+          }
+          // Otherwise keep polling — network may recover
         }
       };
       
@@ -316,6 +344,8 @@ export default function ImportData() {
       pollingIntervalRef.current = null;
     }
     pollCountRef.current = 0;
+    networkErrorCountRef.current = 0;
+    setIsReconnecting(false);
     setStep("upload");
     setPreviewData(null);
     setPreviewSummary(null);
@@ -389,9 +419,16 @@ export default function ImportData() {
           <Card className="mb-8">
             <CardContent className="py-12">
               <div className="flex flex-col items-center justify-center space-y-6">
-                <Loader2 className="h-16 w-16 text-primary animate-spin" />
+                <Loader2 className={`h-16 w-16 animate-spin ${isReconnecting ? 'text-amber-500' : 'text-primary'}`} />
                 <div className="text-center">
-                  <h3 className="text-xl font-semibold mb-2">Extracting Data...</h3>
+                  <h3 className="text-xl font-semibold mb-2">
+                    {isReconnecting ? 'Reconnecting...' : 'Extracting Data...'}
+                  </h3>
+                  {isReconnecting && (
+                    <p className="text-amber-600 text-sm mb-2">
+                      Network connection lost. Retrying automatically...
+                    </p>
+                  )}
                   <p className="text-muted-foreground mb-4">{extractionMessage}</p>
                 </div>
                 <div className="w-full max-w-md">

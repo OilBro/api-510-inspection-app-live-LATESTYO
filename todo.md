@@ -3180,3 +3180,9 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Add meta description (50-160 characters) to index.html
 - [x] Add meta keywords to index.html
 - [x] Add H2 headings to Home.tsx (Key Capabilities, Inspection Tools, Overview)
+
+## Network Error Resilience for Extraction Polling (Feb 2026) ✅ COMPLETE
+- [x] Add retry-on-network-error logic: tracks consecutive network failures, retries up to 15 times (30s) before giving up
+- [x] Show "Reconnecting..." status with amber spinner after 2 consecutive network failures
+- [x] Toast notification when connection restores ("Connection restored. Resuming extraction...")
+- [x] Reset networkErrorCountRef in handleCancel to prevent stale state
