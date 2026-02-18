@@ -1,0 +1,370 @@
+{
+  "query": "SHOW COLUMNS FROM inspections;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SHOW COLUMNS FROM inspections;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "varchar(64)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "userId",
+      "Type": "varchar(64)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "previousInspectionId",
+      "Type": "varchar(64)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "vesselTagNumber",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "vesselName",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "manufacturer",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "serialNumber",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "yearBuilt",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "designPressure",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "designTemperature",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "operatingPressure",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "materialSpec",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "allowableStress",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "vesselType",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "insideDiameter",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "overallLength",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "status",
+      "Type": "enum('draft','in_progress','completed','archived')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "draft",
+      "Extra": ""
+    },
+    {
+      "Field": "inspectionDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "completedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "operatingTemperature",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "mdmt",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "product",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "constructionCode",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "vesselConfiguration",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "headType",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "insulationType",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nbNumber",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "jointEfficiency",
+      "Type": "decimal(4,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "radiographyType",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "specificGravity",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "crownRadius",
+      "Type": "decimal(10,3)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "knuckleRadius",
+      "Type": "decimal(10,3)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "inspectionResults",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "recommendations",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "reviewStatus",
+      "Type": "enum('pending_review','reviewed','approved')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "approved",
+      "Extra": ""
+    },
+    {
+      "Field": "anomalyCount",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "extractionQuality",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "complete",
+      "Extra": ""
+    },
+    {
+      "Field": "warningsDismissedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "vesselOrientation",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "liquidHeight",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "shellNominalThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "headNominalThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "headJointEfficiency",
+      "Type": "decimal(4,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tvarchar(64)\tNO\tPRI\tNULL\t\nuserId\tvarchar(64)\tNO\t\tNULL\t\npreviousInspectionId\tvarchar(64)\tYES\t\tNULL\t\nvesselTagNumber\tvarchar(255)\tNO\t\tNULL\t\nvesselName\ttext\tYES\t\tNULL\t\nmanufacturer\ttext\tYES\t\tNULL\t\nserialNumber\tvarchar(255)\tYES\t\tNULL\t\nyearBuilt\tint(11)\tYES\t\tNULL\t\ndesignPressure\tdecimal(10,2)\tYES\t\tNULL\t\ndesignTemperature\tdecimal(10,2)\tYES\t\tNULL\t\noperatingPressure\tdecimal(10,2)\tYES\t\tNULL\t\nmaterialSpec\tvarchar(255)\tYES\t\tNULL\t\nallowableStress\tdecimal(10,2)\tYES\t\tNULL\t\nvesselType\tvarchar(255)\tYES\t\tNULL\t\ninsideDiameter\tdecimal(10,2)\tYES\t\tNULL\t\noverallLength\tdecimal(10,2)\tYES\t\tNULL\t\nstatus\tenum('draft','in_progress','completed','archived')\tNO\t\tdraft\t\ninspectionDate\ttimestamp\tYES\t\tNULL\t\ncreatedAt\ttimestamp\tYES\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tYES\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\ncompletedAt\ttimestamp\tYES\t\tNULL\t\noperatingTemperature\tdecimal(10,2)\tYES\t\tNULL\t\nmdmt\tdecimal(10,2)\tYES\t\tNULL\t\nproduct\ttext\tYES\t\tNULL\t\nconstructionCode\tvarchar(255)\tYES\t\tNULL\t\nvesselConfiguration\tvarchar(255)\tYES\t\tNULL\t\nheadType\tvarchar(255)\tYES\t\tNULL\t\ninsulationType\tvarchar(255)\tYES\t\tNULL\t\nnbNumber\tvarchar(255)\tYES\t\tNULL\t\njointEfficiency\tdecimal(4,2)\tYES\t\tNULL\t\nradiographyType\tvarchar(50)\tYES\t\tNULL\t\nspecificGravity\tdecimal(10,4)\tYES\t\tNULL\t\ncrownRadius\tdecimal(10,3)\tYES\t\tNULL\t\nknuckleRadius\tdecimal(10,3)\tYES\t\tNULL\t\ninspectionResults\ttext\tYES\t\tNULL\t\nrecommendations\ttext\tYES\t\tNULL\t\nreviewStatus\tenum('pending_review','reviewed','approved')\tNO\t\tapproved\t\nanomalyCount\tint(11)\tNO\t\t0\t\nextractionQuality\tvarchar(50)\tYES\t\tcomplete\t\nwarningsDismissedAt\ttimestamp\tYES\t\tNULL\t\nvesselOrientation\tvarchar(50)\tYES\t\tNULL\t\nliquidHeight\tdecimal(10,2)\tYES\t\tNULL\t\nshellNominalThickness\tdecimal(10,4)\tYES\t\tNULL\t\nheadNominalThickness\tdecimal(10,4)\tYES\t\tNULL\t\nheadJointEfficiency\tdecimal(4,2)\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

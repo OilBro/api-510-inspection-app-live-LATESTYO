@@ -1,0 +1,50 @@
+{
+  "query": "SHOW COLUMNS FROM inspections LIKE '%vessel%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SHOW COLUMNS FROM inspections LIKE '%vessel%';",
+  "rows": [
+    {
+      "Field": "vesselTagNumber",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "vesselName",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "vesselType",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "vesselConfiguration",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "vesselOrientation",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nvesselTagNumber\tvarchar(255)\tNO\t\tNULL\t\nvesselName\ttext\tYES\t\tNULL\t\nvesselType\tvarchar(255)\tYES\t\tNULL\t\nvesselConfiguration\tvarchar(255)\tYES\t\tNULL\t\nvesselOrientation\tvarchar(50)\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

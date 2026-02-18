@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE nozzleEvaluations \nSET actualThickness = CASE nozzleNumber\n  WHEN 'N1' THEN 0.1480\n  WHEN 'N2' THEN 0.1350\n  WHEN 'N3' THEN 0.1260\n  WHEN 'N4' THEN 0.2100\n  WHEN 'N5' THEN 0.2740\n  WHEN 'N6' THEN 0.2300\n  WHEN 'N7' THEN 0.1500\n  WHEN 'N8' THEN 0.1390\n  WHEN 'N9' THEN 0.5500\nEND,\nupdatedAt = NOW()\nWHERE inspectionId IN (SELECT id FROM inspections WHERE vesselTagNumber = '57-11-001')\nAND nozzleNumber IN ('N1','N2','N3','N4','N5','N6','N7','N8','N9');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute UPDATE nozzleEvaluations \nSET actualThickness = CASE nozzleNumber\n  WHEN 'N1' THEN 0.1480\n  WHEN 'N2' THEN 0.1350\n  WHEN 'N3' THEN 0.1260\n  WHEN 'N4' THEN 0.2100\n  WHEN 'N5' THEN 0.2740\n  WHEN 'N6' THEN 0.2300\n  WHEN 'N7' THEN 0.1500\n  WHEN 'N8' THEN 0.1390\n  WHEN 'N9' THEN 0.5500\nEND,\nupdatedAt = NOW()\nWHERE inspectionId IN (SELECT id FROM inspections WHERE vesselTagNumber = '57-11-001')\nAND nozzleNumber IN ('N1','N2','N3','N4','N5','N6','N7','N8','N9');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 91
+}

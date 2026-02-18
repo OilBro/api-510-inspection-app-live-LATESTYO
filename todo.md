@@ -3136,3 +3136,23 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Shell t_min remains correct at 0.7125" (matches PDF 0.719")
 - [x] Database migration pushed successfully (drizzle/0033_massive_cammi.sql)
 - [x] Updated vessel 54-11-001 with headJointEfficiency = 0.85
+
+## COMPREHENSIVE CALCULATION ENGINE AUDIT (Feb 2026)
+- [x] Audit 1: Shell t_min formula (ASME UG-27) - verify PR/(SE-0.6P) implementation ✓ CORRECT
+- [x] Audit 2: Head t_min formulas (ASME UG-32) - ellipsoidal, torispherical, hemispherical ✓ CORRECT
+- [x] Audit 3: Shell MAWP formula - verify SEt/(R+0.6t) implementation ✓ CORRECT
+- [x] Audit 4: Head MAWP formulas - verify all head type implementations ✓ CORRECT
+- [x] Audit 5: Nozzle minimum thickness (ASME UG-45) - verify lookup table vs calculation ✓ CORRECT
+- [x] Audit 6: Corrosion rate calculation - verify (t_prev - t_act) / years ✓ CORRECT
+- [x] Audit 7: Remaining life calculation - verify (t_act - t_min) / CR ✓ CORRECT
+- [x] Audit 8: Next inspection date calculation - verify API 510 rules ✓ CORRECT
+- [x] Audit 9: Static head pressure calculation - verify for horizontal vessels ✓ CORRECT
+- [x] Audit 10: Allowable stress (S) lookup tables - verify material/temperature values ✓ CORRECT
+- [x] Audit 11: Joint efficiency (E) values - verify per radiography type ✓ CORRECT
+- [x] Audit 12: Pipe schedule database accuracy - verify nominal wall thicknesses ✓ CORRECT
+- [x] Audit 13: Nozzle reinforcement calculations (UG-37) ✓ CORRECT
+- [x] Audit 14: MAWP at next inspection projection ✓ CORRECT
+- [x] Audit 15: Retirement thickness logic ✓ CORRECT
+- [x] No discrepancies identified - all formulas verified correct
+- [x] Write comprehensive vitest tests for all calculation engines (97 tests, all passing)
+- [x] Deliver audit report to user

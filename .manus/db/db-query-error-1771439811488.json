@@ -1,0 +1,8 @@
+{
+  "query": "SELECT ne.id, ne.nozzleNumber, ne.nozzleDescription, ne.nominalSize, ne.actualThickness, ne.minRequiredThickness \nFROM nozzleEvaluations ne\nJOIN inspections i ON ne.inspectionId = i.id\nWHERE i.vesselNumber = '57-11-001'\nORDER BY ne.nozzleNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT ne.id, ne.nozzleNumber, ne.nozzleDescription, ne.nominalSize, ne.actualThickness, ne.minRequiredThickness \nFROM nozzleEvaluations ne\nJOIN inspections i ON ne.inspectionId = i.id\nWHERE i.vesselNumber = '57-11-001'\nORDER BY ne.nozzleNumber;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'i.vesselnumber' in 'where clause'"
+  ]
+}

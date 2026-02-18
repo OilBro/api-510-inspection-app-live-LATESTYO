@@ -1,0 +1,306 @@
+{
+  "query": "SHOW COLUMNS FROM nozzleEvaluations;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SHOW COLUMNS FROM nozzleEvaluations;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "varchar(64)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "inspectionId",
+      "Type": "varchar(64)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nozzleNumber",
+      "Type": "varchar(50)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nozzleDescription",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "location",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nominalSize",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "schedule",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "actualThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pipeNominalThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pipeMinusManufacturingTolerance",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "shellHeadRequiredThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "minimumRequired",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "acceptable",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "notes",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "service",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pipeOutsideDiameter",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "manufacturingTolerance",
+      "Type": "decimal(5,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0.125",
+      "Extra": ""
+    },
+    {
+      "Field": "toleranceOverridden",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "previousThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nominalThickness",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "reinforcementRequired",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "reinforcementAvailable",
+      "Type": "decimal(10,4)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "reinforcementAdequate",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "reinforcementMargin",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "shortTermCorrosionRate",
+      "Type": "decimal(10,6)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "longTermCorrosionRate",
+      "Type": "decimal(10,6)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "corrosionRate",
+      "Type": "decimal(10,6)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "corrosionRateType",
+      "Type": "enum('LT','ST','USER','GOVERNING')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "remainingLife",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nextInspectionDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "currentInspectionDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "previousInspectionDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "originalInstallDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "governingCriterion",
+      "Type": "enum('pipe_schedule','shell_head_required','reinforcement')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "calculationNotes",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tvarchar(64)\tNO\tPRI\tNULL\t\ninspectionId\tvarchar(64)\tNO\t\tNULL\t\nnozzleNumber\tvarchar(50)\tNO\t\tNULL\t\nnozzleDescription\ttext\tYES\t\tNULL\t\nlocation\tvarchar(100)\tYES\t\tNULL\t\nnominalSize\tvarchar(20)\tNO\t\tNULL\t\nschedule\tvarchar(20)\tYES\t\tNULL\t\nactualThickness\tdecimal(10,4)\tYES\t\tNULL\t\npipeNominalThickness\tdecimal(10,4)\tYES\t\tNULL\t\npipeMinusManufacturingTolerance\tdecimal(10,4)\tYES\t\tNULL\t\nshellHeadRequiredThickness\tdecimal(10,4)\tYES\t\tNULL\t\nminimumRequired\tdecimal(10,4)\tYES\t\tNULL\t\nacceptable\ttinyint(1)\tYES\t\t1\t\nnotes\ttext\tYES\t\tNULL\t\ncreatedAt\ttimestamp\tYES\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tYES\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\nservice\tvarchar(100)\tYES\t\tNULL\t\npipeOutsideDiameter\tdecimal(10,4)\tYES\t\tNULL\t\nmanufacturingTolerance\tdecimal(5,4)\tYES\t\t0.125\t\ntoleranceOverridden\ttinyint(1)\tYES\t\t0\t\npreviousThickness\tdecimal(10,4)\tYES\t\tNULL\t\nnominalThickness\tdecimal(10,4)\tYES\t\tNULL\t\nreinforcementRequired\tdecimal(10,4)\tYES\t\tNULL\t\nreinforcementAvailable\tdecimal(10,4)\tYES\t\tNULL\t\nreinforcementAdequate\ttinyint(1)\tYES\t\t1\t\nreinforcementMargin\tdecimal(10,2)\tYES\t\tNULL\t\nshortTermCorrosionRate\tdecimal(10,6)\tYES\t\tNULL\t\nlongTermCorrosionRate\tdecimal(10,6)\tYES\t\tNULL\t\ncorrosionRate\tdecimal(10,6)\tYES\t\tNULL\t\ncorrosionRateType\tenum('LT','ST','USER','GOVERNING')\tYES\t\tNULL\t\nremainingLife\tdecimal(10,2)\tYES\t\tNULL\t\nnextInspectionDate\ttimestamp\tYES\t\tNULL\t\ncurrentInspectionDate\ttimestamp\tYES\t\tNULL\t\npreviousInspectionDate\ttimestamp\tYES\t\tNULL\t\noriginalInstallDate\ttimestamp\tYES\t\tNULL\t\ngoverningCriterion\tenum('pipe_schedule','shell_head_required','reinforcement')\tYES\t\tNULL\t\ncalculationNotes\ttext\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

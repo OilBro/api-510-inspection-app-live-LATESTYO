@@ -1,0 +1,82 @@
+{
+  "query": "SELECT ne.nozzleNumber, ne.nozzleDescription, ne.nominalSize, ne.actualThickness, ne.minimumRequired, ne.acceptable\nFROM nozzleEvaluations ne\nWHERE ne.inspectionId IN (SELECT id FROM inspections WHERE vesselTagNumber = '57-11-001')\nORDER BY ne.nozzleNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT ne.nozzleNumber, ne.nozzleDescription, ne.nominalSize, ne.actualThickness, ne.minimumRequired, ne.acceptable\nFROM nozzleEvaluations ne\nWHERE ne.inspectionId IN (SELECT id FROM inspections WHERE vesselTagNumber = '57-11-001')\nORDER BY ne.nozzleNumber;",
+  "rows": [
+    {
+      "nozzleNumber": "N1",
+      "nozzleDescription": "Outlet",
+      "nominalSize": "2 inch",
+      "actualThickness": "0.1480",
+      "minimumRequired": "NULL",
+      "acceptable": "1"
+    },
+    {
+      "nozzleNumber": "N2",
+      "nozzleDescription": "Site Glass",
+      "nominalSize": "1 inch",
+      "actualThickness": "0.1350",
+      "minimumRequired": "NULL",
+      "acceptable": "1"
+    },
+    {
+      "nozzleNumber": "N3",
+      "nozzleDescription": "Site Glass",
+      "nominalSize": "1 inch",
+      "actualThickness": "0.1260",
+      "minimumRequired": "NULL",
+      "acceptable": "1"
+    },
+    {
+      "nozzleNumber": "N4",
+      "nozzleDescription": "Inlet",
+      "nominalSize": "3 inch",
+      "actualThickness": "0.2100",
+      "minimumRequired": "NULL",
+      "acceptable": "1"
+    },
+    {
+      "nozzleNumber": "N5",
+      "nozzleDescription": "PV",
+      "nominalSize": "6 inch",
+      "actualThickness": "0.2740",
+      "minimumRequired": "NULL",
+      "acceptable": "1"
+    },
+    {
+      "nozzleNumber": "N6",
+      "nozzleDescription": "Vapor",
+      "nominalSize": "4 inch",
+      "actualThickness": "0.2300",
+      "minimumRequired": "NULL",
+      "acceptable": "1"
+    },
+    {
+      "nozzleNumber": "N7",
+      "nozzleDescription": "Blank",
+      "nominalSize": "2 inch",
+      "actualThickness": "0.1500",
+      "minimumRequired": "NULL",
+      "acceptable": "1"
+    },
+    {
+      "nozzleNumber": "N8",
+      "nozzleDescription": "Recirc",
+      "nominalSize": "1.5 inch",
+      "actualThickness": "0.1390",
+      "minimumRequired": "NULL",
+      "acceptable": "1"
+    },
+    {
+      "nozzleNumber": "N9",
+      "nozzleDescription": "Manway",
+      "nominalSize": "18 inch",
+      "actualThickness": "0.5500",
+      "minimumRequired": "NULL",
+      "acceptable": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "nozzleNumber\tnozzleDescription\tnominalSize\tactualThickness\tminimumRequired\tacceptable\nN1\tOutlet\t2 inch\t0.1480\tNULL\t1\nN2\tSite Glass\t1 inch\t0.1350\tNULL\t1\nN3\tSite Glass\t1 inch\t0.1260\tNULL\t1\nN4\tInlet\t3 inch\t0.2100\tNULL\t1\nN5\tPV\t6 inch\t0.2740\tNULL\t1\nN6\tVapor\t4 inch\t0.2300\tNULL\t1\nN7\tBlank\t2 inch\t0.1500\tNULL\t1\nN8\tRecirc\t1.5 inch\t0.1390\tNULL\t1\nN9\tManway\t18 inch\t0.5500\tNULL\t1\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

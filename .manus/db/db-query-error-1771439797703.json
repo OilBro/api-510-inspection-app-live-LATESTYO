@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, inspectionId, nozzleNumber, nozzleDescription, nominalSize, actualThickness, minRequiredThickness \nFROM nozzleEvaluations \nWHERE inspectionId = (SELECT id FROM inspections WHERE vesselTag = '57-11-001')\nORDER BY nozzleNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT id, inspectionId, nozzleNumber, nozzleDescription, nominalSize, actualThickness, minRequiredThickness \nFROM nozzleEvaluations \nWHERE inspectionId = (SELECT id FROM inspections WHERE vesselTag = '57-11-001')\nORDER BY nozzleNumber;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'vesseltag' in 'where clause'"
+  ]
+}

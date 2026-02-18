@@ -1,0 +1,14 @@
+{
+  "query": "SELECT nozzleNumber, actualThickness FROM nozzleEvaluations WHERE inspectionId IN (SELECT id FROM inspections WHERE vesselTagNumber = '57-11-001') AND nozzleNumber = 'N1';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2vRv1t5JdAedAFZ.807c3fab4c80 --database A4XPjAmiHcgmrps2ZTa96H --execute SELECT nozzleNumber, actualThickness FROM nozzleEvaluations WHERE inspectionId IN (SELECT id FROM inspections WHERE vesselTagNumber = '57-11-001') AND nozzleNumber = 'N1';",
+  "rows": [
+    {
+      "nozzleNumber": "N1",
+      "actualThickness": "0.1480"
+    }
+  ],
+  "messages": [],
+  "stdout": "nozzleNumber\tactualThickness\nN1\t0.1480\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}
