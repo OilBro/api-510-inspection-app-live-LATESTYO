@@ -59,6 +59,8 @@ import {
   getAllowableStress,
   getAllowableStressNormalized,
   normalizeMaterialSpec,
+  getMaterialProperties,
+  listAvailableMaterials,
 } from './asmeMaterialDatabase';
 
 import {
@@ -1415,5 +1417,538 @@ describe('Formula Consistency Verification', () => {
       const MAWP = (2 * S * E * t_min * cosA) / (D + 1.2 * t_min * cosA);
       expectCloseTo(MAWP, P, 0.001, 'Cone inverse check');
     });
+  });
+});
+
+// ============================================================================
+// EXTENDED MATERIAL DATABASE VERIFICATION - SA-387 (Cr-Mo) & SA-204 (C-½Mo)
+// Per ASME Section II Part D, Table 1A, 2021 Edition
+// ============================================================================
+describe('Extended Material Database - SA-387 Cr-Mo Alloys', () => {
+
+  describe('SA-387 Gr 11 Cl 1 (1¼Cr-½Mo-Si) Allowable Stress Values', () => {
+    // ASME Section II Part D, Table 1A, Line 24 (Plate, K11789, Class 1)
+    // Min Tensile: 60 ksi, Min Yield: 35 ksi, Max Temp: 1200°F
+
+    it('should return 17,100 psi at 100°F (exact table value)', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 1', 100);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(17100);
+    });
+
+    it('should return 17,100 psi at 500°F (stress plateau)', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 1', 500);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(17100);
+    });
+
+    it('should return 17,100 psi at 750°F (still in plateau)', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 1', 750);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(17100);
+    });
+
+    it('should return 16,800 psi at 800°F (stress begins to decrease)', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 1', 800);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(16800);
+    });
+
+    it('should return 16,400 psi at 850°F', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 1', 850);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(16400);
+    });
+
+    it('should return 13,700 psi at 900°F (creep range begins)', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 1', 900);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(13700);
+    });
+
+    it('should return 9,300 psi at 950°F', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 1', 950);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(9300);
+    });
+
+    it('should return 6,300 psi at 1000°F', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 1', 1000);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(6300);
+    });
+
+    it('should return 1,200 psi at 1200°F (max temperature)', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 1', 1200);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(1200);
+    });
+
+    it('should interpolate correctly at 825°F', () => {
+      // Between 800°F (16,800) and 850°F (16,400)
+      // Linear: 16800 + (16400-16800) * (825-800)/(850-800) = 16800 + (-400)*0.5 = 16600
+      const result = getAllowableStress('SA-387 Gr 11 Cl 1', 825);
+      expect(result.status).toBe('ok_interpolated');
+      expect(result.stress).toBe(16600);
+    });
+
+    it('should return error above 1200°F', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 1', 1250);
+      expect(result.status).toBe('error');
+      expect(result.stress).toBeNull();
+    });
+  });
+
+  describe('SA-387 Gr 11 Cl 2 (1¼Cr-½Mo-Si, Higher Strength) Allowable Stress Values', () => {
+    // ASME Section II Part D, Table 1A, Line 30 (Plate, K11789, Class 2)
+    // Min Tensile: 75 ksi, Min Yield: 45 ksi, Max Temp: 1200°F
+
+    it('should return 21,400 psi at 100°F', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 2', 100);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(21400);
+    });
+
+    it('should return 21,400 psi at 800°F (extended plateau vs Class 1)', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 2', 800);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(21400);
+    });
+
+    it('should return 20,200 psi at 850°F', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 2', 850);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(20200);
+    });
+
+    it('should return 13,700 psi at 900°F (converges with Class 1 in creep)', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 2', 900);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(13700);
+    });
+
+    it('should return 1,200 psi at 1200°F', () => {
+      const result = getAllowableStress('SA-387 Gr 11 Cl 2', 1200);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(1200);
+    });
+  });
+
+  describe('SA-387 Gr 22 Cl 1 (2¼Cr-1Mo) Allowable Stress Values', () => {
+    // ASME Section II Part D, Table 1A, Line 36 (Plate, K21590, Class 1)
+    // Min Tensile: 60 ksi, Min Yield: 30 ksi, Max Temp: 1200°F
+
+    it('should return 17,100 psi at 100°F', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 1', 100);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(17100);
+    });
+
+    it('should return 16,600 psi at 300°F (stress drops earlier than Gr 11)', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 1', 300);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(16600);
+    });
+
+    it('should return 16,600 psi at 850°F (extended high-temp plateau)', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 1', 850);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(16600);
+    });
+
+    it('should return 13,600 psi at 900°F', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 1', 900);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(13600);
+    });
+
+    it('should return 10,800 psi at 950°F (better creep resistance than Gr 11)', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 1', 950);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(10800);
+    });
+
+    it('should return 8,000 psi at 1000°F', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 1', 1000);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(8000);
+    });
+
+    it('should return 1,400 psi at 1200°F', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 1', 1200);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(1400);
+    });
+
+    it('should interpolate correctly at 925°F', () => {
+      // Between 900°F (13,600) and 950°F (10,800)
+      // Linear: 13600 + (10800-13600) * (925-900)/(950-900) = 13600 + (-2800)*0.5 = 12200
+      const result = getAllowableStress('SA-387 Gr 22 Cl 1', 925);
+      expect(result.status).toBe('ok_interpolated');
+      expect(result.stress).toBe(12200);
+    });
+  });
+
+  describe('SA-387 Gr 22 Cl 2 (2¼Cr-1Mo, Higher Strength) Allowable Stress Values', () => {
+    // ASME Section II Part D, Table 1A, Line 12 (Plate, K21590, Class 2)
+    // Min Tensile: 75 ksi, Min Yield: 45 ksi, Max Temp: 1200°F
+
+    it('should return 21,400 psi at 100°F', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 2', 100);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(21400);
+    });
+
+    it('should return 20,900 psi at 300°F (stress decreases earlier than Gr 11 Cl 2)', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 2', 300);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(20900);
+    });
+
+    it('should return 20,500 psi at 500°F', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 2', 500);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(20500);
+    });
+
+    it('should return 20,000 psi at 700°F', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 2', 700);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(20000);
+    });
+
+    it('should return 19,300 psi at 800°F', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 2', 800);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(19300);
+    });
+
+    it('should return 18,700 psi at 850°F', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 2', 850);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(18700);
+    });
+
+    it('should return 15,800 psi at 900°F', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 2', 900);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(15800);
+    });
+
+    it('should return 11,400 psi at 950°F', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 2', 950);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(11400);
+    });
+
+    it('should return 7,800 psi at 1000°F', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 2', 1000);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(7800);
+    });
+
+    it('should return 1,200 psi at 1200°F', () => {
+      const result = getAllowableStress('SA-387 Gr 22 Cl 2', 1200);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(1200);
+    });
+
+    it('should interpolate correctly at 975°F', () => {
+      // Between 950°F (11,400) and 1000°F (7,800)
+      // Linear: 11400 + (7800-11400) * (975-950)/(1000-950) = 11400 + (-3600)*0.5 = 9600
+      const result = getAllowableStress('SA-387 Gr 22 Cl 2', 975);
+      expect(result.status).toBe('ok_interpolated');
+      expect(result.stress).toBe(9600);
+    });
+  });
+});
+
+describe('Extended Material Database - SA-204 C-½Mo Alloys', () => {
+
+  describe('SA-204 Gr A (C-½Mo) Allowable Stress Values', () => {
+    // ASME Section II Part D, Table 1A, Line 25 (Plate, K11820)
+    // Min Tensile: 65 ksi, Min Yield: 37 ksi, Max Temp: 1000°F
+
+    it('should return 18,600 psi at 100°F', () => {
+      const result = getAllowableStress('SA-204 Gr A', 100);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(18600);
+    });
+
+    it('should return 18,600 psi at 700°F (extended plateau)', () => {
+      const result = getAllowableStress('SA-204 Gr A', 700);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(18600);
+    });
+
+    it('should return 18,400 psi at 800°F', () => {
+      const result = getAllowableStress('SA-204 Gr A', 800);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(18400);
+    });
+
+    it('should return 17,900 psi at 850°F', () => {
+      const result = getAllowableStress('SA-204 Gr A', 850);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(17900);
+    });
+
+    it('should return 13,700 psi at 900°F', () => {
+      const result = getAllowableStress('SA-204 Gr A', 900);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(13700);
+    });
+
+    it('should return 8,200 psi at 950°F', () => {
+      const result = getAllowableStress('SA-204 Gr A', 950);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(8200);
+    });
+
+    it('should return 4,800 psi at 1000°F (max temperature)', () => {
+      const result = getAllowableStress('SA-204 Gr A', 1000);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(4800);
+    });
+
+    it('should return error above 1000°F', () => {
+      const result = getAllowableStress('SA-204 Gr A', 1050);
+      expect(result.status).toBe('error');
+      expect(result.stress).toBeNull();
+    });
+  });
+
+  describe('SA-204 Gr B (C-½Mo, Higher Strength) Allowable Stress Values', () => {
+    // ASME Section II Part D, Table 1A, Line 30 (Plate, K12020)
+    // Min Tensile: 70 ksi, Min Yield: 40 ksi, Max Temp: 1000°F
+
+    it('should return 20,000 psi at 100°F', () => {
+      const result = getAllowableStress('SA-204 Gr B', 100);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(20000);
+    });
+
+    it('should return 20,000 psi at 750°F (extended plateau)', () => {
+      const result = getAllowableStress('SA-204 Gr B', 750);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(20000);
+    });
+
+    it('should return 19,900 psi at 800°F', () => {
+      const result = getAllowableStress('SA-204 Gr B', 800);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(19900);
+    });
+
+    it('should return 19,300 psi at 850°F', () => {
+      const result = getAllowableStress('SA-204 Gr B', 850);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(19300);
+    });
+
+    it('should return 13,700 psi at 900°F (converges with Gr A in creep)', () => {
+      const result = getAllowableStress('SA-204 Gr B', 900);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(13700);
+    });
+
+    it('should return 4,800 psi at 1000°F', () => {
+      const result = getAllowableStress('SA-204 Gr B', 1000);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(4800);
+    });
+
+    it('should interpolate correctly at 875°F', () => {
+      // Between 850°F (19,300) and 900°F (13,700)
+      // Linear: 19300 + (13700-19300) * (875-850)/(900-850) = 19300 + (-5600)*0.5 = 16500
+      const result = getAllowableStress('SA-204 Gr B', 875);
+      expect(result.status).toBe('ok_interpolated');
+      expect(result.stress).toBe(16500);
+    });
+  });
+
+  describe('SA-204 Gr C (C-½Mo, Highest Strength) Allowable Stress Values', () => {
+    // ASME Section II Part D, Table 1A, Line 35 (Plate, K12320)
+    // Min Tensile: 75 ksi, Min Yield: 43 ksi, Max Temp: 1000°F
+
+    it('should return 21,400 psi at 100°F', () => {
+      const result = getAllowableStress('SA-204 Gr C', 100);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(21400);
+    });
+
+    it('should return 21,400 psi at 800°F (extended plateau)', () => {
+      const result = getAllowableStress('SA-204 Gr C', 800);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(21400);
+    });
+
+    it('should return 20,700 psi at 850°F', () => {
+      const result = getAllowableStress('SA-204 Gr C', 850);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(20700);
+    });
+
+    it('should return 13,700 psi at 900°F (converges with Gr A & B in creep)', () => {
+      const result = getAllowableStress('SA-204 Gr C', 900);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(13700);
+    });
+
+    it('should return 4,800 psi at 1000°F', () => {
+      const result = getAllowableStress('SA-204 Gr C', 1000);
+      expect(result.status).toBe('ok');
+      expect(result.stress).toBe(4800);
+    });
+  });
+});
+
+describe('Extended Material Normalization - SA-387 & SA-204', () => {
+
+  it('should normalize "SA-387 Grade 11 Class 1" to "SA-387 Gr 11 Cl 1"', () => {
+    const result = normalizeMaterialSpec('SA-387 Grade 11 Class 1');
+    expect(result).toBe('SA-387 Gr 11 Cl 1');
+  });
+
+  it('should normalize "sa-387 gr 22 cl 2" (lowercase) to "SA-387 Gr 22 Cl 2"', () => {
+    const result = normalizeMaterialSpec('sa-387 gr 22 cl 2');
+    expect(result).toBe('SA-387 Gr 22 Cl 2');
+  });
+
+  it('should normalize "SA-204 Grade B" to "SA-204 Gr B"', () => {
+    const result = normalizeMaterialSpec('SA-204 Grade B');
+    expect(result).toBe('SA-204 Gr B');
+  });
+
+  it('should normalize "SA-204 GRADE C" to "SA-204 Gr C"', () => {
+    const result = normalizeMaterialSpec('SA-204 GRADE C');
+    expect(result).toBe('SA-204 Gr C');
+  });
+
+  it('should handle getAllowableStressNormalized for SA-387 Grade 22 Class 1', () => {
+    const result = getAllowableStressNormalized('SA-387 Grade 22 Class 1', 900);
+    expect(result.status).toBe('ok');
+    expect(result.stress).toBe(13600);
+    expect(result.normalizedSpec).toBe('SA-387 Gr 22 Cl 1');
+  });
+});
+
+describe('Material Properties - SA-387 & SA-204', () => {
+  it('SA-387 Gr 11 Cl 1 properties should match ASME data', () => {
+    const props = getMaterialProperties('SA-387 Gr 11 Cl 1');
+    expect(props).not.toBeNull();
+    expect(props!.specNumber).toBe('SA-387');
+    expect(props!.grade).toBe('11 Class 1');
+    expect(props!.productForm).toBe('Plate');
+    expect(props!.minTensileStrength).toBe(60000);
+    expect(props!.minYieldStrength).toBe(35000);
+    expect(props!.maxTemperature).toBe(1200);
+  });
+
+  it('SA-387 Gr 22 Cl 2 properties should match ASME data', () => {
+    const props = getMaterialProperties('SA-387 Gr 22 Cl 2');
+    expect(props).not.toBeNull();
+    expect(props!.specNumber).toBe('SA-387');
+    expect(props!.grade).toBe('22 Class 2');
+    expect(props!.productForm).toBe('Plate');
+    expect(props!.minTensileStrength).toBe(75000);
+    expect(props!.minYieldStrength).toBe(45000);
+    expect(props!.maxTemperature).toBe(1200);
+  });
+
+  it('SA-204 Gr B properties should match ASME data', () => {
+    const props = getMaterialProperties('SA-204 Gr B');
+    expect(props).not.toBeNull();
+    expect(props!.specNumber).toBe('SA-204');
+    expect(props!.grade).toBe('B');
+    expect(props!.productForm).toBe('Plate');
+    expect(props!.minTensileStrength).toBe(70000);
+    expect(props!.minYieldStrength).toBe(40000);
+    expect(props!.maxTemperature).toBe(1000);
+  });
+
+  it('SA-204 Gr C properties should match ASME data', () => {
+    const props = getMaterialProperties('SA-204 Gr C');
+    expect(props).not.toBeNull();
+    expect(props!.specNumber).toBe('SA-204');
+    expect(props!.grade).toBe('C');
+    expect(props!.productForm).toBe('Plate');
+    expect(props!.minTensileStrength).toBe(75000);
+    expect(props!.minYieldStrength).toBe(43000);
+    expect(props!.maxTemperature).toBe(1000);
+  });
+});
+
+describe('Cr-Mo Material Calculation Integration Tests', () => {
+  // Verify that the new materials work correctly through the full calculation pipeline
+
+  it('should calculate shell t_min for SA-387 Gr 22 Cl 1 at 650°F', () => {
+    // P=200 psi, R=24 in (D=48), S=16600 psi, E=1.0
+    // t_min = PR / (SE - 0.6P) = 200*24 / (16600*1.0 - 0.6*200) = 4800 / 16480 = 0.2913 in
+    const R = 24;
+    const t_expected = (200 * R) / (16600 * 1.0 - 0.6 * 200);
+    const result = calculateShellThickness({
+      P: 200,
+      S: 16600,
+      E: 1.0,
+      D: 48,
+    });
+    expectCloseTo(result.t_min, t_expected, THICKNESS_TOL, 'SA-387 Gr 22 Cl 1 shell t_min');
+  });
+
+  it('should calculate shell t_min for SA-204 Gr B at 850°F', () => {
+    // P=150 psi, R=30 in (D=60), S=19300 psi, E=0.85
+    // t_min = PR / (SE - 0.6P) = 150*30 / (19300*0.85 - 0.6*150) = 4500 / 16315 = 0.2758 in
+    const R = 30;
+    const t_expected = (150 * R) / (19300 * 0.85 - 0.6 * 150);
+    const result = calculateShellThickness({
+      P: 150,
+      S: 19300,
+      E: 0.85,
+      D: 60,
+    });
+    expectCloseTo(result.t_min, t_expected, THICKNESS_TOL, 'SA-204 Gr B shell t_min');
+  });
+
+  it('should calculate MAWP for SA-387 Gr 11 Cl 1 vessel at 900°F', () => {
+    // t=0.5 in, R=18 in (D=36), S=13700 psi, E=1.0
+    // MAWP = SEt / (R + 0.6t) = 13700*1.0*0.5 / (18 + 0.6*0.5) = 6850 / 18.3 = 374.3 psi
+    const MAWP_expected = (13700 * 1.0 * 0.5) / (18 + 0.6 * 0.5);
+    const result = calculateMAWPShell({
+      insideDiameter: 36,
+      designPressure: 200,
+      designTemperature: 900,
+      materialSpec: 'SA-387 Gr 11 Cl 1',
+      allowableStress: 13700,
+      jointEfficiency: 1.0,
+      nominalThickness: 0.625,
+      currentThickness: 0.5,
+    });
+    expect(result.success).toBe(true);
+    expectCloseTo(result.resultValue!, MAWP_expected, MAWP_TOL, 'SA-387 Gr 11 Cl 1 MAWP at 900°F');
+  });
+
+  it('should verify Gr 22 has better high-temp creep resistance than Gr 11', () => {
+    // At 1000°F: Gr 22 Cl 1 = 8000 psi vs Gr 11 Cl 1 = 6300 psi
+    const gr22 = getAllowableStress('SA-387 Gr 22 Cl 1', 1000);
+    const gr11 = getAllowableStress('SA-387 Gr 11 Cl 1', 1000);
+    expect(gr22.stress).toBeGreaterThan(gr11.stress!);
+    expect(gr22.stress).toBe(8000);
+    expect(gr11.stress).toBe(6300);
+  });
+
+  it('should verify SA-204 grades converge at creep temperatures', () => {
+    // At 900°F all SA-204 grades converge to 13,700 psi (creep-governed)
+    const grA = getAllowableStress('SA-204 Gr A', 900);
+    const grB = getAllowableStress('SA-204 Gr B', 900);
+    const grC = getAllowableStress('SA-204 Gr C', 900);
+    expect(grA.stress).toBe(13700);
+    expect(grB.stress).toBe(13700);
+    expect(grC.stress).toBe(13700);
+  });
+
+  it('should verify total material count is now 19', () => {
+    const materials = listAvailableMaterials();
+    expect(materials.length).toBe(19); // 12 original + 4 SA-387 + 3 SA-204
   });
 });

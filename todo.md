@@ -3156,3 +3156,17 @@ Test PDF: 54-11-067 2017.pdf
 - [x] No discrepancies identified - all formulas verified correct
 - [x] Write comprehensive vitest tests for all calculation engines (97 tests, all passing)
 - [x] Deliver audit report to user
+
+## Reusable Skill, CI Integration, and Material Database Extension (Feb 2026)
+- [x] Read skill-creator SKILL.md for proper skill creation workflow
+- [x] Read existing api510-report-error-correction skill for reference patterns
+- [x] Create reusable calculation-engine-audit skill with SKILL.md, references, and templates
+- [x] Integrate audit tests into CI pipeline (`pnpm test:audit` script added)
+- [x] Research and add SA-387 Gr 11 Cl 1 & Cl 2 (1¼Cr-½Mo-Si) from ASME Section II Part D Table 1A
+- [x] Research and add SA-387 Gr 22 Cl 1 & Cl 2 (2¼Cr-1Mo) from ASME Section II Part D Table 1A
+- [x] Research and add SA-204 Gr A, B, C (C-½Mo) from ASME Section II Part D Table 1A
+- [x] Add material properties (tensile, yield, max temp) for all 7 new materials
+- [x] Update normalization function to handle Class/Cl variations
+- [x] Add 70 new verification tests for all new materials
+- [x] Run full test suite - 1200 tests passed, 167 audit tests passed, 0 regressions
+- [x] Save checkpoint and deliver to user

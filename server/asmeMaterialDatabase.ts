@@ -253,6 +253,155 @@ const ALLOWABLE_STRESS_TABLE_1A: Record<string, Record<number, number>> = {
     850: 12900,
     900: 10000,
   },
+  // SA-387 Grade 11 Class 1 - 1¼Cr-½Mo-Si Alloy Steel Plate (Cr-Mo for elevated temperature service)
+  // Per ASME Section II Part D, Table 1A, 2021 Edition
+  "SA-387 Gr 11 Cl 1": {
+    [-20]: 17100,
+    100: 17100,
+    200: 17100,
+    300: 17100,
+    400: 17100,
+    500: 17100,
+    600: 17100,
+    650: 17100,
+    700: 17100,
+    750: 17100,
+    800: 16800,
+    850: 16400,
+    900: 13700,
+    950: 9300,
+    1000: 6300,
+    1050: 4200,
+    1100: 2800,
+    1150: 1900,
+    1200: 1200,
+  },
+  // SA-387 Grade 11 Class 2 - 1¼Cr-½Mo-Si Alloy Steel Plate (Higher strength class)
+  // Per ASME Section II Part D, Table 1A, 2021 Edition
+  "SA-387 Gr 11 Cl 2": {
+    [-20]: 21400,
+    100: 21400,
+    200: 21400,
+    300: 21400,
+    400: 21400,
+    500: 21400,
+    600: 21400,
+    650: 21400,
+    700: 21400,
+    750: 21400,
+    800: 21400,
+    850: 20200,
+    900: 13700,
+    950: 9300,
+    1000: 6300,
+    1050: 4200,
+    1100: 2800,
+    1150: 1900,
+    1200: 1200,
+  },
+  // SA-387 Grade 22 Class 1 - 2¼Cr-1Mo Alloy Steel Plate (Cr-Mo for high-temperature hydrogen service)
+  // Per ASME Section II Part D, Table 1A, 2021 Edition
+  "SA-387 Gr 22 Cl 1": {
+    [-20]: 17100,
+    100: 17100,
+    200: 17100,
+    300: 16600,
+    400: 16600,
+    500: 16600,
+    600: 16600,
+    650: 16600,
+    700: 16600,
+    750: 16600,
+    800: 16600,
+    850: 16600,
+    900: 13600,
+    950: 10800,
+    1000: 8000,
+    1050: 5700,
+    1100: 3800,
+    1150: 2400,
+    1200: 1400,
+  },
+  // SA-387 Grade 22 Class 2 - 2¼Cr-1Mo Alloy Steel Plate (Higher strength class)
+  // Per ASME Section II Part D, Table 1A, 2021 Edition
+  "SA-387 Gr 22 Cl 2": {
+    [-20]: 21400,
+    100: 21400,
+    200: 21400,
+    300: 20900,
+    400: 20600,
+    500: 20500,
+    600: 20400,
+    650: 20200,
+    700: 20000,
+    750: 19700,
+    800: 19300,
+    850: 18700,
+    900: 15800,
+    950: 11400,
+    1000: 7800,
+    1050: 5100,
+    1100: 3200,
+    1150: 2000,
+    1200: 1200,
+  },
+  // SA-204 Grade A - C-½Mo Alloy Steel Plate (Molybdenum alloy for elevated temperature)
+  // Per ASME Section II Part D, Table 1A, 2021 Edition
+  "SA-204 Gr A": {
+    [-20]: 18600,
+    100: 18600,
+    200: 18600,
+    300: 18600,
+    400: 18600,
+    500: 18600,
+    600: 18600,
+    650: 18600,
+    700: 18600,
+    750: 18600,
+    800: 18400,
+    850: 17900,
+    900: 13700,
+    950: 8200,
+    1000: 4800,
+  },
+  // SA-204 Grade B - C-½Mo Alloy Steel Plate (Higher strength grade)
+  // Per ASME Section II Part D, Table 1A, 2021 Edition
+  "SA-204 Gr B": {
+    [-20]: 20000,
+    100: 20000,
+    200: 20000,
+    300: 20000,
+    400: 20000,
+    500: 20000,
+    600: 20000,
+    650: 20000,
+    700: 20000,
+    750: 20000,
+    800: 19900,
+    850: 19300,
+    900: 13700,
+    950: 8200,
+    1000: 4800,
+  },
+  // SA-204 Grade C - C-½Mo Alloy Steel Plate (Highest strength grade)
+  // Per ASME Section II Part D, Table 1A, 2021 Edition
+  "SA-204 Gr C": {
+    [-20]: 21400,
+    100: 21400,
+    200: 21400,
+    300: 21400,
+    400: 21400,
+    500: 21400,
+    600: 21400,
+    650: 21400,
+    700: 21400,
+    750: 21400,
+    800: 21400,
+    850: 20700,
+    900: 13700,
+    950: 8200,
+    1000: 4800,
+  },
 };
 
 /**
@@ -365,6 +514,69 @@ const MATERIAL_PROPERTIES: Record<string, MaterialProperties> = {
     minTensileStrength: 70000,
     minYieldStrength: 36000,
     maxTemperature: 900,
+    tableReference: "Table 1A"
+  },
+  "SA-387 Gr 11 Cl 1": {
+    specNumber: "SA-387",
+    grade: "11 Class 1",
+    productForm: "Plate",
+    minTensileStrength: 60000,
+    minYieldStrength: 35000,
+    maxTemperature: 1200,
+    tableReference: "Table 1A"
+  },
+  "SA-387 Gr 11 Cl 2": {
+    specNumber: "SA-387",
+    grade: "11 Class 2",
+    productForm: "Plate",
+    minTensileStrength: 75000,
+    minYieldStrength: 45000,
+    maxTemperature: 1200,
+    tableReference: "Table 1A"
+  },
+  "SA-387 Gr 22 Cl 1": {
+    specNumber: "SA-387",
+    grade: "22 Class 1",
+    productForm: "Plate",
+    minTensileStrength: 60000,
+    minYieldStrength: 30000,
+    maxTemperature: 1200,
+    tableReference: "Table 1A"
+  },
+  "SA-387 Gr 22 Cl 2": {
+    specNumber: "SA-387",
+    grade: "22 Class 2",
+    productForm: "Plate",
+    minTensileStrength: 75000,
+    minYieldStrength: 45000,
+    maxTemperature: 1200,
+    tableReference: "Table 1A"
+  },
+  "SA-204 Gr A": {
+    specNumber: "SA-204",
+    grade: "A",
+    productForm: "Plate",
+    minTensileStrength: 65000,
+    minYieldStrength: 37000,
+    maxTemperature: 1000,
+    tableReference: "Table 1A"
+  },
+  "SA-204 Gr B": {
+    specNumber: "SA-204",
+    grade: "B",
+    productForm: "Plate",
+    minTensileStrength: 70000,
+    minYieldStrength: 40000,
+    maxTemperature: 1000,
+    tableReference: "Table 1A"
+  },
+  "SA-204 Gr C": {
+    specNumber: "SA-204",
+    grade: "C",
+    productForm: "Plate",
+    minTensileStrength: 75000,
+    minYieldStrength: 43000,
+    maxTemperature: 1000,
     tableReference: "Table 1A"
   },
 };
@@ -512,6 +724,8 @@ export function normalizeMaterialSpec(materialSpec: string): string | null {
     .replace(/\s+/g, ' ')
     .replace(/GRADE\s*/gi, 'Gr ')
     .replace(/GR\.\s*/gi, 'Gr ')
+    .replace(/CLASS\s*/gi, 'Cl ')
+    .replace(/CL\.\s*/gi, 'Cl ')
     .replace(/TYPE\s*/gi, 'Type ')
     .replace(/TP\s*/gi, 'TP')
     .replace(/\s+/g, ' ')
