@@ -18,6 +18,10 @@ export interface FfsLevel1Input {
   allowableStress: number; // psi
   jointEfficiency: number;
   
+  // Geometry (required for proper MAWP calculation)
+  insideRadius: number; // inches (inside radius of shell/head)
+  componentType?: 'shell' | 'head_ellipsoidal' | 'head_hemispherical' | 'head_torispherical';
+  
   // Damage characterization
   damageType: "general_metal_loss" | "local_thin_area" | "pitting";
   corrosionRate: number; // mpy (mils per year)
@@ -68,7 +72,10 @@ export function assessGeneralMetalLoss(input: FfsLevel1Input): FfsLevel1Result {
   }
 
   // Step 2: Calculate remaining life
-  const excessThickness = remainingThickness - tmm;
+  // Per API 579-1 Part 4 Section 4.4: RL = (t_remaining - t_min) / CR
+  // FCA is used in the acceptance criteria (Step 1 check against tmm),
+  // but remaining life is based on time until thickness reaches t_min
+  const excessThickness = remainingThickness - minimumRequiredThickness;
   const remainingLife = corrosionRate > 0 ? excessThickness / (corrosionRate / 1000) : Infinity;
 
   // Step 3: Determine next inspection interval per API 510
@@ -77,9 +84,44 @@ export function assessGeneralMetalLoss(input: FfsLevel1Input): FfsLevel1Result {
   const nextInspectionInterval = Math.min(halfLife, 10);
 
   // Step 4: Calculate MAWP with remaining thickness
-  // Simplified - actual calculation depends on component geometry
-  const mawp = (input.allowableStress * input.jointEfficiency * remainingThickness) / 
-               (input.designPressure > 0 ? input.designPressure : 1);
+  // Per ASME Section VIII Division 1 UG-27(c)(1) for cylindrical shells:
+  //   MAWP = S*E*t / (R + 0.6*t)
+  // Per UG-32(e) for 2:1 ellipsoidal heads:
+  //   MAWP = 2*S*E*t / (D + 0.2*t)  where D = 2*R
+  // Per UG-32(d) for hemispherical heads:
+  //   MAWP = 2*S*E*t / (R + 0.2*t)
+  const S = input.allowableStress;
+  const E = input.jointEfficiency;
+  const t = remainingThickness;
+  const R = input.insideRadius;
+  let mawp: number;
+  
+  switch (input.componentType) {
+    case 'head_ellipsoidal': {
+      // UG-32(e): P = 2*S*E*t / (D + 0.2*t), D = 2*R
+      const D = 2 * R;
+      mawp = (2 * S * E * t) / (D + 0.2 * t);
+      break;
+    }
+    case 'head_hemispherical': {
+      // UG-32(d): P = 2*S*E*t / (R + 0.2*t)
+      mawp = (2 * S * E * t) / (R + 0.2 * t);
+      break;
+    }
+    case 'head_torispherical': {
+      // Simplified: use ellipsoidal formula as conservative approximation
+      // Full torispherical requires L and r parameters
+      const D = 2 * R;
+      mawp = (2 * S * E * t) / (D + 0.2 * t);
+      break;
+    }
+    case 'shell':
+    default: {
+      // UG-27(c)(1): P = S*E*t / (R + 0.6*t)
+      mawp = (S * E * t) / (R + 0.6 * t);
+      break;
+    }
+  }
 
   // Step 5: Generate recommendations
   if (remainingLife < 2) {

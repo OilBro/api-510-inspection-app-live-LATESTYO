@@ -7,6 +7,8 @@
  * calculate shell thickness.
  */
 
+import { getAllowableStressNormalized } from './asmeMaterialDatabase';
+
 export interface NozzlePressureCalcInput {
   nominalSize: string; // e.g., "2", "6", "12"
   outsideDiameter: number; // inches (from pipe schedule)
@@ -29,42 +31,28 @@ export interface NozzlePressureCalcResult {
 }
 
 /**
- * Get allowable stress for common pipe materials at temperature
- * Reference: ASME Section II Part D - Material Properties
+ * Get allowable stress for pipe materials at temperature
+ * Uses the authoritative ASME Section II Part D database with actual Table 1A values
+ * and proper linear interpolation between temperature points.
+ * 
+ * Falls back to SA-106 Gr B (common seamless pipe) if material not found.
  */
 function getAllowableStress(materialSpec: string | undefined, temperature: number): number {
-  // Simplified allowable stress values (psi) at various temperatures
-  // In production, this should reference ASME Section II Part D tables
+  const material = materialSpec || 'SA-106 Gr B';
+  const result = getAllowableStressNormalized(material, temperature);
   
-  const material = (materialSpec || 'SA-106 Grade B').toUpperCase();
-  
-  // Carbon Steel (SA-106 Grade B, SA-53 Grade B) - most common for nozzles
-  if (material.includes('SA-106') || material.includes('SA-53')) {
-    if (temperature <= 650) return 15000;
-    if (temperature <= 700) return 15000;
-    if (temperature <= 750) return 14700;
-    if (temperature <= 800) return 14200;
-    return 13500; // >800°F
+  if (result.stress !== null) {
+    return result.stress;
   }
   
-  // Stainless Steel 304/304L
-  if (material.includes('304')) {
-    if (temperature <= 650) return 16700;
-    if (temperature <= 700) return 15900;
-    if (temperature <= 750) return 15300;
-    return 14800; // >750°F
-  }
-  
-  // Stainless Steel 316/316L
-  if (material.includes('316')) {
-    if (temperature <= 650) return 16700;
-    if (temperature <= 700) return 16400;
-    if (temperature <= 750) return 16100;
-    return 15700; // >750°F
-  }
-  
-  // Default to conservative carbon steel value
-  return 15000;
+  // Fallback: If material not found in authoritative database,
+  // try SA-106 Gr B (most common nozzle pipe material)
+  console.warn(
+    `[nozzlePressureCalc] Material '${material}' not found in ASME database at ${temperature}°F. ` +
+    `Using SA-106 Gr B as fallback. Error: ${result.message}`
+  );
+  const fallback = getAllowableStressNormalized('SA-106 Gr B', temperature);
+  return fallback.stress ?? 15000; // Ultimate fallback: SA-106 Gr B room temp value
 }
 
 /**

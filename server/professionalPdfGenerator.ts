@@ -1177,8 +1177,18 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   
   // Formulas
   doc.font('Helvetica').fontSize(10);
-  const ca = shellComp?.tActual && shellComp?.tMin ? (parseFloat(shellComp.tActual) - parseFloat(shellComp.tMin)).toFixed(3) : '0.122';
-  const cr = shellComp?.tPrevious && shellComp?.tActual ? ((parseFloat(shellComp.tPrevious) - parseFloat(shellComp.tActual)) / 12.0).toFixed(5) : '0.00000';
+  // Calculate corrosion allowance (Ca), corrosion rate (Cr), and remaining life (RL)
+  // Per API 510: Ca = t_act - t_min, Cr = (t_prev - t_act) / Y, RL = Ca / Cr
+  const shellTAct = shellComp?.tActual || shellComp?.actualThickness;
+  const shellTMin = shellComp?.tMin || shellComp?.minimumThickness || shellComp?.minimumRequired;
+  const shellTPrev = shellComp?.tPrevious || shellComp?.previousThickness || shellComp?.nominalThickness || (inspection as any)?.shellNominalThickness;
+  const shellTimeSpan = parseFloat(shellComp?.timeSpan || shellComp?.age || '0');
+  
+  const ca = shellTAct && shellTMin ? (parseFloat(shellTAct) - parseFloat(shellTMin)).toFixed(3) : '0.000';
+  // FIXED: Use actual timeSpan (Y) instead of hardcoded 12.0
+  const cr = shellTPrev && shellTAct && shellTimeSpan > 0
+    ? ((parseFloat(shellTPrev) - parseFloat(shellTAct)) / shellTimeSpan).toFixed(5)
+    : shellComp?.corrosionRate || '0.00000';
   const rl = parseFloat(cr) > 0 ? (parseFloat(ca) / parseFloat(cr)).toFixed(0) : '>20';
   
   doc.text(`Ca = t act - t min = ${ca} (inch)`, MARGIN, doc.y);
@@ -1186,8 +1196,13 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   doc.text(`RL = Ca / Cr = ${rl} (year)`, MARGIN, doc.y);
   doc.moveDown(1);
   
+  // Calculate next inspection interval per API 510: MIN(RL/2, 10 years)
+  const shellRLNum = parseFloat(rl) || 0;
+  const Yn = shellRLNum > 0 && shellRLNum !== Infinity ? Math.min(shellRLNum / 2, 10) : 10;
+  const YnDisplay = Yn.toFixed(1);
+  
   doc.font('Helvetica-Bold').fontSize(10);
-  doc.text('Next Inspection (Yn) = 10 (years)', MARGIN, doc.y);
+  doc.text(`Next Inspection (Yn) = ${YnDisplay} (years)`, MARGIN, doc.y);
   doc.moveDown(1);
   
   // MAWP Calculations
@@ -1195,8 +1210,29 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   doc.text('MAWP Calculations', MARGIN, doc.y);
   doc.moveDown(0.5);
   
-  const tNext = shellComp?.tActual ? (parseFloat(shellComp.tActual) - 2 * 10 * parseFloat(cr)).toFixed(3) : '0.652';
-  const mawp = shellComp?.mawp || '307.5';
+  // FIXED: Calculate t_next using actual Yn, and recalculate MAWP from t_next
+  // Per API 510: t_next = t_act - 2 * Yn * Cr (projected thickness at next inspection)
+  const crNum = parseFloat(cr) || 0;
+  const tActNum = shellTAct ? parseFloat(shellTAct) : 0;
+  const tNext = tActNum > 0 ? (tActNum - 2 * Yn * crNum).toFixed(3) : (shellComp?.actualThickness || '0.000');
+  
+  // Recalculate MAWP from t_next using ASME UG-27: P = S*E*t / (R + 0.6*t)
+  const shellS = parseFloat(shellComp?.allowableStress || inspection?.allowableStress || '20000');
+  const shellE = parseFloat(inspection?.jointEfficiency || '0.85');
+  const shellR = parseFloat(inspection?.insideDiameter || '0') / 2;
+  const tNextNum = parseFloat(tNext);
+  const shellStaticHead = parseFloat(shellComp?.staticHead || '0');
+  const shellSG = parseFloat(inspection?.specificGravity || '1.0');
+  
+  let mawpCalc = 0;
+  if (shellR > 0 && tNextNum > 0) {
+    // MAP at next inspection = S*E*t_next / (R + 0.6*t_next)
+    const mapAtNext = (shellS * shellE * tNextNum) / (shellR + 0.6 * tNextNum);
+    // MAWP = MAP - static head pressure
+    const staticHeadPressure = shellStaticHead * 0.433 * shellSG;
+    mawpCalc = mapAtNext - staticHeadPressure;
+  }
+  const mawp = mawpCalc > 0 ? mawpCalc.toFixed(1) : (shellComp?.mawp || '0.0');
   
   doc.font('Helvetica').fontSize(10);
   doc.text('Vessel Shell - MAP - Next Inspection', MARGIN, doc.y);
@@ -1645,7 +1681,22 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
     }
     
     const tMin = nozzle.minimumRequired ? parseFloat(nozzle.minimumRequired) : 0.116;
-    const age = 12.0; // Default age, should come from vessel data
+    
+    // FIXED: Calculate actual age from vessel data instead of hardcoded 12.0
+    // Priority: inspection dates > vessel install date > vessel age field > fallback
+    let age = 0;
+    if (inspection?.inspectionDate && inspection?.previousInspectionDate) {
+      const current = new Date(inspection.inspectionDate).getTime();
+      const previous = new Date(inspection.previousInspectionDate).getTime();
+      age = (current - previous) / (365.25 * 24 * 60 * 60 * 1000);
+    } else if (inspection?.inspectionDate && (inspection as any)?.installDate) {
+      const current = new Date(inspection.inspectionDate).getTime();
+      const install = new Date((inspection as any).installDate).getTime();
+      age = (current - install) / (365.25 * 24 * 60 * 60 * 1000);
+    } else if ((inspection as any)?.vesselAge) {
+      age = parseFloat((inspection as any).vesselAge);
+    }
+    if (age <= 0) age = 10; // Conservative fallback only as last resort
     
     // Calculate RL
     let Ca = 0, Cr = 0, RL = 0;
@@ -1660,7 +1711,7 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
       cml.toString(),
       nozzle.nozzleNumber || `N${index + 1}`,
       nozzle.nominalSize ? nozzle.nominalSize.toString() : '-',
-      'SS A - 304', // material field not in schema, using default
+      (nozzle as any).materialSpec || (nozzle as any).material || inspection?.materialSpec || 'Not Specified',
       age.toFixed(1),
       tPrev ? tPrev.toFixed(3) : '-',
       tAct ? tAct.toFixed(3) : '-',

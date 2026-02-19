@@ -4,6 +4,7 @@
  */
 
 import { calculateExternalPressureMAWP } from './xChartData';
+import { getAllowableStressNormalized } from './asmeMaterialDatabase';
 
 interface ComponentData {
   // Design parameters
@@ -93,64 +94,28 @@ function calculateStaticHeadPressure(
 
 /**
  * Get allowable stress from ASME Section II Part D
- * Simplified lookup - in production, use full ASME tables
+ * Uses the authoritative asmeMaterialDatabase.ts with actual Table 1A values
+ * and proper linear interpolation between temperature points.
+ * 
+ * Falls back to conservative default (SA-516 Gr 70 at room temp) if material
+ * not found in database, with a warning logged.
  */
 function getAllowableStress(materialSpec: string, temperature: number): number {
-  // Common pressure vessel materials
-  const stressData: Record<string, { baseStress: number, tempFactor: (t: number) => number }> = {
-    "SA-515-70": {
-      baseStress: 17100,
-      tempFactor: (t) => t <= 650 ? 1.0 : (t <= 750 ? 0.95 : 0.85)
-    },
-    "SA-516-70": {
-      baseStress: 17100,
-      tempFactor: (t) => t <= 650 ? 1.0 : (t <= 750 ? 0.95 : 0.85)
-    },
-    "SA-285-C": {
-      baseStress: 13750,
-      tempFactor: (t) => t <= 650 ? 1.0 : 0.90
-    },
-    // Seamless pipe - commonly used for nozzles
-    "SA-106-B": {
-      baseStress: 15000,
-      tempFactor: (t) => t <= 650 ? 1.0 : (t <= 800 ? 0.92 : 0.80)
-    },
-    // Carbon steel forgings - nozzles, flanges
-    "SA-105": {
-      baseStress: 15000,
-      tempFactor: (t) => t <= 650 ? 1.0 : (t <= 800 ? 0.92 : 0.80)
-    },
-    // Stainless steel 304
-    "SA-240-304": {
-      baseStress: 16700,
-      tempFactor: (t) => t <= 100 ? 1.0 : (t <= 500 ? 0.95 : (t <= 800 ? 0.85 : 0.75))
-    },
-    // Stainless steel 316
-    "SA-240-316": {
-      baseStress: 16700,
-      tempFactor: (t) => t <= 100 ? 1.0 : (t <= 500 ? 0.95 : (t <= 800 ? 0.85 : 0.75))
-    },
-    // Chrome-moly 1.25Cr-0.5Mo
-    "SA-387-11-2": {
-      baseStress: 15000,
-      tempFactor: (t) => t <= 700 ? 1.0 : (t <= 900 ? 0.90 : 0.75)
-    },
-    // Chrome-moly 2.25Cr-1Mo
-    "SA-387-22-2": {
-      baseStress: 15000,
-      tempFactor: (t) => t <= 700 ? 1.0 : (t <= 950 ? 0.92 : 0.78)
-    },
-    "SA-36": {
-      baseStress: 14400,
-      tempFactor: (t) => t <= 650 ? 1.0 : 0.90
-    },
-  };
+  const result = getAllowableStressNormalized(materialSpec, temperature);
   
-  // Normalize material spec
-  const normalized = materialSpec.toUpperCase().replace(/\s+/g, "-");
-  const data = stressData[normalized] || stressData["SA-516-70"]; // Default
+  if (result.stress !== null) {
+    return result.stress;
+  }
   
-  return data.baseStress * data.tempFactor(temperature);
+  // Fallback: If material not found in authoritative database,
+  // use SA-516 Gr 70 at the given temperature as a conservative default.
+  // This ensures calculations don't fail, but the result should be flagged.
+  console.warn(
+    `[componentCalculations] Material '${materialSpec}' not found in ASME database at ${temperature}°F. ` +
+    `Using SA-516 Gr 70 as conservative fallback. Error: ${result.message}`
+  );
+  const fallback = getAllowableStressNormalized('SA-516 Gr 70', temperature);
+  return fallback.stress ?? 17500; // Ultimate fallback: SA-516-70 room temp value
 }
 
 /**

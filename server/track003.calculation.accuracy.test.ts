@@ -2,11 +2,14 @@
  * Track 003: Critical Calculation Accuracy Tests
  * 
  * These tests verify that all ASME Section VIII Division 1 calculations
- * are accurate and match expected values using correct ASME parameters.
+ * are accurate and match expected values using correct ASME Section II Part D
+ * Table 1A allowable stress values.
  * 
- * Key Parameters Used:
- * - SA-516-70 at 200°F: S = 17,100 psi (ASME Section II Part D)
- * - SA-106-B at 200°F: S = 15,000 psi
+ * Key Parameters Used (ASME Section II Part D, Table 1A):
+ * - SA-516 Gr 70 at 200°F: S = 20,000 psi
+ * - SA-516 Gr 70 at 700°F: S = 20,000 psi
+ * - SA-106 Gr B at 200°F: S = 17,100 psi
+ * - SA-285 Gr C at 200°F: S = 13,800 psi
  * - Standard vessel: ID = 72", P = 250 psi, E = 0.85
  */
 
@@ -22,7 +25,7 @@ describe("Track 003: Calculation Accuracy Verification", () => {
   describe("Shell Calculations - ASME UG-27", () => {
     
     it("should calculate shell minimum thickness correctly", () => {
-      // Standard test case
+      // Standard test case: SA-516 Gr 70 at 200°F, S = 20,000 psi (per ASME Table 1A)
       const data = {
         designPressure: 250,
         designTemperature: 200,
@@ -39,9 +42,9 @@ describe("Track 003: Calculation Accuracy Verification", () => {
       const result = calculateComponent(data);
 
       // Formula: t = PR / (SE - 0.6P)
-      // t = (250 × 36) / (17100 × 0.85 - 0.6 × 250)
-      // t = 9000 / (14535 - 150) = 9000 / 14385 = 0.6257"
-      expect(result.minimumRequiredThickness).toBeCloseTo(0.6257, 3);
+      // t = (250 × 36) / (20000 × 0.85 - 0.6 × 250)
+      // t = 9000 / (17000 - 150) = 9000 / 16850 = 0.5341"
+      expect(result.minimumRequiredThickness).toBeCloseTo(0.5341, 3);
     });
 
     it("should calculate shell MAWP correctly - circumferential governs", () => {
@@ -61,10 +64,10 @@ describe("Track 003: Calculation Accuracy Verification", () => {
       const result = calculateComponent(data);
 
       // Net thickness: t = 0.750 - 0.125 = 0.625"
-      // Circumferential: P = SEt / (R + 0.6t) = (17100 × 0.85 × 0.625) / (36 + 0.375) = 249.7 psi
-      // Longitudinal: P = 2SEt / (R - 0.4t) = (2 × 17100 × 0.85 × 0.625) / (36 - 0.25) = 507.4 psi
-      // Governing (minimum): 249.7 psi
-      expect(result.mawp).toBeCloseTo(249.7, 0);
+      // Circumferential: P = SEt / (R + 0.6t) = (20000 × 0.85 × 0.625) / (36 + 0.375) = 10625 / 36.375 = 292.1 psi
+      // Longitudinal: P = 2SEt / (R - 0.4t) = (2 × 20000 × 0.85 × 0.625) / (36 - 0.25) = 21250 / 35.75 = 594.4 psi
+      // Governing (minimum): 292.1 psi
+      expect(result.mawp).toBeCloseTo(292.1, 0);
     });
 
     it("should handle different joint efficiencies correctly", () => {
@@ -80,41 +83,42 @@ describe("Track 003: Calculation Accuracy Verification", () => {
         corrosionRate: 0,
       };
 
-      // E = 1.0 (Full RT)
+      // E = 1.0 (Full RT): t = 9000/(20000*1.0-150) = 9000/19850 = 0.4534"
       const result_E1 = calculateComponent({ ...baseData, jointEfficiency: 1.0 });
-      expect(result_E1.minimumRequiredThickness).toBeCloseTo(0.5310, 3);
+      expect(result_E1.minimumRequiredThickness).toBeCloseTo(0.4534, 3);
 
-      // E = 0.85 (Spot RT)
+      // E = 0.85 (Spot RT): t = 9000/(20000*0.85-150) = 9000/16850 = 0.5341"
       const result_E085 = calculateComponent({ ...baseData, jointEfficiency: 0.85 });
-      expect(result_E085.minimumRequiredThickness).toBeCloseTo(0.6257, 3);
+      expect(result_E085.minimumRequiredThickness).toBeCloseTo(0.5341, 3);
 
-      // E = 0.70 (No RT)
+      // E = 0.70 (No RT): t = 9000/(20000*0.70-150) = 9000/13850 = 0.6498"
       const result_E070 = calculateComponent({ ...baseData, jointEfficiency: 0.70 });
-      expect(result_E070.minimumRequiredThickness).toBeCloseTo(0.7614, 3);
+      expect(result_E070.minimumRequiredThickness).toBeCloseTo(0.6498, 3);
     });
   });
 
   describe("Hemispherical Head Calculations - ASME UG-32(d)", () => {
     
     it("should calculate hemispherical head t_min correctly", () => {
+      // Using S = 20,000 psi for SA-516 Gr 70 at 200°F
       const P = 250;
       const R = 36;
-      const S = 17100;
+      const S = 20000;
       const E = 0.85;
       const CA = 0.125;
 
       const t_min = calculateHeadMinThickness(P, R, S, E, CA, "hemispherical");
 
       // Formula: t = PL / (2SE - 0.2P) where L = R
-      // t = (250 × 36) / (2 × 17100 × 0.85 - 0.2 × 250)
-      // t = 9000 / (29070 - 50) = 9000 / 29020 = 0.3101"
-      expect(t_min).toBeCloseTo(0.3101, 3);
+      // t = (250 × 36) / (2 × 20000 × 0.85 - 0.2 × 250)
+      // t = 9000 / (34000 - 50) = 9000 / 33950 = 0.2651"
+      expect(t_min).toBeCloseTo(0.2651, 3);
     });
 
     it("should calculate hemispherical head MAWP correctly", () => {
       const t = 0.500;
       const R = 36;
-      const S = 17100;
+      const S = 20000;
       const E = 0.85;
       const CA = 0.125;
 
@@ -122,8 +126,8 @@ describe("Track 003: Calculation Accuracy Verification", () => {
 
       // Net thickness: t_net = 0.500 - 0.125 = 0.375"
       // Formula: P = 2SEt / (R + 0.2t)
-      // P = (2 × 17100 × 0.85 × 0.375) / (36 + 0.075) = 10901.25 / 36.075 = 302.2 psi
-      expect(mawp).toBeCloseTo(302.2, 0);
+      // P = (2 × 20000 × 0.85 × 0.375) / (36 + 0.075) = 12750 / 36.075 = 353.4 psi
+      expect(mawp).toBeCloseTo(353.4, 0);
     });
   });
 
@@ -132,22 +136,22 @@ describe("Track 003: Calculation Accuracy Verification", () => {
     it("should calculate 2:1 ellipsoidal head t_min correctly", () => {
       const P = 250;
       const R = 36;
-      const S = 17100;
+      const S = 20000;
       const E = 0.85;
       const CA = 0.125;
 
       const t_min = calculateHeadMinThickness(P, R, S, E, CA, "ellipsoidal");
 
       // Formula: t = PD / (2SE - 0.2P) where D = 2R = 72"
-      // t = (250 × 72) / (2 × 17100 × 0.85 - 0.2 × 250)
-      // t = 18000 / (29070 - 50) = 18000 / 29020 = 0.6203"
-      expect(t_min).toBeCloseTo(0.6203, 3);
+      // t = (250 × 72) / (2 × 20000 × 0.85 - 0.2 × 250)
+      // t = 18000 / (34000 - 50) = 18000 / 33950 = 0.5302"
+      expect(t_min).toBeCloseTo(0.5302, 3);
     });
 
     it("should calculate ellipsoidal head MAWP correctly", () => {
       const t = 0.750;
       const R = 36;
-      const S = 17100;
+      const S = 20000;
       const E = 0.85;
       const CA = 0.125;
 
@@ -155,8 +159,8 @@ describe("Track 003: Calculation Accuracy Verification", () => {
 
       // Net thickness: t_net = 0.750 - 0.125 = 0.625"
       // Formula: P = 2SEt / (D + 0.2t) where D = 72"
-      // P = (2 × 17100 × 0.85 × 0.625) / (72 + 0.125) = 18168.75 / 72.125 = 251.9 psi
-      expect(mawp).toBeCloseTo(251.9, 0);
+      // P = (2 × 20000 × 0.85 × 0.625) / (72 + 0.125) = 21250 / 72.125 = 294.6 psi
+      expect(mawp).toBeCloseTo(294.6, 0);
     });
   });
 
@@ -176,7 +180,7 @@ describe("Track 003: Calculation Accuracy Verification", () => {
     it("should calculate torispherical head t_min correctly", () => {
       const P = 250;
       const R = 36;
-      const S = 17100;
+      const S = 20000;
       const E = 0.85;
       const CA = 0.125;
       const D = 72;
@@ -187,15 +191,15 @@ describe("Track 003: Calculation Accuracy Verification", () => {
 
       // M = 1.7705
       // Formula: t = PLM / (2SE - 0.2P)
-      // t = (250 × 72 × 1.7705) / (2 × 17100 × 0.85 - 0.2 × 250)
-      // t = 31869 / 29020 = 1.0982"
-      expect(t_min).toBeCloseTo(1.0982, 3);
+      // t = (250 × 72 × 1.7705) / (2 × 20000 × 0.85 - 0.2 × 250)
+      // t = 31869 / 33950 = 0.9387"
+      expect(t_min).toBeCloseTo(0.9387, 3);
     });
 
     it("should calculate torispherical head MAWP correctly", () => {
       const t = 1.250;
       const R = 36;
-      const S = 17100;
+      const S = 20000;
       const E = 0.85;
       const CA = 0.125;
       const D = 72;
@@ -207,9 +211,9 @@ describe("Track 003: Calculation Accuracy Verification", () => {
       // Net thickness: t_net = 1.250 - 0.125 = 1.125"
       // M = 1.7705
       // Formula: P = 2SEt / (LM + 0.2t)
-      // P = (2 × 17100 × 0.85 × 1.125) / (72 × 1.7705 + 0.225)
-      // P = 32681.25 / (127.476 + 0.225) = 32681.25 / 127.701 = 255.9 psi
-      expect(mawp).toBeCloseTo(255.9, 0);
+      // P = (2 × 20000 × 0.85 × 1.125) / (72 × 1.7705 + 0.225)
+      // P = 38250 / (127.476 + 0.225) = 38250 / 127.701 = 299.5 psi
+      expect(mawp).toBeCloseTo(299.5, 0);
     });
   });
 
@@ -278,7 +282,7 @@ describe("Track 003: Calculation Accuracy Verification", () => {
         insideDiameter: 72,
         materialSpec: "SA-516-70",
         nominalThickness: 0.875,
-        actualThickness: 0.750, // Above t_min
+        actualThickness: 0.750, // Above t_min of 0.5341"
         corrosionAllowance: 0.125,
         jointEfficiency: 0.85,
         componentType: "shell" as const,
@@ -287,21 +291,23 @@ describe("Track 003: Calculation Accuracy Verification", () => {
 
       const result = calculateComponent(data);
 
-      // t_min = 0.6257"
-      // Ca = t_act - t_min = 0.750 - 0.6257 = 0.1243"
+      // t_min = 0.5341" (with S = 20,000 psi)
+      // Ca = t_act - t_min = 0.750 - 0.5341 = 0.2159"
       // Cr = 5 mpy = 0.005 inches/year
-      // RL = Ca / Cr = 0.1243 / 0.005 = 24.86 years
-      expect(result.remainingLife).toBeCloseTo(24.86, 0);
+      // RL = Ca / Cr = 0.2159 / 0.005 = 43.18 years
+      expect(result.remainingLife).toBeCloseTo(43.18, 0);
     });
 
     it("should return 0 remaining life when below minimum thickness", () => {
+      // With S = 20,000 psi, t_min = 0.5341"
+      // Need t_act below 0.5341"
       const data = {
         designPressure: 250,
         designTemperature: 200,
         insideDiameter: 72,
         materialSpec: "SA-516-70",
         nominalThickness: 0.625,
-        actualThickness: 0.600, // Below t_min of 0.6257"
+        actualThickness: 0.500, // Below t_min of 0.5341"
         corrosionAllowance: 0.125,
         jointEfficiency: 0.85,
         componentType: "shell" as const,
@@ -310,7 +316,6 @@ describe("Track 003: Calculation Accuracy Verification", () => {
 
       const result = calculateComponent(data);
 
-      // t_act (0.600) < t_min (0.6257), so remaining life should be 0
       expect(result.remainingLife).toBe(0);
     });
 
@@ -338,14 +343,14 @@ describe("Track 003: Calculation Accuracy Verification", () => {
   describe("Status Determination", () => {
     
     it("should mark as acceptable when t_act >= t_min + 0.5*CA", () => {
-      // t_min = 0.6257", monitoring threshold = 0.6257 + 0.0625 = 0.6882"
+      // t_min = 0.5341", monitoring threshold = 0.5341 + 0.0625 = 0.5966"
       const data = {
         designPressure: 250,
         designTemperature: 200,
         insideDiameter: 72,
         materialSpec: "SA-516-70",
         nominalThickness: 0.875,
-        actualThickness: 0.750, // Above 0.6882"
+        actualThickness: 0.750, // Above 0.5966"
         corrosionAllowance: 0.125,
         jointEfficiency: 0.85,
         componentType: "shell" as const,
@@ -357,15 +362,15 @@ describe("Track 003: Calculation Accuracy Verification", () => {
     });
 
     it("should mark as monitoring when t_min <= t_act < t_min + 0.5*CA", () => {
-      // t_min = 0.6257", monitoring threshold = 0.6882"
-      // Need t_act between 0.6257 and 0.6882
+      // t_min = 0.5341", monitoring threshold = 0.5966"
+      // Need t_act between 0.5341 and 0.5966
       const data = {
         designPressure: 250,
         designTemperature: 200,
         insideDiameter: 72,
         materialSpec: "SA-516-70",
-        nominalThickness: 0.700,
-        actualThickness: 0.670, // Between t_min and threshold
+        nominalThickness: 0.600,
+        actualThickness: 0.560, // Between t_min (0.5341) and threshold (0.5966)
         corrosionAllowance: 0.125,
         jointEfficiency: 0.85,
         componentType: "shell" as const,
@@ -377,13 +382,14 @@ describe("Track 003: Calculation Accuracy Verification", () => {
     });
 
     it("should mark as critical when t_act < t_min", () => {
+      // t_min = 0.5341"
       const data = {
         designPressure: 250,
         designTemperature: 200,
         insideDiameter: 72,
         materialSpec: "SA-516-70",
         nominalThickness: 0.625,
-        actualThickness: 0.600, // Below t_min of 0.6257"
+        actualThickness: 0.500, // Below t_min of 0.5341"
         corrosionAllowance: 0.125,
         jointEfficiency: 0.85,
         componentType: "shell" as const,
@@ -410,13 +416,13 @@ describe("Track 003: Calculation Accuracy Verification", () => {
         corrosionRate: 0,
       };
 
-      // At 200°F: S = 17,100 psi
+      // At 200°F: S = 20,000 psi (per ASME Section II Part D, Table 1A)
       const result_200 = calculateComponent({ ...baseData, designTemperature: 200 });
-      expect(result_200.allowableStress).toBe(17100);
+      expect(result_200.allowableStress).toBe(20000);
 
-      // At 700°F: S = 17,100 × 0.95 = 16,245 psi
+      // At 700°F: S = 20,000 psi (per ASME Section II Part D, Table 1A)
       const result_700 = calculateComponent({ ...baseData, designTemperature: 700 });
-      expect(result_700.allowableStress).toBeCloseTo(16245, 0);
+      expect(result_700.allowableStress).toBe(20000);
     });
 
     it("should use correct stress for SA-106-B", () => {
@@ -434,7 +440,8 @@ describe("Track 003: Calculation Accuracy Verification", () => {
       };
 
       const result = calculateComponent(data);
-      expect(result.allowableStress).toBe(15000);
+      // SA-106 Gr B at 200°F: S = 17,100 psi (per ASME Table 1A)
+      expect(result.allowableStress).toBe(17100);
     });
 
     it("should use correct stress for SA-285-C", () => {
@@ -452,7 +459,8 @@ describe("Track 003: Calculation Accuracy Verification", () => {
       };
 
       const result = calculateComponent(data);
-      expect(result.allowableStress).toBe(13750);
+      // SA-285 Gr C at 200°F: S = 13,800 psi (per ASME Table 1A)
+      expect(result.allowableStress).toBe(13800);
     });
   });
 
@@ -495,8 +503,8 @@ describe("Track 003: Calculation Accuracy Verification", () => {
 
       const result = calculateComponent(data);
       
-      // t_min = (1000 × 36) / (17100 × 0.85 - 600) = 36000 / 13935 = 2.584"
-      expect(result.minimumRequiredThickness).toBeCloseTo(2.584, 2);
+      // t_min = (1000 × 36) / (20000 × 0.85 - 600) = 36000 / 16400 = 2.195"
+      expect(result.minimumRequiredThickness).toBeCloseTo(2.195, 2);
     });
 
     it("should handle small diameter vessels", () => {
@@ -515,8 +523,8 @@ describe("Track 003: Calculation Accuracy Verification", () => {
 
       const result = calculateComponent(data);
       
-      // t_min = (250 × 6) / (17100 × 0.85 - 150) = 1500 / 14385 = 0.1043"
-      expect(result.minimumRequiredThickness).toBeCloseTo(0.1043, 3);
+      // t_min = (250 × 6) / (20000 × 0.85 - 150) = 1500 / 16850 = 0.0890"
+      expect(result.minimumRequiredThickness).toBeCloseTo(0.0890, 3);
     });
   });
 });

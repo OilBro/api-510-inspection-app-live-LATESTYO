@@ -718,7 +718,6 @@ export function normalizeMaterialSpec(materialSpec: string): string | null {
   if (materialSpec in ALLOWABLE_STRESS_TABLE_1A) {
     return materialSpec;
   }
-
   // Try common normalizations - apply replacements in sequence
   let normalized = materialSpec
     .replace(/\s+/g, ' ')
@@ -730,6 +729,32 @@ export function normalizeMaterialSpec(materialSpec: string): string | null {
     .replace(/TP\s*/gi, 'TP')
     .replace(/\s+/g, ' ')
     .trim();
+  
+  // Handle hyphenated format: SA-516-70 → SA-516 Gr 70, SA-106-B → SA-106 Gr B, SA-285-C → SA-285 Gr C
+  // Pattern: SA-NNN-GRADE where GRADE is a number or letter(s)
+  const hyphenatedMatch = normalized.match(/^(SA-\d+)-(\w+)$/i);
+  if (hyphenatedMatch) {
+    const specBase = hyphenatedMatch[1]; // e.g., SA-516
+    const gradeOrType = hyphenatedMatch[2]; // e.g., 70, B, C, 304, 316L
+    
+    // Try "SA-NNN Gr GRADE" format (most common: SA-516 Gr 70, SA-106 Gr B)
+    const grFormat = `${specBase} Gr ${gradeOrType}`;
+    if (grFormat in ALLOWABLE_STRESS_TABLE_1A) {
+      return grFormat;
+    }
+    // Try "SA-NNN Type GRADE" format (stainless: SA-240 Type 304)
+    const typeFormat = `${specBase} Type ${gradeOrType}`;
+    if (typeFormat in ALLOWABLE_STRESS_TABLE_1A) {
+      return typeFormat;
+    }
+    // Try "SA-NNN TPGRADE" format (pipe: SA-312 TP304)
+    const tpFormat = `${specBase} TP${gradeOrType}`;
+    if (tpFormat in ALLOWABLE_STRESS_TABLE_1A) {
+      return tpFormat;
+    }
+    // Update normalized for further matching
+    normalized = grFormat;
+  };
 
   // Check normalized version against database keys
   for (const key of Object.keys(ALLOWABLE_STRESS_TABLE_1A)) {
