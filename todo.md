@@ -3245,3 +3245,13 @@ Test PDF: 54-11-067 2017.pdf
 ### Phase 5: Deliver
 - [x] Generate comprehensive audit findings report
 - [x] Deliver to user — 1,282 tests passing, 0 failures, 9 findings all corrected
+
+## Cohere Rerank Code Clause Integration into Calculation Worksheet (Feb 2026)
+- [x] Read existing Calculation Worksheet page to understand current UI and calculation flow
+- [x] Read Cohere service and router to understand available endpoints
+- [x] Create CodeClausePanel component (532 lines) with inline badge and expandable panel modes
+- [x] Wire CodeClausePanel into all 6 calculation sections (shell t_min, shell MAWP, shell RL, head t_min, head MAWP, head RL)
+- [x] Add loading states, error handling, and offline fallback knowledge base
+- [x] Add SA-387 and SA-204 materials to worksheet dropdowns
+- [x] Write 31 integration tests — all passing (Rerank confidence 78-88%)
+- [x] Save checkpoint and deliver to user

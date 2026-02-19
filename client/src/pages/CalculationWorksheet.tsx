@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Save, FileDown, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
+import CodeClausePanel, { CodeClauseBadge } from "@/components/CodeClausePanel";
+import type { CalculationType } from "@/components/CodeClausePanel";
 
 export default function CalculationWorksheet() {
   // Header Information
@@ -360,7 +362,15 @@ export default function CalculationWorksheet() {
                         <SelectItem value="SA-285-C">SA-285-C</SelectItem>
                         <SelectItem value="SA-240-304">SA-240-304</SelectItem>
                         <SelectItem value="SA-240-316">SA-240-316</SelectItem>
+                        <SelectItem value="SA-240-316L">SA-240-316L</SelectItem>
                         <SelectItem value="SA-612">SA-612</SelectItem>
+                        <SelectItem value="SA-387-11-1">SA-387 Gr 11 Cl 1</SelectItem>
+                        <SelectItem value="SA-387-11-2">SA-387 Gr 11 Cl 2</SelectItem>
+                        <SelectItem value="SA-387-22-1">SA-387 Gr 22 Cl 1</SelectItem>
+                        <SelectItem value="SA-387-22-2">SA-387 Gr 22 Cl 2</SelectItem>
+                        <SelectItem value="SA-204-A">SA-204 Gr A</SelectItem>
+                        <SelectItem value="SA-204-B">SA-204 Gr B</SelectItem>
+                        <SelectItem value="SA-204-C">SA-204 Gr C</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -451,10 +461,16 @@ export default function CalculationWorksheet() {
               </CardContent>
             </Card>
 
+            {/* SHELL CODE CLAUSE REFERENCE */}
+            <CodeClausePanel calculationType="shell_tmin" mode="panel" className="mb-2" />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader className="bg-green-50">
-                  <CardTitle>Minimum Thickness Calculations</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    Minimum Thickness Calculations
+                    <CodeClauseBadge calculationType="shell_tmin" />
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <div className="space-y-4">
@@ -489,7 +505,10 @@ export default function CalculationWorksheet() {
 
               <Card>
                 <CardHeader className="bg-orange-50">
-                  <CardTitle>Remaining Life Calculations</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    Remaining Life Calculations
+                    <CodeClauseBadge calculationType="remaining_life" />
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <div className="space-y-3">
@@ -559,7 +578,10 @@ export default function CalculationWorksheet() {
 
             <Card>
               <CardHeader className="bg-purple-50">
-                <CardTitle>MAWP Calculations - Next Inspection</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  MAWP Calculations - Next Inspection
+                  <CodeClauseBadge calculationType="shell_mawp" />
+                </CardTitle>
                 <CardDescription>Next Inspection (Yn) = {shellNextInspection} years</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
@@ -622,7 +644,15 @@ export default function CalculationWorksheet() {
                         <SelectItem value="SA-285-C">SA-285-C</SelectItem>
                         <SelectItem value="SA-240-304">SA-240-304</SelectItem>
                         <SelectItem value="SA-240-316">SA-240-316</SelectItem>
+                        <SelectItem value="SA-240-316L">SA-240-316L</SelectItem>
                         <SelectItem value="SA-612">SA-612</SelectItem>
+                        <SelectItem value="SA-387-11-1">SA-387 Gr 11 Cl 1</SelectItem>
+                        <SelectItem value="SA-387-11-2">SA-387 Gr 11 Cl 2</SelectItem>
+                        <SelectItem value="SA-387-22-1">SA-387 Gr 22 Cl 1</SelectItem>
+                        <SelectItem value="SA-387-22-2">SA-387 Gr 22 Cl 2</SelectItem>
+                        <SelectItem value="SA-204-A">SA-204 Gr A</SelectItem>
+                        <SelectItem value="SA-204-B">SA-204 Gr B</SelectItem>
+                        <SelectItem value="SA-204-C">SA-204 Gr C</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -733,10 +763,16 @@ export default function CalculationWorksheet() {
               </CardContent>
             </Card>
 
+            {/* HEAD CODE CLAUSE REFERENCE */}
+            <CodeClausePanel calculationType="head_tmin" headType={headType} mode="panel" className="mb-2" />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader className="bg-green-50">
-                  <CardTitle>Minimum Thickness Calculations</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    Minimum Thickness Calculations
+                    <CodeClauseBadge calculationType="head_tmin" headType={headType} />
+                  </CardTitle>
                   <CardDescription>
                     {headType === "hemispherical" && "Formula: PL/(2SE-0.2P) = t min"}
                     {headType === "ellipsoidal" && "Formula: PD/(2SE-0.2P) = t min"}
@@ -775,7 +811,10 @@ export default function CalculationWorksheet() {
 
               <Card>
                 <CardHeader className="bg-orange-50">
-                  <CardTitle>Remaining Life Calculations</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    Remaining Life Calculations
+                    <CodeClauseBadge calculationType="remaining_life" />
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <div className="space-y-3">
@@ -845,7 +884,10 @@ export default function CalculationWorksheet() {
 
             <Card>
               <CardHeader className="bg-purple-50">
-                <CardTitle>MAWP Calculations</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  MAWP Calculations
+                  <CodeClauseBadge calculationType="head_mawp" headType={headType} />
+                </CardTitle>
                 <CardDescription>
                   {headType === "hemispherical" && "Formula: 2SEt/(R+0.2t) = P"}
                   {headType === "ellipsoidal" && "Formula: 2SEt/(D+0.2t) = P"}
