@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Save, FileDown, ArrowLeft } from "lucide-react";
+import { Save, FileDown, ArrowLeft, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import CodeClausePanel, { CodeClauseBadge } from "@/components/CodeClausePanel";
@@ -70,6 +71,25 @@ export default function CalculationWorksheet() {
   const [headRL, setHeadRL] = useState("0");
   const [headMAPnext, setHeadMAPnext] = useState("0");
   const [headMAWPnext, setHeadMAWPnext] = useState("0");
+
+  // Conical Section Parameters (Specialty — ASME VIII UG-32(g) Reducer Cones)
+  const [conicalD, setConicalD] = useState("48.000");
+  const [conicalAlpha, setConicalAlpha] = useState("30");
+  const [conicalP, setConicalP] = useState("250");
+  const [conicalS, setConicalS] = useState("20000");
+  const [conicalE, setConicalE] = useState("0.85");
+  const [conicalMaterial, setConicalMaterial] = useState("SA-516-70");
+  const [conicalTnom, setConicalTnom] = useState("0.500");
+  const [conicalTact, setConicalTact] = useState("0.480");
+  const [conicalTprev, setConicalTprev] = useState("0.500");
+  const [conicalY, setConicalY] = useState("10.0");
+  const [conicalTmin, setConicalTmin] = useState("0");
+  const [conicalCa, setConicalCa] = useState("0");
+  const [conicalCr, setConicalCr] = useState("0");
+  const [conicalRL, setConicalRL] = useState("0");
+  const [conicalMAPnext, setConicalMAPnext] = useState("0");
+  const [conicalMAWPnext, setConicalMAWPnext] = useState("0");
+  const [conicalAlphaWarning, setConicalAlphaWarning] = useState(false);
 
   // Calculate Shell Results
   useEffect(() => {
@@ -206,6 +226,54 @@ export default function CalculationWorksheet() {
     }
   }, [headType, headP, headD, headS, headE, headTact, headTprev, headY, headSH, headSG1]);
 
+  // Calculate Conical Section Results — ASME VIII-1 UG-32(g)
+  useEffect(() => {
+    const P = parseFloat(conicalP);
+    const D = parseFloat(conicalD);
+    const S = parseFloat(conicalS);
+    const E = parseFloat(conicalE);
+    const alphaDeg = parseFloat(conicalAlpha);
+    const tact = parseFloat(conicalTact);
+    const tprev = parseFloat(conicalTprev);
+    const Y = parseFloat(conicalY);
+
+    // Warn if alpha > 30° (UG-32(g) limit)
+    setConicalAlphaWarning(alphaDeg > 30);
+
+    if (!isNaN(P) && !isNaN(D) && !isNaN(S) && !isNaN(E) && !isNaN(alphaDeg)) {
+      const alpha = alphaDeg * (Math.PI / 180);
+      const cosAlpha = Math.cos(alpha);
+
+      // t = PD / (2cos(α)(SE - 0.6P))
+      const denominator = 2 * cosAlpha * (S * E - 0.6 * P);
+      const tmin = denominator > 0 ? (P * D) / denominator : 0;
+      setConicalTmin(tmin.toFixed(3));
+
+      if (!isNaN(tact) && !isNaN(tprev) && !isNaN(Y) && Y > 0) {
+        const ca = tact - tmin;
+        setConicalCa(ca.toFixed(3));
+
+        const cr = (tprev - tact) / Y;
+        setConicalCr(cr.toFixed(5));
+
+        if (cr > 0) {
+          const rl = ca / cr;
+          setConicalRL(rl > 100 ? ">100" : rl.toFixed(1));
+
+          // MAWP = 2SEt·cos(α) / (D + 1.2t·cos(α))
+          const mapNext = (2 * S * E * tact * cosAlpha) / (D + 1.2 * tact * cosAlpha);
+          setConicalMAPnext(mapNext.toFixed(1));
+          setConicalMAWPnext(mapNext.toFixed(1));
+        } else {
+          setConicalRL(">100");
+          const mapCurrent = (2 * S * E * tact * cosAlpha) / (D + 1.2 * tact * cosAlpha);
+          setConicalMAPnext(mapCurrent.toFixed(1));
+          setConicalMAWPnext(mapCurrent.toFixed(1));
+        }
+      }
+    }
+  }, [conicalP, conicalD, conicalS, conicalE, conicalAlpha, conicalTact, conicalTprev, conicalY]);
+
   const handleExport = () => {
     // Create a simple text export of the calculation results
     const data = [
@@ -335,9 +403,10 @@ export default function CalculationWorksheet() {
         </Card>
 
         <Tabs defaultValue="shell" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="shell">Shell Evaluation</TabsTrigger>
             <TabsTrigger value="head">Head Evaluation</TabsTrigger>
+            <TabsTrigger value="conical" className="text-amber-700">Conical (Advanced)</TabsTrigger>
             <TabsTrigger value="definitions">Variable Definitions</TabsTrigger>
           </TabsList>
 
@@ -912,6 +981,300 @@ export default function CalculationWorksheet() {
                         <span className="font-bold text-purple-700 text-lg">{headMAWPnext} psi</span>
                       </div>
                     </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* CONICAL SECTION EVALUATION (Specialty/Advanced) */}
+          <TabsContent value="conical" className="space-y-6">
+            <Alert className="border-amber-300 bg-amber-50">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertTitle className="text-amber-800">Specialty Calculation — ASME VIII-1 UG-32(g) Reducer Cones</AlertTitle>
+              <AlertDescription className="text-amber-700">
+                This section applies to <strong>conical reducer sections</strong> in ASME Section VIII Division 1 pressure vessels (e.g., transition cones between different shell diameters). Conical roofs and bottoms on atmospheric storage tanks are governed by <strong>API 620</strong>, not API 510/ASME VIII. Use this calculator only for pressure vessel reducer cones with half-apex angle α ≤ 30°. For α &gt; 30°, Appendix 1-5(g) special analysis is required.
+              </AlertDescription>
+            </Alert>
+
+            <Card>
+              <CardHeader className="bg-amber-50">
+                <CardTitle>Conical Section — Material & Geometry Parameters</CardTitle>
+                <CardDescription>ASME VIII-1 UG-32(g): t = PD / (2cos(α)(SE - 0.6P))</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="conicalMaterial">Material</Label>
+                    <Select value={conicalMaterial} onValueChange={setConicalMaterial}>
+                      <SelectTrigger id="conicalMaterial">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SA-516-70">SA-516-70</SelectItem>
+                        <SelectItem value="SA-516-60">SA-516-60</SelectItem>
+                        <SelectItem value="SA-515-70">SA-515-70</SelectItem>
+                        <SelectItem value="SA-285-C">SA-285-C</SelectItem>
+                        <SelectItem value="SA-240-304">SA-240-304</SelectItem>
+                        <SelectItem value="SA-240-316">SA-240-316</SelectItem>
+                        <SelectItem value="SA-240-316L">SA-240-316L</SelectItem>
+                        <SelectItem value="SA-612">SA-612</SelectItem>
+                        <SelectItem value="SA-387-11-1">SA-387 Gr 11 Cl 1</SelectItem>
+                        <SelectItem value="SA-387-11-2">SA-387 Gr 11 Cl 2</SelectItem>
+                        <SelectItem value="SA-387-22-1">SA-387 Gr 22 Cl 1</SelectItem>
+                        <SelectItem value="SA-387-22-2">SA-387 Gr 22 Cl 2</SelectItem>
+                        <SelectItem value="SA-204-A">SA-204 Gr A</SelectItem>
+                        <SelectItem value="SA-204-B">SA-204 Gr B</SelectItem>
+                        <SelectItem value="SA-204-C">SA-204 Gr C</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="conicalD">D — Large End ID (inch)</Label>
+                    <Input
+                      id="conicalD"
+                      type="number"
+                      step="0.001"
+                      value={conicalD}
+                      onChange={(e) => setConicalD(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="conicalAlpha" className={conicalAlphaWarning ? "text-red-600 font-bold" : ""}>
+                      α — Half-Apex Angle (°) {conicalAlphaWarning && " ⚠️ EXCEEDS 30°"}
+                    </Label>
+                    <Input
+                      id="conicalAlpha"
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      max="90"
+                      value={conicalAlpha}
+                      onChange={(e) => setConicalAlpha(e.target.value)}
+                      className={conicalAlphaWarning ? "border-red-500 bg-red-50" : ""}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="conicalP">P — Design Pressure (psi)</Label>
+                    <Input
+                      id="conicalP"
+                      type="number"
+                      step="0.1"
+                      value={conicalP}
+                      onChange={(e) => setConicalP(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="conicalS">S — Allowable Stress (psi)</Label>
+                    <Input
+                      id="conicalS"
+                      type="number"
+                      step="1"
+                      value={conicalS}
+                      onChange={(e) => setConicalS(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="conicalE">E — Joint Efficiency</Label>
+                    <Select value={conicalE} onValueChange={setConicalE}>
+                      <SelectTrigger id="conicalE">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1.0">1.0 (Full RT)</SelectItem>
+                        <SelectItem value="0.85">0.85 (Spot RT)</SelectItem>
+                        <SelectItem value="0.70">0.70 (No RT)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="conicalTnom">t nom (inch)</Label>
+                    <Input
+                      id="conicalTnom"
+                      type="number"
+                      step="0.001"
+                      value={conicalTnom}
+                      onChange={(e) => setConicalTnom(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {conicalAlphaWarning && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>UG-32(g) Limit Exceeded</AlertTitle>
+                <AlertDescription>
+                  Half-apex angle α = {conicalAlpha}° exceeds the 30° limit of UG-32(g). This formula is <strong>NOT valid</strong> for α &gt; 30°. Use ASME VIII-1 Appendix 1-5(g) for conical sections with large half-apex angles. Results shown below are for reference only and must not be used for compliance.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader className="bg-green-50">
+                  <CardTitle className="flex items-center gap-2">
+                    Minimum Thickness — Conical Section
+                  </CardTitle>
+                  <CardDescription>
+                    Formula: t = PD / (2cos(α)(SE - 0.6P)) per UG-32(g)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+                      <div className="grid grid-cols-5 gap-2 text-center text-sm font-medium">
+                        <div>
+                          <p className="text-gray-600">P</p>
+                          <p>{conicalP}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">D</p>
+                          <p>{conicalD}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">α</p>
+                          <p>{conicalAlpha}°</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">S</p>
+                          <p>{conicalS}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">E</p>
+                          <p>{conicalE}</p>
+                        </div>
+                      </div>
+                      <div className="mt-4 text-center">
+                        <p className="text-sm text-gray-600 mb-1">t min</p>
+                        <p className={`text-2xl font-bold ${conicalAlphaWarning ? 'text-red-600' : 'text-blue-700'}`}>{conicalTmin} inch</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="bg-orange-50">
+                  <CardTitle className="flex items-center gap-2">
+                    Remaining Life — Conical Section
+                    <CodeClauseBadge calculationType="remaining_life" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="conicalTprev" className="text-xs">t prev</Label>
+                        <Input
+                          id="conicalTprev"
+                          type="number"
+                          step="0.001"
+                          value={conicalTprev}
+                          onChange={(e) => setConicalTprev(e.target.value)}
+                          className="h-8"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="conicalTact" className="text-xs">t act</Label>
+                        <Input
+                          id="conicalTact"
+                          type="number"
+                          step="0.001"
+                          value={conicalTact}
+                          onChange={(e) => setConicalTact(e.target.value)}
+                          className="h-8"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="conicalTmin2" className="text-xs">t min</Label>
+                        <Input
+                          id="conicalTmin2"
+                          value={conicalTmin}
+                          readOnly
+                          className="h-8 bg-gray-100"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="conicalY" className="text-xs">y (years)</Label>
+                        <Input
+                          id="conicalY"
+                          type="number"
+                          step="0.1"
+                          value={conicalY}
+                          onChange={(e) => setConicalY(e.target.value)}
+                          className="h-8"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between p-2 bg-gray-50 rounded">
+                        <span>Ca = t act - t min</span>
+                        <span className="font-bold">{conicalCa} inch</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-gray-50 rounded">
+                        <span>Cr = t prev - t act / Y</span>
+                        <span className="font-bold">{conicalCr} in/year</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-green-100 rounded border border-green-300">
+                        <span className="font-semibold">RL = Ca / Cr</span>
+                        <span className="font-bold text-green-700 text-lg">{conicalRL} years</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader className="bg-purple-50">
+                <CardTitle>MAWP — Conical Section</CardTitle>
+                <CardDescription>
+                  Formula: MAWP = 2SEt·cos(α) / (D + 1.2t·cos(α)) per UG-32(g)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <h4 className="font-semibold">MAP at Current Thickness</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between p-2 bg-gray-50 rounded">
+                        <span>Where t = t act</span>
+                        <span className="font-bold">{conicalTact} inch</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-gray-50 rounded">
+                        <span>2SEt·cos(α)/(D+1.2t·cos(α)) = MAP</span>
+                        <span className="font-bold">{conicalMAPnext} psi</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-purple-100 rounded border border-purple-300">
+                        <span className="font-semibold">MAWP</span>
+                        <span className={`font-bold text-lg ${conicalAlphaWarning ? 'text-red-600' : 'text-purple-700'}`}>{conicalMAWPnext} psi</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="bg-gray-50">
+                <CardTitle>Conical Section — Code Reference</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="space-y-3 text-sm">
+                  <div className="p-3 bg-amber-50 rounded border border-amber-200">
+                    <p className="font-semibold">ASME VIII-1 UG-32(g) — Conical Heads and Sections</p>
+                    <p className="text-gray-700 mt-1">The required thickness of a conical head or conical shell section under internal pressure shall not be less than that determined by the formula: t = PD / (2cos(α)(SE - 0.6P)), where α is the half-apex angle of the cone.</p>
+                  </div>
+                  <div className="p-3 bg-amber-50 rounded border border-amber-200">
+                    <p className="font-semibold">Applicability Limitation</p>
+                    <p className="text-gray-700 mt-1">This formula applies only when α ≤ 30°. For half-apex angles exceeding 30°, the rules of Appendix 1-5(g) shall be used, which require additional reinforcement analysis at the cone-to-cylinder junction.</p>
+                  </div>
+                  <div className="p-3 bg-blue-50 rounded border border-blue-200">
+                    <p className="font-semibold">API 620 vs. API 510 Context</p>
+                    <p className="text-gray-700 mt-1">Conical roofs and bottoms on large, welded, low-pressure storage tanks are governed by <strong>API 620</strong>, not ASME Section VIII / API 510. This calculator addresses only ASME VIII-1 reducer cones (transition sections between different shell diameters) that may be encountered in API 510 inspections.</p>
                   </div>
                 </div>
               </CardContent>

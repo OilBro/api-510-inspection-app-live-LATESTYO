@@ -20,6 +20,144 @@ import { getInspection, getTmlReadings, getDb } from "./db";
 import { ffsAssessments, inLieuOfAssessments } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { calculateComponent } from "./componentCalculations";
+import { getCodeReference, CODE_CLAUSE_KNOWLEDGE_BASE, type CodeClause, type FormulaSelectionResult } from "./cohereService";
+
+// ============================================================================
+// CODE CLAUSE REFERENCE CACHE (populated during PDF generation)
+// ============================================================================
+
+interface CodeClauseRef {
+  paragraph: string;
+  title: string;
+  formula: string;
+  confidence: number;
+  source: 'cohere_rerank' | 'local_fallback';
+}
+
+/**
+ * Fetch code clause reference for a calculation type.
+ * Falls back to local knowledge base if Cohere API is unavailable.
+ */
+async function fetchCodeClauseRef(
+  calculationType: 'shell_tmin' | 'shell_mawp' | 'head_tmin' | 'head_mawp' | 'nozzle_reinforcement' | 'remaining_life' | 'corrosion_rate' | 'inspection_interval',
+  headType?: string
+): Promise<CodeClauseRef> {
+  try {
+    const result = await getCodeReference(calculationType, headType);
+    return {
+      paragraph: `${result.selectedClause.code} ${result.selectedClause.paragraph}`,
+      title: result.selectedClause.title,
+      formula: result.selectedClause.formula,
+      confidence: result.confidence,
+      source: 'cohere_rerank',
+    };
+  } catch (error) {
+    logger.warn(`[PDF] Cohere Rerank unavailable for ${calculationType}, using local fallback:`, error);
+    return getLocalFallbackClause(calculationType, headType);
+  }
+}
+
+/**
+ * Local fallback code clause lookup when Cohere API is unavailable.
+ * Uses the authoritative CODE_CLAUSE_KNOWLEDGE_BASE directly.
+ */
+function getLocalFallbackClause(
+  calculationType: string,
+  headType?: string
+): CodeClauseRef {
+  const clauseMap: Record<string, string> = {
+    shell_tmin: 'UG-27-circ',
+    shell_mawp: 'UG-27-circ',
+    head_tmin: headType?.toLowerCase().includes('hemispher') ? 'UG-32-f-hemispherical'
+      : headType?.toLowerCase().includes('torisp') ? 'UG-32-e-torispherical'
+      : 'UG-32-d-ellipsoidal',
+    head_mawp: headType?.toLowerCase().includes('hemispher') ? 'UG-32-f-hemispherical'
+      : headType?.toLowerCase().includes('torisp') ? 'UG-32-e-torispherical'
+      : 'UG-32-d-ellipsoidal',
+    remaining_life: 'API510-7.1.1-RL',
+    corrosion_rate: 'API510-CR-ST',
+    inspection_interval: 'API510-interval',
+    nozzle_reinforcement: 'UG-37-reinforcement',
+  };
+
+  const clauseId = clauseMap[calculationType] || 'UG-27-circ';
+  const clause = CODE_CLAUSE_KNOWLEDGE_BASE.find(c => c.id === clauseId);
+
+  if (clause) {
+    return {
+      paragraph: `${clause.code} ${clause.paragraph}`,
+      title: clause.title,
+      formula: clause.formula,
+      confidence: 1.0,
+      source: 'local_fallback',
+    };
+  }
+
+  return {
+    paragraph: 'ASME VIII-1',
+    title: 'Code Reference',
+    formula: 'See applicable code section',
+    confidence: 0,
+    source: 'local_fallback',
+  };
+}
+
+/**
+ * Draw a code clause reference box in the PDF.
+ * Renders a bordered box with the governing code clause, formula, and confidence score.
+ */
+function drawCodeClauseBox(
+  doc: PDFKit.PDFDocument,
+  ref: CodeClauseRef,
+  label: string = 'Governing Code Clause'
+) {
+  checkPageBreak(doc, 60);
+
+  const boxY = doc.y;
+  const boxHeight = 50;
+  const boxWidth = CONTENT_WIDTH;
+
+  // Background fill — light blue for Cohere, light gray for fallback
+  const bgColor = ref.source === 'cohere_rerank' ? '#eff6ff' : '#f8fafc';
+  const borderColor = ref.source === 'cohere_rerank' ? '#93c5fd' : '#cbd5e1';
+
+  doc.save();
+  doc.fillColor(bgColor).rect(MARGIN, boxY, boxWidth, boxHeight).fill();
+  doc.strokeColor(borderColor).lineWidth(1).rect(MARGIN, boxY, boxWidth, boxHeight).stroke();
+
+  // Left accent bar
+  doc.fillColor(ref.source === 'cohere_rerank' ? '#2563eb' : '#64748b')
+     .rect(MARGIN, boxY, 4, boxHeight).fill();
+
+  // Label line
+  doc.font('Helvetica-Bold').fontSize(8).fillColor('#64748b');
+  doc.text(label.toUpperCase(), MARGIN + 12, boxY + 5, { width: boxWidth - 24 });
+
+  // Paragraph + title
+  doc.font('Helvetica-Bold').fontSize(10).fillColor('#1e293b');
+  doc.text(`${ref.paragraph}: ${ref.title}`, MARGIN + 12, boxY + 16, { width: boxWidth - 150 });
+
+  // Formula
+  doc.font('Helvetica').fontSize(9).fillColor('#475569');
+  doc.text(`Formula: ${ref.formula}`, MARGIN + 12, boxY + 30, { width: boxWidth - 150 });
+
+  // Confidence badge (right side)
+  const confPct = (ref.confidence * 100).toFixed(0);
+  const confColor = ref.confidence > 0.5 ? '#16a34a' : ref.confidence > 0.2 ? '#d97706' : '#dc2626';
+  const confLabel = ref.source === 'cohere_rerank' ? `AI Confidence: ${confPct}%` : 'Local Reference';
+
+  doc.font('Helvetica-Bold').fontSize(8).fillColor(confColor);
+  doc.text(confLabel, MARGIN + boxWidth - 140, boxY + 10, { width: 130, align: 'right' });
+
+  // Source indicator
+  doc.font('Helvetica').fontSize(7).fillColor('#94a3b8');
+  const sourceText = ref.source === 'cohere_rerank' ? 'Cohere Rerank V3' : 'Local Knowledge Base';
+  doc.text(sourceText, MARGIN + boxWidth - 140, boxY + 22, { width: 130, align: 'right' });
+
+  doc.restore();
+  doc.y = boxY + boxHeight + 8;
+  doc.fillColor(COLORS.text);
+}
 
 // ============================================================================
 // PDF CONFIGURATION
@@ -1136,6 +1274,16 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   await addTable(doc, shellMaterialData[0], [shellMaterialData[1]], '', logoBuffer);
   doc.moveDown(1);
   
+  // Fetch code clause references for shell calculations (parallel)
+  const [shellTminRef, shellMawpRef, rlRef] = await Promise.all([
+    fetchCodeClauseRef('shell_tmin'),
+    fetchCodeClauseRef('shell_mawp'),
+    fetchCodeClauseRef('remaining_life'),
+  ]);
+  
+  // Code Clause Reference — Shell Minimum Thickness
+  drawCodeClauseBox(doc, shellTminRef, 'Governing Code Clause — Shell Minimum Thickness');
+  
   // Minimum Thickness Calculations
   doc.font('Helvetica-Bold').fontSize(11);
   doc.text('Minimum Thickness Calculations', MARGIN, doc.y);
@@ -1155,6 +1303,9 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   
   await addTable(doc, minThicknessData[1], [minThicknessData[2]], '', logoBuffer);
   doc.moveDown(1);
+  
+  // Code Clause Reference — Remaining Life
+  drawCodeClauseBox(doc, rlRef, 'Governing Code Clause — Remaining Life');
   
   // Remaining Life Calculations
   doc.font('Helvetica-Bold').fontSize(11);
@@ -1204,6 +1355,9 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   doc.font('Helvetica-Bold').fontSize(10);
   doc.text(`Next Inspection (Yn) = ${YnDisplay} (years)`, MARGIN, doc.y);
   doc.moveDown(1);
+  
+  // Code Clause Reference — Shell MAWP
+  drawCodeClauseBox(doc, shellMawpRef, 'Governing Code Clause — Shell MAWP');
   
   // MAWP Calculations
   doc.font('Helvetica-Bold').fontSize(11);
@@ -1327,6 +1481,16 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   await addTable(doc, headSpecData[0], headSpecData.slice(1), '', logoBuffer);
   doc.moveDown(1);
   
+  // Fetch code clause references for head calculations
+  const headTypeForClause = eastHead?.headType || inspection?.headType || 'Ellipsoidal';
+  const [headTminRef, headMawpRef] = await Promise.all([
+    fetchCodeClauseRef('head_tmin', headTypeForClause),
+    fetchCodeClauseRef('head_mawp', headTypeForClause),
+  ]);
+  
+  // Code Clause Reference — Head Minimum Thickness
+  drawCodeClauseBox(doc, headTminRef, 'Governing Code Clause — Head Minimum Thickness');
+  
   // Minimum Thickness Calculations for heads
   doc.font('Helvetica-Bold').fontSize(11);
   doc.text('Minimum Thickness Calculations', MARGIN, doc.y);
@@ -1419,6 +1583,9 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   const nextInspectionYears = eastHead?.nextInspectionYears || westHead?.nextInspectionYears || '10';
   doc.text(`Next Inspection (Yn) = ${nextInspectionYears} (year)`, MARGIN, doc.y);
   doc.moveDown(1);
+  
+  // Code Clause Reference — Head MAWP
+  drawCodeClauseBox(doc, headMawpRef, 'Governing Code Clause — Head MAWP');
   
   // MAWP Calculations for heads
   doc.font('Helvetica-Bold').fontSize(11);
@@ -1569,6 +1736,10 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
   doc.moveDown(1);
   
   addSectionTitle(doc, '7.0 NOZZLE MINIMUM THICKNESS EVALUATION (ASME UG-45)');
+  
+  // Code Clause Reference — Nozzle Reinforcement
+  const nozzleRef = await fetchCodeClauseRef('nozzle_reinforcement');
+  drawCodeClauseBox(doc, nozzleRef, 'Governing Code Clause — Nozzle Evaluation');
   
   if (!nozzles || nozzles.length === 0) {
     addText(doc, 'No nozzle evaluations recorded.');

@@ -53,9 +53,12 @@ export interface CalculationInput {
   corrosionAllowance?: number;  // inches (optional, derived if omitted)
   
   // Head-specific parameters
-  headType?: '2:1 Ellipsoidal' | 'Torispherical' | 'Hemispherical' | 'Flat';
+  headType?: '2:1 Ellipsoidal' | 'Torispherical' | 'Hemispherical' | 'Flat' | 'Conical';
   crownRadius?: number;        // inches (L for torispherical)
   knuckleRadius?: number;      // inches (r for torispherical)
+  
+  // Conical section parameters
+  halfApexAngle?: number;      // degrees (α for conical sections, must be ≤ 30° per UG-32(g))
   
   // Dates for corrosion rate calculation
   yearBuilt?: number;
@@ -102,7 +105,7 @@ export interface CalculationResult {
  */
 export interface FullCalculationResult {
   success: boolean;
-  componentType: 'Shell' | 'Head';
+  componentType: 'Shell' | 'Head' | 'Conical';
   
   // Primary results
   tRequired: CalculationResult;
@@ -1037,6 +1040,271 @@ export function calculateMAWPTorisphericalHead(input: CalculationInput): Calcula
 }
 
 /**
+ * Calculate minimum required thickness for conical sections.
+ * 
+ * Formula per ASME Section VIII Division 1, UG-32(g):
+ * t = (P × D) / (2 × cos(α) × (S × E - 0.6 × P))
+ * 
+ * Where:
+ *   P = Design pressure (psi)
+ *   D = Inside diameter at large end (inches)
+ *   α = Half-apex angle (degrees), must be ≤ 30°
+ *   S = Allowable stress (psi)
+ *   E = Joint efficiency
+ * 
+ * CRITICAL: UG-32(g) is ONLY valid for α ≤ 30°.
+ * For α > 30°, Appendix 1-5(g) rules must be used.
+ */
+export function calculateTRequiredConicalSection(input: CalculationInput): CalculationResult {
+  const calculatedAt = new Date().toISOString();
+  const assumptions: string[] = [];
+  const warnings: string[] = [];
+  
+  // Validate required inputs
+  if (!input.designPressure || input.designPressure <= 0) {
+    return createErrorResult('t_required_conical', 'Design pressure must be > 0', calculatedAt);
+  }
+  if (!input.insideDiameter || input.insideDiameter <= 0) {
+    return createErrorResult('t_required_conical', 'Inside diameter must be > 0', calculatedAt);
+  }
+  if (!input.jointEfficiency || input.jointEfficiency <= 0 || input.jointEfficiency > 1) {
+    return createErrorResult('t_required_conical', 'Joint efficiency must be between 0 and 1', calculatedAt);
+  }
+  
+  // Validate half-apex angle
+  const alphaDeg = input.halfApexAngle || 30; // Default to 30° if not provided
+  if (alphaDeg <= 0 || alphaDeg >= 90) {
+    return createErrorResult('t_required_conical', 
+      `Half-apex angle must be between 0° and 90°: α = ${alphaDeg}°`, calculatedAt);
+  }
+  
+  if (!input.halfApexAngle) {
+    warnings.push('Half-apex angle not provided - defaulting to 30° (maximum for UG-32(g))');
+  }
+  
+  // CRITICAL: UG-32(g) scope limitation
+  if (alphaDeg > 30) {
+    warnings.push(`CRITICAL: Half-apex angle α = ${alphaDeg}° exceeds UG-32(g) limit of 30°. This formula is NOT valid. Use Appendix 1-5(g) for conical sections with α > 30°.`);
+  }
+  
+  // Get allowable stress
+  let allowableStress: number;
+  let stressLookupDetails: Record<string, any> = {};
+  
+  if (input.allowableStress && input.allowableStress > 0) {
+    allowableStress = input.allowableStress;
+    warnings.push('Allowable stress provided directly - not from ASME database lookup');
+    stressLookupDetails = { source: 'user_provided', value: allowableStress };
+  } else {
+    const stressResult = getAllowableStressNormalized(input.materialSpec, input.designTemperature);
+    if (stressResult.status === 'error' || !stressResult.stress) {
+      return createErrorResult('t_required_conical', 
+        `Failed to lookup allowable stress: ${stressResult.message}`, calculatedAt);
+    }
+    allowableStress = stressResult.stress;
+    stressLookupDetails = {
+      source: 'ASME_database',
+      materialSpec: stressResult.normalizedSpec || input.materialSpec,
+      temperature: input.designTemperature,
+      value: allowableStress,
+      databaseVersion: stressResult.databaseVersion
+    };
+  }
+  
+  const P = input.designPressure;
+  const D = input.insideDiameter;
+  const S = allowableStress;
+  const E = input.jointEfficiency;
+  const alphaRad = (alphaDeg * Math.PI) / 180;
+  const cosAlpha = Math.cos(alphaRad);
+  
+  // ASME VIII-1 UG-32(g): t = PD / (2cos(α)(SE - 0.6P))
+  const numerator = P * D;
+  const denominator = 2 * cosAlpha * (S * E - 0.6 * P);
+  
+  if (denominator <= 0) {
+    return createErrorResult('t_required_conical', 
+      'Calculation error: 2cos(α)(SE - 0.6P) must be > 0', calculatedAt);
+  }
+  
+  const tRequired = numerator / denominator;
+  
+  assumptions.push('Formula per ASME Section VIII Division 1, UG-32(g)');
+  assumptions.push(`Half-apex angle α = ${alphaDeg}°`);
+  assumptions.push('Applies to conical sections with α ≤ 30°');
+  assumptions.push('D = inside diameter at the large end of the cone');
+  assumptions.push('Corrosion allowance NOT included in t_required');
+  
+  if (input.currentThickness && input.currentThickness < tRequired) {
+    warnings.push(`CRITICAL: Current thickness (${input.currentThickness.toFixed(4)}") is below t_required (${tRequired.toFixed(4)}")`);
+  }
+  
+  return {
+    success: true,
+    calculationType: 't_required_conical',
+    resultValue: round(tRequired, 4),
+    resultUnit: 'inches',
+    codeReference: 'ASME Section VIII Division 1, UG-32(g)',
+    formulaUsed: 't = (P × D) / (2 × cos(α) × (S × E - 0.6 × P))',
+    intermediateValues: {
+      P: P,
+      D: D,
+      S: S,
+      E: E,
+      'α (degrees)': alphaDeg,
+      'cos(α)': round(cosAlpha, 6),
+      'S × E': S * E,
+      '0.6 × P': 0.6 * P,
+      'S × E - 0.6 × P': S * E - 0.6 * P,
+      '2 × cos(α) × (SE - 0.6P)': denominator,
+      'P × D': numerator,
+      t_required: round(tRequired, 4),
+      ...stressLookupDetails
+    },
+    assumptions,
+    warnings,
+    calculationEngineVersion: CALCULATION_ENGINE_VERSION,
+    materialDatabaseVersion: DATABASE_VERSION,
+    calculatedAt,
+    validationStatus: warnings.some(w => w.includes('CRITICAL')) ? 'warning' : 'valid'
+  };
+}
+
+/**
+ * Calculate Maximum Allowable Working Pressure (MAWP) for conical sections.
+ * 
+ * Formula per ASME Section VIII Division 1, UG-32(g):
+ * MAWP = (2 × S × E × t × cos(α)) / (D + 1.2 × t × cos(α))
+ * 
+ * Where:
+ *   S = Allowable stress (psi)
+ *   E = Joint efficiency
+ *   t = Actual thickness (inches)
+ *   α = Half-apex angle (degrees)
+ *   D = Inside diameter at large end (inches)
+ */
+export function calculateMAWPConicalSection(input: CalculationInput): CalculationResult {
+  const calculatedAt = new Date().toISOString();
+  const assumptions: string[] = [];
+  const warnings: string[] = [];
+  
+  if (!input.currentThickness || input.currentThickness <= 0) {
+    return createErrorResult('mawp_conical', 'Current thickness must be > 0', calculatedAt);
+  }
+  if (!input.insideDiameter || input.insideDiameter <= 0) {
+    return createErrorResult('mawp_conical', 'Inside diameter must be > 0', calculatedAt);
+  }
+  if (!input.jointEfficiency || input.jointEfficiency <= 0 || input.jointEfficiency > 1) {
+    return createErrorResult('mawp_conical', 'Joint efficiency must be between 0 and 1', calculatedAt);
+  }
+  
+  const alphaDeg = input.halfApexAngle || 30;
+  if (alphaDeg <= 0 || alphaDeg >= 90) {
+    return createErrorResult('mawp_conical', 
+      `Half-apex angle must be between 0° and 90°: α = ${alphaDeg}°`, calculatedAt);
+  }
+  
+  if (!input.halfApexAngle) {
+    warnings.push('Half-apex angle not provided - defaulting to 30° (maximum for UG-32(g))');
+  }
+  
+  if (alphaDeg > 30) {
+    warnings.push(`CRITICAL: Half-apex angle α = ${alphaDeg}° exceeds UG-32(g) limit of 30°. This formula is NOT valid. Use Appendix 1-5(g).`);
+  }
+  
+  // Get allowable stress
+  let allowableStress: number;
+  let stressLookupDetails: Record<string, any> = {};
+  
+  if (input.allowableStress && input.allowableStress > 0) {
+    allowableStress = input.allowableStress;
+    warnings.push('Allowable stress provided directly - not from ASME database lookup');
+    stressLookupDetails = { source: 'user_provided', value: allowableStress };
+  } else {
+    const stressResult = getAllowableStressNormalized(input.materialSpec, input.designTemperature);
+    if (stressResult.status === 'error' || !stressResult.stress) {
+      return createErrorResult('mawp_conical', 
+        `Failed to lookup allowable stress: ${stressResult.message}`, calculatedAt);
+    }
+    allowableStress = stressResult.stress;
+    stressLookupDetails = {
+      source: 'ASME_database',
+      materialSpec: stressResult.normalizedSpec || input.materialSpec,
+      temperature: input.designTemperature,
+      value: allowableStress,
+      databaseVersion: stressResult.databaseVersion
+    };
+  }
+  
+  const t = input.currentThickness;
+  const D = input.insideDiameter;
+  const S = allowableStress;
+  const E = input.jointEfficiency;
+  const alphaRad = (alphaDeg * Math.PI) / 180;
+  const cosAlpha = Math.cos(alphaRad);
+  
+  // ASME VIII-1 UG-32(g): MAWP = 2SEt·cos(α) / (D + 1.2t·cos(α))
+  const numerator = 2 * S * E * t * cosAlpha;
+  const denominator = D + (1.2 * t * cosAlpha);
+  
+  if (denominator <= 0) {
+    return createErrorResult('mawp_conical', 
+      'Calculation error: D + 1.2t·cos(α) must be > 0', calculatedAt);
+  }
+  
+  const mawpGross = numerator / denominator;
+  
+  // Static head deduction (inline calculation)
+  let staticHead = 0;
+  if (input.specificGravity && input.liquidHeight && input.vesselOrientation === 'vertical') {
+    const liquidHeightFeet = input.liquidHeight / 12;
+    staticHead = liquidHeightFeet * 0.433 * input.specificGravity;
+  } else if (input.specificGravity && input.vesselOrientation === 'horizontal' && input.insideDiameter) {
+    const idFeet = input.insideDiameter / 12;
+    staticHead = idFeet * 0.433 * input.specificGravity;
+  }
+  const mawpNet = mawpGross - staticHead;
+  
+  assumptions.push('Formula per ASME Section VIII Division 1, UG-32(g)');
+  assumptions.push(`Half-apex angle α = ${alphaDeg}°`);
+  assumptions.push('D = inside diameter at the large end of the cone');
+  assumptions.push(`Static head deduction: ${staticHead.toFixed(2)} psi`);
+  
+  if (input.designPressure && mawpNet < input.designPressure) {
+    warnings.push(`WARNING: MAWP (${mawpNet.toFixed(1)} psi) is below design pressure (${input.designPressure} psi)`);
+  }
+  
+  return {
+    success: true,
+    calculationType: 'mawp_conical',
+    resultValue: round(mawpNet, 1),
+    resultUnit: 'psi',
+    codeReference: 'ASME Section VIII Division 1, UG-32(g)',
+    formulaUsed: 'MAWP = (2 × S × E × t × cos(α)) / (D + 1.2 × t × cos(α)) - Static Head',
+    intermediateValues: {
+      t: t,
+      D: D,
+      S: S,
+      E: E,
+      'α (degrees)': alphaDeg,
+      'cos(α)': round(cosAlpha, 6),
+      '2SEt·cos(α)': round(numerator, 2),
+      'D + 1.2t·cos(α)': round(denominator, 4),
+      MAWP_gross: round(mawpGross, 1),
+      static_head: round(staticHead, 2),
+      MAWP_net: round(mawpNet, 1),
+      ...stressLookupDetails
+    },
+    assumptions,
+    warnings,
+    calculationEngineVersion: CALCULATION_ENGINE_VERSION,
+    materialDatabaseVersion: DATABASE_VERSION,
+    calculatedAt,
+    validationStatus: warnings.some(w => w.includes('WARNING') || w.includes('CRITICAL')) ? 'warning' : 'valid'
+  };
+}
+
+/**
  * Calculate MAP (Maximum Allowable Pressure) at next inspection.
  * 
  * Formula:
@@ -1067,7 +1335,7 @@ export interface MAPAtNextInspectionResult {
 
 export function calculateMAPAtNextInspection(
   input: CalculationInput,
-  componentType: 'Shell' | 'Head',
+  componentType: 'Shell' | 'Head' | 'Conical',
   corrosionRate: number,
   yearsToNextInspection: number
 ): MAPAtNextInspectionResult {
@@ -1158,6 +1426,8 @@ export function calculateMAPAtNextInspection(
   
   if (componentType === 'Shell') {
     mapResult = calculateMAWPShell(projectedInput);
+  } else if (componentType === 'Conical') {
+    mapResult = calculateMAWPConicalSection(projectedInput);
   } else {
     switch (input.headType) {
       case 'Hemispherical':
@@ -1165,6 +1435,9 @@ export function calculateMAPAtNextInspection(
         break;
       case 'Torispherical':
         mapResult = calculateMAWPTorisphericalHead(projectedInput);
+        break;
+      case 'Conical':
+        mapResult = calculateMAWPConicalSection(projectedInput);
         break;
       case '2:1 Ellipsoidal':
       default:
@@ -1564,7 +1837,7 @@ export function calculateNextInspectionInterval(remainingLife: number): Calculat
 /**
  * Perform complete calculation suite for a component.
  */
-export function performFullCalculation(input: CalculationInput, componentType: 'Shell' | 'Head'): FullCalculationResult {
+export function performFullCalculation(input: CalculationInput, componentType: 'Shell' | 'Head' | 'Conical'): FullCalculationResult {
   const calculatedAt = new Date().toISOString();
   const warnings: string[] = [];
   
@@ -1615,6 +1888,8 @@ export function performFullCalculation(input: CalculationInput, componentType: '
   
   if (componentType === 'Shell') {
     tRequiredResult = calculateTRequiredShell(input);
+  } else if (componentType === 'Conical') {
+    tRequiredResult = calculateTRequiredConicalSection(input);
   } else {
     // Head calculation based on head type
     switch (input.headType) {
@@ -1626,6 +1901,9 @@ export function performFullCalculation(input: CalculationInput, componentType: '
         break;
       case 'Hemispherical':
         tRequiredResult = calculateTRequiredHemisphericalHead(input);
+        break;
+      case 'Conical':
+        tRequiredResult = calculateTRequiredConicalSection(input);
         break;
       default:
         // Default to ellipsoidal if head type not specified
@@ -1651,6 +1929,8 @@ export function performFullCalculation(input: CalculationInput, componentType: '
   
   if (componentType === 'Shell') {
     mawpResult = calculateMAWPShell(input);
+  } else if (componentType === 'Conical') {
+    mawpResult = calculateMAWPConicalSection(input);
   } else {
     switch (input.headType) {
       case 'Hemispherical':
@@ -1658,6 +1938,9 @@ export function performFullCalculation(input: CalculationInput, componentType: '
         break;
       case 'Torispherical':
         mawpResult = calculateMAWPTorisphericalHead(input);
+        break;
+      case 'Conical':
+        mawpResult = calculateMAWPConicalSection(input);
         break;
       case '2:1 Ellipsoidal':
       default:

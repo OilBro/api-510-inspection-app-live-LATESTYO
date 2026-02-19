@@ -3255,3 +3255,34 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Add SA-387 and SA-204 materials to worksheet dropdowns
 - [x] Write 31 integration tests — all passing (Rerank confidence 78-88%)
 - [x] Save checkpoint and deliver to user
+
+## PDF Code Clause Embedding & Missing Conical Option (Feb 2026)
+- [ ] Add conical section option to calculation component type dropdown
+- [ ] Add conical section to head type dropdown in Calculation Worksheet
+- [ ] Embed code clause reference (paragraph, formula, confidence) into shell section of PDF
+- [ ] Embed code clause reference into head section of PDF
+- [ ] Embed code clause reference into nozzle section of PDF
+- [ ] Embed code clause reference into remaining life section of PDF
+- [ ] Embed code clause reference into corrosion rate section of PDF
+- [ ] Add conical clause to Cohere knowledge base
+- [ ] Write tests for PDF code clause embedding
+- [ ] Write tests for conical calculations
+- [ ] Save checkpoint and deliver to user
+
+## Conical Cleanup + PDF Code Clause Embedding (Feb 2026)
+### Conical Section Cleanup
+- [x] Fix TypeScript errors in lockedCalculationEngine.ts (MAP function signature)
+- [x] Position conical as specialty/advanced option in Calculation Worksheet only
+- [x] Conical = reducer cone per ASME VIII UG-32(g), NOT a roof/bottom (that's API 620)
+- [x] Keep conical OUT of the standard CalculationPanel head type dropdown
+- [x] Add half-apex angle input when conical is selected in Calculation Worksheet
+### PDF Code Clause Embedding
+- [x] Add code clause reference box to shell t_min section of PDF
+- [x] Add code clause reference box to shell MAWP section of PDF
+- [x] Add code clause reference box to head t_min section of PDF
+- [x] Add code clause reference box to head MAWP section of PDF
+- [x] Add code clause reference box to remaining life section of PDF
+- [x] Add code clause reference box to nozzle evaluation section of PDF
+- [x] Add confidence score display for each code reference
+- [x] Write tests for all changes (25 tests, all passing)
+- [x] Run full test suite to verify no regressions
