@@ -3170,3 +3170,42 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Add 70 new verification tests for all new materials
 - [x] Run full test suite - 1200 tests passed, 167 audit tests passed, 0 regressions
 - [x] Save checkpoint and deliver to user
+
+## Cohere API Integration for Regulatory-Grade Intelligence (Feb 2026)
+
+### Architecture Design
+- [x] Design Rerank V3 integration for formula selection and code clause retrieval
+- [x] Design Embed V3 integration for historical inspection memory and similarity search
+- [x] Design Command R+ RAG integration for code-grounded engineering guidance
+- [x] Create database schema for embeddings (inspectionEmbeddings table)
+- [x] Document integration architecture and data flow
+
+### Integration 1: Rerank V3 for Calculation Accuracy
+- [x] Create code clause knowledge base (15 clauses: ASME VIII-1, API 510, API 579)
+- [x] Implement formula selection endpoint using Rerank V3 (selectFormula, getCodeReference)
+- [x] Add "Why this formula?" explanation with confidence scores
+- [x] Create UI component — Code Reference tab in Engineering Advisor page
+- [x] Write tests for formula selection accuracy (5 API tests + 8 knowledge base tests)
+
+### Integration 2: Embed V3 for Historical Memory
+- [x] Add inspectionEmbeddings table with 1024-dim vector storage
+- [x] Create embedding generation pipeline (generateEmbeddings, buildInspectionSummary)
+- [x] Implement similarity search (findSimilarInspections, cosineSimilarity)
+- [x] Create UI component — Historical Memory tab in Engineering Advisor page
+- [x] Create batch embedding endpoint for existing inspections
+- [x] Write tests for similarity search accuracy (9 cosine tests + 8 find-similar tests + 3 API tests)
+
+### Integration 3: Command R+ RAG for Engineering Guidance
+- [x] Build code clause knowledge base as RAG context (15 clauses with full formulas)
+- [x] Create RAG endpoint (askEngineeringQuestion with vessel context)
+- [x] Add "Ask the Code" chat interface — Engineering Guidance tab in Engineering Advisor page
+- [x] System prompt constrains answers to ASME/API codes only
+- [x] Add citation tracking with code, paragraph, and text fields
+- [x] Write tests for RAG accuracy and citation correctness (4 API tests)
+
+### Testing & Documentation
+- [x] Test all three integrations end-to-end — 48 tests all passing
+- [x] Verify calculation audit tests still pass (no regressions)
+- [x] Cohere API connectivity validated (Rerank, Embed, Chat all operational)
+- [ ] Create user documentation for new AI features
+- [x] Save checkpoint and deliver to user

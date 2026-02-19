@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
-import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare, AlertTriangle, Smartphone, Cog, RefreshCw, Database } from "lucide-react";
+import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare, AlertTriangle, Smartphone, Cog, RefreshCw, Database, Brain } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { AnomalyStats } from "@/components/AnomalyStats";
 
@@ -212,6 +212,16 @@ export default function Home() {
               <CardTitle>Data Migration</CardTitle>
               <CardDescription>
                 Fix missing angle readings and correct TML data for existing inspections
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation("/engineering-advisor")}>
+            <CardHeader>
+              <Brain className="h-12 w-12 text-violet-600 mb-4" />
+              <CardTitle>Engineering Advisor</CardTitle>
+              <CardDescription>
+                AI-powered code guidance, formula selection, and historical inspection memory powered by Cohere
               </CardDescription>
             </CardHeader>
           </Card>

@@ -1583,3 +1583,20 @@ export const cmlCorrelations = mysqlTable("cmlCorrelations", {
 
 export type CMLCorrelation = typeof cmlCorrelations.$inferSelect;
 export type InsertCMLCorrelation = typeof cmlCorrelations.$inferInsert;
+
+/**
+ * Inspection embeddings table — stores Cohere Embed V3 vectors
+ * for historical inspection similarity search (semantic memory).
+ * Embedding dimension: 1024 (embed-english-v3.0)
+ */
+export const inspectionEmbeddings = mysqlTable("inspectionEmbeddings", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  inspectionId: varchar("inspectionId", { length: 64 }).notNull().unique(),
+  embedding: json("embedding").notNull(), // 1024-dimensional float vector
+  summary: text("summary"), // Text that was embedded for debugging/audit
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type InspectionEmbedding = typeof inspectionEmbeddings.$inferSelect;
+export type InsertInspectionEmbedding = typeof inspectionEmbeddings.$inferInsert;

@@ -18,7 +18,9 @@ import {
   importedFiles,
   InsertImportedFile,
   nozzleEvaluations,
-  InsertNozzleEvaluation
+  InsertNozzleEvaluation,
+  inspectionEmbeddings,
+  InsertInspectionEmbedding
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -358,4 +360,89 @@ export async function getNozzleEvaluations(inspectionId: string) {
   if (!db) return [];
   
   return await db.select().from(nozzleEvaluations).where(eq(nozzleEvaluations.inspectionId, inspectionId));
+}
+
+
+// ============= Inspection Embedding Functions (Cohere Embed V3) =============
+
+export async function storeInspectionEmbedding(
+  inspectionId: string,
+  embedding: string,
+  summary: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const id = `emb-${inspectionId}`;
+  
+  // Upsert: insert or update if exists
+  await db.insert(inspectionEmbeddings).values({
+    id,
+    inspectionId,
+    embedding: JSON.parse(embedding),
+    summary,
+  }).onDuplicateKeyUpdate({
+    set: {
+      embedding: JSON.parse(embedding),
+      summary,
+    },
+  });
+}
+
+export async function getInspectionEmbedding(inspectionId: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const results = await db.select().from(inspectionEmbeddings)
+    .where(eq(inspectionEmbeddings.inspectionId, inspectionId));
+  
+  if (results.length === 0) return null;
+  
+  return {
+    ...results[0],
+    embedding: JSON.stringify(results[0].embedding),
+  };
+}
+
+export async function getAllInspectionEmbeddings(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Join with inspections to get vessel info and filter by user
+  const results = await db.select({
+    inspectionId: inspectionEmbeddings.inspectionId,
+    embedding: inspectionEmbeddings.embedding,
+    summary: inspectionEmbeddings.summary,
+    vesselTagNumber: inspections.vesselTagNumber,
+    vesselName: inspections.vesselName,
+    inspectionDate: inspections.inspectionDate,
+  })
+  .from(inspectionEmbeddings)
+  .innerJoin(inspections, eq(inspectionEmbeddings.inspectionId, inspections.id))
+  .where(eq(inspections.userId, userId));
+  
+  return results.map(r => ({
+    inspectionId: r.inspectionId,
+    embedding: JSON.stringify(r.embedding),
+    summary: r.summary,
+    vesselTagNumber: r.vesselTagNumber,
+    vesselName: r.vesselName,
+    inspectionDate: r.inspectionDate ? r.inspectionDate.toISOString() : null,
+  }));
+}
+
+export async function getInspectionsWithoutEmbeddings(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Get inspections that don't have embeddings yet
+  const allInspections = await db.select().from(inspections)
+    .where(eq(inspections.userId, userId));
+  
+  const embeddedIds = await db.select({ inspectionId: inspectionEmbeddings.inspectionId })
+    .from(inspectionEmbeddings);
+  
+  const embeddedIdSet = new Set(embeddedIds.map(e => e.inspectionId));
+  
+  return allInspections.filter(insp => !embeddedIdSet.has(insp.id));
 }
