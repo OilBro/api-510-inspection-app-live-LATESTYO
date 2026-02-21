@@ -3286,3 +3286,14 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Add confidence score display for each code reference
 - [x] Write tests for all changes (25 tests, all passing)
 - [x] Run full test suite to verify no regressions
+
+## Add Grok 5.2 to Import Data Parsing Dropdown (Feb 2026)
+- [x] Locate the parsing model dropdown in import data UI
+- [x] Add Grok 5.2 option to the dropdown list
+- [x] Add GROK_API_KEY to environment configuration
+- [x] Create grokPdfParser.ts for Grok 5.2 integration
+- [x] Integrate Grok parser into parsePDFFile function
+- [x] Update all parser type definitions across codebase
+- [x] Verify API key integration for Grok 5.2 (test passed)
+- [x] Test Grok API connection (test passed)
+- [ ] Save checkpoint

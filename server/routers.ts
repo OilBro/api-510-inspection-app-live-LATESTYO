@@ -974,7 +974,7 @@ Return JSON in this exact format:
         fileData: z.string(), // Base64 encoded file
         fileName: z.string(),
         fileType: z.enum(["pdf", "excel"]),
-        parserType: z.enum(["docupipe", "manus", "vision", "hybrid"]).optional(),
+        parserType: z.enum(["docupipe", "manus", "vision", "hybrid", "grok"]).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         // Check base64 string size before processing (base64 is ~33% larger than binary)
@@ -1065,7 +1065,7 @@ Return JSON in this exact format:
         fileData: z.string(), // Base64 encoded file
         fileName: z.string(),
         fileType: z.enum(["pdf", "excel"]),
-        parserType: z.enum(["docupipe", "manus", "vision", "hybrid"]).optional(),
+        parserType: z.enum(["docupipe", "manus", "vision", "hybrid", "grok"]).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         try {
@@ -1541,7 +1541,7 @@ Return JSON in this exact format:
         fileData: z.string(), // Base64 encoded file
         fileName: z.string(),
         fileType: z.enum(["pdf", "excel"]),
-        parserType: z.enum(["docupipe", "manus", "vision", "hybrid"]).optional(), // Optional parser selection
+        parserType: z.enum(["docupipe", "manus", "vision", "hybrid", "grok"]).optional(), // Optional parser selection
         inspectionId: z.string().optional(), // Optional: append to existing inspection
       }))
       .mutation(async ({ ctx, input }) => {

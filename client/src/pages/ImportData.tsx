@@ -73,7 +73,7 @@ export default function ImportData() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [parserType, setParserType] = useState<"docupipe" | "manus" | "vision" | "hybrid">("hybrid");
+  const [parserType, setParserType] = useState<"docupipe" | "manus" | "vision" | "hybrid" | "grok">("hybrid");
   const [step, setStep] = useState<ImportStep>("upload");
   const [previewData, setPreviewData] = useState<any>(null);
   const [previewSummary, setPreviewSummary] = useState<any>(null);
@@ -513,6 +513,7 @@ export default function ImportData() {
                         <SelectItem value="hybrid">Hybrid (Recommended)</SelectItem>
                         <SelectItem value="manus">Manus AI Parser</SelectItem>
                         <SelectItem value="vision">Vision Parser (for scanned)</SelectItem>
+                        <SelectItem value="grok">Grok 5.2</SelectItem>
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">

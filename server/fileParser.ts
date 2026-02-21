@@ -476,12 +476,70 @@ CRITICAL RULES:
 /**
  * Parse PDF file using Manus API + LLM extraction
  */
-export async function parsePDFFile(buffer: Buffer, parserType?: "docupipe" | "manus" | "vision" | "hybrid"): Promise<ParsedVesselData> {
+export async function parsePDFFile(buffer: Buffer, parserType?: "docupipe" | "manus" | "vision" | "hybrid" | "grok"): Promise<ParsedVesselData> {
   const selectedParser = parserType || "manus";
   logger.info(`[PDF Parser] Using parser: ${selectedParser}`);
   
   try {
     // If vision parser is requested, use vision-based extraction
+    
+    // If Grok parser is requested, use Grok 5.2 vision-based extraction
+    if (selectedParser === "grok") {
+      logger.info("[PDF Parser] Using Grok 5.2 parser for comprehensive extraction...");
+      const { parseWithGrok } = await import('./grokPdfParser');
+      const grokData = await parseWithGrok(buffer);
+      
+      // Convert Grok data to ParsedVesselData format
+      return {
+        vesselTagNumber: grokData.vesselInfo?.vesselTag || '',
+        vesselName: grokData.vesselInfo?.vesselDescription || '',
+        manufacturer: grokData.vesselInfo?.manufacturer || '',
+        serialNumber: grokData.vesselInfo?.serialNumber || '',
+        yearBuilt: grokData.vesselInfo?.yearBuilt ? parseInt(grokData.vesselInfo.yearBuilt, 10) : undefined,
+        designPressure: grokData.vesselInfo?.designPressure || '',
+        designTemperature: grokData.vesselInfo?.designTemperature || '',
+        operatingPressure: grokData.vesselInfo?.operatingPressure || '',
+        operatingTemperature: grokData.vesselInfo?.operatingTemperature || '',
+        mdmt: grokData.vesselInfo?.mdmt || '',
+        materialSpec: grokData.vesselInfo?.materialSpec || '',
+        allowableStress: grokData.vesselInfo?.allowableStress || '',
+        jointEfficiency: grokData.vesselInfo?.jointEfficiency || '',
+        insideDiameter: grokData.vesselInfo?.insideDiameter || '',
+        overallLength: grokData.vesselInfo?.overallLength || '',
+        headType: grokData.vesselInfo?.headType || '',
+        vesselConfiguration: grokData.vesselInfo?.vesselConfiguration || '',
+        constructionCode: grokData.vesselInfo?.constructionCode || '',
+        nbNumber: grokData.vesselInfo?.nbNumber || '',
+        product: grokData.vesselInfo?.product || '',
+        insulationType: grokData.vesselInfo?.insulationType || '',
+        corrosionAllowance: grokData.vesselInfo?.corrosionAllowance || '',
+        reportNumber: grokData.reportInfo?.reportNumber || grokData.inspectionInfo?.reportNumber || '',
+        reportDate: grokData.reportInfo?.reportDate || grokData.inspectionInfo?.reportDate || '',
+        inspectionDate: grokData.reportInfo?.inspectionDate || grokData.inspectionInfo?.inspectionDate || '',
+        inspectionType: grokData.reportInfo?.inspectionType || grokData.inspectionInfo?.inspectionType || '',
+        inspectorName: grokData.reportInfo?.inspectorName || grokData.inspectionInfo?.inspectorName || '',
+        inspectorCert: grokData.reportInfo?.inspectorCert || grokData.inspectionInfo?.inspectorCertification || '',
+        clientName: grokData.clientInfo?.clientName || grokData.inspectionInfo?.clientName || '',
+        clientLocation: grokData.clientInfo?.clientLocation || grokData.inspectionInfo?.clientLocation || '',
+        executiveSummary: grokData.executiveSummary || '',
+        inspectionResults: grokData.inspectionResults || '',
+        recommendations: grokData.recommendations || '',
+        tmlReadings: grokData.thicknessMeasurements || [],
+        checklistItems: grokData.checklistItems || [],
+        nozzles: grokData.nozzles?.map(n => ({
+          nozzleNumber: n.nozzleNumber || '',
+          nozzleDescription: n.service || '',
+          nominalSize: n.size || '',
+          schedule: n.schedule || '',
+          actualThickness: n.actualThickness,
+          pipeNominalThickness: n.nominalThickness,
+          minimumRequired: n.minimumRequired,
+          acceptable: n.acceptable,
+          notes: n.notes,
+        })) || [],
+        tableA: grokData.tableA,
+      };
+    }
     
     // If hybrid parser is requested, use hybrid mixed-content parsing
     if (selectedParser === "hybrid") {

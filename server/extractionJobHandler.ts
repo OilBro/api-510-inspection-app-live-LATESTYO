@@ -5,7 +5,7 @@ import { extractionJobs } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { sanitizeExtractedData } from "./extractionSanitizer";
 
-type ParserType = "docupipe" | "manus" | "vision" | "hybrid" | undefined;
+type ParserType = "docupipe" | "manus" | "vision" | "hybrid" | "grok" | undefined;
 
 /**
  * Normalize parsed data from any parser into a consistent structure.
