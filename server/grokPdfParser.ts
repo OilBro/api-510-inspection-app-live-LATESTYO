@@ -1,6 +1,9 @@
 import { ENV } from "./_core/env";
 import { logger } from "./_core/logger";
 import { storagePut } from './storage';
+import { fromBuffer } from 'pdf2pic';
+import fs from 'fs/promises';
+import path from 'path';
 
 /**
  * Grok 5.2 PDF parser for API 510 pressure vessel inspection reports
@@ -140,14 +143,62 @@ interface GrokParsedData {
  */
 export async function parseWithGrok(pdfBuffer: Buffer): Promise<GrokParsedData> {
   try {
-    logger.info('[Grok Parser] Starting PDF upload to S3');
+    logger.info('[Grok Parser] Converting PDF to images for Grok vision API');
     
-    // Upload PDF directly to S3
+    // Convert PDF to images (Grok only accepts image formats, not PDFs)
     const timestamp = Date.now();
-    const pdfKey = `grok-parser/${timestamp}-inspection.pdf`;
+    const tempDir = `/tmp/grok-parser-${timestamp}`;
+    await fs.mkdir(tempDir, { recursive: true });
     
-    const { url: pdfUrl } = await storagePut(pdfKey, pdfBuffer, 'application/pdf');
-    logger.info(`[Grok Parser] PDF uploaded to S3: ${pdfUrl}`);
+    const options = {
+      density: 200,
+      saveFilename: `page`,
+      savePath: tempDir,
+      format: 'png',
+      width: 2000,
+      height: 2000,
+    };
+    
+    const convert = fromBuffer(pdfBuffer, options);
+    
+    // Convert all pages
+    logger.info('[Grok Parser] Converting PDF pages to PNG...');
+    const pageResults = [];
+    let pageNum = 1;
+    let hasMorePages = true;
+    
+    while (hasMorePages && pageNum <= 50) { // Limit to 50 pages max
+      try {
+        const result = await convert(pageNum, { responseType: 'buffer' });
+        if (result && result.buffer) {
+          pageResults.push(result.buffer);
+          pageNum++;
+        } else {
+          hasMorePages = false;
+        }
+      } catch (error) {
+        hasMorePages = false;
+      }
+    }
+    
+    logger.info(`[Grok Parser] Converted ${pageResults.length} pages to PNG`);
+    
+    // Upload images to S3
+    const imageUrls: string[] = [];
+    for (let i = 0; i < pageResults.length; i++) {
+      const imageKey = `grok-parser/${timestamp}-page-${i + 1}.png`;
+      const { url } = await storagePut(imageKey, pageResults[i], 'image/png');
+      imageUrls.push(url);
+    }
+    
+    logger.info(`[Grok Parser] Uploaded ${imageUrls.length} images to S3`);
+    
+    // Clean up temp directory
+    try {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    } catch (cleanupError) {
+      logger.warn('[Grok Parser] Failed to clean up temp directory:', cleanupError);
+    }
     
     // Comprehensive extraction prompt for API 510 inspection reports
     const extractionPrompt = `You are an expert at extracting vessel inspection data from API 510 pressure vessel inspection reports.
@@ -208,6 +259,24 @@ CRITICAL INSTRUCTIONS:
 
 Return ONLY valid JSON with no markdown formatting or explanation.`;
 
+    // Build message content array with text prompt and all page images
+    const messageContent: Array<{ type: string; text?: string; image_url?: { url: string; detail: string } }> = [
+      { type: 'text', text: extractionPrompt }
+    ];
+    
+    // Add all page images
+    for (const imageUrl of imageUrls) {
+      messageContent.push({
+        type: 'image_url',
+        image_url: {
+          url: imageUrl,
+          detail: 'high'
+        }
+      });
+    }
+    
+    logger.info(`[Grok Parser] Sending ${imageUrls.length} images to Grok API...`);
+    
     // Call Grok API
     const response = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
@@ -220,16 +289,7 @@ Return ONLY valid JSON with no markdown formatting or explanation.`;
         messages: [
           {
             role: 'user',
-            content: [
-              { type: 'text', text: extractionPrompt },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: pdfUrl,
-                  detail: 'high'
-                }
-              }
-            ]
+            content: messageContent
           }
         ],
         temperature: 0.1,

@@ -3296,4 +3296,22 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Update all parser type definitions across codebase
 - [x] Verify API key integration for Grok 5.2 (test passed)
 - [x] Test Grok API connection (test passed)
+- [x] Save checkpoint (version: 0d13cb76)
+
+## Fix Grok Parser Empty Extraction Results (Feb 2026)
+- [ ] Investigate why Grok parser returns empty extraction results
+- [ ] Check if Grok API supports PDF URLs or requires base64 encoding
+- [ ] Review Grok API response format and error handling
+- [ ] Fix the grokPdfParser.ts implementation
+- [ ] Add detailed error logging for debugging
+- [ ] Test with actual PDF import
+- [ ] Save checkpoint
+
+## Fix Hybrid Parser Returning Empty Fields (Feb 2026)
+- [x] Check server logs for Hybrid parser errors
+- [x] Review hybridPdfParser.ts implementation
+- [x] Identify root cause: data mapping issue between hybrid parser output and fileParser normalization
+- [x] Fix the data structure mapping in fileParser.ts (now checks top-level fields first)
+- [x] Add logging to track data flow
+- [x] Test with actual PDF import
 - [ ] Save checkpoint
