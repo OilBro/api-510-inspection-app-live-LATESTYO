@@ -3314,4 +3314,10 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Fix the data structure mapping in fileParser.ts (now checks top-level fields first)
 - [x] Add logging to track data flow
 - [x] Test with actual PDF import
+- [x] Save checkpoint (version: f296ad58)
+
+## Fix Homepage SEO Issues (Feb 2026)
+- [x] Add meta description (50-160 characters)
+- [x] Add meta keywords
+- [x] Add H2 heading to homepage
 - [ ] Save checkpoint

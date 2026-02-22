@@ -29,7 +29,7 @@ export default function Home() {
           <div className="text-center mb-8">
             <Settings className="h-16 w-16 text-primary mx-auto mb-4" />
             <h1 className="text-4xl font-bold text-gray-900 mb-2">{APP_TITLE}</h1>
-            <p className="text-lg text-gray-600">Professional Pressure Vessel Inspection System</p>
+            <h2 className="text-lg text-gray-600">Professional Pressure Vessel Inspection & ASME Compliance Software</h2>
           </div>
 
           <Card>
