@@ -3320,4 +3320,27 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Add meta description (50-160 characters)
 - [x] Add meta keywords
 - [x] Add H2 heading to homepage
+- [x] Save checkpoint (version: 0782ae55)
+
+## Fix Production Errors (Feb 2026)
+### CORS Manifest Error
+- [ ] Investigate CORS policy blocking manifest.json access
+- [ ] Fix manifest.json CORS headers
+- [ ] Test OAuth redirect flow
+
+### Database 500 Error in Component Calculations
+- [ ] Investigate SQL update failure for componentCalculations
+- [ ] Identify column mismatch or data type issues
+- [ ] Fix the database schema or query
+- [ ] Test component calculations update
+
+- [ ] Save checkpoint
+
+## Fix Production Database 500 Error (Feb 2026)
+- [x] Investigate database 500 error in component calculations update
+- [x] Identify root cause: head type value mismatch ("elliptical" vs "ellipsoidal")
+- [x] Fix frontend dropdown to use "ellipsoidal" instead of "elliptical"
+- [x] Fix CSV template header to show "ellipsoidal"
+- [x] Fix default value in import parser
+- [ ] Test component calculation updates in production
 - [ ] Save checkpoint

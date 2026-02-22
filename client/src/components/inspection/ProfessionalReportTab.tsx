@@ -794,7 +794,7 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
       "Measured Thickness (in)",
       "Joint Efficiency",
       "Allowable Stress (psi)",
-      "Head Type (elliptical/hemispherical/torispherical)",
+      "Head Type (ellipsoidal/hemispherical/torispherical)",
       "Crown Radius (in)",
       "Knuckle Radius (in)"
     ];
@@ -1067,7 +1067,7 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
           };
 
           if (componentData.componentType === "head") {
-            componentData.headType = values[13]?.trim() || "elliptical";
+            componentData.headType = values[13]?.trim() || "ellipsoidal";
             componentData.crownRadius = values[14]?.trim() || "";
             componentData.knuckleRadius = values[15]?.trim() || "";
           }
@@ -1548,7 +1548,7 @@ function ComponentEditForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="elliptical">Elliptical (2:1)</SelectItem>
+                <SelectItem value="ellipsoidal">Ellipsoidal (2:1)</SelectItem>
                 <SelectItem value="hemispherical">Hemispherical</SelectItem>
                 <SelectItem value="torispherical">Torispherical</SelectItem>
               </SelectContent>
