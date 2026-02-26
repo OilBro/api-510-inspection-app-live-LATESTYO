@@ -3342,5 +3342,5 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Fix frontend dropdown to use "ellipsoidal" instead of "elliptical"
 - [x] Fix CSV template header to show "ellipsoidal"
 - [x] Fix default value in import parser
-- [ ] Test component calculation updates in production
-- [ ] Save checkpoint
+- [x] Test component calculation updates in production
+- [x] Save checkpoint (version: ae2e534b)
