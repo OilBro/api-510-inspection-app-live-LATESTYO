@@ -1396,6 +1396,22 @@ function ComponentEditForm({
     actualThickness: calculation.actualThickness || '',
     timeSpan: calculation.timeSpan || '',
     nextInspectionYears: calculation.nextInspectionYears || '5',
+    // Calculated result fields — preserved on save so they don't get wiped
+    minimumThickness: calculation.minimumThickness || '',
+    corrosionRate: calculation.corrosionRate || '',
+    corrosionRateLongTerm: calculation.corrosionRateLongTerm || '',
+    corrosionRateShortTerm: calculation.corrosionRateShortTerm || '',
+    governingRateType: calculation.governingRateType || '',
+    remainingLife: calculation.remainingLife || '',
+    corrosionAllowance: calculation.corrosionAllowance || '',
+    calculatedMAWP: calculation.calculatedMAWP || '',
+    mawpAtNextInspection: calculation.mawpAtNextInspection || '',
+    thicknessAtNextInspection: calculation.thicknessAtNextInspection || '',
+    pressureAtNextInspection: calculation.pressureAtNextInspection || '',
+    dataQualityStatus: calculation.dataQualityStatus || '',
+    dataQualityNotes: calculation.dataQualityNotes || '',
+    governingRateReason: calculation.governingRateReason || '',
+    headFactor: calculation.headFactor || '',
   });
 
   const handleChange = (field: string, value: string) => {
@@ -1573,6 +1589,66 @@ function ComponentEditForm({
         </div>
       )}
 
+      {/* Calculated Results — Manual Override Section */}
+      <div className="border-t pt-4 mt-4">
+        <h4 className="text-sm font-semibold text-blue-700 mb-3 flex items-center gap-2">
+          📊 Calculated Results (Override)
+          <span className="text-xs font-normal text-muted-foreground">Edit these to manually override final report values</span>
+        </h4>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="edit-minimumThickness">Min Thickness / t_min (in)</Label>
+            <Input
+              id="edit-minimumThickness"
+              value={formData.minimumThickness}
+              onChange={(e) => handleChange('minimumThickness', e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-corrosionRate">Corrosion Rate (in/yr)</Label>
+            <Input
+              id="edit-corrosionRate"
+              value={formData.corrosionRate}
+              onChange={(e) => handleChange('corrosionRate', e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-remainingLife">Remaining Life (years)</Label>
+            <Input
+              id="edit-remainingLife"
+              value={formData.remainingLife}
+              onChange={(e) => handleChange('remainingLife', e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-4 mt-3">
+          <div className="space-y-2">
+            <Label htmlFor="edit-corrosionAllowance">Corrosion Allowance (in)</Label>
+            <Input
+              id="edit-corrosionAllowance"
+              value={formData.corrosionAllowance}
+              onChange={(e) => handleChange('corrosionAllowance', e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-calculatedMAWP">Calculated MAWP (psi)</Label>
+            <Input
+              id="edit-calculatedMAWP"
+              value={formData.calculatedMAWP}
+              onChange={(e) => handleChange('calculatedMAWP', e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-mawpAtNextInspection">MAWP @ Next Inspection (psi)</Label>
+            <Input
+              id="edit-mawpAtNextInspection"
+              value={formData.mawpAtNextInspection}
+              onChange={(e) => handleChange('mawpAtNextInspection', e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
           Cancel
@@ -1584,7 +1660,7 @@ function ComponentEditForm({
               Saving...
             </>
           ) : (
-            'Save & Recalculate'
+            'Save Changes'
           )}
         </Button>
       </div>
