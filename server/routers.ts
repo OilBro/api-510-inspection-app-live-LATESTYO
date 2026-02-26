@@ -48,15 +48,15 @@ function calculateTimeSpanYears(
   defaultYears: number = 10
 ): number {
   if (!previousDate || !currentDate) return defaultYears;
-  
+
   const prev = new Date(previousDate);
   const curr = new Date(currentDate);
-  
+
   if (isNaN(prev.getTime()) || isNaN(curr.getTime())) return defaultYears;
-  
+
   const diffMs = curr.getTime() - prev.getTime();
   const diffYears = diffMs / (1000 * 60 * 60 * 24 * 365.25);
-  
+
   return diffYears > 0 ? diffYears : defaultYears;
 }
 
@@ -104,48 +104,48 @@ export const appRouter = router({
   }),
 
   inspections: router({
-      // Get original uploaded PDF for an inspection
-  getOriginalPdf: protectedProcedure
-    .input(z.object({ inspectionId: z.string() }))
-    .query(async ({ input, ctx }) => {
-      const db = await import('./db');
-      
-      // Get inspection to verify ownership
-      const inspection = await db.getInspection(input.inspectionId);
-      if (!inspection) {
-        throw new Error('Inspection not found');
-      }
-      
-      // Admin can access any inspection, regular users only their own
-      if (ctx.user.role !== 'admin' && inspection.userId !== ctx.user.id) {
-        throw new Error('Unauthorized');
-      }
-      
-      // Get imported files for this inspection
-      const files = await db.getInspectionImportedFiles(input.inspectionId);
-      
-      // Find the first PDF file
-      const pdfFile = files.find((f: any) => f.fileType === 'pdf' || f.fileName?.endsWith('.pdf'));
-      
-      if (!pdfFile) {
-        return null;
-      }
-      
-      return {
-        url: pdfFile.fileUrl,
-        fileName: pdfFile.fileName,
-      };
-    }),
+    // Get original uploaded PDF for an inspection
+    getOriginalPdf: protectedProcedure
+      .input(z.object({ inspectionId: z.string() }))
+      .query(async ({ input, ctx }) => {
+        const db = await import('./db');
 
-  // Get all inspections - admin sees all, regular users see only their own
-  list: protectedProcedure.query(async ({ ctx }) => {
+        // Get inspection to verify ownership
+        const inspection = await db.getInspection(input.inspectionId);
+        if (!inspection) {
+          throw new Error('Inspection not found');
+        }
+
+        // Admin can access any inspection, regular users only their own
+        if (ctx.user.role !== 'admin' && inspection.userId !== ctx.user.id) {
+          throw new Error('Unauthorized');
+        }
+
+        // Get imported files for this inspection
+        const files = await db.getInspectionImportedFiles(input.inspectionId);
+
+        // Find the first PDF file
+        const pdfFile = files.find((f: any) => f.fileType === 'pdf' || f.fileName?.endsWith('.pdf'));
+
+        if (!pdfFile) {
+          return null;
+        }
+
+        return {
+          url: pdfFile.fileUrl,
+          fileName: pdfFile.fileName,
+        };
+      }),
+
+    // Get all inspections - admin sees all, regular users see only their own
+    list: protectedProcedure.query(async ({ ctx }) => {
       const db = await import('./db');
-      
+
       // Admin users can see all inspections
       if (ctx.user.role === 'admin') {
         return await db.getAllInspections();
       }
-      
+
       // Regular users only see their own inspections
       return await db.getUserInspections(ctx.user.id);
     }),
@@ -155,12 +155,12 @@ export const appRouter = router({
       .input(z.object({ id: z.string() }))
       .query(async ({ input, ctx }) => {
         const inspection = await db.getInspection(input.id);
-        
+
         // Admin can access any inspection, regular users only their own
         if (ctx.user.role !== 'admin' && inspection && inspection.userId !== ctx.user.id) {
           throw new Error('Unauthorized');
         }
-        
+
         return inspection;
       }),
 
@@ -256,14 +256,14 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { id, inspectionResults, recommendations } = input;
         const updateData: Record<string, string | null> = {};
-        
+
         if (inspectionResults !== undefined) {
           updateData.inspectionResults = inspectionResults;
         }
         if (recommendations !== undefined) {
           updateData.recommendations = recommendations;
         }
-        
+
         await db.updateInspection(id, updateData);
         return { success: true };
       }),
@@ -276,10 +276,10 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { invokeLLM } = await import("./_core/llm");
         const { jsonrepair } = await import('jsonrepair');
-        
+
         try {
           logger.info("[Extract Results] Starting extraction from PDF", { url: input.pdfUrl });
-          
+
           // Use LLM to extract Section 3.0 and 4.0 from the PDF
           const response = await invokeLLM({
             messages: [
@@ -372,7 +372,7 @@ Return JSON in this exact format:
 
           const messageContent = response.choices[0].message.content;
           let extractedData;
-          
+
           try {
             extractedData = JSON.parse(typeof messageContent === 'string' ? messageContent : "{}");
           } catch (parseError) {
@@ -420,22 +420,22 @@ Return JSON in this exact format:
       }))
       .mutation(async ({ input, ctx }) => {
         const { importCMLCorrelations } = await import('./cmlCorrelationHelper');
-        
+
         // Verify inspection exists and user has access
         const inspection = await db.getInspection(input.inspectionId);
         if (!inspection) {
           throw new Error('Inspection not found');
         }
-        
+
         // Admin can access any inspection, regular users only their own
         if (ctx.user.role !== 'admin' && inspection.userId !== ctx.user.id) {
           throw new Error('Unauthorized');
         }
-        
+
         const count = await importCMLCorrelations(input.inspectionId, input.correlations);
-        
+
         logger.info(`[CML Correlation] Imported ${count} correlation mappings for inspection ${input.inspectionId}`);
-        
+
         return {
           success: true,
           count,
@@ -480,7 +480,7 @@ Return JSON in this exact format:
       .mutation(async ({ input }) => {
         // Check if calculation exists
         const existing = await db.getCalculation(input.inspectionId);
-        
+
         if (existing) {
           // Update existing
           await db.updateCalculation(existing.id, input);
@@ -540,29 +540,29 @@ Return JSON in this exact format:
         // Auto-calculate loss and corrosion rate
         let calculatedLoss: string | undefined = input.loss;
         let calculatedCorrosionRate: string | undefined = input.corrosionRate;
-        
+
         const current = input.currentThickness ? parseFloat(input.currentThickness) : null;
         const previous = input.previousThickness ? parseFloat(input.previousThickness) : null;
         const nominal = input.nominalThickness ? parseFloat(input.nominalThickness) : null;
-        
+
         // Calculate loss percentage: (Nominal - Current) / Nominal * 100
         if (nominal && current && nominal > 0) {
           const lossPercent = ((nominal - current) / nominal) * 100;
           calculatedLoss = lossPercent.toFixed(2);
         }
-        
+
         // Calculate corrosion rate in mpy (mils per year)
         // Use actual time interval from inspection dates
         if (previous && current) {
           // Note: TML readings don't have inspection dates in input
           // Time span calculation happens at inspection level
           const timeSpanYears = 1; // Default for TML-level calculations
-          
+
           const thicknessLoss = previous - current;
           const corrosionRateMpy = (thicknessLoss / timeSpanYears) * 1000; // Convert inches to mils
           calculatedCorrosionRate = corrosionRateMpy.toFixed(2);
         }
-        
+
         const reading = {
           id: nanoid(),
           ...input,
@@ -598,44 +598,44 @@ Return JSON in this exact format:
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
-        
+
         // Get existing reading to merge values for calculation
         const existingReadings = await db.getTmlReadings('');
         const existing = existingReadings.find(r => r.id === id);
-        
+
         // Merge existing and new values
-        const current = data.currentThickness ? parseFloat(data.currentThickness) : 
-                       (existing?.currentThickness ? parseFloat(String(existing.currentThickness)) : null);
-        const previous = data.previousThickness ? parseFloat(data.previousThickness) : 
-                        (existing?.previousThickness ? parseFloat(String(existing.previousThickness)) : null);
-        const nominal = data.nominalThickness ? parseFloat(data.nominalThickness) : 
-                       (existing?.nominalThickness ? parseFloat(String(existing.nominalThickness)) : null);
-        
+        const current = data.currentThickness ? parseFloat(data.currentThickness) :
+          (existing?.currentThickness ? parseFloat(String(existing.currentThickness)) : null);
+        const previous = data.previousThickness ? parseFloat(data.previousThickness) :
+          (existing?.previousThickness ? parseFloat(String(existing.previousThickness)) : null);
+        const nominal = data.nominalThickness ? parseFloat(data.nominalThickness) :
+          (existing?.nominalThickness ? parseFloat(String(existing.nominalThickness)) : null);
+
         // Auto-calculate loss and corrosion rate if not explicitly provided
         let calculatedLoss = data.loss;
         let calculatedCorrosionRate = data.corrosionRate;
-        
+
         // Calculate loss in inches: Nominal - Current
         let calculatedLossPercent;
         if (!calculatedLoss && nominal !== null && current !== null) {
           const lossInches = nominal - current;
           calculatedLoss = lossInches.toFixed(4);
-          
+
           // Also calculate percentage
           if (nominal > 0) {
             const lossPercent = (lossInches / nominal) * 100;
             calculatedLossPercent = lossPercent.toFixed(2);
           }
         }
-        
+
         // Calculate corrosion rate in mpy (mils per year)
         if (!calculatedCorrosionRate && previous && current) {
           let timeSpanYears = 1; // Default to 1 year if dates not available
-          
+
           // Calculate time span from inspection dates
           const prevDate = existing?.previousInspectionDate;
           const currDate = existing?.currentInspectionDate;
-          
+
           if (prevDate && currDate) {
             const prevTime = new Date(prevDate).getTime();
             const currTime = new Date(currDate).getTime();
@@ -645,19 +645,19 @@ Return JSON in this exact format:
               timeSpanYears = diffYears;
             }
           }
-          
+
           const thicknessLoss = previous - current;
           const corrosionRateMpy = (thicknessLoss / timeSpanYears) * 1000;
           calculatedCorrosionRate = corrosionRateMpy.toFixed(2);
         }
-        
+
         // Auto-calculate status if not provided
         let calculatedStatus = data.status;
         if (!calculatedStatus && current !== null && nominal !== null) {
           // Get inspection data for status calculation
           const inspection = await db.getInspection(existing?.inspectionId || '');
-          if (inspection && inspection.designPressure && inspection.insideDiameter && 
-              inspection.materialSpec && inspection.designTemperature) {
+          if (inspection && inspection.designPressure && inspection.insideDiameter &&
+            inspection.materialSpec && inspection.designTemperature) {
             const { calculateTMLStatus } = require('./tmlStatusCalculator');
             try {
               calculatedStatus = calculateTMLStatus({
@@ -675,15 +675,27 @@ Return JSON in this exact format:
             }
           }
         }
-        
+
+        // CRITICAL FIX: Sync currentThickness ↔ tActual
+        // The TML Editor writes to 'currentThickness' (legacy field)
+        // but the Calculation Panel reads 'tActual' (canonical field).
+        // Both must stay in sync.
+        const syncedData: Record<string, any> = { ...data };
+        if (data.currentThickness && !syncedData.tActual) {
+          syncedData.tActual = data.currentThickness;
+        }
+        if (syncedData.tActual && !data.currentThickness) {
+          syncedData.currentThickness = syncedData.tActual;
+        }
+
         const updateData = {
-          ...data,
+          ...syncedData,
           loss: calculatedLoss,
           lossPercent: calculatedLossPercent,
           corrosionRate: calculatedCorrosionRate,
           status: calculatedStatus,
         };
-        
+
         await db.updateTmlReading(id, updateData);
         return { success: true };
       }),
@@ -716,17 +728,17 @@ Return JSON in this exact format:
       }))
       .mutation(async ({ input }) => {
         const { inspectionId, updates } = input;
-        
+
         // Import stationKey generator for recomputation
         const { generateStationKey } = await import('./lib/stationKeyNormalization');
         const { normalizeComponentGroup } = await import('./lib/componentGroupNormalizer');
-        
+
         // Get existing TML readings for this inspection
         const existingReadings = await db.getTmlReadings(inspectionId);
-        
+
         let updatedCount = 0;
         let notFoundCount = 0;
-        
+
         for (const update of updates) {
           // Find matching TML reading by CML number (normalized)
           const normalizedCml = update.legacyLocationId.replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
@@ -734,7 +746,7 @@ Return JSON in this exact format:
             const existingNormalized = (r.legacyLocationId || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
             return existingNormalized === normalizedCml;
           });
-          
+
           if (matching) {
             // Calculate tActual as minimum of tml1-4
             const readings = [
@@ -743,19 +755,19 @@ Return JSON in this exact format:
               update.tml3,
               update.tml4,
             ].filter((v): v is number => v !== undefined && v !== null && !isNaN(v));
-            
+
             const newValue = readings.length > 0 ? Math.min(...readings) : undefined;
-            
+
             // Resolve final field values (update takes precedence over existing)
             const finalComponentType = update.componentType ?? matching.componentType ?? matching.component ?? undefined;
             const finalLocation = update.location ?? matching.location ?? undefined;
             const finalAngleDeg = update.angleDeg ?? (matching.angleDeg != null ? Number(matching.angleDeg) : undefined);
-            
+
             // Recompute componentGroup from componentType
-            const finalComponentGroup = finalComponentType 
-              ? normalizeComponentGroup(finalComponentType) 
+            const finalComponentGroup = finalComponentType
+              ? normalizeComponentGroup(finalComponentType)
               : (matching.componentGroup || undefined);
-            
+
             // Recompute stationKey from location + angle + componentType
             let finalStationKey = matching.stationKey || undefined;
             if (finalComponentType || finalLocation || finalAngleDeg != null) {
@@ -769,34 +781,34 @@ Return JSON in this exact format:
               });
               finalStationKey = skResult.stationKey;
             }
-            
+
             // Build update object - COMPLETE FIELD SYNC
             // Every related field pair stays in lockstep
             const updateData: Record<string, any> = {};
-            
+
             // --- Thickness fields: tActual = currentThickness = newValue ---
             if (newValue !== undefined) {
               updateData.tActual = newValue.toString();
               updateData.currentThickness = newValue.toString();
             }
-            
+
             // --- Component fields: componentType = component = newComponent ---
             if (update.componentType !== undefined) {
               updateData.componentType = update.componentType;
               updateData.component = update.componentType;
             }
-            
+
             // --- Location ---
             if (update.location !== undefined) {
               updateData.location = update.location;
             }
-            
+
             // --- Angle fields: angle string + angleDeg numeric ---
             if (finalAngleDeg != null) {
               updateData.angleDeg = finalAngleDeg;
               updateData.angle = `${finalAngleDeg}°`;
             }
-            
+
             // --- StationKey + ComponentGroup (recomputed) ---
             if (finalStationKey) {
               updateData.stationKey = finalStationKey;
@@ -804,33 +816,33 @@ Return JSON in this exact format:
             if (finalComponentGroup) {
               updateData.componentGroup = finalComponentGroup;
             }
-            
+
             // --- Individual readings ---
             if (update.tml1 !== undefined) updateData.tml1 = update.tml1.toString();
             if (update.tml2 !== undefined) updateData.tml2 = update.tml2.toString();
             if (update.tml3 !== undefined) updateData.tml3 = update.tml3.toString();
             if (update.tml4 !== undefined) updateData.tml4 = update.tml4.toString();
-            
+
             // --- Previous thickness ---
             if (update.previousThickness !== undefined) {
               updateData.previousThickness = update.previousThickness.toString();
             }
-            
+
             // --- Size ---
             if (update.size !== undefined) {
               updateData.nozzleSize = update.size;
             }
-            
+
             await db.updateTmlReading(matching.id, updateData);
             updatedCount++;
-            
+
             logger.info(`[TML Batch Update] Updated CML ${update.legacyLocationId}: tActual=${newValue}, stationKey=${finalStationKey}, componentGroup=${finalComponentGroup}`);
           } else {
             notFoundCount++;
             logger.warn(`[TML Batch Update] CML ${update.legacyLocationId} not found in inspection ${inspectionId}`);
           }
         }
-        
+
         return {
           success: true,
           updatedCount,
@@ -860,7 +872,7 @@ Return JSON in this exact format:
       }))
       .mutation(async ({ input }) => {
         const existing = await db.getExternalInspection(input.inspectionId);
-        
+
         if (existing) {
           // FIX: Now actually updating!
           await db.updateExternalInspection(existing.id, {
@@ -901,7 +913,7 @@ Return JSON in this exact format:
       }))
       .mutation(async ({ input }) => {
         const existing = await db.getInternalInspection(input.inspectionId);
-        
+
         if (existing) {
           // FIX: Now actually updating!
           await db.updateInternalInspection(existing.id, {
@@ -981,16 +993,16 @@ Return JSON in this exact format:
         const base64Size = input.fileData.length;
         const estimatedFileSize = Math.floor(base64Size * 0.75);
         const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB limit
-        
+
         if (estimatedFileSize > MAX_FILE_SIZE) {
           throw new Error(`File too large: ${(estimatedFileSize / 1024 / 1024).toFixed(1)}MB exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit. Please use a smaller PDF or split into multiple files.`);
         }
-        
+
         logger.info(`[Extraction Job] Starting job for file: ${input.fileName}, estimated size: ${(estimatedFileSize / 1024 / 1024).toFixed(2)}MB`);
-        
+
         const jobId = nanoid();
         const drizzleDb = await db.getDb();
-        
+
         if (!drizzleDb) {
           throw new Error("Database not available");
         }
@@ -1031,7 +1043,7 @@ Return JSON in this exact format:
       }))
       .query(async ({ ctx, input }) => {
         const drizzleDb = await db.getDb();
-        
+
         if (!drizzleDb) {
           throw new Error("Database not available");
         }
@@ -1070,7 +1082,7 @@ Return JSON in this exact format:
       .mutation(async ({ ctx, input }) => {
         try {
           logger.info(`[Preview Extraction] Starting preview for ${input.fileName}`);
-          
+
           // Decode base64 file data
           const buffer = Buffer.from(input.fileData, "base64");
 
@@ -1315,7 +1327,7 @@ Return JSON in this exact format:
             const existing = userInspections.find(
               (insp: any) => insp.vesselTagNumber === input.vesselInfo.vesselTagNumber
             );
-            
+
             if (existing) {
               inspection = existing;
             } else {
@@ -1393,11 +1405,11 @@ Return JSON in this exact format:
           // Save TML readings
           for (const tml of input.tmlReadings) {
             if (!tml.legacyLocationId && !tml.currentThickness) continue;
-            
+
             // CRITICAL: cmlNumber, componentType, and location are NOT NULL in database
             // cmlNumber is limited to 10 chars, location to 50 chars
             const legacyLocationId = (tml.legacyLocationId || `CML-${Date.now()}`).substring(0, 10);
-            
+
             // Normalize component names and types for consistency
             const normalized = normalizeComponent(
               tml.component,
@@ -1408,7 +1420,7 @@ Return JSON in this exact format:
             const componentType = normalized.componentType.substring(0, 255);
             const componentName = normalized.component.substring(0, 255);
             const location = (tml.location || 'General').substring(0, 50);
-            
+
             await db.createTmlReading({
               id: nanoid(),
               inspectionId: inspection.id,
@@ -1429,7 +1441,7 @@ Return JSON in this exact format:
           // Save nozzles
           for (const noz of input.nozzles) {
             if (!noz.nozzleNumber) continue;
-            
+
             await db.createNozzleEvaluation({
               id: nanoid(),
               inspectionId: inspection.id,
@@ -1508,7 +1520,7 @@ Return JSON in this exact format:
             report = await professionalReportDb.getProfessionalReportByInspection(inspection.id);
             logger.info(`[Confirm Extraction] Auto-created professional report ${reportId}`);
           }
-          
+
           // Generate component calculations (Shell, East Head, West Head)
           if (report) {
             try {
@@ -1525,8 +1537,8 @@ Return JSON in this exact format:
             inspectionId: inspection.id,
             isNewInspection,
             checklistItemsCreated,
-            message: isNewInspection 
-              ? 'New inspection created successfully' 
+            message: isNewInspection
+              ? 'New inspection created successfully'
               : 'Data added to existing inspection',
           };
         } catch (error) {
@@ -1550,13 +1562,13 @@ Return JSON in this exact format:
           const base64Size = input.fileData.length;
           const estimatedFileSize = Math.floor(base64Size * 0.75);
           const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB limit
-          
+
           if (estimatedFileSize > MAX_FILE_SIZE) {
             throw new Error(`File too large: ${(estimatedFileSize / 1024 / 1024).toFixed(1)}MB exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit. Please use a smaller PDF or split into multiple files.`);
           }
-          
+
           logger.info(`[PDF Import] Processing file: ${input.fileName}, estimated size: ${(estimatedFileSize / 1024 / 1024).toFixed(2)}MB`);
-          
+
           // Decode base64 file data
           const buffer = Buffer.from(input.fileData, "base64");
 
@@ -1583,7 +1595,7 @@ Return JSON in this exact format:
             const match = str.match(/([0-9]+\.?[0-9]*)/);
             return match ? match[1] : null;
           };
-          
+
           const parseInt = (value: any): number | null => {
             if (value === null || value === undefined || value === '') return null;
             const num = Number(value);
@@ -1600,7 +1612,7 @@ Return JSON in this exact format:
           // Get or create inspection record
           let inspection: any;
           let isNewInspection = false;
-          
+
           if (input.inspectionId) {
             // Append to existing inspection
             inspection = await db.getInspection(input.inspectionId);
@@ -1621,7 +1633,7 @@ Return JSON in this exact format:
                 (insp: any) => insp.vesselTagNumber === parsedData.vesselTagNumber
               );
             }
-            
+
             if (existingInspection) {
               // Update existing inspection with same vessel tag
               isNewInspection = false;
@@ -1641,8 +1653,8 @@ Return JSON in this exact format:
           }
 
           // Track successfully mapped fields for learning
-          const successfulMappings: Array<{sourceField: string, targetSection: string, targetField: string, sourceValue: string}> = [];
-          
+          const successfulMappings: Array<{ sourceField: string, targetSection: string, targetField: string, sourceValue: string }> = [];
+
           // Helper to track successful mapping
           const trackMapping = (sourceField: string, targetField: string, value: any) => {
             successfulMappings.push({
@@ -1652,7 +1664,7 @@ Return JSON in this exact format:
               sourceValue: String(value)
             });
           };
-          
+
           // Merge optional fields (only update if new value exists and old doesn't, or if creating new)
           if (parsedData.vesselName && (isNewInspection || !inspection.vesselName)) {
             inspection.vesselName = String(parsedData.vesselName).substring(0, 500);
@@ -1712,7 +1724,7 @@ Return JSON in this exact format:
               trackMapping('overallLength', 'overallLength', parsedData.overallLength);
             }
           }
-          
+
           // Additional vessel parameters for calculations
           if (parsedData.headType && (isNewInspection || !inspection.headType)) {
             inspection.headType = String(parsedData.headType).substring(0, 255);
@@ -1743,7 +1755,7 @@ Return JSON in this exact format:
               trackMapping('specificGravity', 'specificGravity', parsedData.specificGravity);
             }
           }
-          
+
           // Save inspection date if available
           if (parsedData.inspectionDate) {
             try {
@@ -1802,11 +1814,11 @@ Return JSON in this exact format:
           const createdTMLs: any[] = [];
           if (parsedData.tmlReadings && parsedData.tmlReadings.length > 0) {
             logger.info(`[PDF Import] Processing ${parsedData.tmlReadings.length} TML readings with deduplication`);
-            
+
             // Consolidate duplicate readings into single records
             const consolidatedReadings = consolidateTMLReadings(parsedData.tmlReadings);
             logger.info(`[PDF Import] Consolidated to ${consolidatedReadings.length} unique CML records`);
-            
+
             for (const consolidated of consolidatedReadings) {
               const tmlRecord: any = {
                 id: nanoid(),
@@ -1820,7 +1832,7 @@ Return JSON in this exact format:
                 tmlId: `TML-${nanoid()}`,
                 component: consolidated.componentType,
               };
-              
+
               // Add metadata fields
               if (consolidated.readingType) tmlRecord.readingType = consolidated.readingType;
               if (consolidated.nozzleSize) tmlRecord.nozzleSize = consolidated.nozzleSize;
@@ -1829,14 +1841,14 @@ Return JSON in this exact format:
                 // Store first angle as representative (or "Multi" if multiple)
                 tmlRecord.angle = consolidated.angles.length === 1 ? consolidated.angles[0] : 'Multi';
               }
-              
+
               // Add thickness readings (tml1-4)
               if (consolidated.tml1 !== undefined) tmlRecord.tml1 = consolidated.tml1.toString();
               if (consolidated.tml2 !== undefined) tmlRecord.tml2 = consolidated.tml2.toString();
               if (consolidated.tml3 !== undefined) tmlRecord.tml3 = consolidated.tml3.toString();
               if (consolidated.tml4 !== undefined) tmlRecord.tml4 = consolidated.tml4.toString();
               if (consolidated.tActual !== undefined) tmlRecord.tActual = consolidated.tActual.toString();
-              
+
               // Add historical data
               if (consolidated.nominalThickness !== undefined) {
                 tmlRecord.nominalThickness = consolidated.nominalThickness.toString();
@@ -1844,16 +1856,16 @@ Return JSON in this exact format:
               if (consolidated.previousThickness !== undefined) {
                 tmlRecord.previousThickness = consolidated.previousThickness.toString();
               }
-              
+
               // Legacy currentThickness field (use tActual)
               if (consolidated.tActual !== undefined) {
                 tmlRecord.currentThickness = consolidated.tActual.toString();
               }
-              
+
               await db.createTmlReading(tmlRecord);
               createdTMLs.push(tmlRecord);
             }
-            
+
             logger.info(`[PDF Import] Created ${createdTMLs.length} TML records (eliminated ${parsedData.tmlReadings.length - createdTMLs.length} duplicates)`);
           }
 
@@ -1869,7 +1881,7 @@ Return JSON in this exact format:
                 checkedBy: item.checkedBy,
                 checkedDate: item.checkedDate,
               };
-              
+
               // Auto-map checked status for preview
               if (item.checked !== undefined) {
                 preview.checked = Boolean(item.checked);
@@ -1879,7 +1891,7 @@ Return JSON in this exact format:
               } else {
                 preview.checked = false;
               }
-              
+
               return preview;
             });
           }
@@ -1911,7 +1923,7 @@ Return JSON in this exact format:
           ]);
 
           const unmatchedFields: any[] = [];
-          
+
           // Flatten parsed data and find unmatched fields
           const flattenObject = (obj: any, prefix = '') => {
             for (const [key, value] of Object.entries(obj)) {
@@ -1944,7 +1956,7 @@ Return JSON in this exact format:
               id: nanoid(),
               inspectionId: inspection.id,
             };
-            
+
             // Populate calculation fields from imported vessel data (only fields that exist in schema)
             if (inspection.designPressure) {
               calculationRecord.minThicknessDesignPressure = inspection.designPressure;
@@ -1961,16 +1973,16 @@ Return JSON in this exact format:
                 calculationRecord.mawpCorrosionAllowance = ca;
               }
             }
-            
+
             // Set default values for calculation fields
             calculationRecord.minThicknessAllowableStress = 15000; // Default allowable stress (psi)
             calculationRecord.minThicknessJointEfficiency = 1.0; // Default joint efficiency
             calculationRecord.mawpAllowableStress = 15000;
             calculationRecord.mawpJointEfficiency = 1.0;
-            
+
             await db.saveCalculations(calculationRecord);
             logger.info(`[PDF Import] Auto-created calculations record for inspection ${inspection.id}`);
-            
+
             // Also create component calculation for Professional Report
             let report = await professionalReportDb.getProfessionalReportByInspection(inspection.id);
             if (!report) {
@@ -1989,14 +2001,14 @@ Return JSON in this exact format:
               report = await professionalReportDb.getProfessionalReportByInspection(inspection.id);
               logger.info(`[PDF Import] Auto-created professional report ${reportId}`);
             }
-            
+
             // Create shell component calculation with imported data if report exists
             if (report) {
               // Get average thickness values from TML readings for shell
-              const shellTMLs = createdTMLs.filter((tml: any) => 
+              const shellTMLs = createdTMLs.filter((tml: any) =>
                 tml.component && tml.component.toLowerCase().includes('shell')
               );
-              
+
               let avgCurrentThickness, avgPreviousThickness, avgNominalThickness;
               if (shellTMLs.length > 0) {
                 const currentThicknesses = shellTMLs
@@ -2008,7 +2020,7 @@ Return JSON in this exact format:
                 const nominalThicknesses = shellTMLs
                   .map((t: any) => parseFloat(t.nominalThickness))
                   .filter((v: number) => !isNaN(v));
-                
+
                 if (currentThicknesses.length > 0) {
                   avgCurrentThickness = (currentThicknesses.reduce((a: number, b: number) => a + b, 0) / currentThicknesses.length).toFixed(4);
                 }
@@ -2019,14 +2031,14 @@ Return JSON in this exact format:
                   avgNominalThickness = (nominalThicknesses.reduce((a: number, b: number) => a + b, 0) / nominalThicknesses.length).toFixed(4);
                 }
               }
-              
+
               // Calculate derived values
               const P = parseFloat(inspection.designPressure || "0");
               const R = inspection.insideDiameter ? parseFloat(inspection.insideDiameter) / 2 : 0;
               const S = parseFloat(inspection.allowableStress || '20000'); // Allowable stress from inspection or default
               const E = parseFloat(inspection.jointEfficiency || '0.85'); // Joint efficiency from inspection or default
               const CA = 0.125; // Default corrosion allowance (1/8 inch)
-              
+
               // Minimum thickness calculation (ASME Section VIII Div 1, UG-27)
               // t_min = PR/(SE - 0.6P) - DO NOT add CA here
               let minimumThickness;
@@ -2036,27 +2048,27 @@ Return JSON in this exact format:
                   minimumThickness = ((P * R) / denominator).toFixed(4);
                 }
               }
-              
+
               // Corrosion rate and remaining life calculation
               let corrosionRate, remainingLife, corrosionAllowance;
               if (avgPreviousThickness && avgCurrentThickness && minimumThickness) {
                 const prevThick = parseFloat(avgPreviousThickness);
                 const currThick = parseFloat(avgCurrentThickness);
                 const minThick = parseFloat(minimumThickness);
-                
+
                 // Calculate actual time between inspections from inspection date
                 const timeSpan = calculateTimeSpanYears(
                   inspection.inspectionDate,
                   new Date(),
                   10 // Default to 10 years if inspection date not available
                 );
-                
+
                 // Corrosion rate: Cr = (t_prev - t_act) / Years
                 corrosionRate = ((prevThick - currThick) / timeSpan).toFixed(6);
-                
+
                 // Corrosion allowance: Ca = t_act - t_min
                 corrosionAllowance = (currThick - minThick).toFixed(4);
-                
+
                 // Remaining life: RL = Ca / Cr
                 const cr = parseFloat(corrosionRate);
                 const ca = parseFloat(corrosionAllowance);
@@ -2067,7 +2079,7 @@ Return JSON in this exact format:
                   remainingLife = "0.00";
                 }
               }
-              
+
               await professionalReportDb.createComponentCalculation({
                 id: nanoid(),
                 reportId: report.id,
@@ -2095,7 +2107,7 @@ Return JSON in this exact format:
                 corrosionAllowance: CA.toString(),
               });
               logger.info(`[PDF Import] Auto-created shell component calculation for report ${report.id}`);
-              
+
               // Create East Head component calculation with improved detection
               // Matches: 'east head', 'e head', 'head 1', 'head-1', 'left head', or any head without west/right keywords
               // IMPORTANT: Also check location field for head identification
@@ -2104,24 +2116,24 @@ Return JSON in this exact format:
                 const compType = (tml.componentType || '').toLowerCase();
                 const loc = (tml.location || '').toLowerCase();
                 const combined = `${comp} ${compType}`;
-                
+
                 // Explicit east head matches (check location too)
                 if (combined.includes('east') || loc.includes('east head')) return true;
                 if (combined.includes('e head')) return true;
                 if (combined.includes('head 1') || combined.includes('head-1')) return true;
                 if (combined.includes('left head')) return true;
-                
+
                 // If it's a head but not explicitly west/right, treat as east (first head)
                 // Exclude if location indicates west head
                 if ((combined.includes('head') && !combined.includes('shell')) &&
-                    !combined.includes('west') && !combined.includes('w head') &&
-                    !combined.includes('head 2') && !combined.includes('head-2') &&
-                    !combined.includes('right') && !loc.includes('west')) {
+                  !combined.includes('west') && !combined.includes('w head') &&
+                  !combined.includes('head 2') && !combined.includes('head-2') &&
+                  !combined.includes('right') && !loc.includes('west')) {
                   return true;
                 }
                 return false;
               });
-              
+
               if (eastHeadTMLs.length > 0) {
                 const eastCurrentThicknesses = eastHeadTMLs
                   .map((t: any) => parseFloat(t.currentThickness))
@@ -2132,14 +2144,14 @@ Return JSON in this exact format:
                 const eastNominalThicknesses = eastHeadTMLs
                   .map((t: any) => parseFloat(t.nominalThickness))
                   .filter((v: number) => !isNaN(v));
-                
-                const eastAvgCurrent = eastCurrentThicknesses.length > 0 ? 
+
+                const eastAvgCurrent = eastCurrentThicknesses.length > 0 ?
                   (eastCurrentThicknesses.reduce((a, b) => a + b, 0) / eastCurrentThicknesses.length).toFixed(4) : undefined;
-                const eastAvgPrevious = eastPreviousThicknesses.length > 0 ? 
+                const eastAvgPrevious = eastPreviousThicknesses.length > 0 ?
                   (eastPreviousThicknesses.reduce((a, b) => a + b, 0) / eastPreviousThicknesses.length).toFixed(4) : undefined;
-                const eastAvgNominal = eastNominalThicknesses.length > 0 ? 
+                const eastAvgNominal = eastNominalThicknesses.length > 0 ?
                   (eastNominalThicknesses.reduce((a, b) => a + b, 0) / eastNominalThicknesses.length).toFixed(4) : undefined;
-                
+
                 // Calculate East Head minimum thickness (2:1 ellipsoidal head)
                 let eastMinThickness;
                 if (P && R && S && E) {
@@ -2148,7 +2160,7 @@ Return JSON in this exact format:
                     eastMinThickness = ((P * R) / denominator).toFixed(4);
                   }
                 }
-                
+
                 // Calculate East Head corrosion rate and remaining life
                 let eastCorrosionRate, eastRemainingLife, eastCorrosionAllowance;
                 if (eastAvgPrevious && eastAvgCurrent && eastMinThickness) {
@@ -2156,10 +2168,10 @@ Return JSON in this exact format:
                   const currThick = parseFloat(eastAvgCurrent);
                   const minThick = parseFloat(eastMinThickness);
                   const timeSpan = 10;
-                  
+
                   eastCorrosionRate = ((prevThick - currThick) / timeSpan).toFixed(6);
                   eastCorrosionAllowance = (currThick - minThick).toFixed(4);
-                  
+
                   const cr = parseFloat(eastCorrosionRate);
                   const ca = parseFloat(eastCorrosionAllowance);
                   if (cr > 0 && ca > 0) {
@@ -2168,7 +2180,7 @@ Return JSON in this exact format:
                     eastRemainingLife = "0.00";
                   }
                 }
-                
+
                 await professionalReportDb.createComponentCalculation({
                   id: nanoid(),
                   reportId: report.id,
@@ -2197,7 +2209,7 @@ Return JSON in this exact format:
                 });
                 logger.info(`[PDF Import] Auto-created East Head component calculation for report ${report.id}`);
               }
-              
+
               // Create West Head component calculation with improved detection
               // Matches: 'west head', 'w head', 'head 2', 'head-2', 'right head'
               // IMPORTANT: Also check location field for head identification
@@ -2206,16 +2218,16 @@ Return JSON in this exact format:
                 const compType = (tml.componentType || '').toLowerCase();
                 const loc = (tml.location || '').toLowerCase();
                 const combined = `${comp} ${compType}`;
-                
+
                 // Explicit west head matches (check location too)
                 if (combined.includes('west') || loc.includes('west head')) return true;
                 if (combined.includes('w head')) return true;
                 if (combined.includes('head 2') || combined.includes('head-2')) return true;
                 if (combined.includes('right head')) return true;
-                
+
                 return false;
               });
-              
+
               if (westHeadTMLs.length > 0) {
                 const westCurrentThicknesses = westHeadTMLs
                   .map((t: any) => parseFloat(t.currentThickness))
@@ -2226,14 +2238,14 @@ Return JSON in this exact format:
                 const westNominalThicknesses = westHeadTMLs
                   .map((t: any) => parseFloat(t.nominalThickness))
                   .filter((v: number) => !isNaN(v));
-                
-                const westAvgCurrent = westCurrentThicknesses.length > 0 ? 
+
+                const westAvgCurrent = westCurrentThicknesses.length > 0 ?
                   (westCurrentThicknesses.reduce((a, b) => a + b, 0) / westCurrentThicknesses.length).toFixed(4) : undefined;
-                const westAvgPrevious = westPreviousThicknesses.length > 0 ? 
+                const westAvgPrevious = westPreviousThicknesses.length > 0 ?
                   (westPreviousThicknesses.reduce((a, b) => a + b, 0) / westPreviousThicknesses.length).toFixed(4) : undefined;
-                const westAvgNominal = westNominalThicknesses.length > 0 ? 
+                const westAvgNominal = westNominalThicknesses.length > 0 ?
                   (westNominalThicknesses.reduce((a, b) => a + b, 0) / westNominalThicknesses.length).toFixed(4) : undefined;
-                
+
                 // Calculate West Head minimum thickness (2:1 ellipsoidal head)
                 let westMinThickness;
                 if (P && R && S && E) {
@@ -2242,7 +2254,7 @@ Return JSON in this exact format:
                     westMinThickness = ((P * R) / denominator).toFixed(4);
                   }
                 }
-                
+
                 // Calculate West Head corrosion rate and remaining life
                 let westCorrosionRate, westRemainingLife, westCorrosionAllowance;
                 if (westAvgPrevious && westAvgCurrent && westMinThickness) {
@@ -2250,10 +2262,10 @@ Return JSON in this exact format:
                   const currThick = parseFloat(westAvgCurrent);
                   const minThick = parseFloat(westMinThickness);
                   const timeSpan = 10;
-                  
+
                   westCorrosionRate = ((prevThick - currThick) / timeSpan).toFixed(6);
                   westCorrosionAllowance = (currThick - minThick).toFixed(4);
-                  
+
                   const cr = parseFloat(westCorrosionRate);
                   const ca = parseFloat(westCorrosionAllowance);
                   if (cr > 0 && ca > 0) {
@@ -2262,7 +2274,7 @@ Return JSON in this exact format:
                     westRemainingLife = "0.00";
                   }
                 }
-                
+
                 await professionalReportDb.createComponentCalculation({
                   id: nanoid(),
                   reportId: report.id,
@@ -2293,7 +2305,7 @@ Return JSON in this exact format:
               }
             }
           }
-          
+
           // Create nozzle evaluations if available
           if (parsedData.nozzles && parsedData.nozzles.length > 0) {
             logger.info(`[PDF Import] Creating ${parsedData.nozzles.length} nozzle evaluations...`);
@@ -2308,7 +2320,7 @@ Return JSON in this exact format:
                 schedule: nozzle.schedule,
                 notes: nozzle.notes,
               };
-              
+
               // Add optional numeric fields
               if (nozzle.actualThickness) {
                 const val = typeof nozzle.actualThickness === 'number' ? nozzle.actualThickness : parseFloat(String(nozzle.actualThickness));
@@ -2325,7 +2337,7 @@ Return JSON in this exact format:
               if (nozzle.acceptable !== undefined) {
                 nozzleRecord.acceptable = Boolean(nozzle.acceptable);
               }
-              
+
               await db.createNozzleEvaluation(nozzleRecord);
             }
             logger.info(`[PDF Import] Created ${parsedData.nozzles.length} nozzle evaluations`);
@@ -2339,8 +2351,8 @@ Return JSON in this exact format:
             unmatchedCount: unmatchedFields.length,
             checklistPreview, // Send checklist items for review
             requiresChecklistReview: checklistPreview.length > 0,
-            message: isNewInspection 
-              ? `Created new inspection ${inspection.id}` 
+            message: isNewInspection
+              ? `Created new inspection ${inspection.id}`
               : `Added data to existing inspection ${inspection.id}`,
           };
         } catch (error) {
@@ -2391,12 +2403,12 @@ Return JSON in this exact format:
               itemText: item.itemText,
               checked: item.checked,
             };
-            
+
             if (item.itemNumber) checklistRecord.itemNumber = item.itemNumber;
             if (item.notes) checklistRecord.notes = item.notes;
             if (item.checkedBy) checklistRecord.checkedBy = item.checkedBy;
             if (item.checkedDate) checklistRecord.checkedDate = new Date(item.checkedDate);
-            
+
             await professionalReportDb.createChecklistItem(checklistRecord);
           }
 
@@ -2414,19 +2426,19 @@ Return JSON in this exact format:
 
   // Field mappings for machine learning
   fieldMappings: fieldMappingRouter,
-  
+
   // Unmatched data management
   unmatchedData: unmatchedDataRouter,
-  
+
   // Professional report generation
   professionalReport: professionalReportRouter,
-  
+
   // Nozzle evaluations
   nozzles: nozzleRouter,
-  
+
   // Report comparison
   reportComparison: reportComparisonRouter,
-  
+
   // Calculation validation
   validation: validationRouter,
 });

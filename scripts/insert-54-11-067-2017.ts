@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { getDb } from '../server/db';
 import { inspections, tmlReadings, componentCalculations, professionalReports } from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
@@ -80,10 +81,12 @@ async function insertInspectionData() {
     vesselTagNumber: '54-11-067',
     vesselName: '54-11-067 SACHEM Horizontal Vessel',
     inspectionDate: new Date('2017-06-20'),
+    designPressure: '250',
     designTemperature: '200',
     operatingTemperature: '80',
     operatingPressure: '250',
     materialSpec: 'SA-240 Type 304',
+    product: 'METHYLCHLORIDE CLEAN',
     headType: '2:1 Ellipsoidal',
     vesselOrientation: 'Horizontal',
     insideDiameter: '70.75',
@@ -237,6 +240,23 @@ async function insertTmlReadings(db: any, inspectionId: string) {
     { cml: '122', location: 'WH-5', actual: '0.552', nominal: '0.500' },
   ];
 
+  // Nozzle TML readings (N1-N12 with multi-angle data)
+  // tmin* values from original report, tActual = min of all 4 angles
+  const nozzleReadings = [
+    { cml: 'N1', location: 'N1', service: 'Manway', size: '24', tml1: '0.574', tml2: '0.576', tml3: '0.578', tml4: '0.578', actual: '0.574', nominal: '0.375' },
+    { cml: 'N2', location: 'N2', service: 'Relief', size: '3', tml1: '0.300', tml2: '0.301', tml3: '0.298', tml4: '0.300', actual: '0.298', nominal: '0.216' },
+    { cml: 'N3', location: 'N3', service: 'Vapor Out', size: '2', tml1: '0.164', tml2: '0.164', tml3: '0.163', tml4: '0.162', actual: '0.162', nominal: '0.154' },
+    { cml: 'N4', location: 'N4', service: 'Sight Gauge', size: '1', tml1: '0.137', tml2: '0.131', tml3: '0.130', tml4: '0.131', actual: '0.130', nominal: '0.133' },
+    { cml: 'N5', location: 'N5', service: 'Sight Gauge', size: '1', tml1: '0.131', tml2: '0.132', tml3: '0.128', tml4: '0.130', actual: '0.128', nominal: '0.133' },
+    { cml: 'N6', location: 'N6', service: 'Reactor Feed', size: '2', tml1: '0.163', tml2: '0.163', tml3: '0.164', tml4: '0.166', actual: '0.163', nominal: '0.154' },
+    { cml: 'N7', location: 'N7', service: 'Gauge', size: '1', tml1: '0.162', tml2: '0.161', tml3: '0.128', tml4: '0.163', actual: '0.128', nominal: '0.133' },
+    { cml: 'N8', location: 'N8', service: 'Vapor In', size: '1', tml1: '0.130', tml2: '0.131', tml3: '0.130', tml4: '0.134', actual: '0.130', nominal: '0.133' },
+    { cml: 'N9', location: 'N9', service: 'Out', size: '1', tml1: '0.128', tml2: '0.134', tml3: '0.133', tml4: '0.132', actual: '0.128', nominal: '0.133' },
+    { cml: 'N10', location: 'N10', service: 'Out', size: '1', tml1: '0.132', tml2: '0.130', tml3: '0.130', tml4: '0.133', actual: '0.130', nominal: '0.133' },
+    { cml: 'N11', location: 'N11', service: 'Gauge', size: '1', tml1: '0.133', tml2: '0.132', tml3: '0.132', tml4: '0.131', actual: '0.131', nominal: '0.133' },
+    { cml: 'N12', location: 'N12', service: 'Gauge', size: '1', tml1: '0.133', tml2: '0.132', tml3: '0.132', tml4: '0.130', actual: '0.130', nominal: '0.133' },
+  ];
+
   interface ReadingInput {
     cml: string;
     location: string;
@@ -252,6 +272,7 @@ async function insertTmlReadings(db: any, inspectionId: string) {
     ...westHeadReadings.map(r => ({ ...r, componentType: 'West Head', componentGroup: 'WESTHEAD' })),
   ];
 
+  // Insert shell + head readings
   for (const reading of allReadings) {
     await db.insert(tmlReadings).values({
       id: randomUUID(),
@@ -269,7 +290,32 @@ async function insertTmlReadings(db: any, inspectionId: string) {
     }).execute();
   }
 
-  console.log(`Inserted ${allReadings.length} TML readings`);
+  // Insert nozzle readings with multi-angle data
+  for (const noz of nozzleReadings) {
+    await db.insert(tmlReadings).values({
+      id: randomUUID(),
+      inspectionId,
+      legacyLocationId: noz.cml,
+      componentType: noz.size + '"',
+      location: noz.location,
+      componentGroup: 'NOZZLE',
+      schemaVersion: 1,
+      service: noz.service,
+      nozzleSize: noz.size + '"',
+      readingType: 'nozzle',
+      tml1: noz.tml1,
+      tml2: noz.tml2,
+      tml3: noz.tml3,
+      tml4: noz.tml4,
+      tActual: noz.actual,
+      nominalThickness: noz.nominal,
+      previousThickness: noz.nominal,
+      currentInspectionDate: new Date('2017-06-20'),
+      status: 'good',
+    }).execute();
+  }
+
+  console.log(`Inserted ${allReadings.length} shell/head + ${nozzleReadings.length} nozzle TML readings (${allReadings.length + nozzleReadings.length} total)`);
 }
 
 insertInspectionData().catch(console.error);
