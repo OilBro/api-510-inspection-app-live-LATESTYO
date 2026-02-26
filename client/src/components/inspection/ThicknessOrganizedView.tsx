@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Layers, Filter, BarChart3 } from "lucide-react";
 import { sortByCmlNumber } from "@/lib/cmlSort";
+import { TMLEditorButton } from "@/components/TMLEditor";
+import { trpc } from "@/lib/trpc";
 
 interface TMLReading {
   id: string;
@@ -32,12 +34,14 @@ interface TMLReading {
 
 interface ThicknessOrganizedViewProps {
   readings: TMLReading[];
+  inspectionId?: string;
 }
 
 type ComponentFilter = "all" | "Shell" | "East Head" | "West Head" | "South Head" | "North Head" | "Nozzle";
 
-export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedViewProps) {
+export default function ThicknessOrganizedView({ readings, inspectionId }: ThicknessOrganizedViewProps) {
   const [filter, setFilter] = useState<ComponentFilter>("all");
+  const utils = trpc.useUtils();
 
   // Normalize component type from various fields
   // PRIORITY: componentGroup (canonical) > componentType (new) > component (legacy)
@@ -48,11 +52,11 @@ export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedV
     if (cg === 'NORTHHEAD') return 'North Head';
     if (cg === 'SHELL') return 'Shell';
     if (cg === 'NOZZLE') return 'Nozzle';
-    
+
     // Fallback: check componentType and component text fields
     const component = reading.componentType || reading.component || reading.location || "";
     const normalized = component.toLowerCase();
-    
+
     // Check specific head types first (South/North take priority)
     if (normalized.includes("south head") || normalized.includes("south") && normalized.includes("head")) return "South Head";
     if (normalized.includes("north head") || normalized.includes("north") && normalized.includes("head")) return "North Head";
@@ -67,9 +71,9 @@ export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedV
     if (normalized.includes("head") && !normalized.includes("shell")) {
       return "South Head"; // Default to South Head (first head)
     }
-    if (normalized.includes("nozzle") || normalized.includes("manway") || normalized.includes("relief") || 
-        normalized.includes("inlet") || normalized.includes("outlet") || normalized.includes("drain") ||
-        normalized.includes("vent") || normalized.includes("gauge")) {
+    if (normalized.includes("nozzle") || normalized.includes("manway") || normalized.includes("relief") ||
+      normalized.includes("inlet") || normalized.includes("outlet") || normalized.includes("drain") ||
+      normalized.includes("vent") || normalized.includes("gauge")) {
       return "Nozzle";
     }
     if (normalized.includes("shell") || normalized.includes("body") || normalized.includes("cylinder")) {
@@ -99,7 +103,7 @@ export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedV
 
   // Filter readings based on selection and sort by CML number
   const filteredReadings = sortByCmlNumber(
-    filter === "all" 
+    filter === "all"
       ? readings.map(r => ({ ...r, normalizedComponent: getComponentType(r) }))
       : (groupedReadings[filter] || [])
   );
@@ -109,7 +113,7 @@ export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedV
     const currentVal = parseFloat(current);
     const minVal = parseFloat(min);
     if (isNaN(currentVal) || isNaN(minVal)) return "bg-gray-100";
-    
+
     const ratio = currentVal / minVal;
     if (ratio < 1.0) return "bg-red-100 text-red-800";
     if (ratio < 1.1) return "bg-yellow-100 text-yellow-800";
@@ -162,11 +166,10 @@ export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedV
             <button
               key={type}
               onClick={() => setFilter(type as ComponentFilter)}
-              className={`p-4 rounded-lg border transition-all ${
-                filter === type 
-                  ? "ring-2 ring-blue-500 border-blue-500" 
+              className={`p-4 rounded-lg border transition-all ${filter === type
+                  ? "ring-2 ring-blue-500 border-blue-500"
                   : "hover:border-gray-400"
-              }`}
+                }`}
             >
               <div className="text-2xl font-bold">{count}</div>
               <div className="text-sm text-gray-600">{type}</div>
@@ -188,12 +191,13 @@ export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedV
                 <TableHead className="text-right">Current</TableHead>
                 <TableHead className="text-right">Min Req'd</TableHead>
                 <TableHead className="text-right">Status</TableHead>
+                <TableHead className="text-center w-[60px]">Edit</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredReadings.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={10} className="text-center py-8 text-gray-500">
                     No readings found for this filter
                   </TableCell>
                 </TableRow>
@@ -234,6 +238,30 @@ export default function ThicknessOrganizedView({ readings }: ThicknessOrganizedV
                             : "Below Min"
                           : "-"}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <TMLEditorButton
+                        reading={{
+                          id: reading.id,
+                          legacyLocationId: reading.legacyLocationId || reading.tmlId || '',
+                          componentType: reading.componentType || reading.component || '',
+                          location: reading.location || '',
+                          tml1: reading.tml1 ? String(reading.tml1) : null,
+                          tml2: reading.tml2 ? String(reading.tml2) : null,
+                          tml3: reading.tml3 ? String(reading.tml3) : null,
+                          tml4: reading.tml4 ? String(reading.tml4) : null,
+                          tActual: reading.tActual ? String(reading.tActual) : null,
+                          nominalThickness: reading.nominalThickness ? String(reading.nominalThickness) : null,
+                          previousThickness: reading.previousThickness ? String(reading.previousThickness) : null,
+                          corrosionRate: null,
+                          status: "good",
+                        }}
+                        onSaved={() => {
+                          if (inspectionId) {
+                            utils.tmlReadings.list.invalidate({ inspectionId });
+                          }
+                        }}
+                      />
                     </TableCell>
                   </TableRow>
                 ))

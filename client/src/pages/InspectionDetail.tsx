@@ -188,7 +188,7 @@ export default function InspectionDetail() {
           </TabsContent>
 
           <TabsContent value="thickness">
-            <ThicknessOrganizedView readings={tmlReadings || []} />
+            <ThicknessOrganizedView readings={tmlReadings || []} inspectionId={id} />
           </TabsContent>
 
           <TabsContent value="calculations">
@@ -196,10 +196,10 @@ export default function InspectionDetail() {
           </TabsContent>
 
           <TabsContent value="results">
-            <InspectionResultsTab 
+            <InspectionResultsTab
               inspectionId={id}
-              inspectionResults={inspection.inspectionResults} 
-              recommendations={inspection.recommendations} 
+              inspectionResults={inspection.inspectionResults}
+              recommendations={inspection.recommendations}
             />
           </TabsContent>
 
