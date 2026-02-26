@@ -47,37 +47,37 @@ const calculationInputSchema = z.object({
   // Vessel geometry
   insideDiameter: z.number().positive(),
   insideRadius: z.number().positive().optional(),
-  
+
   // Design conditions
   designPressure: z.number().positive(),
   designTemperature: z.number(),
-  
+
   // Material
   materialSpec: z.string().min(1),
   allowableStress: z.number().positive().optional(),
-  
+
   // Joint efficiency
   jointEfficiency: z.number().min(0).max(1),
-  
+
   // Thickness data
   nominalThickness: z.number().positive(),
   currentThickness: z.number().positive(),
   previousThickness: z.number().positive().optional(),
-  
+
   // Corrosion allowance (optional - derived as t_actual - t_required when omitted)
   corrosionAllowance: z.number().min(0).optional(),
-  
+
   // Head-specific parameters
   headType: z.enum(['2:1 Ellipsoidal', 'Torispherical', 'Hemispherical', 'Flat']).optional(),
   crownRadius: z.number().positive().optional(),
   knuckleRadius: z.number().positive().optional(),
-  
+
   // Dates for corrosion rate calculation
   yearBuilt: z.number().int().optional(),
   currentYear: z.number().int().optional(),
   previousInspectionDate: z.string().optional(),
   currentInspectionDate: z.string().optional(),
-  
+
   // Static head (for horizontal vessels)
   specificGravity: z.number().positive().optional(),
   liquidHeight: z.number().positive().optional(),
@@ -119,7 +119,7 @@ export const calculationEngineRouter = router({
       const normalizedSpec = normalizeMaterialSpec(input.materialSpec);
       const isValid = normalizedSpec !== null;
       const properties = normalizedSpec ? getMaterialProperties(normalizedSpec) : null;
-      
+
       return {
         isValid,
         normalizedSpec,
@@ -151,16 +151,16 @@ export const calculationEngineRouter = router({
         previousInspectionDate: input.previousInspectionDate ? new Date(input.previousInspectionDate) : undefined,
         currentInspectionDate: input.currentInspectionDate ? new Date(input.currentInspectionDate) : undefined,
       };
-      
+
       const result = calculateTRequiredShell(calcInput);
-      
+
       // Log calculation for audit trail
       if (result.success && ctx.user) {
         const auditContext: AuditContext = {
           userId: String(ctx.user.id),
           userName: ctx.user.name || undefined,
         };
-        
+
         await logCalculation(
           auditContext,
           'calculationResults',
@@ -171,7 +171,7 @@ export const calculationEngineRouter = router({
           result.codeReference
         );
       }
-      
+
       return result;
     }),
 
@@ -186,15 +186,15 @@ export const calculationEngineRouter = router({
         previousInspectionDate: input.previousInspectionDate ? new Date(input.previousInspectionDate) : undefined,
         currentInspectionDate: input.currentInspectionDate ? new Date(input.currentInspectionDate) : undefined,
       };
-      
+
       const result = calculateTRequiredEllipsoidalHead(calcInput);
-      
+
       if (result.success && ctx.user) {
         const auditContext: AuditContext = {
           userId: String(ctx.user.id),
           userName: ctx.user.name || undefined,
         };
-        
+
         await logCalculation(
           auditContext,
           'calculationResults',
@@ -205,7 +205,7 @@ export const calculationEngineRouter = router({
           result.codeReference
         );
       }
-      
+
       return result;
     }),
 
@@ -220,15 +220,15 @@ export const calculationEngineRouter = router({
         previousInspectionDate: input.previousInspectionDate ? new Date(input.previousInspectionDate) : undefined,
         currentInspectionDate: input.currentInspectionDate ? new Date(input.currentInspectionDate) : undefined,
       };
-      
+
       const result = calculateTRequiredTorisphericalHead(calcInput);
-      
+
       if (result.success && ctx.user) {
         const auditContext: AuditContext = {
           userId: String(ctx.user.id),
           userName: ctx.user.name || undefined,
         };
-        
+
         await logCalculation(
           auditContext,
           'calculationResults',
@@ -239,7 +239,7 @@ export const calculationEngineRouter = router({
           result.codeReference
         );
       }
-      
+
       return result;
     }),
 
@@ -254,15 +254,15 @@ export const calculationEngineRouter = router({
         previousInspectionDate: input.previousInspectionDate ? new Date(input.previousInspectionDate) : undefined,
         currentInspectionDate: input.currentInspectionDate ? new Date(input.currentInspectionDate) : undefined,
       };
-      
+
       const result = calculateTRequiredHemisphericalHead(calcInput);
-      
+
       if (result.success && ctx.user) {
         const auditContext: AuditContext = {
           userId: String(ctx.user.id),
           userName: ctx.user.name || undefined,
         };
-        
+
         await logCalculation(
           auditContext,
           'calculationResults',
@@ -273,7 +273,7 @@ export const calculationEngineRouter = router({
           result.codeReference
         );
       }
-      
+
       return result;
     }),
 
@@ -288,15 +288,15 @@ export const calculationEngineRouter = router({
         previousInspectionDate: input.previousInspectionDate ? new Date(input.previousInspectionDate) : undefined,
         currentInspectionDate: input.currentInspectionDate ? new Date(input.currentInspectionDate) : undefined,
       };
-      
+
       const result = calculateMAWPShell(calcInput);
-      
+
       if (result.success && ctx.user) {
         const auditContext: AuditContext = {
           userId: String(ctx.user.id),
           userName: ctx.user.name || undefined,
         };
-        
+
         await logCalculation(
           auditContext,
           'calculationResults',
@@ -307,7 +307,7 @@ export const calculationEngineRouter = router({
           result.codeReference
         );
       }
-      
+
       return result;
     }),
 
@@ -322,15 +322,15 @@ export const calculationEngineRouter = router({
         previousInspectionDate: input.previousInspectionDate ? new Date(input.previousInspectionDate) : undefined,
         currentInspectionDate: input.currentInspectionDate ? new Date(input.currentInspectionDate) : undefined,
       };
-      
+
       const result = calculateCorrosionRateLongTerm(calcInput);
-      
+
       if (result.success && ctx.user) {
         const auditContext: AuditContext = {
           userId: String(ctx.user.id),
           userName: ctx.user.name || undefined,
         };
-        
+
         await logCalculation(
           auditContext,
           'calculationResults',
@@ -341,7 +341,7 @@ export const calculationEngineRouter = router({
           result.codeReference
         );
       }
-      
+
       return result;
     }),
 
@@ -356,15 +356,15 @@ export const calculationEngineRouter = router({
         previousInspectionDate: input.previousInspectionDate ? new Date(input.previousInspectionDate) : undefined,
         currentInspectionDate: input.currentInspectionDate ? new Date(input.currentInspectionDate) : undefined,
       };
-      
+
       const result = calculateCorrosionRateShortTerm(calcInput);
-      
+
       if (result.success && ctx.user) {
         const auditContext: AuditContext = {
           userId: String(ctx.user.id),
           userName: ctx.user.name || undefined,
         };
-        
+
         await logCalculation(
           auditContext,
           'calculationResults',
@@ -375,7 +375,7 @@ export const calculationEngineRouter = router({
           result.codeReference
         );
       }
-      
+
       return result;
     }),
 
@@ -396,13 +396,13 @@ export const calculationEngineRouter = router({
         input.corrosionRate,
         input.corrosionRateType
       );
-      
+
       if (result.success && ctx.user) {
         const auditContext: AuditContext = {
           userId: String(ctx.user.id),
           userName: ctx.user.name || undefined,
         };
-        
+
         await logCalculation(
           auditContext,
           'calculationResults',
@@ -413,7 +413,7 @@ export const calculationEngineRouter = router({
           result.codeReference
         );
       }
-      
+
       return result;
     }),
 
@@ -426,13 +426,13 @@ export const calculationEngineRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       const result = calculateNextInspectionInterval(input.remainingLife);
-      
+
       if (result.success && ctx.user) {
         const auditContext: AuditContext = {
           userId: String(ctx.user.id),
           userName: ctx.user.name || undefined,
         };
-        
+
         await logCalculation(
           auditContext,
           'calculationResults',
@@ -443,7 +443,7 @@ export const calculationEngineRouter = router({
           result.codeReference
         );
       }
-      
+
       return result;
     }),
 
@@ -457,22 +457,22 @@ export const calculationEngineRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       const { componentType, ...calcParams } = input;
-      
+
       const calcInput: CalculationInput = {
         ...calcParams,
         previousInspectionDate: calcParams.previousInspectionDate ? new Date(calcParams.previousInspectionDate) : undefined,
         currentInspectionDate: calcParams.currentInspectionDate ? new Date(calcParams.currentInspectionDate) : undefined,
       };
-      
+
       const result = performFullCalculation(calcInput, componentType);
-      
+
       // Log the full calculation for audit trail
       if (result.success && ctx.user) {
         const auditContext: AuditContext = {
           userId: String(ctx.user.id),
           userName: ctx.user.name || undefined,
         };
-        
+
         await logCalculation(
           auditContext,
           'calculationResults',
@@ -489,7 +489,7 @@ export const calculationEngineRouter = router({
           'ASME VIII-1 + API 510'
         );
       }
-      
+
       return result;
     }),
 
@@ -631,7 +631,7 @@ export const calculationEngineRouter = router({
       const { inspections, tmlReadings } = await import("../../drizzle/schema");
       const { eq } = await import("drizzle-orm");
       const { logger } = await import("../../server/_core/logger");
-      
+
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
@@ -661,14 +661,14 @@ export const calculationEngineRouter = router({
       const designPressure = inspection.designPressure ? parseFloat(String(inspection.designPressure)) : 0;
       const designTemperature = inspection.designTemperature ? parseFloat(String(inspection.designTemperature)) : 0;
       const insideDiameter = inspection.insideDiameter ? parseFloat(String(inspection.insideDiameter)) : 0;
-      const jointEfficiency = inspection.jointEfficiency ? parseFloat(String(inspection.jointEfficiency)) : 0.85;
-      const materialSpec = inspection.materialSpec || 'SA-516 Gr 70';
+      const jointEfficiency = inspection.jointEfficiency ? parseFloat(String(inspection.jointEfficiency)) : 0;
+      const materialSpec = inspection.materialSpec;
       const yearBuilt = inspection.yearBuilt ? parseInt(String(inspection.yearBuilt), 10) : undefined;
 
-      if (designPressure <= 0 || insideDiameter <= 0) {
+      if (designPressure <= 0 || insideDiameter <= 0 || jointEfficiency <= 0 || !materialSpec) {
         return {
           success: false,
-          message: "Inspection missing required vessel parameters (designPressure, insideDiameter). Please complete vessel data first.",
+          message: "Inspection missing required vessel parameters (designPressure, insideDiameter, jointEfficiency, or materialSpec). Please complete vessel data first.",
         };
       }
 

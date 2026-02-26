@@ -12,29 +12,29 @@ interface ComponentData {
   designTemperature: number; // T (°F)
   insideDiameter: number; // ID (inches)
   materialSpec: string;
-  
+
   // Thickness data
   nominalThickness: number; // tn (inches)
   actualThickness: number; // ta (inches) - minimum measured
   corrosionAllowance: number; // CA (inches)
-  
+
   // Weld data
   jointEfficiency: number; // E (0.0 - 1.0)
-  
+
   // For heads
   componentType: "shell" | "head";
-  
+
   // External pressure
   externalPressure?: boolean; // Is vessel under external pressure/vacuum?
   unsupportedLength?: number; // L (inches) - for external pressure calculations
   headType?: "hemispherical" | "ellipsoidal" | "torispherical";
   knuckleRadius?: number; // r (inches) - for torispherical heads
-  
+
   // Static head (for liquid-filled vessels)
   liquidService?: boolean; // Is vessel in liquid service?
   specificGravity?: number; // SG (dimensionless, water = 1.0)
   liquidHeight?: number; // h (feet) - height of liquid above component
-  
+
   // Corrosion data
   corrosionRate?: number; // mpy (mils per year)
   previousThickness?: number;
@@ -49,29 +49,29 @@ interface CalculationResults {
   designTemperature: number;
   material: string;
   allowableStress: number;
-  
+
   // Static head (if applicable)
   staticHeadPressure?: number; // psi
   totalDesignPressure?: number; // Design + Static Head (psi)
-  
+
   // Thickness calculations
   minimumRequiredThickness: number; // tmin (inches)
   actualThickness: number; // ta (inches)
   corrosionAllowance: number; // CA (inches)
-  
+
   // Pressure calculations
   mawp: number; // Maximum Allowable Working Pressure (psi)
-  
+
   // Life calculations
   corrosionRate: number; // mpy
   remainingLife: number; // years
   nextInspectionDate: string; // ISO date string
-  
+
   // External pressure (if applicable)
   externalPressureMAWP?: number; // psi
   factorA?: number;
   factorB?: number;
-  
+
   // Status
   status: "acceptable" | "monitoring" | "critical";
   statusReason: string;
@@ -102,20 +102,17 @@ function calculateStaticHeadPressure(
  */
 function getAllowableStress(materialSpec: string, temperature: number): number {
   const result = getAllowableStressNormalized(materialSpec, temperature);
-  
+
   if (result.stress !== null) {
     return result.stress;
   }
-  
-  // Fallback: If material not found in authoritative database,
-  // use SA-516 Gr 70 at the given temperature as a conservative default.
-  // This ensures calculations don't fail, but the result should be flagged.
-  console.warn(
-    `[componentCalculations] Material '${materialSpec}' not found in ASME database at ${temperature}°F. ` +
-    `Using SA-516 Gr 70 as conservative fallback. Error: ${result.message}`
+
+  // Failure: If material not found in authoritative database, throw instead of guessing
+  // Per skills.md: "No guessing. Missing data halts calculations."
+  throw new Error(
+    `Material '${materialSpec}' not found in ASME database at ${temperature}°F. ` +
+    `Calculations halted due to missing allowable stress per regulatory requirements. Error: ${result.message}`
   );
-  const fallback = getAllowableStressNormalized('SA-516 Gr 70', temperature);
-  return fallback.stress ?? 17500; // Ultimate fallback: SA-516-70 room temp value
 }
 
 /**
@@ -163,12 +160,12 @@ export function calculateHeadMinThickness(
   crownRadius?: number
 ): number {
   const D = radius * 2; // Inside diameter
-  
+
   // Safety checks
   if (pressure <= 0 || radius <= 0 || allowableStress <= 0) return 0;
-  
+
   let t: number;
-  
+
   switch (headType.toLowerCase()) {
     case "hemispherical":
       // UG-32(d): t = PL / (2SE - 0.2P) where L = R (inside crown radius)
@@ -177,14 +174,14 @@ export function calculateHeadMinThickness(
       if (denom_hemi <= 0) return 0;
       t = (pressure * R_hemi) / denom_hemi;
       break;
-      
+
     case "ellipsoidal":
       // UG-32(e) for 2:1 ellipsoidal: t = PD / (2SE - 0.2P)
       const denom_ellip = 2 * allowableStress * jointEfficiency - 0.2 * pressure;
       if (denom_ellip <= 0) return 0;
       t = (pressure * D) / denom_ellip;
       break;
-      
+
     case "torispherical":
       // Appendix 1-4(d) M-factor formula:
       // t = PLM / (2SE - 0.2P)
@@ -193,20 +190,20 @@ export function calculateHeadMinThickness(
       // M = 0.25 * (3 + sqrt(L/r))
       const L = crownRadius && crownRadius > 0 ? crownRadius : D;
       const r = knuckleRadius && knuckleRadius > 0 ? knuckleRadius : 0.06 * D;
-      
+
       const M = 0.25 * (3 + Math.sqrt(L / r));
       const denom_tori = 2 * allowableStress * jointEfficiency - 0.2 * pressure;
       if (denom_tori <= 0) return 0;
       t = (pressure * L * M) / denom_tori;
       break;
-      
+
     default:
       // Default to 2:1 ellipsoidal
       const denom_def = 2 * allowableStress * jointEfficiency - 0.2 * pressure;
       if (denom_def <= 0) return 0;
       t = (pressure * D) / denom_def;
   }
-  
+
   return t; // DO NOT add CA here - per API 510, CA is used separately for remaining life
 }
 
@@ -233,19 +230,19 @@ function calculateShellMAWP(
   const t = thickness - corrosionAllowance;
   const El = jointEfficiency; // Longitudinal joint efficiency
   const Ec_eff = Ec ?? jointEfficiency; // Default to same efficiency if not specified
-  
+
   // Safety check: net thickness must be positive
   if (t <= 0 || radius <= 0) return 0;
-  
+
   // UG-27(c)(1): Circumferential (hoop) stress case
   // P_hoop = (S × El × t) / (R + 0.6 × t)
   const P_hoop = (allowableStress * El * t) / (radius + 0.6 * t);
-  
+
   // UG-27(c)(2): Longitudinal stress case
   // P_long = (2 × S × Ec × t) / (R - 0.4 × t)
   const denom_long = radius - 0.4 * t;
   const P_long = denom_long > 0 ? (2 * allowableStress * Ec_eff * t) / denom_long : 0;
-  
+
   // Return the MINIMUM (governing) MAWP
   return Math.min(P_hoop, P_long > 0 ? P_long : P_hoop);
 }
@@ -280,28 +277,28 @@ export function calculateHeadMAWP(
 ): number {
   const t = thickness - corrosionAllowance;
   const D = radius * 2; // Inside diameter
-  
+
   // Safety check: net thickness must be positive
   if (t <= 0 || radius <= 0) return 0;
-  
+
   switch (headType.toLowerCase()) {
     case "hemispherical":
       // UG-32(d): P = 2SEt / (R + 0.2t)
       // R = inside spherical radius
       return (2 * allowableStress * jointEfficiency * t) / (radius + 0.2 * t);
-      
+
     case "ellipsoidal":
       // UG-32(e) for 2:1 ellipsoidal: P = 2SEt / (D + 0.2t)
       // D = inside diameter
       return (2 * allowableStress * jointEfficiency * t) / (D + 0.2 * t);
-      
+
     case "torispherical":
       // L = inside crown radius (typically = D for standard F&D heads)
       const L = crownRadius && crownRadius > 0 ? crownRadius : D;
-      
+
       // r = inside knuckle radius (typically = 0.06D for standard F&D heads)
       const r = knuckleRadius && knuckleRadius > 0 ? knuckleRadius : 0.06 * D;
-      
+
       if (useUG32eStandard) {
         // UG-32(e) standard torispherical formula:
         // P = SEt / (0.885L + 0.1t)
@@ -315,7 +312,7 @@ export function calculateHeadMAWP(
         const denom = L * M + 0.2 * t;
         return denom > 0 ? (2 * allowableStress * jointEfficiency * t) / denom : 0;
       }
-      
+
     default:
       // Default to 2:1 ellipsoidal
       return (2 * allowableStress * jointEfficiency * t) / (D + 0.2 * t);
@@ -343,17 +340,17 @@ function calculateRemainingLife(
       insufficientData: true
     };
   }
-  
+
   // Convert mpy to inches per year
   const corrosionRateInches = corrosionRate / 1000;
-  
+
   // Remaining life = (ta - tmin) / corrosion rate
   const remainingLife = (actualThickness - minThickness) / corrosionRateInches;
-  
+
   // Next inspection = Current date + (Remaining Life / 2) per API 510
   const halfLife = Math.max(remainingLife / 2, 1); // At least 1 year
   const nextInspection = new Date(Date.now() + halfLife * 365 * 24 * 60 * 60 * 1000);
-  
+
   return {
     remainingLife: Math.max(remainingLife, 0),
     nextInspectionDate: nextInspection,
@@ -367,11 +364,11 @@ function calculateRemainingLife(
 export function calculateComponent(data: ComponentData): CalculationResults {
   const radius = data.insideDiameter / 2;
   const allowableStress = getAllowableStress(data.materialSpec, data.designTemperature);
-  
+
   // Calculate static head pressure if applicable
   let staticHeadPressure = 0;
   let totalDesignPressure = data.designPressure;
-  
+
   if (data.liquidService && data.specificGravity && data.liquidHeight) {
     staticHeadPressure = calculateStaticHeadPressure(
       data.specificGravity,
@@ -379,17 +376,17 @@ export function calculateComponent(data: ComponentData): CalculationResults {
     );
     totalDesignPressure = data.designPressure + staticHeadPressure;
   }
-  
+
   // Use total design pressure (including static head) for calculations
   const effectivePressure = totalDesignPressure;
-  
+
   // Calculate minimum required thickness
   let minThickness: number;
   let mawp: number;
   let externalPressureMAWP: number | undefined;
   let factorA: number | undefined;
   let factorB: number | undefined;
-  
+
   // Handle external pressure calculations
   if (data.externalPressure && data.componentType === "shell" && data.unsupportedLength) {
     const Do = data.insideDiameter + 2 * data.actualThickness;
@@ -401,7 +398,7 @@ export function calculateComponent(data: ComponentData): CalculationResults {
     externalPressureMAWP = result.mawp;
     factorA = result.factorA;
     factorB = result.factorB;
-    
+
     // For external pressure, use simplified minimum thickness approach
     // In practice, this would require iterative calculation
     minThickness = data.actualThickness; // Placeholder
@@ -441,7 +438,7 @@ export function calculateComponent(data: ComponentData): CalculationResults {
       data.knuckleRadius
     );
   }
-  
+
   // Calculate remaining life
   const corrosionRate = data.corrosionRate || 0;
   const { remainingLife, nextInspectionDate } = calculateRemainingLife(
@@ -449,11 +446,11 @@ export function calculateComponent(data: ComponentData): CalculationResults {
     minThickness,
     corrosionRate
   );
-  
+
   // Determine status
   let status: "acceptable" | "monitoring" | "critical";
   let statusReason: string;
-  
+
   if (data.actualThickness < minThickness) {
     status = "critical";
     statusReason = `Actual thickness (${data.actualThickness.toFixed(4)}") is below minimum required (${minThickness.toFixed(4)}")`;
@@ -464,7 +461,7 @@ export function calculateComponent(data: ComponentData): CalculationResults {
     status = "acceptable";
     statusReason = `Actual thickness (${data.actualThickness.toFixed(4)}") exceeds minimum required (${minThickness.toFixed(4)}")`;
   }
-  
+
   return {
     component: data.componentType === "shell" ? "Cylindrical Shell" : `${data.headType || "Ellipsoidal"} Head`,
     designPressure: data.designPressure,

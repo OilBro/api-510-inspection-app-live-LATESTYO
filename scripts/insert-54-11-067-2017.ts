@@ -1,6 +1,7 @@
 import { getDb } from '../server/db';
 import { inspections, tmlReadings, componentCalculations, professionalReports } from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
 
 async function insertInspectionData() {
   const db = await getDb();
@@ -13,8 +14,9 @@ async function insertInspectionData() {
   const existing = await db.select().from(inspections)
     .where(eq(inspections.vesselTagNumber, '54-11-067'))
     .execute();
-  
+
   const existingReport = existing.find(i => {
+    if (!i.inspectionDate) return false;
     const date = new Date(i.inspectionDate);
     return date.getFullYear() === 2017 && date.getMonth() === 5; // June 2017
   });
@@ -22,237 +24,248 @@ async function insertInspectionData() {
   if (existingReport) {
     console.log('Inspection for 54-11-067 (June 2017) already exists with ID:', existingReport.id);
     console.log('Updating existing record...');
-    
+
     // Update the existing inspection with correct values
     await db.update(inspections)
       .set({
         allowableStress: '20000',
         jointEfficiency: '0.85',
-        staticHead: '6.0',
-        specificGravity: '0.92',
+        specificGravity: '0.9200',
         designTemperature: '200',
         operatingTemperature: '80',
         operatingPressure: '250',
-        yearBuilt: '2005',
-        vesselMaterial: 'SS A-304',
+        yearBuilt: 2005,
+        materialSpec: 'SA-240 Type 304',
         headType: '2:1 Ellipsoidal',
-        headMaterial: 'SS A-304',
         vesselOrientation: 'Horizontal',
-        insideDiameter: '70.750',
-        vesselLength: '216',
-        nominalThickness: '0.625',
-        headNominalThickness: '0.500',
+        insideDiameter: '70.75',
+        overallLength: '216',
+        shellNominalThickness: '0.6250',
+        headNominalThickness: '0.5000',
         constructionCode: 'ASME S8 D1',
-        nationalBoardNumber: '5653',
+        nbNumber: '5653',
         mdmt: '-20',
-        corrosionAllowance: '0.095',
-        nextExternalInspection: new Date('2022-06-20'),
-        nextInternalInspection: new Date('2027-06-20'),
-        nextUtInspection: new Date('2027-06-20'),
+        liquidHeight: '6.00',
       })
       .where(eq(inspections.id, existingReport.id))
       .execute();
-    
+
     console.log('Updated inspection record');
-    
+
     // Delete existing component calculations for this report
     const reports = await db.select().from(professionalReports)
       .where(eq(professionalReports.inspectionId, existingReport.id))
       .execute();
-    
+
     if (reports.length > 0) {
       await db.delete(componentCalculations)
         .where(eq(componentCalculations.reportId, reports[0].id))
         .execute();
-      
+
       // Insert correct component calculations
       await insertComponentCalculations(db, reports[0].id);
     }
-    
+
     return;
   }
 
   // Create new inspection
   console.log('Creating new inspection for 54-11-067 (June 2017)...');
-  
-  const [newInspection] = await db.insert(inspections).values({
+
+  const inspectionId = randomUUID();
+
+  await db.insert(inspections).values({
+    id: inspectionId,
     userId: 1, // Default user
     vesselTagNumber: '54-11-067',
+    vesselName: '54-11-067 SACHEM Horizontal Vessel',
     inspectionDate: new Date('2017-06-20'),
-    inspectorName: 'Christopher Welch',
-    clientName: 'SACHEM INC',
-    facilityLocation: 'CLEBURNE TX',
-    inspectionType: 'In-Service',
-    mawp: '250',
     designTemperature: '200',
     operatingTemperature: '80',
     operatingPressure: '250',
-    vesselMaterial: 'SS A-304',
+    materialSpec: 'SA-240 Type 304',
     headType: '2:1 Ellipsoidal',
-    headMaterial: 'SS A-304',
     vesselOrientation: 'Horizontal',
-    insideDiameter: '70.750',
-    vesselLength: '216',
-    nominalThickness: '0.625',
-    headNominalThickness: '0.500',
+    insideDiameter: '70.75',
+    overallLength: '216',
+    shellNominalThickness: '0.6250',
+    headNominalThickness: '0.5000',
     allowableStress: '20000',
     jointEfficiency: '0.85',
-    staticHead: '6.0',
-    specificGravity: '0.92',
+    liquidHeight: '6.00',
+    specificGravity: '0.9200',
     constructionCode: 'ASME S8 D1',
-    nationalBoardNumber: '5653',
-    yearBuilt: '2005',
+    nbNumber: '5653',
+    yearBuilt: 2005,
     mdmt: '-20',
-    corrosionAllowance: '0.095',
-    nextExternalInspection: new Date('2022-06-20'),
-    nextInternalInspection: new Date('2027-06-20'),
-    nextUtInspection: new Date('2027-06-20'),
     status: 'completed',
-  }).returning();
+  }).execute();
 
-  console.log('Created inspection with ID:', newInspection.id);
+  console.log('Created inspection with ID:', inspectionId);
 
   // Create professional report
-  const [report] = await db.insert(professionalReports).values({
-    inspectionId: newInspection.id,
-    reportNumber: `RPT-54-11-067-2017`,
-    status: 'completed',
-  }).returning();
+  const reportId = randomUUID();
 
-  console.log('Created professional report with ID:', report.id);
+  await db.insert(professionalReports).values({
+    id: reportId,
+    inspectionId: inspectionId,
+    userId: 1,
+    reportNumber: 'RPT-54-11-067-2017',
+    inspectorName: 'Christopher Welch',
+    clientName: 'SACHEM INC',
+    clientLocation: 'CLEBURNE TX',
+  }).execute();
+
+  console.log('Created professional report with ID:', reportId);
 
   // Insert component calculations
-  await insertComponentCalculations(db, report.id);
+  await insertComponentCalculations(db, reportId);
 
   // Insert TML readings
-  await insertTmlReadings(db, newInspection.id);
+  await insertTmlReadings(db, inspectionId);
 
   console.log('Data insertion complete!');
 }
 
-async function insertComponentCalculations(db: any, reportId: number) {
+async function insertComponentCalculations(db: any, reportId: string) {
   // Shell calculation
   await db.insert(componentCalculations).values({
+    id: randomUUID(),
     reportId,
     componentName: 'Vessel Shell',
     componentType: 'shell',
-    nominalThickness: '0.625',
-    actualThickness: '0.652',
-    minimumThickness: '0.530',
-    previousThickness: '0.625',
-    corrosionRate: '0.00000',
-    remainingLife: '>20',
-    calculatedMawp: '307.5',
-    designMawp: '250',
-    allowableStress: '20000',
+    nominalThickness: '0.6250',
+    actualThickness: '0.6520',
+    minimumThickness: '0.5300',
+    previousThickness: '0.6250',
+    corrosionRate: '0.000000',
+    remainingLife: '20.00',
+    calculatedMAWP: '307.50',
+    designMAWP: '250.00',
+    allowableStress: '20000.00',
     jointEfficiency: '0.85',
     insideDiameter: '70.750',
-    designPressure: '252.4',
-    timeSpan: '12.0',
-    staticHead: '6.0',
-    specificGravity: '0.92',
+    staticHead: '6.00',
+    specificGravity: '0.9200',
+    timeSpan: '12.00',
   }).execute();
 
   // East Head calculation
   await db.insert(componentCalculations).values({
+    id: randomUUID(),
     reportId,
     componentName: 'East Head',
     componentType: 'head',
-    nominalThickness: '0.500',
-    actualThickness: '0.555',
-    minimumThickness: '0.526',
-    previousThickness: '0.500',
-    corrosionRate: '0.00000',
-    remainingLife: '>20',
-    calculatedMawp: '263.9',
-    designMawp: '250',
-    allowableStress: '20000',
+    nominalThickness: '0.5000',
+    actualThickness: '0.5550',
+    minimumThickness: '0.5260',
+    previousThickness: '0.5000',
+    corrosionRate: '0.000000',
+    remainingLife: '20.00',
+    calculatedMAWP: '263.90',
+    designMAWP: '250.00',
+    allowableStress: '20000.00',
     jointEfficiency: '0.85',
     insideDiameter: '70.750',
-    designPressure: '252.4',
-    timeSpan: '12.0',
-    staticHead: '6.0',
-    specificGravity: '0.92',
+    staticHead: '6.00',
+    specificGravity: '0.9200',
+    timeSpan: '12.00',
   }).execute();
 
   // West Head calculation
   await db.insert(componentCalculations).values({
+    id: randomUUID(),
     reportId,
     componentName: 'West Head',
     componentType: 'head',
-    nominalThickness: '0.500',
-    actualThickness: '0.552',
-    minimumThickness: '0.526',
-    previousThickness: '0.500',
-    corrosionRate: '0.00000',
-    remainingLife: '>20',
-    calculatedMawp: '262.5',
-    designMawp: '250',
-    allowableStress: '20000',
+    nominalThickness: '0.5000',
+    actualThickness: '0.5520',
+    minimumThickness: '0.5260',
+    previousThickness: '0.5000',
+    corrosionRate: '0.000000',
+    remainingLife: '20.00',
+    calculatedMAWP: '262.50',
+    designMAWP: '250.00',
+    allowableStress: '20000.00',
     jointEfficiency: '0.85',
     insideDiameter: '70.750',
-    designPressure: '252.4',
-    timeSpan: '12.0',
-    staticHead: '6.0',
-    specificGravity: '0.92',
+    staticHead: '6.00',
+    specificGravity: '0.9200',
+    timeSpan: '12.00',
   }).execute();
 
   console.log('Inserted 3 component calculations (Shell, East Head, West Head)');
 }
 
-async function insertTmlReadings(db: any, inspectionId: number) {
+async function insertTmlReadings(db: any, inspectionId: string) {
   // Shell TML readings (CML 1-17 based on drawing)
   const shellReadings = [
-    { cml: '1', location: 'Shell', actual: '0.660', nominal: '0.625' },
-    { cml: '2', location: 'Shell', actual: '0.658', nominal: '0.625' },
-    { cml: '3', location: 'Shell', actual: '0.655', nominal: '0.625' },
-    { cml: '4', location: 'Shell', actual: '0.652', nominal: '0.625' },
-    { cml: '5', location: 'Shell', actual: '0.654', nominal: '0.625' },
-    { cml: '6', location: 'Shell', actual: '0.656', nominal: '0.625' },
-    { cml: '7', location: 'Shell', actual: '0.653', nominal: '0.625' },
-    { cml: '8', location: 'Shell', actual: '0.657', nominal: '0.625' },
-    { cml: '9', location: 'Shell', actual: '0.659', nominal: '0.625' },
-    { cml: '10', location: 'Shell', actual: '0.655', nominal: '0.625' },
-    { cml: '11', location: 'Shell', actual: '0.654', nominal: '0.625' },
-    { cml: '12', location: 'Shell', actual: '0.656', nominal: '0.625' },
-    { cml: '13', location: 'Shell', actual: '0.658', nominal: '0.625' },
-    { cml: '14', location: 'Shell', actual: '0.657', nominal: '0.625' },
-    { cml: '15', location: 'Shell', actual: '0.655', nominal: '0.625' },
-    { cml: '16', location: 'Shell', actual: '0.653', nominal: '0.625' },
-    { cml: '17', location: 'Shell', actual: '0.652', nominal: '0.625' },
+    { cml: '1', location: '1-0', actual: '0.660', nominal: '0.625' },
+    { cml: '2', location: '2-0', actual: '0.658', nominal: '0.625' },
+    { cml: '3', location: '3-0', actual: '0.655', nominal: '0.625' },
+    { cml: '4', location: '4-0', actual: '0.652', nominal: '0.625' },
+    { cml: '5', location: '5-0', actual: '0.654', nominal: '0.625' },
+    { cml: '6', location: '6-0', actual: '0.656', nominal: '0.625' },
+    { cml: '7', location: '7-0', actual: '0.653', nominal: '0.625' },
+    { cml: '8', location: '8-0', actual: '0.657', nominal: '0.625' },
+    { cml: '9', location: '9-0', actual: '0.659', nominal: '0.625' },
+    { cml: '10', location: '10-0', actual: '0.655', nominal: '0.625' },
+    { cml: '11', location: '11-0', actual: '0.654', nominal: '0.625' },
+    { cml: '12', location: '12-0', actual: '0.656', nominal: '0.625' },
+    { cml: '13', location: '13-0', actual: '0.658', nominal: '0.625' },
+    { cml: '14', location: '14-0', actual: '0.657', nominal: '0.625' },
+    { cml: '15', location: '15-0', actual: '0.655', nominal: '0.625' },
+    { cml: '16', location: '16-0', actual: '0.653', nominal: '0.625' },
+    { cml: '17', location: '17-0', actual: '0.652', nominal: '0.625' },
   ];
 
-  // East Head TML readings (CML 1-5 on East Head)
+  // East Head TML readings
   const eastHeadReadings = [
-    { cml: '1', location: 'East Head', actual: '0.555', nominal: '0.500' },
-    { cml: '2', location: 'East Head', actual: '0.557', nominal: '0.500' },
-    { cml: '3', location: 'East Head', actual: '0.556', nominal: '0.500' },
-    { cml: '4', location: 'East Head', actual: '0.558', nominal: '0.500' },
-    { cml: '5', location: 'East Head', actual: '0.555', nominal: '0.500' },
+    { cml: '1', location: 'EH-1', actual: '0.555', nominal: '0.500' },
+    { cml: '2', location: 'EH-2', actual: '0.557', nominal: '0.500' },
+    { cml: '3', location: 'EH-3', actual: '0.556', nominal: '0.500' },
+    { cml: '4', location: 'EH-4', actual: '0.558', nominal: '0.500' },
+    { cml: '5', location: 'EH-5', actual: '0.555', nominal: '0.500' },
   ];
 
-  // West Head TML readings (CML 118-122 on West Head)
+  // West Head TML readings
   const westHeadReadings = [
-    { cml: '118', location: 'West Head', actual: '0.552', nominal: '0.500' },
-    { cml: '119', location: 'West Head', actual: '0.554', nominal: '0.500' },
-    { cml: '120', location: 'West Head', actual: '0.553', nominal: '0.500' },
-    { cml: '121', location: 'West Head', actual: '0.555', nominal: '0.500' },
-    { cml: '122', location: 'West Head', actual: '0.552', nominal: '0.500' },
+    { cml: '118', location: 'WH-1', actual: '0.552', nominal: '0.500' },
+    { cml: '119', location: 'WH-2', actual: '0.554', nominal: '0.500' },
+    { cml: '120', location: 'WH-3', actual: '0.553', nominal: '0.500' },
+    { cml: '121', location: 'WH-4', actual: '0.555', nominal: '0.500' },
+    { cml: '122', location: 'WH-5', actual: '0.552', nominal: '0.500' },
   ];
 
-  const allReadings = [...shellReadings, ...eastHeadReadings, ...westHeadReadings];
+  interface ReadingInput {
+    cml: string;
+    location: string;
+    actual: string;
+    nominal: string;
+    componentType: string;
+    componentGroup: string;
+  }
+
+  const allReadings: ReadingInput[] = [
+    ...shellReadings.map(r => ({ ...r, componentType: 'Vessel Shell', componentGroup: 'SHELL' })),
+    ...eastHeadReadings.map(r => ({ ...r, componentType: 'East Head', componentGroup: 'EASTHEAD' })),
+    ...westHeadReadings.map(r => ({ ...r, componentType: 'West Head', componentGroup: 'WESTHEAD' })),
+  ];
 
   for (const reading of allReadings) {
     await db.insert(tmlReadings).values({
+      id: randomUUID(),
       inspectionId,
-      cmlNumber: reading.cml,
+      legacyLocationId: reading.cml,
+      componentType: reading.componentType,
       location: reading.location,
-      component: reading.location.includes('Head') ? 'Head' : 'Shell',
-      componentType: reading.location.includes('Head') ? 'head' : 'shell',
-      actualThickness: reading.actual,
+      componentGroup: reading.componentGroup,
+      schemaVersion: 1,
+      tActual: reading.actual,
       nominalThickness: reading.nominal,
       previousThickness: reading.nominal,
-      measurementDate: new Date('2017-06-20'),
+      currentInspectionDate: new Date('2017-06-20'),
+      status: 'good',
     }).execute();
   }
 
