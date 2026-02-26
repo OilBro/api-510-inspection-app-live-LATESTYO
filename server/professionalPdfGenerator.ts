@@ -70,10 +70,10 @@ function getLocalFallbackClause(
     shell_mawp: 'UG-27-circ',
     head_tmin: headType?.toLowerCase().includes('hemispher') ? 'UG-32-f-hemispherical'
       : headType?.toLowerCase().includes('torisp') ? 'UG-32-e-torispherical'
-      : 'UG-32-d-ellipsoidal',
+        : 'UG-32-d-ellipsoidal',
     head_mawp: headType?.toLowerCase().includes('hemispher') ? 'UG-32-f-hemispherical'
       : headType?.toLowerCase().includes('torisp') ? 'UG-32-e-torispherical'
-      : 'UG-32-d-ellipsoidal',
+        : 'UG-32-d-ellipsoidal',
     remaining_life: 'API510-7.1.1-RL',
     corrosion_rate: 'API510-CR-ST',
     inspection_interval: 'API510-interval',
@@ -127,7 +127,7 @@ function drawCodeClauseBox(
 
   // Left accent bar
   doc.fillColor(ref.source === 'cohere_rerank' ? '#2563eb' : '#64748b')
-     .rect(MARGIN, boxY, 4, boxHeight).fill();
+    .rect(MARGIN, boxY, 4, boxHeight).fill();
 
   // Label line
   doc.font('Helvetica-Bold').fontSize(8).fillColor('#64748b');
@@ -198,7 +198,7 @@ function extractCmlNumber(cmlStr: string): number {
 
 async function addHeader(doc: PDFKit.PDFDocument, title: string, logoBuffer?: Buffer, companyName?: string) {
   const startY = doc.y;
-  
+
   // Add logo if provided (top left)
   if (logoBuffer) {
     try {
@@ -210,17 +210,17 @@ async function addHeader(doc: PDFKit.PDFDocument, title: string, logoBuffer?: Bu
       logger.error('[PDF] Failed to add logo:', error);
     }
   }
-  
+
   // Company information (right side of logo) - uses companyName parameter
   const companyX = MARGIN + 110;
   doc.font('Helvetica-Bold').fontSize(11).fillColor(COLORS.primary);
   doc.text(companyName || 'Inspection Services', companyX, MARGIN);
-  
+
   doc.font('Helvetica').fontSize(9).fillColor(COLORS.text);
   // Phone and website could be added as additional parameters in future
   doc.text('', companyX, MARGIN + 14);
   doc.text('', companyX, MARGIN + 26);
-  
+
   // Dynamic page number calculation (current page in buffered range)
   const currentPage = doc.bufferedPageRange().count;
   doc.font('Helvetica').fontSize(9).fillColor(COLORS.secondary);
@@ -228,7 +228,7 @@ async function addHeader(doc: PDFKit.PDFDocument, title: string, logoBuffer?: Bu
     width: 60,
     align: 'right'
   });
-  
+
   // Title (centered below header)
   if (title) {
     doc.font('Helvetica-Bold').fontSize(12).fillColor(COLORS.text);
@@ -237,11 +237,11 @@ async function addHeader(doc: PDFKit.PDFDocument, title: string, logoBuffer?: Bu
       align: 'center'
     });
   }
-  
+
   // Separator line
   doc.strokeColor(COLORS.border).lineWidth(1);
   doc.moveTo(MARGIN, MARGIN + 70).lineTo(PAGE_WIDTH - MARGIN, MARGIN + 70).stroke();
-  
+
   doc.y = MARGIN + 80;
   doc.fillColor(COLORS.text);
 }
@@ -251,7 +251,7 @@ function addSectionTitle(doc: PDFKit.PDFDocument, title: string) {
   doc.font('Helvetica-Bold').fontSize(14).fillColor(COLORS.primary);
   doc.text(title, MARGIN, doc.y);
   doc.moveDown(0.5);
-  
+
   // Underline
   const y = doc.y;
   doc.strokeColor(COLORS.primary).lineWidth(2);
@@ -270,8 +270,8 @@ function addSubsectionTitle(doc: PDFKit.PDFDocument, title: string) {
 function addText(doc: PDFKit.PDFDocument, text: string, options: any = {}) {
   checkPageBreak(doc, 20);
   doc.font(options.bold ? 'Helvetica-Bold' : 'Helvetica')
-     .fontSize(options.fontSize || 10)
-     .fillColor(COLORS.text);
+    .fontSize(options.fontSize || 10)
+    .fillColor(COLORS.text);
   doc.text(text, MARGIN, doc.y, {
     width: CONTENT_WIDTH,
     align: options.align || 'left',
@@ -302,7 +302,7 @@ async function conditionalPageBreak(
 ) {
   const hasContent = doc.y > MARGIN + 100; // Page has content beyond header
   const needsSpace = doc.y + minSpace > PAGE_HEIGHT - MARGIN;
-  
+
   // Only add new page + header if current page has content AND needs more space
   if (hasContent && needsSpace) {
     doc.addPage();
@@ -320,12 +320,12 @@ async function addTable(doc: PDFKit.PDFDocument, headers: string[], rows: string
   const ROW_HEIGHT = 20;
   const HEADER_HEIGHT = 25;
   const MAX_ROWS_PER_PAGE = 30; // Limit rows per page to avoid issues
-  
+
   // Helper to draw table header
   function drawTableHeader(y: number) {
     doc.fillColor(COLORS.headerBg).rect(MARGIN, y, CONTENT_WIDTH, HEADER_HEIGHT).fill();
     doc.fillColor(COLORS.text).font('Helvetica-Bold').fontSize(9);
-    
+
     let xOffset = MARGIN;
     headers.forEach((header, i) => {
       doc.text(header, xOffset + 5, y + 8, {
@@ -334,47 +334,47 @@ async function addTable(doc: PDFKit.PDFDocument, headers: string[], rows: string
       });
       xOffset += colWidths[i];
     });
-    
+
     return y + HEADER_HEIGHT;
   }
-  
+
   // Split rows into chunks if needed
   let rowIndex = 0;
   let isFirstChunk = true;
-  
+
   while (rowIndex < rows.length) {
     const remainingRows = rows.length - rowIndex;
     const rowsThisPage = Math.min(remainingRows, MAX_ROWS_PER_PAGE);
-    
-    // Check if we need a page break (only if not the first chunk or insufficient space)
+
+    // Check if we need a page break (insufficient space for this chunk)
     const neededSpace = HEADER_HEIGHT + (rowsThisPage * ROW_HEIGHT) + 20;
-    if (!isFirstChunk && doc.y + neededSpace > PAGE_HEIGHT - MARGIN) {
+    if (doc.y + neededSpace > PAGE_HEIGHT - MARGIN) {
       doc.addPage();
       doc.y = MARGIN + 60; // Start below header space
     }
-    
+
     // Draw header directly at current position (no extra spacing)
     let currentY = drawTableHeader(doc.y);
     isFirstChunk = false;
     const tableStartY = currentY - HEADER_HEIGHT;
-    
+
     // Draw rows for this page
     doc.font('Helvetica').fontSize(9);
-    
+
     // Save the current auto page break setting and disable it
     const originalBufferPages = (doc as any).options?.bufferPages;
     (doc as any).options = (doc as any).options || {};
     (doc as any).options.bufferPages = true; // Disable automatic page breaks
-    
+
     for (let i = 0; i < rowsThisPage; i++) {
       const row = rows[rowIndex + i];
       const rowY = currentY + (i * ROW_HEIGHT);
-      
+
       // Alternate row background
       if (i % 2 === 0) {
         doc.fillColor('#f9fafb').rect(MARGIN, rowY, CONTENT_WIDTH, ROW_HEIGHT).fill();
       }
-      
+
       doc.fillColor(COLORS.text);
       let xOffset = MARGIN;
       row.forEach((cell, colIndex) => {
@@ -383,11 +383,11 @@ async function addTable(doc: PDFKit.PDFDocument, headers: string[], rows: string
         // Truncate text if it's too long to prevent overflow
         const maxLength = Math.floor((colW - 10) / 5); // Approximate chars that fit
         const displayText = cellText.length > maxLength ? cellText.substring(0, maxLength - 3) + '...' : cellText;
-        
+
         // Use text without width parameter to prevent automatic page breaks
         const x = xOffset + 5;
         const y = rowY + 5;
-        
+
         // Manually clip text to cell width
         doc.save();
         doc.rect(xOffset, rowY, colW, ROW_HEIGHT).clip();
@@ -399,21 +399,21 @@ async function addTable(doc: PDFKit.PDFDocument, headers: string[], rows: string
         xOffset += colW;
       });
     }
-    
+
     // Restore original page break setting
     if (originalBufferPages !== undefined) {
       (doc as any).options.bufferPages = originalBufferPages;
     }
-    
+
     // Draw border around this table section
     const tableHeight = HEADER_HEIGHT + (rowsThisPage * ROW_HEIGHT);
     doc.strokeColor(COLORS.border).lineWidth(1);
     doc.rect(MARGIN, tableStartY, CONTENT_WIDTH, tableHeight).stroke();
-    
+
     // Update position
     doc.y = currentY + (rowsThisPage * ROW_HEIGHT) + 10;
     rowIndex += rowsThisPage;
-    
+
     // Don't add page break here - let the next iteration's space check handle it
     // This prevents duplicate page breaks and blank pages
   }
@@ -540,10 +540,10 @@ export const REPORT_TEMPLATES = {
 
 export async function generateProfessionalPDF(data: ProfessionalReportData): Promise<Buffer> {
   const { reportId, inspectionId, sectionConfig } = data;
-  
+
   // Default to full report if no config provided
   const config: ReportSectionConfig = sectionConfig || REPORT_TEMPLATES.FULL_REPORT.config;
-  
+
   // Load company logo
   let logoBuffer: Buffer | undefined;
   try {
@@ -554,14 +554,14 @@ export async function generateProfessionalPDF(data: ProfessionalReportData): Pro
   } catch (error) {
     logger.error('[PDF] Failed to load logo:', error);
   }
-  
+
   // Fetch all data
   const report = await getProfessionalReport(reportId);
   if (!report) throw new Error('Report not found');
-  
+
   const inspection = await getInspection(inspectionId);
   if (!inspection) throw new Error('Inspection not found');
-  
+
   const components = (await getComponentCalculations(reportId)).sort((a, b) => {
     // Extract numeric part from component name for sorting
     const getNumber = (name: string) => {
@@ -575,7 +575,7 @@ export async function generateProfessionalPDF(data: ProfessionalReportData): Pro
   const photos = await getInspectionPhotos(reportId);
   const checklist = await getChecklistItems(reportId);
   const tmlReadings = await getTmlReadings(inspectionId);
-  
+
   // DEBUG LOGGING
   logger.info('[PDF DEBUG] Data counts:');
   logger.info('  Components:', components?.length || 0);
@@ -584,131 +584,131 @@ export async function generateProfessionalPDF(data: ProfessionalReportData): Pro
   logger.info('  Photos:', photos?.length || 0);
   logger.info('  Checklist:', checklist?.length || 0);
   logger.info('  TML Readings:', tmlReadings?.length || 0);
-  
+
   // Create PDF
   const doc = new PDFDocument({
     size: 'LETTER',
     margins: { top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN },
     bufferPages: true,
   });
-  
+
   const chunks: Buffer[] = [];
   doc.on('data', (chunk) => chunks.push(chunk));
-  
+
   const pdfPromise = new Promise<Buffer>((resolve, reject) => {
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
   });
-  
+
   // Generate pages based on section config
   if (config.coverPage !== false) {
     logger.info('[PDF DEBUG] Generating cover page...');
     generateCoverPage(doc, report, inspection);
     logger.info('[PDF DEBUG] Page count after cover:', doc.bufferedPageRange().count);
   }
-  
+
   if (config.tableOfContents !== false) {
     logger.info('[PDF DEBUG] Generating TOC...');
     await generateTableOfContents(doc, logoBuffer);
     logger.info('[PDF DEBUG] Page count after TOC:', doc.bufferedPageRange().count);
   }
-  
+
   if (config.executiveSummary !== false) {
     logger.info('[PDF DEBUG] Generating executive summary...');
     await generateExecutiveSummary(doc, report, components, logoBuffer, inspection, tmlReadings);
     logger.info('[PDF DEBUG] Page count after exec summary:', doc.bufferedPageRange().count);
   }
-  
+
   if (config.vesselData !== false) {
     logger.info('[PDF DEBUG] Generating vessel data...');
     await generateVesselData(doc, inspection, logoBuffer);
     logger.info('[PDF DEBUG] Page count after vessel data:', doc.bufferedPageRange().count);
   }
-  
+
   if (config.componentCalculations !== false) {
     logger.info('[PDF DEBUG] Generating component calculations...');
     await generateComponentCalculations(doc, components, logoBuffer, inspection, tmlReadings, report);
     logger.info('[PDF DEBUG] Page count after components:', doc.bufferedPageRange().count);
   }
-  
+
   if (config.inspectionFindings !== false) {
     logger.info('[PDF DEBUG] Generating findings...');
     await generateInspectionFindings(doc, findings, logoBuffer, inspection);
     logger.info('[PDF DEBUG] Page count after findings:', doc.bufferedPageRange().count);
   }
-  
+
   if (config.recommendations !== false) {
     logger.info('[PDF DEBUG] Generating recommendations...');
     await generateRecommendationsSection(doc, recommendations, logoBuffer, inspection);
     logger.info('[PDF DEBUG] Page count after recommendations:', doc.bufferedPageRange().count);
   }
-  
+
   if (config.thicknessReadings !== false) {
     logger.info('[PDF DEBUG] Generating thickness readings...');
     await generateThicknessReadings(doc, tmlReadings, logoBuffer);
     logger.info('[PDF DEBUG] Page count after TML:', doc.bufferedPageRange().count);
   }
-  
+
   // Nozzle evaluation section
   logger.info('[PDF DEBUG] Generating nozzle evaluation...');
   await generateNozzleEvaluation(doc, inspectionId, logoBuffer, report, inspection);
   logger.info('[PDF DEBUG] Page count after nozzles:', doc.bufferedPageRange().count);
-  
+
   if (config.checklist !== false) {
     logger.info('[PDF DEBUG] Generating checklist...');
     await generateChecklist(doc, checklist, logoBuffer);
     logger.info('[PDF DEBUG] Page count after checklist:', doc.bufferedPageRange().count);
   }
-  
+
   if (config.ffsAssessment !== false) {
     logger.info('[PDF DEBUG] Generating FFS assessment...');
     await generateFfsAssessment(doc, inspectionId, logoBuffer);
     logger.info('[PDF DEBUG] Page count after FFS:', doc.bufferedPageRange().count);
   }
-  
+
   if (config.inLieuOfQualification !== false) {
     logger.info('[PDF DEBUG] Generating In-Lieu-Of qualification...');
     await generateInLieuOfQualification(doc, inspectionId, logoBuffer);
     logger.info('[PDF DEBUG] Page count after In-Lieu-Of:', doc.bufferedPageRange().count);
   }
-  
+
   // Generate drawings section (collect PDF drawings for later merging)
   const drawings = await getVesselDrawings(reportId);
   const pdfDrawings: { url: string; title: string }[] = [];
-  
+
   if (drawings && drawings.length > 0) {
     logger.info('[PDF DEBUG] Generating drawings...');
     // Separate PDF drawings from image drawings
-    const imageDrawings = drawings.filter((d: any) => 
-      !d.fileType?.includes('pdf') && 
+    const imageDrawings = drawings.filter((d: any) =>
+      !d.fileType?.includes('pdf') &&
       (d.fileType?.includes('image') || d.fileName?.match(/\.(png|jpg|jpeg|gif)$/i))
     );
-    
+
     // Collect PDF drawings for merging later
     drawings.forEach((d: any) => {
       if (d.fileType?.includes('pdf') && d.fileUrl) {
         pdfDrawings.push({ url: d.fileUrl, title: d.title || d.fileName || 'Drawing' });
       }
     });
-    
+
     // Generate section with image drawings and references to PDF drawings
     await generateDrawings(doc, drawings, logoBuffer, pdfDrawings.length > 0);
     logger.info('[PDF DEBUG] Page count after drawings:', doc.bufferedPageRange().count);
     logger.info('[PDF DEBUG] PDF drawings to merge:', pdfDrawings.length);
   }
-  
+
   if (config.photos !== false) {
     logger.info('[PDF DEBUG] Generating photos...');
     await generatePhotos(doc, photos, logoBuffer);
     logger.info('[PDF DEBUG] Final page count:', doc.bufferedPageRange().count);
   }
-  
+
   // Finalize the main PDF
   doc.end();
-  
+
   // Get the main PDF buffer
   const mainPdfBuffer = await pdfPromise;
-  
+
   // If there are PDF drawings to merge, merge them now
   if (pdfDrawings.length > 0) {
     logger.info('[PDF] Merging', pdfDrawings.length, 'PDF drawings into report...');
@@ -722,7 +722,7 @@ export async function generateProfessionalPDF(data: ProfessionalReportData): Pro
       return mainPdfBuffer;
     }
   }
-  
+
   return mainPdfBuffer;
 }
 
@@ -734,53 +734,53 @@ function generateCoverPage(doc: PDFKit.PDFDocument, report: any, inspection: any
   // Company header - uses report.employerName if available
   doc.font('Helvetica').fontSize(10).fillColor(COLORS.secondary);
   doc.text(report.employerName || 'Inspection Services', MARGIN, MARGIN);
-  doc.text(`${inspection.vesselTagNumber || ''} API 510 IN LIEU OF`, 
+  doc.text(`${inspection.vesselTagNumber || ''} API 510 IN LIEU OF`,
     PAGE_WIDTH - MARGIN - 200, MARGIN, { width: 200, align: 'right' });
-  
+
   // Logo (text-based - uses first word of employerName or generic)
   const companyWords = (report.employerName || 'Inspection Services').split(' ');
   doc.font('Helvetica-Bold').fontSize(32).fillColor(COLORS.primary);
   doc.text(companyWords[0] || 'Inspection', MARGIN, MARGIN + 60);
   doc.font('Helvetica').fontSize(12).fillColor(COLORS.secondary);
   doc.text(companyWords.slice(1).join(' ') || 'Services', MARGIN + 10, MARGIN + 95);
-  
+
   // Client info
   doc.moveDown(4);
   doc.font('Helvetica-Bold').fontSize(20).fillColor(COLORS.text);
   doc.text(report.clientName || 'CLIENT NAME', { align: 'center' });
   doc.font('Helvetica').fontSize(14).fillColor(COLORS.secondary);
   doc.text(report.clientLocation || 'Location', { align: 'center' });
-  
+
   // Report metadata box
   doc.moveDown(3);
   const boxY = doc.y;
   const boxHeight = 120;
-  
+
   // Box background
   doc.fillColor(COLORS.headerBg).rect(MARGIN + 50, boxY, CONTENT_WIDTH - 100, boxHeight).fill();
   doc.strokeColor(COLORS.border).rect(MARGIN + 50, boxY, CONTENT_WIDTH - 100, boxHeight).stroke();
-  
+
   // Metadata fields
   const leftX = MARGIN + 70;
   const valueX = leftX + 140;
   let fieldY = boxY + 20;
-  
+
   doc.fillColor(COLORS.text).font('Helvetica-Bold').fontSize(11);
-  
+
   const fields = [
     ['Report No.:', report.reportNumber || ''],
     ['Inspector:', report.inspectorName || ''],
     ['Employer:', report.employerName || 'Inspection Services'],
     ['Inspection Date:', report.reportDate ? new Date(report.reportDate).toLocaleDateString('en-US') : ''],
   ];
-  
+
   fields.forEach(([label, value]) => {
     doc.text(label, leftX, fieldY);
     doc.font('Helvetica').text(value, valueX, fieldY);
     doc.font('Helvetica-Bold');
     fieldY += 25;
   });
-  
+
   // Title
   doc.moveDown(4);
   doc.font('Helvetica-Bold').fontSize(18).fillColor(COLORS.primary);
@@ -794,12 +794,12 @@ function generateCoverPage(doc: PDFKit.PDFDocument, report: any, inspection: any
   doc.moveDown(1);
   doc.fontSize(24).fillColor(COLORS.text);
   doc.text(inspection.vesselTagNumber || '', { align: 'center' });
-  
+
   // Executive summary paragraph
   doc.moveDown(2);
   doc.font('Helvetica').fontSize(10).fillColor(COLORS.text);
   const summaryText = `An API Standard 510 Inspection based on client criterion for nondestructive examinations was conducted on vessel ${inspection.vesselTagNumber || ''} in the ${report.clientLocation || ''} facility located at ${report.clientLocation || ''} on ${report.reportDate ? new Date(report.reportDate).toLocaleDateString('en-US') : ''}. This vessel was originally built to ASME S8 D1. This inspection was conducted in accordance with requirements of the API-510 standard for inspections of Pressure Vessels. The following is a detailed report of the inspection including findings and recommendations.`;
-  
+
   doc.text(summaryText, MARGIN, doc.y, {
     width: CONTENT_WIDTH,
     align: 'justify'
@@ -808,7 +808,7 @@ function generateCoverPage(doc: PDFKit.PDFDocument, report: any, inspection: any
 
 async function generateTableOfContents(doc: PDFKit.PDFDocument, logoBuffer?: Buffer) {
   await conditionalPageBreak(doc, 'TABLE OF CONTENTS', logoBuffer, 300);
-  
+
   const sections = [
     '1.0 EXECUTIVE SUMMARY',
     '2.0 VESSEL DATA',
@@ -831,7 +831,7 @@ async function generateTableOfContents(doc: PDFKit.PDFDocument, logoBuffer?: Buf
     'Appendix F - Repair Documentation',
     'Appendix G - Supporting Documentation',
   ];
-  
+
   doc.font('Helvetica-Bold').fontSize(11).fillColor(COLORS.text);
   sections.forEach((section, i) => {
     doc.text(section, MARGIN + 20, doc.y);
@@ -841,171 +841,171 @@ async function generateTableOfContents(doc: PDFKit.PDFDocument, logoBuffer?: Buf
 
 async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, components: any[], logoBuffer?: Buffer, inspection?: any, tmlReadings?: any[]) {
   await conditionalPageBreak(doc, 'EXECUTIVE SUMMARY', logoBuffer, 400);
-  
+
   addSectionTitle(doc, '1.0 EXECUTIVE SUMMARY');
-  
+
   // Use database summary if available, otherwise generate default text
   // Pull vessel info from inspection record if not in report
   const vesselId = report.vesselId || inspection?.vesselTagNumber || inspection?.vesselName || 'Not Specified';
   const location = report.location || inspection?.location || report.clientLocation || 'Not Specified';
   const inspDate = report.inspectionDate || inspection?.inspectionDate;
-  const summaryText = report.executiveSummary || 
+  const summaryText = report.executiveSummary ||
     `An API Standard 510 inspection of pressure vessel ${vesselId} located in ${location}, was conducted on ${inspDate ? new Date(inspDate).toLocaleDateString() : 'Not Specified'}. This inspection was made to collect data in order to evaluate the mechanical integrity and fitness for service of the vessel. No major problems were noted. The vessel is in satisfactory mechanical condition for continued service.`;
-  
+
   addText(doc, summaryText);
-  
+
   doc.moveDown(1);
-  
+
   // TABLE A - Summary of 3 main components
   doc.font('Helvetica-Bold').fontSize(11).fillColor(COLORS.text);
   doc.text('TABLE A', { align: 'center' });
   doc.moveDown(0.5);
-  
+
   try {
     // Debug logging handled by centralized logger
-    
-    
-  
-  // Get component calculations for TABLE A
-  // These should have been created during PDF import or manually
-  const componentCalcs = await getComponentCalculations(report.id);
-  
-  
-  
-  // Find the three main components with expanded pattern matching
-  // Supports: South/North Head, East/West Head, Top/Bottom Head, Head 1/2
-  const findComponent = (patterns: string[]) => {
-    return componentCalcs.find(c => {
-      const name = (c.componentName || '').toLowerCase();
-      const type = (c.componentType || '').toLowerCase();
-      return patterns.some(p => name.includes(p) || type.includes(p));
-    });
-  };
-  
-  const shellCalc = findComponent(['shell', 'cylinder', 'body']);
-  // Head 1 patterns: south, east, top, head 1, left (South Head is canonical)
-  const head1Calc = findComponent(['south', 'east', 'top head', 'head 1', 'head-1', 'left head']);
-  // Head 2 patterns: north, west, bottom, head 2, right (North Head is canonical)
-  const head2Calc = findComponent(['north', 'west', 'bottom', 'bttm', 'btm', 'head 2', 'head-2', 'right head']);
-  
-  // Derive display names from actual component data (not hardcoded)
-  const head1Name = head1Calc?.componentName || 'South Head';
-  const head2Name = head2Calc?.componentName || 'North Head';
-  
-  
-  
-  
-  
-  // Helper to format values
-  const formatValue = (val: any, decimals: number = 3): string => {
-    if (val == null || val === '' || val === '-') return '-';
-    const num = parseFloat(String(val));
-    return !isNaN(num) && isFinite(num) ? num.toFixed(decimals) : '-';
-  };
-  
-  // Extract data from component calculations
-  // Nominal thickness fallback: componentCalc → inspection-level vessel data
-  const getComponentData = (calc: any, componentType: 'shell' | 'head') => {
-    if (!calc) return { tNom: '-', tActual: '-', tMin: '-', mawp: '-', rl: '-' };
-    
-    // For nominalThickness: use the component calc value if available,
-    // otherwise try to derive from inspection-level vessel data
-    let tNom = formatValue(calc.nominalThickness);
-    if (tNom === '-' && inspection) {
-      // Fall back to inspection-level nominal thickness if available
-      // Shell and head may have different nominal thicknesses stored in vessel data
-      const inspNom = (inspection as any).shellNominalThickness || (inspection as any).nominalThickness;
-      const inspHeadNom = (inspection as any).headNominalThickness;
-      if (componentType === 'shell' && inspNom) {
-        tNom = formatValue(inspNom);
-      } else if (componentType === 'head' && (inspHeadNom || inspNom)) {
-        tNom = formatValue(inspHeadNom || inspNom);
-      }
-    }
-    
-    return {
-      tNom,
-      tActual: formatValue(calc.actualThickness),
-      tMin: formatValue(calc.minimumThickness),
-      mawp: formatValue(calc.calculatedMAWP, 1),
-      rl: calc.remainingLife != null && calc.remainingLife !== '' ? String(calc.remainingLife) : '-',
+
+
+
+    // Get component calculations for TABLE A
+    // These should have been created during PDF import or manually
+    const componentCalcs = await getComponentCalculations(report.id);
+
+
+
+    // Find the three main components with expanded pattern matching
+    // Supports: South/North Head, East/West Head, Top/Bottom Head, Head 1/2
+    const findComponent = (patterns: string[]) => {
+      return componentCalcs.find(c => {
+        const name = (c.componentName || '').toLowerCase();
+        const type = (c.componentType || '').toLowerCase();
+        return patterns.some(p => name.includes(p) || type.includes(p));
+      });
     };
-  };
-  
-  const shellData = getComponentData(shellCalc, 'shell');
-  const head1Data = getComponentData(head1Calc, 'head');
-  const head2Data = getComponentData(head2Calc, 'head');
-  
-  // Create table structure with aggregated data
-  const tableHeaders = [
-    'Component',
-    'Nominal\nDesign\nThickness\n(in.)',
-    'Actual\nMeasured\nThickness\n(in.)',
-    'Minimum\nRequired\nThickness\n(in.)',
-    'Design\nMAWP\n(psi)\nInternal',
-    'Calculated\nMAWP\n(psi)\nInternal',
-    'Remaining\nLife\n(years)'
-  ];
-  
-  // Convert all values to strings explicitly to prevent PDFKit pattern errors
-  const toStr = (val: any): string => {
-    if (val === null || val === undefined) return '-';
-    // Ensure we always return a clean string and strip non-ASCII chars to prevent font crashes
-    return String(val).replace(/[^\x00-\x7F]/g, '');
-  };
-  
-  const tableRows = [
-    [
-      'Vessel Shell',
-      toStr(shellData.tNom),
-      toStr(shellData.tActual),
-      toStr(shellData.tMin),
-      toStr(inspection?.designPressure || '250'),
-      toStr(shellData.mawp),
-      toStr(shellData.rl),
-    ],
-    [
-      toStr(head1Name),
-      toStr(head1Data.tNom),
-      toStr(head1Data.tActual),
-      toStr(head1Data.tMin),
-      toStr(inspection?.designPressure || '250'),
-      toStr(head1Data.mawp),
-      toStr(head1Data.rl),
-    ],
-    [
-      toStr(head2Name),
-      toStr(head2Data.tNom),
-      toStr(head2Data.tActual),
-      toStr(head2Data.tMin),
-      toStr(inspection?.designPressure || '250'),
-      toStr(head2Data.mawp),
-      toStr(head2Data.rl),
-    ],
-  ];
-  
-  
-  
-  // Custom column widths for TABLE A to prevent text cutoff
-  // Total CONTENT_WIDTH is ~515, distribute to fit long headers
-  const tableAColWidths = [
-    70,  // Component
-    65,  // Nominal Design Thickness
-    80,  // Actual Measured Thickness (wider)
-    80,  // Minimum Required Thickness (wider)
-    70,  // Design MAWP
-    80,  // Calculated MAWP (wider)
-    70   // Remaining Life
-  ];
-  
-  await addTable(doc, tableHeaders, tableRows, '', logoBuffer, tableAColWidths);
-  
-  
+
+    const shellCalc = findComponent(['shell', 'cylinder', 'body']);
+    // Head 1 patterns: south, east, top, head 1, left (South Head is canonical)
+    const head1Calc = findComponent(['south', 'east', 'top head', 'head 1', 'head-1', 'left head']);
+    // Head 2 patterns: north, west, bottom, head 2, right (North Head is canonical)
+    const head2Calc = findComponent(['north', 'west', 'bottom', 'bttm', 'btm', 'head 2', 'head-2', 'right head']);
+
+    // Derive display names from actual component data (not hardcoded)
+    const head1Name = head1Calc?.componentName || 'South Head';
+    const head2Name = head2Calc?.componentName || 'North Head';
+
+
+
+
+
+    // Helper to format values
+    const formatValue = (val: any, decimals: number = 3): string => {
+      if (val == null || val === '' || val === '-') return '-';
+      const num = parseFloat(String(val));
+      return !isNaN(num) && isFinite(num) ? num.toFixed(decimals) : '-';
+    };
+
+    // Extract data from component calculations
+    // Nominal thickness fallback: componentCalc → inspection-level vessel data
+    const getComponentData = (calc: any, componentType: 'shell' | 'head') => {
+      if (!calc) return { tNom: '-', tActual: '-', tMin: '-', mawp: '-', rl: '-' };
+
+      // For nominalThickness: use the component calc value if available,
+      // otherwise try to derive from inspection-level vessel data
+      let tNom = formatValue(calc.nominalThickness);
+      if (tNom === '-' && inspection) {
+        // Fall back to inspection-level nominal thickness if available
+        // Shell and head may have different nominal thicknesses stored in vessel data
+        const inspNom = (inspection as any).shellNominalThickness || (inspection as any).nominalThickness;
+        const inspHeadNom = (inspection as any).headNominalThickness;
+        if (componentType === 'shell' && inspNom) {
+          tNom = formatValue(inspNom);
+        } else if (componentType === 'head' && (inspHeadNom || inspNom)) {
+          tNom = formatValue(inspHeadNom || inspNom);
+        }
+      }
+
+      return {
+        tNom,
+        tActual: formatValue(calc.actualThickness),
+        tMin: formatValue(calc.minimumThickness),
+        mawp: formatValue(calc.calculatedMAWP, 1),
+        rl: calc.remainingLife != null && calc.remainingLife !== '' ? String(calc.remainingLife) : '-',
+      };
+    };
+
+    const shellData = getComponentData(shellCalc, 'shell');
+    const head1Data = getComponentData(head1Calc, 'head');
+    const head2Data = getComponentData(head2Calc, 'head');
+
+    // Create table structure with aggregated data
+    const tableHeaders = [
+      'Component',
+      'Nominal\nDesign\nThickness\n(in.)',
+      'Actual\nMeasured\nThickness\n(in.)',
+      'Minimum\nRequired\nThickness\n(in.)',
+      'Design\nMAWP\n(psi)\nInternal',
+      'Calculated\nMAWP\n(psi)\nInternal',
+      'Remaining\nLife\n(years)'
+    ];
+
+    // Convert all values to strings explicitly to prevent PDFKit pattern errors
+    const toStr = (val: any): string => {
+      if (val === null || val === undefined) return '-';
+      // Ensure we always return a clean string and strip non-ASCII chars to prevent font crashes
+      return String(val).replace(/[^\x00-\x7F]/g, '');
+    };
+
+    const tableRows = [
+      [
+        'Vessel Shell',
+        toStr(shellData.tNom),
+        toStr(shellData.tActual),
+        toStr(shellData.tMin),
+        toStr(inspection?.designPressure || '250'),
+        toStr(shellData.mawp),
+        toStr(shellData.rl),
+      ],
+      [
+        toStr(head1Name),
+        toStr(head1Data.tNom),
+        toStr(head1Data.tActual),
+        toStr(head1Data.tMin),
+        toStr(inspection?.designPressure || '250'),
+        toStr(head1Data.mawp),
+        toStr(head1Data.rl),
+      ],
+      [
+        toStr(head2Name),
+        toStr(head2Data.tNom),
+        toStr(head2Data.tActual),
+        toStr(head2Data.tMin),
+        toStr(inspection?.designPressure || '250'),
+        toStr(head2Data.mawp),
+        toStr(head2Data.rl),
+      ],
+    ];
+
+
+
+    // Custom column widths for TABLE A to prevent text cutoff
+    // Total CONTENT_WIDTH is ~515, distribute to fit long headers
+    const tableAColWidths = [
+      70,  // Component
+      65,  // Nominal Design Thickness
+      80,  // Actual Measured Thickness (wider)
+      80,  // Minimum Required Thickness (wider)
+      70,  // Design MAWP
+      80,  // Calculated MAWP (wider)
+      70   // Remaining Life
+    ];
+
+    await addTable(doc, tableHeaders, tableRows, '', logoBuffer, tableAColWidths);
+
+
   } catch (error) {
     // Error logged in production
-    
-    
-    
+
+
+
     // Fallback: Generate simple table with dashes
     const fallbackHeaders = ['Component', 'Nominal\nDesign\nThickness\n(in.)', 'Actual\nMeasured\nThickness\n(in.)', 'Minimum\nRequired\nThickness\n(in.)', 'Design\nMAWP\n(psi)\nInternal', 'Calculated\nMAWP\n(psi)\nInternal', 'Remaining\nLife\n(years)'];
     const fallbackRows = [
@@ -1015,47 +1015,47 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
     ];
     await addTable(doc, fallbackHeaders, fallbackRows, '', logoBuffer);
   }
-  
+
   // Next Inspection section - properly formatted below table
   doc.moveDown(2);
   doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.text);
   doc.text('Next Inspection:', MARGIN, doc.y);
   doc.moveDown(0.5);
   doc.font('Helvetica').fontSize(9);
-  
+
   // Format dates to show only date without time and timezone
   const formatDate = (dateValue: any): string => {
     if (!dateValue) return 'Not specified';
     try {
       const date = new Date(dateValue);
       if (isNaN(date.getTime())) return 'Invalid date';
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       });
     } catch (e) {
       return 'Invalid date';
     }
   };
-  
+
   doc.text(`Next external inspection is due by: ${formatDate(report.nextExternalInspectionAPI)}`, MARGIN, doc.y);
   doc.text(`Next internal inspection is due by: ${formatDate(report.nextInternalInspection)}`, MARGIN, doc.y);
   doc.text(`Next UT inspection is due by: ${formatDate(report.nextUTInspection)}`, MARGIN, doc.y);
-  
+
   // Compliance and Risk Assessment section (Option 1 Quick Wins)
   doc.moveDown(2);
   doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.text);
   doc.text('Compliance & Risk Assessment:', MARGIN, doc.y);
   doc.moveDown(0.5);
   doc.font('Helvetica').fontSize(9);
-  
+
   // Compliance status
   const api510Status = report.api510Compliant ? '✓ Compliant' : '✗ Non-Compliant';
   const asmeStatus = report.asmeCompliant ? '✓ Compliant' : '✗ Non-Compliant';
   doc.text(`API 510 Compliance: ${api510Status}`, MARGIN, doc.y);
   doc.text(`ASME Compliance: ${asmeStatus}`, MARGIN, doc.y);
-  
+
   // Risk classification with color coding
   const riskLevel = report.riskClassification || 'medium';
   const riskColors: { [key: string]: string } = {
@@ -1070,16 +1070,16 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
     high: 'High Risk',
     critical: 'Critical Risk'
   };
-  
+
   doc.fillColor(riskColors[riskLevel] || riskColors.medium);
   doc.text(`Risk Classification: ${riskLabels[riskLevel] || 'Medium Risk'}`, MARGIN, doc.y);
   doc.fillColor(COLORS.text); // Reset color
-  
+
   // Operational efficiency score
   if (report.operationalEfficiencyScore != null) {
     doc.text(`Operational Efficiency Score: ${report.operationalEfficiencyScore}/100`, MARGIN, doc.y);
   }
-  
+
   // Compliance notes if present
   if (report.complianceNotes) {
     doc.moveDown(0.5);
@@ -1088,14 +1088,14 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
     doc.font('Helvetica').fontSize(9);
     doc.text(report.complianceNotes, MARGIN, doc.y, { width: CONTENT_WIDTH });
   }
-  
+
   // Per skills.md: Add explicit assumption declarations to PDF output
   doc.moveDown(2);
   doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.text);
   doc.text('Calculation Assumptions & Basis:', MARGIN, doc.y);
   doc.moveDown(0.5);
   doc.font('Helvetica').fontSize(8).fillColor(COLORS.secondary);
-  
+
   const assumptions = [
     '• All calculations are based on ASME Section VIII Division 1 (current edition). Verify applicability with current code.',
     '• Minimum thickness calculations per UG-27 (shells) and UG-32 (heads).',
@@ -1106,20 +1106,20 @@ async function generateExecutiveSummary(doc: PDFKit.PDFDocument, report: any, co
     '• Static head pressure included where applicable per API 510 Section 7.',
     '• This report does not constitute a fitness-for-service assessment unless Section 10.0 is included.',
   ];
-  
+
   assumptions.forEach(assumption => {
     doc.text(assumption, MARGIN, doc.y, { width: CONTENT_WIDTH });
     doc.moveDown(0.3);
   });
-  
+
   doc.fillColor(COLORS.text); // Reset color
 }
 
 async function generateVesselData(doc: PDFKit.PDFDocument, inspection: any, logoBuffer?: Buffer) {
   await conditionalPageBreak(doc, 'VESSEL DATA', logoBuffer, 350);
-  
+
   addSectionTitle(doc, '2.0 VESSEL DATA');
-  
+
   const data = [
     ['Vessel Tag Number', inspection.vesselTagNumber || '-'],
     ['Vessel Name', inspection.vesselName || '-'],
@@ -1133,26 +1133,26 @@ async function generateVesselData(doc: PDFKit.PDFDocument, inspection: any, logo
     ['Inside Diameter', `${inspection.insideDiameter || '-'} inches`],
     ['Overall Length', `${inspection.overallLength || '-'} inches`],
   ];
-  
+
   // Two-column layout
   const colWidth = CONTENT_WIDTH / 2 - 10;
   let leftY = doc.y;
-  
+
   data.forEach((row, i) => {
     const isLeft = i % 2 === 0;
     const x = isLeft ? MARGIN : MARGIN + colWidth + 20;
     const y = isLeft ? leftY : leftY;
-    
+
     doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.text);
     doc.text(row[0] + ':', x, y, { width: colWidth });
     doc.font('Helvetica');
     doc.text(row[1], x, y + 15, { width: colWidth });
-    
+
     if (!isLeft) {
       leftY += 40;
     }
   });
-  
+
   doc.y = leftY + 20;
 }
 
@@ -1168,24 +1168,24 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       report?.reportDate ? new Date(report.reportDate).toLocaleDateString() : (inspection?.inspectionDate ? new Date(inspection.inspectionDate).toLocaleDateString() : '-')
     ]
   ];
-  
+
   // Generate Variable Definitions page
   await conditionalPageBreak(doc, 'VARIABLE DEFINITIONS', logoBuffer, 400);
-  
+
   doc.font('Helvetica-Bold').fontSize(12).fillColor(COLORS.text);
   doc.text('API-510 PRESSURE VESSEL SHELL EVALUATION', { align: 'center' });
   doc.fontSize(10);
   doc.text('MINIMUM THICKNESS, REMAINING LIFE, PRESSURE CALCULATIONS', { align: 'center' });
   doc.moveDown(1);
-  
+
   await addTable(doc, headerData[0], [headerData[1]], '', logoBuffer);
   doc.moveDown(1);
-  
+
   // Variable Definitions for Shell Calculations
   doc.font('Helvetica-Bold').fontSize(11);
   doc.text('Variable Definitions for Shell Calculations:', MARGIN, doc.y);
   doc.moveDown(0.5);
-  
+
   doc.font('Helvetica').fontSize(9);
   const definitions = [
     'A = factor determined from Fig. G in Subpart 3 of Section II, Part D and used to enter the applicable material chart in Subpart 3 of Section II, Part D. For the case of cylinders having Do/t values less than 10, see UG-28(c)(2).',
@@ -1228,7 +1228,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
     '',
     'Yn = estimated time span to next inspection of the vessel part under consideration, in years.'
   ];
-  
+
   definitions.forEach(def => {
     if (def === '') {
       doc.moveDown(0.3);
@@ -1236,28 +1236,28 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       doc.text(def, MARGIN, doc.y, { width: CONTENT_WIDTH, align: 'left' });
     }
   });
-  
+
   // Generate Shell Evaluation page
   await conditionalPageBreak(doc, 'SHELL EVALUATION', logoBuffer, 400);
-  
+
   doc.font('Helvetica-Bold').fontSize(12).fillColor(COLORS.text);
   doc.text('API-510 PRESSURE VESSEL SHELL EVALUATION', { align: 'center' });
   doc.fontSize(10);
   doc.text('MINIMUM THICKNESS, REMAINING LIFE, PRESSURE CALCULATIONS', { align: 'center' });
   doc.moveDown(1);
-  
+
   // Header info table (reuse from Variable Definitions page)
   await addTable(doc, headerData[0], [headerData[1]], '', logoBuffer);
   doc.moveDown(1);
-  
+
   // Vessel Shell Material specs
   doc.font('Helvetica-Bold').fontSize(11);
   doc.text('Vessel Shell', MARGIN, doc.y);
   doc.moveDown(0.5);
-  
+
   // Find shell component data (needed for staticHead)
   const shellComp = components.find(c => c.componentType === 'shell' || c.componentName?.includes('Shell'));
-  
+
   const shellMaterialData = [
     ['Material', 'Temp.', 'MAWP', 'SH', 'SG', 'D', 't nom'],
     [
@@ -1270,25 +1270,25 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       shellComp?.nominalThickness || (inspection as any)?.shellNominalThickness || inspection?.nominalThickness || '0.625'
     ]
   ];
-  
+
   await addTable(doc, shellMaterialData[0], [shellMaterialData[1]], '', logoBuffer);
   doc.moveDown(1);
-  
+
   // Fetch code clause references for shell calculations (parallel)
   const [shellTminRef, shellMawpRef, rlRef] = await Promise.all([
     fetchCodeClauseRef('shell_tmin'),
     fetchCodeClauseRef('shell_mawp'),
     fetchCodeClauseRef('remaining_life'),
   ]);
-  
+
   // Code Clause Reference — Shell Minimum Thickness
   drawCodeClauseBox(doc, shellTminRef, 'Governing Code Clause — Shell Minimum Thickness');
-  
+
   // Minimum Thickness Calculations
   doc.font('Helvetica-Bold').fontSize(11);
   doc.text('Minimum Thickness Calculations', MARGIN, doc.y);
   doc.moveDown(0.5);
-  
+
   const minThicknessData = [
     ['Vessel Shell', 'Internal', 'PR/(SE-0.6P) = t', '', ''],
     ['P', 'R', 'S', 'E', 't'],
@@ -1300,18 +1300,18 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       shellComp?.minimumThickness || shellComp?.minimumRequired || '0.530'
     ]
   ];
-  
+
   await addTable(doc, minThicknessData[1], [minThicknessData[2]], '', logoBuffer);
   doc.moveDown(1);
-  
+
   // Code Clause Reference — Remaining Life
   drawCodeClauseBox(doc, rlRef, 'Governing Code Clause — Remaining Life');
-  
+
   // Remaining Life Calculations
   doc.font('Helvetica-Bold').fontSize(11);
   doc.text('Remaining Life Calculations', MARGIN, doc.y);
   doc.moveDown(0.5);
-  
+
   const rlData = [
     ['Vessel Shell', 't prev', 't act', 't min', 'y'],
     [
@@ -1322,10 +1322,10 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       shellComp?.timeSpan || '12.0'
     ]
   ];
-  
+
   await addTable(doc, rlData[0], [rlData[1]], '', logoBuffer);
   doc.moveDown(0.5);
-  
+
   // Formulas
   doc.font('Helvetica').fontSize(10);
   // Calculate corrosion allowance (Ca), corrosion rate (Cr), and remaining life (RL)
@@ -1334,42 +1334,42 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   const shellTMin = shellComp?.tMin || shellComp?.minimumThickness || shellComp?.minimumRequired;
   const shellTPrev = shellComp?.tPrevious || shellComp?.previousThickness || shellComp?.nominalThickness || (inspection as any)?.shellNominalThickness;
   const shellTimeSpan = parseFloat(shellComp?.timeSpan || shellComp?.age || '0');
-  
+
   const ca = shellTAct && shellTMin ? (parseFloat(shellTAct) - parseFloat(shellTMin)).toFixed(3) : '0.000';
   // FIXED: Use actual timeSpan (Y) instead of hardcoded 12.0
   const cr = shellTPrev && shellTAct && shellTimeSpan > 0
     ? ((parseFloat(shellTPrev) - parseFloat(shellTAct)) / shellTimeSpan).toFixed(5)
     : shellComp?.corrosionRate || '0.00000';
   const rl = parseFloat(cr) > 0 ? (parseFloat(ca) / parseFloat(cr)).toFixed(0) : '>20';
-  
+
   doc.text(`Ca = t act - t min = ${ca} (inch)`, MARGIN, doc.y);
   doc.text(`Cr = t prev - t act / Y = ${cr} (in/year)`, MARGIN, doc.y);
   doc.text(`RL = Ca / Cr = ${rl} (year)`, MARGIN, doc.y);
   doc.moveDown(1);
-  
+
   // Calculate next inspection interval per API 510: MIN(RL/2, 10 years)
   const shellRLNum = parseFloat(rl) || 0;
   const Yn = shellRLNum > 0 && shellRLNum !== Infinity ? Math.min(shellRLNum / 2, 10) : 10;
   const YnDisplay = Yn.toFixed(1);
-  
+
   doc.font('Helvetica-Bold').fontSize(10);
   doc.text(`Next Inspection (Yn) = ${YnDisplay} (years)`, MARGIN, doc.y);
   doc.moveDown(1);
-  
+
   // Code Clause Reference — Shell MAWP
   drawCodeClauseBox(doc, shellMawpRef, 'Governing Code Clause — Shell MAWP');
-  
+
   // MAWP Calculations
   doc.font('Helvetica-Bold').fontSize(11);
   doc.text('MAWP Calculations', MARGIN, doc.y);
   doc.moveDown(0.5);
-  
+
   // FIXED: Calculate t_next using actual Yn, and recalculate MAWP from t_next
   // Per API 510: t_next = t_act - 2 * Yn * Cr (projected thickness at next inspection)
   const crNum = parseFloat(cr) || 0;
   const tActNum = shellTAct ? parseFloat(shellTAct) : 0;
   const tNext = tActNum > 0 ? (tActNum - 2 * Yn * crNum).toFixed(3) : (shellComp?.actualThickness || '0.000');
-  
+
   // Recalculate MAWP from t_next using ASME UG-27: P = S*E*t / (R + 0.6*t)
   const shellS = parseFloat(shellComp?.allowableStress || inspection?.allowableStress || '20000');
   const shellE = parseFloat(inspection?.jointEfficiency || '0.85');
@@ -1377,7 +1377,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   const tNextNum = parseFloat(tNext);
   const shellStaticHead = parseFloat(shellComp?.staticHead || '0');
   const shellSG = parseFloat(inspection?.specificGravity || '1.0');
-  
+
   let mawpCalc = 0;
   if (shellR > 0 && tNextNum > 0) {
     // MAP at next inspection = S*E*t_next / (R + 0.6*t_next)
@@ -1387,31 +1387,31 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
     mawpCalc = mapAtNext - staticHeadPressure;
   }
   const mawp = mawpCalc > 0 ? mawpCalc.toFixed(1) : (shellComp?.mawp || '0.0');
-  
+
   doc.font('Helvetica').fontSize(10);
   doc.text('Vessel Shell - MAP - Next Inspection', MARGIN, doc.y);
   doc.text(`Where t = t act - 2YnCr = ${tNext} (inch)`, MARGIN, doc.y);
   doc.text(`SEt/(R+0.6t) = P = ${mawp} (psi)`, MARGIN, doc.y);
   doc.text(`P-(SH*.433*SG) = MAWP = ${mawp} (psi)`, MARGIN, doc.y);
-  
+
   // Generate Head Evaluation page
   await conditionalPageBreak(doc, 'HEAD EVALUATION', logoBuffer, 400);
-  
+
   doc.font('Helvetica-Bold').fontSize(12).fillColor(COLORS.text);
   doc.text('API-510 PRESSURE VESSEL HEAD EVALUATION', { align: 'center' });
   doc.fontSize(10);
   doc.text('MINIMUM THICKNESS, REMAINING LIFE, PRESSURE CALCULATIONS', { align: 'center' });
   doc.moveDown(1);
-  
+
   // Header info table
   await addTable(doc, headerData[0], [headerData[1]], '', logoBuffer);
   doc.moveDown(1);
-  
+
   // Vessel Head(s) info
   doc.font('Helvetica-Bold').fontSize(11);
   doc.text('Vessel Head(s)', MARGIN, doc.y);
   doc.moveDown(0.5);
-  
+
   // Get head component data with expanded pattern matching for legacy naming
   const findHeadComponent = (patterns: string[]) => {
     return components.find(c => {
@@ -1420,16 +1420,16 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       return patterns.some(p => name.includes(p) || type.includes(p));
     });
   };
-  
+
   // Head 1 patterns: south, east, top, head 1, left (South Head is canonical)
   const eastHead = findHeadComponent(['south', 'east', 'top head', 'head 1', 'head-1', 'left head']);
   // Head 2 patterns: north, west, bottom, head 2, right (North Head is canonical)
   const westHead = findHeadComponent(['north', 'west', 'bottom', 'bttm', 'btm', 'head 2', 'head-2', 'right head']);
-  
+
   // Derive display names from actual component data
   const head1DisplayName = eastHead?.componentName || 'South Head';
   const head2DisplayName = westHead?.componentName || 'North Head';
-  
+
   const headInfoData = [
     ['', `${head1DisplayName} and ${head2DisplayName}`, '', '', '', ''],
     ['MAWP', 'D', 'T', 'E', 'SG1', 'SG2'],
@@ -1442,10 +1442,10 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       inspection?.specificGravity || '0.92'
     ]
   ];
-  
+
   await addTable(doc, headInfoData[1], [headInfoData[2]], '', logoBuffer);
   doc.moveDown(1);
-  
+
   // Normalize head type display name
   const normalizeHeadType = (ht: string) => {
     const lower = ht.toLowerCase();
@@ -1454,7 +1454,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
     if (lower.includes('ellipsoidal')) return 'Ellipsoidal';
     return ht.charAt(0).toUpperCase() + ht.slice(1);
   };
-  
+
   // Head specifications table - use component calculation data
   const headSpecData = [
     ['Head ID', 'Head Type', 't nom', 'Material', 'S', 'SH', 'P'],
@@ -1477,31 +1477,31 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       westHead?.designMAWP || inspection?.designPressure || '252.4'
     ]
   ];
-  
+
   await addTable(doc, headSpecData[0], headSpecData.slice(1), '', logoBuffer);
   doc.moveDown(1);
-  
+
   // Fetch code clause references for head calculations
   const headTypeForClause = eastHead?.headType || inspection?.headType || 'Ellipsoidal';
   const [headTminRef, headMawpRef] = await Promise.all([
     fetchCodeClauseRef('head_tmin', headTypeForClause),
     fetchCodeClauseRef('head_mawp', headTypeForClause),
   ]);
-  
+
   // Code Clause Reference — Head Minimum Thickness
   drawCodeClauseBox(doc, headTminRef, 'Governing Code Clause — Head Minimum Thickness');
-  
+
   // Minimum Thickness Calculations for heads
   doc.font('Helvetica-Bold').fontSize(11);
   doc.text('Minimum Thickness Calculations', MARGIN, doc.y);
   doc.moveDown(0.5);
-  
+
   // Determine head type from component data (both heads should be same type)
   const eastHeadType = eastHead?.headType || inspection?.headType || 'Ellipsoidal';
   const westHeadType = westHead?.headType || inspection?.headType || 'Ellipsoidal';
   const eastHeadTypeDisplay = normalizeHeadType(eastHeadType);
   const westHeadTypeDisplay = normalizeHeadType(westHeadType);
-  
+
   // Show only the applicable head type formula (not all three)
   doc.font('Helvetica').fontSize(9);
   const headTypeForFormula = eastHeadTypeDisplay; // Use east head type as representative
@@ -1512,7 +1512,7 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   } else {
     doc.text('2:1 Ellipsoidal Head: PD/(2SE-0.2P) = t min', MARGIN, doc.y);
   }
-  
+
   doc.text(`${head1DisplayName}: ${eastHeadTypeDisplay} t min = ${eastHead?.minimumThickness || eastHead?.minimumRequired || '-'} (inch)`, MARGIN, doc.y);
   if (eastHead?.headFactor) {
     doc.text(`  (M factor = ${eastHead.headFactor})`, MARGIN + 20, doc.y);
@@ -1522,12 +1522,12 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
     doc.text(`  (M factor = ${westHead.headFactor})`, MARGIN + 20, doc.y);
   }
   doc.moveDown(1);
-  
+
   // Remaining Life Calculations for heads
   doc.font('Helvetica-Bold').fontSize(11);
   doc.text('Remaining Life Calculations', MARGIN, doc.y);
   doc.moveDown(0.5);
-  
+
   const eastRLData = [
     [head1DisplayName, 't prev', 't act', 't min', 'y'],
     [
@@ -1538,22 +1538,22 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       eastHead?.timeSpan || '10.0'
     ]
   ];
-  
+
   await addTable(doc, eastRLData[0], [eastRLData[1]], '', logoBuffer);
   doc.moveDown(0.5);
-  
-  const eastCa = eastHead?.actualThickness && eastHead?.minimumThickness 
-    ? (parseFloat(eastHead.actualThickness) - parseFloat(eastHead.minimumThickness)).toFixed(3) 
+
+  const eastCa = eastHead?.actualThickness && eastHead?.minimumThickness
+    ? (parseFloat(eastHead.actualThickness) - parseFloat(eastHead.minimumThickness)).toFixed(3)
     : '0.029';
   const eastCr = eastHead?.corrosionRate || '0';
   const eastRL = eastHead?.remainingLife || '>20';
-  
+
   doc.font('Helvetica').fontSize(10);
   doc.text(`Ca = t act - t min = ${eastCa} (inch)`, MARGIN, doc.y);
   doc.text(`Cr = t prev - t act / Y = ${eastCr} (in/year)`, MARGIN, doc.y);
   doc.text(`RL = Ca / Cr = ${eastRL} (years)`, MARGIN, doc.y);
   doc.moveDown(1);
-  
+
   const westRLData = [
     [head2DisplayName, 't prev', 't act', 't min', 'y'],
     [
@@ -1564,52 +1564,52 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
       westHead?.timeSpan || '10.0'
     ]
   ];
-  
+
   await addTable(doc, westRLData[0], [westRLData[1]], '', logoBuffer);
   doc.moveDown(0.5);
-  
-  const westCa = westHead?.actualThickness && westHead?.minimumThickness 
-    ? (parseFloat(westHead.actualThickness) - parseFloat(westHead.minimumThickness)).toFixed(3) 
+
+  const westCa = westHead?.actualThickness && westHead?.minimumThickness
+    ? (parseFloat(westHead.actualThickness) - parseFloat(westHead.minimumThickness)).toFixed(3)
     : '0.026';
   const westCr = westHead?.corrosionRate || '0';
   const westRL = westHead?.remainingLife || '>20';
-  
+
   doc.text(`Ca = t act - t min = ${westCa} (inch)`, MARGIN, doc.y);
   doc.text(`Cr = t prev - t act / Y = ${westCr} (in/year)`, MARGIN, doc.y);
   doc.text(`RL = Ca / Cr = ${westRL} (years)`, MARGIN, doc.y);
   doc.moveDown(1);
-  
+
   doc.font('Helvetica-Bold').fontSize(10);
   const nextInspectionYears = eastHead?.nextInspectionYears || westHead?.nextInspectionYears || '10';
   doc.text(`Next Inspection (Yn) = ${nextInspectionYears} (year)`, MARGIN, doc.y);
   doc.moveDown(1);
-  
+
   // Code Clause Reference — Head MAWP
   drawCodeClauseBox(doc, headMawpRef, 'Governing Code Clause — Head MAWP');
-  
+
   // MAWP Calculations for heads
   doc.font('Helvetica-Bold').fontSize(11);
   doc.text('MAWP Calculations', MARGIN, doc.y);
   doc.moveDown(0.5);
-  
+
   doc.font('Helvetica').fontSize(9);
   doc.text('(reference supplemental calcs for other head type formulas)', MARGIN, doc.y);
   doc.moveDown(0.5);
-  
+
   const eastMAWP = eastHead?.calculatedMAWP || eastHead?.mawp || '263.9';
   const westMAWP = westHead?.calculatedMAWP || westHead?.mawp || '262.5';
-  
+
   const eastThickness = eastHead?.actualThickness || '0.555';
   const westThickness = westHead?.actualThickness || '0.552';
-  
+
   // Calculate P values if possible (simplified - actual formula would need more data)
   const eastP = eastMAWP;
   const westP = westMAWP;
-  
+
   doc.text(`${head1DisplayName} ${eastHeadTypeDisplay} t = ${eastThickness} (inch) P= ${eastP} (psi) MAWP = ${eastMAWP} (psi)`, MARGIN, doc.y);
   doc.text(`${head2DisplayName} ${westHeadTypeDisplay} t = ${westThickness} (inch) P= ${westP} (psi) MAWP = ${westMAWP} (psi)`, MARGIN, doc.y);
   doc.moveDown(1);
-  
+
   doc.font('Helvetica').fontSize(10);
   doc.text('Where t = t act - 2YnCr', MARGIN, doc.y);
   doc.text('Where P = MAP at the Next Inspection', MARGIN, doc.y);
@@ -1618,9 +1618,9 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
 
 async function generateInspectionFindings(doc: PDFKit.PDFDocument, findings: any[], logoBuffer?: Buffer, inspection?: any) {
   await conditionalPageBreak(doc, 'INSPECTION FINDINGS', logoBuffer, 200);
-  
+
   addSectionTitle(doc, '4.0 INSPECTION FINDINGS');
-  
+
   // First, include the text-based inspection results from the inspection record (Section 3.0)
   const inspectionResults = inspection?.inspectionResults;
   if (inspectionResults && inspectionResults.trim()) {
@@ -1633,26 +1633,26 @@ async function generateInspectionFindings(doc: PDFKit.PDFDocument, findings: any
     });
     doc.moveDown(1);
   }
-  
+
   // Then include structured findings from the professional report
   if (findings && findings.length > 0) {
     if (inspectionResults && inspectionResults.trim()) {
       addSubsectionTitle(doc, 'Additional Findings');
     }
-    
+
     findings.forEach((finding, index) => {
       if (index > 0) doc.moveDown(1);
-      
+
       addSubsectionTitle(doc, `Finding ${index + 1}: ${finding.findingType || 'General'}`);
       addText(doc, `Section: ${finding.section || '-'}`);
       addText(doc, `Severity: ${finding.severity || '-'}`, { bold: true });
       addText(doc, `Location: ${finding.location || '-'}`);
       addText(doc, `Description: ${finding.description || '-'}`);
-      
+
       if (finding.measurements) {
         addText(doc, `Measurements: ${finding.measurements}`);
       }
-      
+
       checkPageBreak(doc, 80);
     });
   } else if (!inspectionResults || !inspectionResults.trim()) {
@@ -1662,9 +1662,9 @@ async function generateInspectionFindings(doc: PDFKit.PDFDocument, findings: any
 
 async function generateRecommendationsSection(doc: PDFKit.PDFDocument, recommendations: any[], logoBuffer?: Buffer, inspection?: any) {
   await conditionalPageBreak(doc, 'RECOMMENDATIONS', logoBuffer, 200);
-  
+
   addSectionTitle(doc, '5.0 RECOMMENDATIONS');
-  
+
   // First, include the text-based recommendations from the inspection record (Section 4.0)
   const inspectionRecommendations = inspection?.recommendations;
   if (inspectionRecommendations && inspectionRecommendations.trim()) {
@@ -1677,16 +1677,16 @@ async function generateRecommendationsSection(doc: PDFKit.PDFDocument, recommend
     });
     doc.moveDown(1);
   }
-  
+
   // Then include structured recommendations from the professional report
   if (recommendations && recommendations.length > 0) {
     if (inspectionRecommendations && inspectionRecommendations.trim()) {
       addSubsectionTitle(doc, 'Additional Recommendations');
     }
-    
+
     recommendations.forEach((rec, index) => {
       if (index > 0) doc.moveDown(1);
-      
+
       addText(doc, `${index + 1}. ${rec.recommendation || ''}`, { bold: true });
       addText(doc, `Priority: ${rec.priority || '-'}`);
       if (rec.dueDate) {
@@ -1695,7 +1695,7 @@ async function generateRecommendationsSection(doc: PDFKit.PDFDocument, recommend
       if (rec.notes) {
         addText(doc, `Notes: ${rec.notes}`);
       }
-      
+
       checkPageBreak(doc, 60);
     });
   } else if (!inspectionRecommendations || !inspectionRecommendations.trim()) {
@@ -1708,19 +1708,19 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
   const { NOZZLE_MIN_THICKNESS_TABLE, calculateNozzleRL } = await import('../shared/nozzleStandards.js');
   const { getNozzlesByInspection } = await import('./nozzleDb.js');
   const { getTmlReadings } = await import('./db.js');
-  
+
   const nozzles = await getNozzlesByInspection(inspectionId);
   const tmlReadings = await getTmlReadings(inspectionId);
-  
+
   await conditionalPageBreak(doc, 'NOZZLE EVALUATION', logoBuffer, 300);
-  
+
   // Add header with title
   doc.font('Helvetica-Bold').fontSize(12).fillColor(COLORS.text);
   doc.text('API-510 PRESSURE VESSEL NOZZLE EVALUATION', { align: 'center' });
   doc.fontSize(10);
   doc.text('MINIMUM THICKNESS, REMAINING LIFE, PRESSURE CALCULATIONS', { align: 'center' });
   doc.moveDown(1);
-  
+
   // Add header info table
   const headerData = [
     ['Report No.', 'Client', 'Inspector', 'Vessel', 'Date'],
@@ -1734,41 +1734,41 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
   ];
   await addTable(doc, headerData[0], [headerData[1]], '', logoBuffer);
   doc.moveDown(1);
-  
+
   addSectionTitle(doc, '7.0 NOZZLE MINIMUM THICKNESS EVALUATION (ASME UG-45)');
-  
+
   // Code Clause Reference — Nozzle Reinforcement
   const nozzleRef = await fetchCodeClauseRef('nozzle_reinforcement');
   drawCodeClauseBox(doc, nozzleRef, 'Governing Code Clause — Nozzle Evaluation');
-  
+
   if (!nozzles || nozzles.length === 0) {
     addText(doc, 'No nozzle evaluations recorded.');
     return;
   }
-  
+
   // Section a) Minimum Thickness Determinations
   doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.text);
   doc.text('Minimum Thickness Determinations:', MARGIN, doc.y);
   doc.moveDown(0.5);
-  
+
   doc.font('Helvetica-Bold').fontSize(9);
   doc.text('a) The following nozzle minimum thicknesses are based on current ASME Standards. Minimum thickness allowed for nozzles walls are based on standard pipe thicknesses minus 12.5% or connecting shell/head required thickness whichever is smaller. (ASME Sect VIII, UG-45)', MARGIN, doc.y, {
     width: CONTENT_WIDTH,
     align: 'left'
   });
   doc.moveDown(1);
-  
+
   // ASME UG-45 minimum thickness table
   doc.font('Helvetica').fontSize(9);
   const minThicknessHeaders = ['Size (inch)', ...NOZZLE_MIN_THICKNESS_TABLE.map(t => t.size)];
   const minThicknessValues = ['tmin (inch)', ...NOZZLE_MIN_THICKNESS_TABLE.map(t => t.tminInches.toFixed(3))];
-  
+
   // Draw table manually for horizontal layout
   const cellWidth = 45;
   const cellHeight = 20;
   let startX = MARGIN;
   let startY = doc.y;
-  
+
   // Header row
   doc.font('Helvetica-Bold').fontSize(8);
   minThicknessHeaders.forEach((header, i) => {
@@ -1778,7 +1778,7 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
       align: 'center'
     });
   });
-  
+
   // Value row
   doc.font('Helvetica').fontSize(8);
   startY += cellHeight;
@@ -1789,24 +1789,27 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
       align: 'center'
     });
   });
-  
+
   doc.y = startY + cellHeight + 20;
-  
+
   // Section b) Large nozzles note
   doc.font('Helvetica-Bold').fontSize(9);
   doc.text('b) Large size nozzles or nozzles subject to high pressures are calculated per ASME Sect VIII, DIV 1, UG-27 as follows: PR/(SE-0.6P) = t.', MARGIN, doc.y, {
     width: CONTENT_WIDTH
   });
   doc.moveDown(1.5);
-  
+
   // Nozzle Remaining Life Calculations section
+  // Ensure we have enough space for the title + table, otherwise start a new page
+  await conditionalPageBreak(doc, 'NOZZLE EVALUATION', logoBuffer, 250);
+
   doc.font('Helvetica-Bold').fontSize(10);
   doc.text('Nozzle Remaining Life Calculations:', MARGIN, doc.y);
   doc.moveDown(0.5);
-  
+
   // Calculate CML numbers (continuing from shell/head components)
   let legacyLocationId = 100; // Start at 100 for nozzles (adjust based on last shell/head CML)
-  
+
   // Build nozzle RL table
   const nozzleRLHeaders = [
     'CML',
@@ -1821,38 +1824,38 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
     'Cr\n(inch/Yr)',
     'RL\n(year)'
   ];
-  
+
   const nozzleRLWidths = [35, 40, 35, 60, 40, 45, 45, 45, 40, 50, 45];
-  
+
   const nozzleRLRows = nozzles.map((nozzle, index) => {
     const cml = legacyLocationId + index;
-    
+
     // Get TML readings for this nozzle (at 0°, 90°, 180°, 270°)
     const nozzleTMLs = tmlReadings?.filter((tml: any) => {
       const tmlComp = (tml.component || '').toLowerCase();
       const nozzleId = (nozzle.nozzleNumber || '').toLowerCase();
       return tmlComp.includes(nozzleId) || tmlComp.includes('nozzle') && tmlComp.includes(nozzleId.replace(/\D/g, ''));
     }) || [];
-    
+
     // Get minimum (governing) thickness from TML readings
     let tAct = nozzle.actualThickness ? parseFloat(nozzle.actualThickness) : null;
     let tPrev = tAct; // Default to same if no history
-    
+
     if (nozzleTMLs.length > 0) {
       tAct = nozzleTMLs.reduce((min: number, tml: any) => {
         const current = tml.currentThickness ? parseFloat(tml.currentThickness) : Infinity;
         return current < min ? current : min;
       }, Infinity);
-      
+
       if (tAct === Infinity) tAct = null;
-      
+
       // Get previous thickness if available
       const prevThickness = nozzleTMLs[0]?.previousThickness || nozzleTMLs[0]?.nominalThickness;
       if (prevThickness) tPrev = parseFloat(prevThickness);
     }
-    
+
     const tMin = nozzle.minimumRequired ? parseFloat(nozzle.minimumRequired) : 0.116;
-    
+
     // FIXED: Calculate actual age from vessel data instead of hardcoded 12.0
     // Priority: inspection dates > vessel install date > vessel age field > fallback
     let age = 0;
@@ -1868,7 +1871,7 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
       age = parseFloat((inspection as any).vesselAge);
     }
     if (age <= 0) age = 10; // Conservative fallback only as last resort
-    
+
     // Calculate RL
     let Ca = 0, Cr = 0, RL = 0;
     if (tAct && tPrev) {
@@ -1877,7 +1880,7 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
       Cr = calc.Cr;
       RL = calc.RL;
     }
-    
+
     return [
       cml.toString(),
       nozzle.nozzleNumber || `N${index + 1}`,
@@ -1892,7 +1895,7 @@ async function generateNozzleEvaluation(doc: PDFKit.PDFDocument, inspectionId: s
       RL > 20 ? '>20' : RL.toFixed(0)
     ];
   });
-  
+
   await addTable(doc, nozzleRLHeaders, nozzleRLRows, '', logoBuffer, nozzleRLWidths);
 }
 
@@ -1903,22 +1906,22 @@ async function generateThicknessReadings(doc: PDFKit.PDFDocument, readings: any[
     const bNum = extractCmlNumber(b.legacyLocationId || b.tmlId || '');
     return aNum - bNum;
   });
-  
+
   if (!sortedReadings || sortedReadings.length === 0) {
     await conditionalPageBreak(doc, 'THICKNESS MEASUREMENTS', logoBuffer, 150);
     addSectionTitle(doc, '8.0 ULTRASONIC THICKNESS MEASUREMENTS');
     addText(doc, 'No thickness readings recorded.');
     return;
   }
-  
+
   // Add page with header and title - table will start immediately after
   // Use smaller minSpace since addTable will handle its own page breaks
   await conditionalPageBreak(doc, 'THICKNESS MEASUREMENTS', logoBuffer, 150);
   addSectionTitle(doc, '6.0 ULTRASONIC THICKNESS MEASUREMENTS');
   doc.moveDown(0.5); // Small spacing before table
-  
+
   // First TML reading structure verified
-  
+
   // Enhanced grid-based format with angle labels and metadata
   const headers = ['CML', 'Comp ID', 'Location', 'Type', 'Size', 'Service', 't prev', '0°', '90°', '180°', '270°', 't act*'];
   const rows = sortedReadings.map(r => [
@@ -1935,11 +1938,11 @@ async function generateThicknessReadings(doc: PDFKit.PDFDocument, readings: any[
     r.tml4 ? parseFloat(r.tml4).toFixed(3) : '-',
     r.tActual ? parseFloat(r.tActual).toFixed(3) : (r.currentThickness ? parseFloat(r.currentThickness).toFixed(3) : '-'),
   ]);
-  
+
   // TML table rows created: ${rows.length}
-  
+
   await addTable(doc, headers, rows, 'ULTRASONIC THICKNESS MEASUREMENTS', logoBuffer);
-  
+
   // Add explanatory note about t act*
   doc.moveDown(0.5);
   doc.fontSize(9).fillColor('#666666');
@@ -1954,24 +1957,24 @@ async function generateThicknessReadings(doc: PDFKit.PDFDocument, readings: any[
 
 async function generateChecklist(doc: PDFKit.PDFDocument, items: any[], logoBuffer?: Buffer) {
   await conditionalPageBreak(doc, 'INSPECTION CHECKLIST', logoBuffer, 300);
-  
+
   addSectionTitle(doc, '9.0 API 510 INSPECTION CHECKLIST');
-  
+
   if (!items || items.length === 0) {
     addText(doc, 'Checklist not completed.');
     return;
   }
-  
+
   items.forEach((item, index) => {
     // Use [X] instead of checkmark for better font compatibility in PDFs
     const status = item.checked ? '[X]' : '[ ]';
     const itemNumber = index + 1;
     addText(doc, `${itemNumber}. ${status} ${item.itemText || ''}`, { moveDown: true });
-    
+
     if (item.notes) {
       addText(doc, `   Notes: ${item.notes}`, { fontSize: 9 });
     }
-    
+
     checkPageBreak(doc, 30);
   });
 }
@@ -1979,16 +1982,16 @@ async function generateChecklist(doc: PDFKit.PDFDocument, items: any[], logoBuff
 async function generatePhotos(doc: PDFKit.PDFDocument, photos: any[], logoBuffer?: Buffer) {
   await conditionalPageBreak(doc, 'PHOTOGRAPHS', logoBuffer, 300);
   addSectionTitle(doc, '6.0 INSPECTION PHOTOGRAPHS');
-  
+
   if (!photos || photos.length === 0) {
     addText(doc, 'No photographs attached.');
     return;
   }
-  
+
   // Group photos by section
-  const photosBySection: {[key: string]: any[]} = {};
+  const photosBySection: { [key: string]: any[] } = {};
   const sectionOrder = ['general', 'shell', 'heads', 'nozzles', 'foundation', 'appurtenances'];
-  const sectionNames: {[key: string]: string} = {
+  const sectionNames: { [key: string]: string } = {
     general: 'General Views',
     shell: 'Shell',
     heads: 'Heads',
@@ -1996,7 +1999,7 @@ async function generatePhotos(doc: PDFKit.PDFDocument, photos: any[], logoBuffer
     foundation: 'Foundation',
     appurtenances: 'Appurtenances'
   };
-  
+
   photos.forEach(photo => {
     const section = photo.section || 'general';
     if (!photosBySection[section]) {
@@ -2004,33 +2007,33 @@ async function generatePhotos(doc: PDFKit.PDFDocument, photos: any[], logoBuffer
     }
     photosBySection[section].push(photo);
   });
-  
+
   // Render photos grouped by section
   let photoCounter = 1;
   for (const sectionKey of sectionOrder) {
     if (!photosBySection[sectionKey] || photosBySection[sectionKey].length === 0) continue;
-    
+
     // Add section header
     addSubsectionTitle(doc, `6.${sectionOrder.indexOf(sectionKey) + 1} ${sectionNames[sectionKey]}`);
     doc.moveDown(0.5);
-    
+
     // 2-column layout configuration
     const photoWidth = (CONTENT_WIDTH - 30) / 2; // 30px spacing between columns
     const photoHeight = 200;
     const columnSpacing = 15; // Horizontal spacing between columns
     const rowSpacing = 30; // Vertical spacing between rows
     const captionHeight = 25; // Space for caption above photo
-    
+
     const leftColumnX = MARGIN;
     const rightColumnX = MARGIN + photoWidth + columnSpacing;
-    
+
     let columnIndex = 0; // 0 = left column, 1 = right column
     let rowStartY = doc.y; // Track the Y position where current row started
-    
+
     for (const photo of photosBySection[sectionKey]) {
       const isLeftColumn = columnIndex % 2 === 0;
       const imgX = isLeftColumn ? leftColumnX : rightColumnX;
-      
+
       // If starting a new row (left column), check if we have enough space
       if (isLeftColumn) {
         const spaceNeeded = captionHeight + photoHeight + rowSpacing;
@@ -2040,7 +2043,7 @@ async function generatePhotos(doc: PDFKit.PDFDocument, photos: any[], logoBuffer
         // Right column: go back to the row start Y position
         doc.y = rowStartY;
       }
-      
+
       // Add caption above photo
       const captionY = doc.y;
       doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.text);
@@ -2049,7 +2052,7 @@ async function generatePhotos(doc: PDFKit.PDFDocument, photos: any[], logoBuffer
         align: 'left'
       });
       photoCounter++;
-      
+
       // Render actual photo from URL
       const imgY = captionY + captionHeight;
       if (photo.photoUrl) {
@@ -2057,14 +2060,14 @@ async function generatePhotos(doc: PDFKit.PDFDocument, photos: any[], logoBuffer
           // Fetch image from URL
           const response = await fetch(photo.photoUrl);
           if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
-          
+
           const imageBuffer = Buffer.from(await response.arrayBuffer());
-          
+
           // Add image to PDF in the correct column
           doc.image(imageBuffer, imgX, imgY, {
             fit: [photoWidth, photoHeight],
           });
-          
+
           logger.info(`[PDF] Rendered photo ${photoCounter - 1} in ${isLeftColumn ? 'left' : 'right'} column`);
         } catch (error) {
           logger.error(`[PDF] Failed to render photo ${photoCounter - 1}:`, error);
@@ -2081,20 +2084,20 @@ async function generatePhotos(doc: PDFKit.PDFDocument, photos: any[], logoBuffer
           align: 'center'
         });
       }
-      
+
       // After rendering right column photo, move Y down for next row
       if (!isLeftColumn) {
         doc.y = rowStartY + captionHeight + photoHeight + rowSpacing;
       }
-      
+
       columnIndex++;
     }
-    
+
     // If we ended on a left column photo, move Y down
     if (columnIndex % 2 === 1) {
       doc.y = rowStartY + captionHeight + photoHeight + rowSpacing;
     }
-    
+
     // Add spacing between sections
     doc.moveDown(1);
   }
@@ -2110,26 +2113,26 @@ async function generateFfsAssessment(doc: PDFKit.PDFDocument, inspectionId: stri
     logger.info('[PDF] Database not available for FFS assessment');
     return;
   }
-  
+
   const assessments = await db.select().from(ffsAssessments).where(eq(ffsAssessments.inspectionId, inspectionId));
-  
+
   if (!assessments || assessments.length === 0) {
     logger.info('[PDF] No FFS assessments found');
     return;
   }
-  
+
   await conditionalPageBreak(doc, 'FFS ASSESSMENT', logoBuffer, 300);
   addSectionTitle(doc, '10.0 FITNESS-FOR-SERVICE ASSESSMENT (API 579)');
-  
+
   addText(doc, 'Fitness-For-Service (FFS) assessment performed per API 579-1/ASME FFS-1 to evaluate the structural integrity of components with identified flaws or damage.');
   doc.moveDown();
-  
+
   for (const assessment of assessments) {
     addSubsectionTitle(doc, `Damage Type: ${assessment.damageType || 'Unknown'}`);
-    
+
     // Helper to parse decimal fields
     const parseDecimal = (val: any) => val ? parseFloat(val.toString()) : null;
-    
+
     const data = [
       ['Assessment Level', assessment.assessmentLevel ? `Level ${assessment.assessmentLevel.replace('level', '')}` : '-'],
       ['Damage Type', assessment.damageType || '-'],
@@ -2140,16 +2143,16 @@ async function generateFfsAssessment(doc: PDFKit.PDFDocument, inspectionId: stri
       ['Remaining Life (years)', parseDecimal(assessment.remainingLife)?.toFixed(2) || '-'],
       ['Next Inspection Date', assessment.nextInspectionDate ? new Date(assessment.nextInspectionDate).toLocaleDateString() : '-'],
     ];
-    
+
     addTable(doc, ['Parameter', 'Value'], data);
     doc.moveDown();
-    
+
     if (assessment.recommendations) {
       addSubsectionTitle(doc, 'Recommendations');
       addText(doc, assessment.recommendations);
       doc.moveDown();
     }
-    
+
     // Note: warnings field removed - not in schema
   }
 }
@@ -2161,20 +2164,20 @@ async function generateInLieuOfQualification(doc: PDFKit.PDFDocument, inspection
     logger.info('[PDF] Database not available for In-Lieu-Of assessment');
     return;
   }
-  
+
   const assessments = await db.select().from(inLieuOfAssessments).where(eq(inLieuOfAssessments.inspectionId, inspectionId));
-  
+
   if (!assessments || assessments.length === 0) {
     logger.info('[PDF] No In-Lieu-Of assessments found');
     return;
   }
-  
+
   await conditionalPageBreak(doc, 'IN-LIEU-OF QUALIFICATION', logoBuffer, 300);
   addSectionTitle(doc, '11.0 IN-LIEU-OF INTERNAL INSPECTION QUALIFICATION (API 510 Section 6.4)');
-  
+
   addText(doc, 'Assessment performed to determine if external inspection combined with thickness measurements can be used in lieu of internal inspection per API 510 Section 6.4.');
   doc.moveDown();
-  
+
   for (const assessment of assessments) {
     const data = [
       ['Clean Service', assessment.cleanService ? 'Yes' : 'No'],
@@ -2186,16 +2189,16 @@ async function generateInLieuOfQualification(doc: PDFKit.PDFDocument, inspection
       ['Maximum Interval (years)', assessment.maxInterval?.toString() || '-'],
       ['Next Internal Due', assessment.nextInternalDue ? new Date(assessment.nextInternalDue).toLocaleDateString() : '-'],
     ];
-    
+
     addTable(doc, ['Criteria', 'Status'], data);
     doc.moveDown();
-    
+
     if (assessment.justification) {
       addSubsectionTitle(doc, 'Justification');
       addText(doc, assessment.justification);
       doc.moveDown();
     }
-    
+
     if (assessment.monitoringPlan) {
       addSubsectionTitle(doc, 'Monitoring Plan');
       addText(doc, assessment.monitoringPlan);
@@ -2209,7 +2212,7 @@ async function generateInLieuOfQualification(doc: PDFKit.PDFDocument, inspection
 // DRAWINGS SECTION
 // ============================================================================
 
-const DRAWING_CATEGORY_NAMES: {[key: string]: string} = {
+const DRAWING_CATEGORY_NAMES: { [key: string]: string } = {
   pid: 'P&ID (Piping & Instrumentation)',
   fabrication: 'Fabrication Drawing',
   isometric: 'Isometric Drawing',
@@ -2223,16 +2226,16 @@ const DRAWING_CATEGORY_NAMES: {[key: string]: string} = {
 async function generateDrawings(doc: PDFKit.PDFDocument, drawings: any[], logoBuffer?: Buffer, hasPdfDrawings: boolean = false) {
   await conditionalPageBreak(doc, 'VESSEL DRAWINGS', logoBuffer, 300);
   addSectionTitle(doc, '5.0 VESSEL DRAWINGS');
-  
+
   if (!drawings || drawings.length === 0) {
     addText(doc, 'No drawings attached.');
     return;
   }
-  
+
   // Group drawings by category
-  const drawingsByCategory: {[key: string]: any[]} = {};
+  const drawingsByCategory: { [key: string]: any[] } = {};
   const categoryOrder = ['pid', 'fabrication', 'isometric', 'general_arrangement', 'detail', 'nameplate', 'nozzle_schedule', 'other'];
-  
+
   drawings.forEach(drawing => {
     const category = drawing.category || 'other';
     if (!drawingsByCategory[category]) {
@@ -2240,26 +2243,26 @@ async function generateDrawings(doc: PDFKit.PDFDocument, drawings: any[], logoBu
     }
     drawingsByCategory[category].push(drawing);
   });
-  
+
   // Render drawings grouped by category
   let drawingCounter = 1;
   let subsectionCounter = 1;
-  
+
   for (const categoryKey of categoryOrder) {
     if (!drawingsByCategory[categoryKey] || drawingsByCategory[categoryKey].length === 0) continue;
-    
+
     // Add category header
     addSubsectionTitle(doc, `5.${subsectionCounter} ${DRAWING_CATEGORY_NAMES[categoryKey] || categoryKey}`);
     doc.moveDown(0.5);
     subsectionCounter++;
-    
+
     for (const drawing of drawingsByCategory[categoryKey]) {
       // Check if we need a new page
       if (doc.y > PAGE_HEIGHT - 400) {
         doc.addPage();
         await addHeader(doc, 'VESSEL DRAWINGS', logoBuffer);
       }
-      
+
       // Drawing title with number and revision
       let titleText = `Drawing ${drawingCounter}: ${drawing.title}`;
       if (drawing.drawingNumber) {
@@ -2269,37 +2272,37 @@ async function generateDrawings(doc: PDFKit.PDFDocument, drawings: any[], logoBu
         }
         titleText += ')';
       }
-      
+
       doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.text);
       doc.text(titleText, MARGIN, doc.y, { width: CONTENT_WIDTH });
       doc.moveDown(0.3);
-      
+
       // Description if present
       if (drawing.description) {
         doc.font('Helvetica').fontSize(9).fillColor(COLORS.secondary);
         doc.text(drawing.description, MARGIN, doc.y, { width: CONTENT_WIDTH });
         doc.moveDown(0.3);
       }
-      
+
       // Try to embed the drawing if it's an image
-      if (drawing.fileUrl && (drawing.fileType?.includes('image') || 
-          drawing.fileName?.match(/\.(png|jpg|jpeg|gif)$/i))) {
+      if (drawing.fileUrl && (drawing.fileType?.includes('image') ||
+        drawing.fileName?.match(/\.(png|jpg|jpeg|gif)$/i))) {
         try {
           const response = await fetch(drawing.fileUrl);
           if (response.ok) {
             const arrayBuffer = await response.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
-            
+
             // Calculate dimensions to fit on page
             const maxWidth = CONTENT_WIDTH;
             const maxHeight = 400;
-            
+
             // Add image
             doc.image(buffer, MARGIN, doc.y, {
               fit: [maxWidth, maxHeight],
               align: 'center',
             });
-            
+
             // Move down after image
             doc.y += maxHeight + 20;
           } else {
@@ -2320,11 +2323,11 @@ async function generateDrawings(doc: PDFKit.PDFDocument, drawings: any[], logoBu
         doc.font('Helvetica').fontSize(9).fillColor(COLORS.secondary);
         doc.text(`[Drawing file: ${drawing.fileName || 'See attached'}]`, MARGIN, doc.y);
       }
-      
+
       doc.moveDown(1);
       drawingCounter++;
     }
-    
+
     // Add spacing between categories
     doc.moveDown(0.5);
   }
@@ -2347,42 +2350,42 @@ async function mergePdfDrawings(
 ): Promise<Buffer> {
   // Load the main PDF
   const mainPdf = await PDFLib.load(mainPdfBuffer);
-  
+
   // Process each PDF drawing
   for (const drawing of pdfDrawings) {
     try {
       logger.info('[PDF Merge] Fetching drawing:', drawing.title, 'from', drawing.url);
-      
+
       // Fetch the PDF drawing
       const response = await fetch(drawing.url);
       if (!response.ok) {
         logger.error('[PDF Merge] Failed to fetch drawing:', drawing.title, response.status);
         continue;
       }
-      
+
       const arrayBuffer = await response.arrayBuffer();
       const drawingPdfBytes = new Uint8Array(arrayBuffer);
-      
+
       // Load the drawing PDF
       const drawingPdf = await PDFLib.load(drawingPdfBytes, { ignoreEncryption: true });
-      
+
       // Copy all pages from the drawing PDF to the main PDF
       const pageCount = drawingPdf.getPageCount();
       logger.info('[PDF Merge] Drawing has', pageCount, 'pages');
-      
+
       const copiedPages = await mainPdf.copyPages(drawingPdf, drawingPdf.getPageIndices());
-      
+
       for (const page of copiedPages) {
         mainPdf.addPage(page);
       }
-      
+
       logger.info('[PDF Merge] Successfully merged drawing:', drawing.title);
     } catch (err) {
       logger.error('[PDF Merge] Error merging drawing:', drawing.title, err);
       // Continue with other drawings even if one fails
     }
   }
-  
+
   // Save the merged PDF
   const mergedPdfBytes = await mainPdf.save();
   return Buffer.from(mergedPdfBytes);

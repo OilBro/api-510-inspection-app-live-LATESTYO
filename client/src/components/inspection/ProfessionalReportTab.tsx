@@ -84,10 +84,10 @@ export default function ProfessionalReportTab({ inspectionId }: ProfessionalRepo
   const handleExportCSV = async () => {
     if (!report) return;
     setExportingCSV(true);
-    
+
     try {
       const result = await exportCSV.refetch();
-      
+
       if (result.data) {
         // Create blob and download
         const blob = new Blob([result.data.csvContent], { type: 'text/csv' });
@@ -99,7 +99,7 @@ export default function ProfessionalReportTab({ inspectionId }: ProfessionalRepo
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
+
         toast.success('CSV exported successfully!');
       }
     } catch (error: any) {
@@ -128,7 +128,7 @@ export default function ProfessionalReportTab({ inspectionId }: ProfessionalRepo
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast.success("Professional report generated successfully!");
       setGenerating(false);
     },
@@ -172,7 +172,7 @@ export default function ProfessionalReportTab({ inspectionId }: ProfessionalRepo
       toast.error("Please enter recipient email address");
       return;
     }
-    
+
     setSendingEmail(true);
     try {
       // Note: Backend email endpoint needs implementation
@@ -180,10 +180,10 @@ export default function ProfessionalReportTab({ inspectionId }: ProfessionalRepo
       console.log('Sending email to:', emailRecipient);
       console.log('Subject:', emailSubject);
       console.log('Message:', emailMessage);
-      
+
       // Simulate API call (replace with actual tRPC mutation)
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       toast.success(`Report sent to ${emailRecipient}`);
       setEmailDialogOpen(false);
       setEmailRecipient("");
@@ -819,8 +819,8 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
 
     // Generate PDF content for regulatory-compliant calculation report
     const vesselId = inspection?.vesselTagNumber || inspection?.vesselName || "Unknown Vessel";
-    const inspectionDate = inspection?.inspectionDate 
-      ? new Date(inspection.inspectionDate).toLocaleDateString() 
+    const inspectionDate = inspection?.inspectionDate
+      ? new Date(inspection.inspectionDate).toLocaleDateString()
       : new Date().toLocaleDateString();
     const reportDate = new Date().toLocaleDateString();
 
@@ -838,30 +838,30 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
     .header h2 { color: #374151; margin: 0; font-size: 12pt; font-weight: normal; }
     .meta-info { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 9pt; }
     .meta-info div { flex: 1; }
-    .component { page-break-inside: avoid; border: 1px solid #d1d5db; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+    .component { border: 1px solid #d1d5db; border-radius: 8px; padding: 15px; margin-bottom: 20px; page-break-before: auto; }
     .component-header { background: #f3f4f6; margin: -15px -15px 15px -15px; padding: 10px 15px; border-radius: 8px 8px 0 0; border-bottom: 1px solid #d1d5db; }
     .component-header h3 { margin: 0; color: #1f2937; font-size: 12pt; }
     .component-header .type { color: #6b7280; font-size: 9pt; }
-    .section { margin-bottom: 15px; }
+    .section { margin-bottom: 15px; page-break-inside: avoid; break-inside: avoid; }
     .section-title { font-weight: bold; color: #1e40af; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px; margin-bottom: 8px; font-size: 10pt; }
     .data-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .data-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #e5e7eb; }
     .data-label { color: #6b7280; font-size: 9pt; }
     .data-value { font-weight: 500; text-align: right; }
-    .formula-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 10px; margin: 8px 0; font-family: 'Courier New', monospace; font-size: 9pt; }
+    .formula-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 10px; margin: 8px 0; font-family: 'Courier New', monospace; font-size: 9pt; page-break-inside: avoid; break-inside: avoid; }
     .formula-title { font-weight: bold; color: #475569; margin-bottom: 5px; }
     .formula-step { margin: 3px 0; }
-    .result-box { background: #ecfdf5; border: 1px solid #10b981; border-radius: 4px; padding: 10px; margin-top: 10px; }
+    .result-box { background: #ecfdf5; border: 1px solid #10b981; border-radius: 4px; padding: 10px; margin-top: 10px; page-break-inside: avoid; break-inside: avoid; }
     .result-box.warning { background: #fef3c7; border-color: #f59e0b; }
     .result-box.danger { background: #fee2e2; border-color: #ef4444; }
     .result-title { font-weight: bold; color: #059669; }
     .result-box.warning .result-title { color: #d97706; }
     .result-box.danger .result-title { color: #dc2626; }
-    .assumptions { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 4px; padding: 10px; margin: 10px 0; }
+    .assumptions { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 4px; padding: 10px; margin: 10px 0; page-break-inside: avoid; break-inside: avoid; }
     .assumptions-title { font-weight: bold; color: #92400e; margin-bottom: 5px; }
     .assumptions ul { margin: 0; padding-left: 20px; }
     .code-ref { color: #6366f1; font-style: italic; font-size: 8pt; }
-    .certification { border: 2px solid #1e40af; border-radius: 8px; padding: 15px; margin-top: 30px; page-break-inside: avoid; }
+    .certification { border: 2px solid #1e40af; border-radius: 8px; padding: 15px; margin-top: 30px; page-break-inside: avoid; break-inside: avoid; }
     .certification-title { font-weight: bold; color: #1e40af; font-size: 11pt; margin-bottom: 10px; }
     .signature-line { border-bottom: 1px solid #333; width: 250px; margin: 30px 0 5px 0; }
     .signature-label { font-size: 9pt; color: #6b7280; }
@@ -881,16 +881,16 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
   </div>
 
   ${calculations.map(calc => {
-    const tAct = parseFloat(calc.actualThickness || '0');
-    const tMin = parseFloat(calc.minimumThickness || '0');
-    const cr = parseFloat(calc.corrosionRate || '0');
-    const rl = parseFloat(calc.remainingLife || '0');
-    const mawp = parseFloat(calc.calculatedMAWP || '0');
-    const designMawp = parseFloat(calc.designMAWP || '0');
-    const isBelowMin = tAct < tMin;
-    const isLowLife = rl < 2;
-    
-    return `
+      const tAct = parseFloat(calc.actualThickness || '0');
+      const tMin = parseFloat(calc.minimumThickness || '0');
+      const cr = parseFloat(calc.corrosionRate || '0');
+      const rl = parseFloat(calc.remainingLife || '0');
+      const mawp = parseFloat(calc.calculatedMAWP || '0');
+      const designMawp = parseFloat(calc.designMAWP || '0');
+      const isBelowMin = tAct < tMin;
+      const isLowLife = rl < 2;
+
+      return `
     <div class="component">
       <div class="component-header">
         <h3>${calc.componentName}</h3>
@@ -987,14 +987,14 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
           <div class="data-item"><span class="data-label">Remaining Life:</span><span class="data-value">${calc.remainingLife || '-'} years</span></div>
         </div>
         <p style="margin-top: 10px; font-weight: bold;">
-          ${isBelowMin ? '⚠ COMPONENT IS BELOW MINIMUM THICKNESS - IMMEDIATE ACTION REQUIRED' : 
-            isLowLife ? '⚠ REMAINING LIFE IS LOW - SCHEDULE REPAIR OR REPLACEMENT' : 
+          ${isBelowMin ? '⚠ COMPONENT IS BELOW MINIMUM THICKNESS - IMMEDIATE ACTION REQUIRED' :
+          isLowLife ? '⚠ REMAINING LIFE IS LOW - SCHEDULE REPAIR OR REPLACEMENT' :
             '✓ Component is acceptable for continued service'}
         </p>
       </div>
     </div>
     `;
-  }).join('')}
+    }).join('')}
   
   <div class="certification">
     <div class="certification-title">REPORT CERTIFICATION</div>
@@ -1036,48 +1036,48 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
     toast.info("Importing components...");
 
     try {
-        // Read CSV/Excel file
-        const text = await file.text();
-        const lines = text.split("\n").filter(line => line.trim());
-        
-        if (lines.length < 2) {
-          toast.error("File is empty or invalid");
-          return;
+      // Read CSV/Excel file
+      const text = await file.text();
+      const lines = text.split("\n").filter(line => line.trim());
+
+      if (lines.length < 2) {
+        toast.error("File is empty or invalid");
+        return;
+      }
+
+      const headers = lines[0].split(",");
+      const dataLines = lines.slice(1);
+
+      for (const line of dataLines) {
+        const values = line.split(",");
+        const componentData: any = {
+          componentName: values[0]?.trim() || "",
+          componentType: values[1]?.trim().toLowerCase() === "head" ? "head" : "shell",
+          materialCode: values[2]?.trim() || "",
+          materialName: values[3]?.trim() || "",
+          designTemp: values[4]?.trim() || "",
+          designMAWP: values[5]?.trim() || "",
+          staticHead: values[6]?.trim() || "0",
+          corrosionAllowance: values[7]?.trim() || "",
+          insideDiameter: values[8]?.trim() || "",
+          nominalThickness: values[9]?.trim() || "",
+          measuredThickness: values[10]?.trim() || "",
+          jointEfficiency: values[11]?.trim() || "",
+          allowableStress: values[12]?.trim() || "",
+        };
+
+        if (componentData.componentType === "head") {
+          componentData.headType = values[13]?.trim() || "ellipsoidal";
+          componentData.crownRadius = values[14]?.trim() || "";
+          componentData.knuckleRadius = values[15]?.trim() || "";
         }
 
-        const headers = lines[0].split(",");
-        const dataLines = lines.slice(1);
-
-        for (const line of dataLines) {
-          const values = line.split(",");
-          const componentData: any = {
-            componentName: values[0]?.trim() || "",
-            componentType: values[1]?.trim().toLowerCase() === "head" ? "head" : "shell",
-            materialCode: values[2]?.trim() || "",
-            materialName: values[3]?.trim() || "",
-            designTemp: values[4]?.trim() || "",
-            designMAWP: values[5]?.trim() || "",
-            staticHead: values[6]?.trim() || "0",
-            corrosionAllowance: values[7]?.trim() || "",
-            insideDiameter: values[8]?.trim() || "",
-            nominalThickness: values[9]?.trim() || "",
-            measuredThickness: values[10]?.trim() || "",
-            jointEfficiency: values[11]?.trim() || "",
-            allowableStress: values[12]?.trim() || "",
-          };
-
-          if (componentData.componentType === "head") {
-            componentData.headType = values[13]?.trim() || "ellipsoidal";
-            componentData.crownRadius = values[14]?.trim() || "";
-            componentData.knuckleRadius = values[15]?.trim() || "";
-          }
-
-          if (componentData.componentName) {
-            await createCalculation.mutateAsync({ reportId, ...componentData });
-          }
+        if (componentData.componentName) {
+          await createCalculation.mutateAsync({ reportId, ...componentData });
         }
+      }
 
-        toast.success(`Imported ${dataLines.length} components`);
+      toast.success(`Imported ${dataLines.length} components`);
     } catch (error) {
       console.error("Import error:", error);
       toast.error("Failed to import file");
@@ -1105,18 +1105,18 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button 
-            variant={detailedView ? "default" : "outline"} 
-            className="gap-2" 
+          <Button
+            variant={detailedView ? "default" : "outline"}
+            className="gap-2"
             onClick={() => setDetailedView(!detailedView)}
           >
             <FileText className="h-4 w-4" />
             {detailedView ? "Summary View" : "Detailed Report"}
           </Button>
           {detailedView && calculations && calculations.length > 0 && (
-            <Button 
-              variant="outline" 
-              className="gap-2" 
+            <Button
+              variant="outline"
+              className="gap-2"
               onClick={() => handlePrintCalculationReport()}
             >
               <Printer className="h-4 w-4" />
@@ -1183,7 +1183,7 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
             const govRate = parseFloat(calc.corrosionRate || '0');
             const govType = (calc.governingRateType || 'nominal') as 'long_term' | 'short_term' | 'nominal';
             const dataStatus = (calc.dataQualityStatus || 'good') as 'good' | 'anomaly' | 'growth_error' | 'below_minimum' | 'confirmed';
-            
+
             // Render detailed regulatory-compliant report card
             if (detailedView) {
               return (
@@ -1201,7 +1201,7 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
                 />
               );
             }
-                        // Render summary card (original view)
+            // Render summary card (original view)
             return (
               <Card key={calc.id} className={dataStatus === 'below_minimum' ? 'border-red-500 border-2' : ''}>
                 <CardHeader>
@@ -1222,7 +1222,7 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
                                 <TooltipContent>
                                   <p className="max-w-xs">
                                     {govType === 'long_term' ? 'Long-term rate is governing' : 'Short-term rate is governing (accelerated corrosion)'}
-                                    {calc.governingRateReason && <><br/><br/>{calc.governingRateReason}</>}
+                                    {calc.governingRateReason && <><br /><br />{calc.governingRateReason}</>}
                                   </p>
                                 </TooltipContent>
                               </Tooltip>
@@ -1261,12 +1261,12 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
                 <CardContent className="space-y-4">
                   {/* Data Quality Alert */}
                   {dataStatus !== 'good' && (
-                    <DataQualityIndicator 
-                      status={dataStatus} 
+                    <DataQualityIndicator
+                      status={dataStatus}
                       notes={calc.dataQualityNotes || undefined}
                     />
                   )}
-                  
+
                   {/* Dual Corrosion Rates */}
                   {(ltRate > 0 || stRate > 0) && (
                     <div className="bg-muted/30 rounded-lg p-4">
@@ -1283,7 +1283,7 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
                       />
                     </div>
                   )}
-                  
+
                   {/* Main Calculation Results */}
                   <div className="grid grid-cols-4 gap-4 text-sm">
                     <div>
@@ -1366,14 +1366,14 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
 }
 
 // Component Edit Form
-function ComponentEditForm({ 
-  calculation, 
-  onSave, 
+function ComponentEditForm({
+  calculation,
+  onSave,
   onCancel,
-  isSaving 
-}: { 
-  calculation: any; 
-  onSave: (data: any) => void; 
+  isSaving
+}: {
+  calculation: any;
+  onSave: (data: any) => void;
   onCancel: () => void;
   isSaving: boolean;
 }) {
