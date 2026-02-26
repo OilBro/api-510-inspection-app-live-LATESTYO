@@ -41,7 +41,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
   const { data: engineInfo } = trpc.calculationEngine.getEngineInfo.useQuery();
   const { data: materialDbInfo } = trpc.calculationEngine.getMaterialDatabaseInfo.useQuery();
   const { data: availableMaterials } = trpc.calculationEngine.listMaterials.useQuery();
-  
+
   // Calculation mutations
   const fullCalculationMutation = trpc.calculationEngine.performFullCalculation.useMutation();
   const tRequiredShellMutation = trpc.calculationEngine.calculateTRequiredShell.useMutation();
@@ -49,7 +49,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
   const tRequiredTorisphericalMutation = trpc.calculationEngine.calculateTRequiredTorisphericalHead.useMutation();
   const tRequiredHemisphericalMutation = trpc.calculationEngine.calculateTRequiredHemisphericalHead.useMutation();
   const mawpShellMutation = trpc.calculationEngine.calculateMAWPShell.useMutation();
-  
+
   // Get allowable stress for the material
   const materialSpec = inspection?.materialSpec || '';
   const designTemperature = inspection?.designTemperature ? parseFloat(String(inspection.designTemperature)) : 100;
@@ -57,7 +57,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     { materialSpec, temperatureF: designTemperature },
     { enabled: !!materialSpec }
   );
-  
+
   // Group TML readings by component name (normalized: "Vessel Shell", "South Head", "North Head")
   // PRIORITY: componentGroup (canonical) > componentType (new) > component (legacy)
   const componentGroups = useMemo(() => {
@@ -65,7 +65,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     const groups: Record<string, typeof tmlReadings> = {};
     for (const reading of tmlReadings) {
       let groupKey = 'Unknown';
-      
+
       // componentGroup is the canonical source of truth
       const cg = ((reading as any).componentGroup || '').toUpperCase();
       if (cg === 'SOUTHHEAD') {
@@ -80,7 +80,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
         // Fallback: text-based matching
         const comp = (reading.component || reading.componentType || '').toLowerCase();
         const loc = (reading.location || '').toLowerCase();
-        
+
         if (comp.includes('south head') || (comp.includes('south') && comp.includes('head'))) {
           groupKey = 'South Head';
         } else if (comp.includes('north head') || (comp.includes('north') && comp.includes('head'))) {
@@ -104,16 +104,16 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
           groupKey = 'Vessel Shell'; // Default
         }
       }
-      
+
       if (!groups[groupKey]) groups[groupKey] = [];
       groups[groupKey].push(reading);
     }
     return groups;
   }, [tmlReadings]);
-  
+
   // Get unique component types
   const componentTypes = useMemo(() => Object.keys(componentGroups), [componentGroups]);
-  
+
   // Local state for calculation inputs
   const [selectedComponent, setSelectedComponent] = useState<string>('');
   const [selectedReadingId, setSelectedReadingId] = useState<string>('');
@@ -128,20 +128,20 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     crownRadius: '', // L parameter for torispherical heads (optional, defaults to D)
     knuckleRadius: '', // r parameter for torispherical heads (optional, defaults to 0.06D)
   });
-  
+
   // Calculation results
   const [shellResult, setShellResult] = useState<CalculationResult | null>(null);
   const [mawpResult, setMawpResult] = useState<CalculationResult | null>(null);
   const [fullResult, setFullResult] = useState<any>(null);
   const [showIntermediateValues, setShowIntermediateValues] = useState(false);
-  
+
   // Auto-select first component type when data loads
   useEffect(() => {
     if (componentTypes.length > 0 && !selectedComponent) {
       setSelectedComponent(componentTypes[0]);
     }
   }, [componentTypes, selectedComponent]);
-  
+
   // Update inputs from inspection data
   useEffect(() => {
     if (inspection) {
@@ -151,7 +151,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
       }));
     }
   }, [inspection]);
-  
+
   // Auto-populate inputs when a TML reading is selected
   useEffect(() => {
     if (selectedReadingId && tmlReadings) {
@@ -162,7 +162,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
         const selectedLower = selectedComponent.toLowerCase();
         const isHead = selectedLower.includes('head');
         const isShell = selectedLower.includes('shell') || selectedLower.includes('cylinder');
-        
+
         // Determine head type from inspection.headType field
         let headType: '2:1 Ellipsoidal' | 'Torispherical' | 'Hemispherical' = '2:1 Ellipsoidal';
         if (inspection?.headType) {
@@ -171,7 +171,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
           else if (inspHeadType.includes('torisp')) headType = 'Torispherical';
           else headType = '2:1 Ellipsoidal';
         }
-        
+
         setInputs(prev => ({
           ...prev,
           componentType: isHead ? 'Head' : 'Shell',
@@ -180,46 +180,46 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
           previousThickness: reading.previousThickness?.toString() || '',
           nominalThickness: reading.nominalThickness?.toString() || '',
         }));
-        
+
         toast.info(`Loaded data from CML ${reading.legacyLocationId} - ${selectedComponent}`);
       }
     }
   }, [selectedReadingId, tmlReadings, inspection, selectedComponent]);
-  
+
   // Get readings for selected component
   const selectedComponentReadings = useMemo(() => {
     return componentGroups[selectedComponent] || [];
   }, [componentGroups, selectedComponent]);
-  
+
   // Get minimum thickness for selected component (governing thickness)
   // CRITICAL: Only consider readings with valid tActual values (not null/empty)
   const governingReading = useMemo(() => {
     if (selectedComponentReadings.length === 0) return null;
-    
+
     // Filter to only readings with valid tActual values
-    const validReadings = selectedComponentReadings.filter(r => 
+    const validReadings = selectedComponentReadings.filter(r =>
       r.tActual !== null && r.tActual !== undefined && r.tActual !== '' && !isNaN(parseFloat(r.tActual))
     );
-    
+
     if (validReadings.length === 0) return null;
-    
+
     return validReadings.reduce((min, reading) => {
       const current = parseFloat(reading.tActual!);
       const minVal = parseFloat(min.tActual!);
       return current < minVal ? reading : min;
     }, validReadings[0]);
   }, [selectedComponentReadings]);
-  
+
   // Auto-select governing reading when component changes
   useEffect(() => {
     if (governingReading && governingReading.id !== selectedReadingId) {
       setSelectedReadingId(governingReading.id);
     }
   }, [governingReading, selectedReadingId]);
-  
+
   const buildCalculationInput = () => {
     if (!inspection) return null;
-    
+
     const insideDiameter = parseFloat(inspection.insideDiameter || '0');
     const designPressure = parseFloat(inspection.designPressure || '0');
     const jointEfficiency = parseFloat(String(inspection.jointEfficiency || 0.85));
@@ -229,19 +229,45 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     const nominalThickness = parseFloat(inputs.nominalThickness || '0');
     const yearBuilt = parseInt(inputs.yearBuilt || '0');
     const currentYear = parseInt(inputs.currentYear || new Date().getFullYear().toString());
-    
+
     // Get allowable stress: prioritize user-entered value over ASME database
     // If user manually entered an allowable stress, use that (it's more accurate for their specific vessel)
     // Otherwise fall back to ASME database lookup, then default to 20000
     const userEnteredStress = inspection.allowableStress ? parseFloat(String(inspection.allowableStress)) : null;
     const allowableStress = userEnteredStress || stressData?.stress || 20000;
-    
+
     // Determine vessel orientation from inspection data
     // Default to horizontal as most process vessels are horizontal
     const vesselConfig = inspection.vesselConfiguration?.toLowerCase() || '';
-    const vesselOrientation: 'horizontal' | 'vertical' = 
+    const vesselOrientation: 'horizontal' | 'vertical' =
       vesselConfig.includes('vertical') ? 'vertical' : 'horizontal';
-    
+
+    // ============================================================
+    // INSPECTION DATES for corrosion rate calculation
+    // Short-term rate: CR = (t_prev - t_actual) / years_between
+    // Requires both previousInspectionDate and currentInspectionDate
+    // ============================================================
+    let previousInspectionDate: string | undefined;
+    let currentInspectionDate: string | undefined;
+
+    // Get current inspection date from selected TML reading or inspection record
+    const selectedReading = selectedReadingId && tmlReadings
+      ? tmlReadings.find(r => r.id === selectedReadingId)
+      : null;
+
+    if (selectedReading?.currentInspectionDate) {
+      currentInspectionDate = new Date(selectedReading.currentInspectionDate).toISOString();
+    } else if (inspection.inspectionDate) {
+      currentInspectionDate = new Date(inspection.inspectionDate).toISOString();
+    }
+
+    // Get previous inspection date from TML reading or inspection record
+    if (selectedReading?.previousInspectionDate) {
+      previousInspectionDate = new Date(selectedReading.previousInspectionDate).toISOString();
+    } else if ((inspection as any).previousInspectionDate) {
+      previousInspectionDate = new Date((inspection as any).previousInspectionDate).toISOString();
+    }
+
     return {
       insideDiameter,
       designPressure,
@@ -259,30 +285,33 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
       vesselOrientation, // CRITICAL: Horizontal vessels have static head = 0
       specificGravity: inspection.specificGravity ? parseFloat(String(inspection.specificGravity)) : undefined,
       // Only include liquid height for vertical vessels
-      liquidHeight: vesselOrientation === 'vertical' && inspection.insideDiameter 
-        ? parseFloat(inspection.insideDiameter) 
+      liquidHeight: vesselOrientation === 'vertical' && inspection.insideDiameter
+        ? parseFloat(inspection.insideDiameter)
         : undefined,
       // Crown and knuckle radius for torispherical heads (optional)
       crownRadius: inputs.crownRadius ? parseFloat(inputs.crownRadius) : undefined,
       knuckleRadius: inputs.knuckleRadius ? parseFloat(inputs.knuckleRadius) : undefined,
+      // Inspection dates for short-term corrosion rate calculation
+      previousInspectionDate,
+      currentInspectionDate,
     };
   };
-  
+
   const handleCalculateTRequired = async () => {
     const input = buildCalculationInput();
     if (!input) {
       toast.error("Missing inspection data");
       return;
     }
-    
+
     if (!input.currentThickness || input.currentThickness <= 0) {
       toast.error("Please select a TML reading with valid thickness data");
       return;
     }
-    
+
     try {
       let result;
-      
+
       // Use the correct calculation based on component type and head type
       if (inputs.componentType === 'Head') {
         // For heads, use the appropriate head formula based on head type selection
@@ -302,9 +331,9 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
         // For shells, use the shell formula
         result = await tRequiredShellMutation.mutateAsync(input);
       }
-      
+
       setShellResult(result);
-      
+
       if (result.success) {
         const componentDesc = inputs.componentType === 'Head' ? `${inputs.headType} Head` : 'Shell';
         toast.success(`t_required for ${componentDesc}: ${result.resultValue?.toFixed(4)}" per ${result.codeReference}`);
@@ -316,23 +345,23 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
       console.error(error);
     }
   };
-  
+
   const handleCalculateMAWP = async () => {
     const input = buildCalculationInput();
     if (!input) {
       toast.error("Missing inspection data");
       return;
     }
-    
+
     if (!input.currentThickness || input.currentThickness <= 0) {
       toast.error("Please select a TML reading with valid thickness data");
       return;
     }
-    
+
     try {
       const result = await mawpShellMutation.mutateAsync(input);
       setMawpResult(result);
-      
+
       if (result.success) {
         toast.success(`MAWP calculated: ${result.resultValue?.toFixed(1)} psi per ${result.codeReference}`);
       } else {
@@ -343,26 +372,26 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
       console.error(error);
     }
   };
-  
+
   const handleFullCalculation = async () => {
     const input = buildCalculationInput();
     if (!input) {
       toast.error("Missing inspection data");
       return;
     }
-    
+
     if (!input.currentThickness || input.currentThickness <= 0) {
       toast.error("Please select a TML reading with valid thickness data");
       return;
     }
-    
+
     try {
       const result = await fullCalculationMutation.mutateAsync({
         componentType: inputs.componentType,
         ...input,
       });
       setFullResult(result);
-      
+
       if (result.success) {
         toast.success(`Full calculation complete - Status: ${result.summary.status}`);
       } else {
@@ -373,7 +402,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
       console.error(error);
     }
   };
-  
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ok':
@@ -391,12 +420,12 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
         return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
     }
   };
-  
+
   const formatValue = (value: number | null | undefined, decimals: number = 4): string => {
     if (value === null || value === undefined) return '-';
     return value.toFixed(decimals);
   };
-  
+
   return (
     <div className="space-y-6">
       {/* Engine Info */}
@@ -427,7 +456,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Material Stress Lookup */}
       {stressData && (
         <Alert className={stressData.status === 'ok' ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}>
@@ -455,7 +484,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
           </AlertDescription>
         </Alert>
       )}
-      
+
       {/* TML Reading Selection - NEW */}
       <Card>
         <CardHeader>
@@ -491,7 +520,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                 </SelectContent>
               </Select>
             </div>
-            
+
             {/* TML Reading Selector */}
             <div className="space-y-2">
               <Label>TML Reading (CML)</Label>
@@ -522,7 +551,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
               )}
             </div>
           </div>
-          
+
           {/* Selected Reading Summary */}
           {selectedReadingId && tmlReadings && (
             <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
@@ -572,7 +601,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
           )}
         </CardContent>
       </Card>
-      
+
       {/* Calculation Inputs */}
       <Card>
         <CardHeader>
@@ -598,7 +627,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                 </SelectContent>
               </Select>
             </div>
-            
+
             {inputs.componentType === 'Head' && (
               <div className="space-y-2">
                 <Label>Head Type</Label>
@@ -617,7 +646,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                 </Select>
               </div>
             )}
-            
+
             {/* Crown and Knuckle Radius for Torispherical Heads */}
             {inputs.componentType === 'Head' && inputs.headType === 'Torispherical' && (
               <>
@@ -645,7 +674,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                 </div>
               </>
             )}
-            
+
             <div className="space-y-2">
               <Label>Current Thickness (in)</Label>
               <Input
@@ -657,7 +686,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                 className={inputs.currentThickness ? 'border-green-300 bg-green-50' : ''}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label>Previous Thickness (in)</Label>
               <Input
@@ -668,7 +697,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                 onChange={(e) => setInputs({ ...inputs, previousThickness: e.target.value })}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label>Nominal Thickness (in)</Label>
               <Input
@@ -679,7 +708,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                 onChange={(e) => setInputs({ ...inputs, nominalThickness: e.target.value })}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label>Year Built</Label>
               <Input
@@ -689,7 +718,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                 onChange={(e) => setInputs({ ...inputs, yearBuilt: e.target.value })}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label>Current Year</Label>
               <Input
@@ -699,7 +728,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
               />
             </div>
           </div>
-          
+
           <div className="flex gap-2 mt-6">
             <Button onClick={handleCalculateTRequired} disabled={tRequiredShellMutation.isPending}>
               <Calculator className="mr-2 h-4 w-4" />
@@ -716,7 +745,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Calculation Results */}
       {(shellResult || mawpResult || fullResult) && (
         <Card>
@@ -731,7 +760,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                 <TabsTrigger value="details">Detailed Results</TabsTrigger>
                 <TabsTrigger value="traceability">Traceability</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="summary" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* t_min: Prefer fullResult.tRequired (component-specific), fall back to shellResult */}
@@ -747,7 +776,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                       {getStatusBadge(fullResult?.tRequired?.validationStatus ?? shellResult?.validationStatus ?? 'valid')}
                     </div>
                   )}
-                  
+
                   {/* MAWP: Prefer fullResult.mawp (component-specific), fall back to mawpResult */}
                   {/* CRITICAL FIX: fullResult.mawp uses correct head formula (UG-32) vs mawpResult uses shell formula (UG-27) */}
                   {(fullResult?.mawp || mawpResult) && (
@@ -762,7 +791,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                       {getStatusBadge(fullResult?.mawp?.validationStatus ?? mawpResult?.validationStatus ?? 'valid')}
                     </div>
                   )}
-                  
+
                   {fullResult?.summary && (
                     <>
                       <div className="p-4 bg-gray-50 rounded-lg border">
@@ -770,13 +799,13 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                         <p className="text-2xl font-bold">{formatValue(fullResult.summary.corrosionRate, 4)} in/yr</p>
                         <p className="text-xs text-gray-500 mt-1">API 510 §7.1.1</p>
                       </div>
-                      
+
                       <div className="p-4 bg-gray-50 rounded-lg border">
                         <p className="text-sm text-gray-600">Remaining Life</p>
                         <p className="text-2xl font-bold">{formatValue(fullResult.summary.remainingLife, 1)} years</p>
                         <p className="text-xs text-gray-500 mt-1">API 510</p>
                       </div>
-                      
+
                       <div className="p-4 bg-gray-50 rounded-lg border col-span-full">
                         <p className="text-sm text-gray-600">Overall Status</p>
                         <div className="flex items-center gap-2 mt-1">
@@ -788,7 +817,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                   )}
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="details" className="mt-4">
                 {fullResult && (
                   <div className="space-y-4">
@@ -809,7 +838,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                         )}
                       </div>
                     )}
-                    
+
                     {fullResult.mawp && (
                       <div className="p-4 border rounded-lg">
                         <h4 className="font-semibold mb-2">Maximum Allowable Working Pressure</h4>
@@ -817,7 +846,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                         <p className="text-lg font-bold">{formatValue(fullResult.mawp.resultValue, 1)} psi</p>
                       </div>
                     )}
-                    
+
                     {fullResult.corrosionRateLT && (
                       <div className="p-4 border rounded-lg">
                         <h4 className="font-semibold mb-2">Long-Term Corrosion Rate</h4>
@@ -825,7 +854,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                         <p className="text-lg font-bold">{formatValue(fullResult.corrosionRateLT.resultValue, 4)} in/yr</p>
                       </div>
                     )}
-                    
+
                     {fullResult.remainingLife && (
                       <div className="p-4 border rounded-lg">
                         <h4 className="font-semibold mb-2">Remaining Life</h4>
@@ -833,7 +862,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                         <p className="text-lg font-bold">{formatValue(fullResult.remainingLife.resultValue, 1)} years</p>
                       </div>
                     )}
-                    
+
                     {fullResult.nextInspectionDate && (
                       <div className="p-4 border rounded-lg">
                         <h4 className="font-semibold mb-2">Next Inspection Interval</h4>
@@ -844,7 +873,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                   </div>
                 )}
               </TabsContent>
-              
+
               <TabsContent value="traceability" className="mt-4">
                 <Collapsible open={showIntermediateValues} onOpenChange={setShowIntermediateValues}>
                   <CollapsibleTrigger asChild>
@@ -870,7 +899,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                         </div>
                       </div>
                     )}
-                    
+
                     {fullResult?.tRequired?.intermediateValues && (
                       <div className="p-4 border rounded-lg mb-4">
                         <h4 className="font-semibold mb-2">Full Calculation - t_required</h4>
@@ -884,7 +913,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                         </div>
                       </div>
                     )}
-                    
+
                     {fullResult && (
                       <div className="space-y-4">
                         {/* Validation Status */}
@@ -913,7 +942,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                             </Alert>
                           )}
                         </div>
-                        
+
                         {/* Code References */}
                         <div className="p-4 border rounded-lg">
                           <h4 className="font-semibold mb-2 flex items-center gap-2">
@@ -947,7 +976,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
                             )}
                           </div>
                         </div>
-                        
+
                         {/* Audit Information */}
                         <div className="p-4 border rounded-lg">
                           <h4 className="font-semibold mb-2">Audit Information</h4>
