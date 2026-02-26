@@ -17,15 +17,15 @@ function calculateTimeSpanYears(
   defaultYears: number = 10
 ): number {
   if (!previousDate || !currentDate) return defaultYears;
-  
+
   const prev = new Date(previousDate);
   const curr = new Date(currentDate);
-  
+
   if (isNaN(prev.getTime()) || isNaN(curr.getTime())) return defaultYears;
-  
+
   const diffMs = curr.getTime() - prev.getTime();
   const diffYears = diffMs / (1000 * 60 * 60 * 24 * 365.25);
-  
+
   return diffYears > 0 ? diffYears : defaultYears;
 }
 import {
@@ -65,6 +65,13 @@ import {
   getInLieuOfAssessmentsByInspection,
   updateInLieuOfAssessment,
   deleteInLieuOfAssessment,
+  deleteAllComponentCalculations,
+  deleteAllFindings,
+  deleteAllRecommendations,
+  deleteAllPhotos,
+  deleteAllChecklistItems,
+  deleteAllFfsAssessments,
+  deleteAllInLieuOfAssessments,
 } from "./professionalReportDb";
 import { generateProfessionalPDF } from "./professionalPdfGenerator";
 import { evaluateShell, evaluateHead, ShellCalculationInputs, HeadCalculationInputs } from "./professionalCalculations";
@@ -82,37 +89,37 @@ export const professionalReportRouter = router({
       try {
         let report = await getProfessionalReportByInspection(input.inspectionId);
         logger.info('[Professional Report] Existing report found:', !!report);
-      
+
         if (!report) {
-        const reportId = nanoid();
-        await createProfessionalReport({
-          id: reportId,
-          inspectionId: input.inspectionId,
-          userId: ctx.user.id,
-          reportNumber: `RPT-${Date.now()}`,
-          reportDate: new Date(),
-          inspectorName: ctx.user.name || '',
-          employerName: 'OilPro Consulting LLC',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-        
-        // Initialize default checklist
-        await initializeDefaultChecklist(reportId);
-        
-        // Generate default component calculations
-        await generateDefaultCalculationsForInspection(input.inspectionId, reportId);
-        
+          const reportId = nanoid();
+          await createProfessionalReport({
+            id: reportId,
+            inspectionId: input.inspectionId,
+            userId: ctx.user.id,
+            reportNumber: `RPT-${Date.now()}`,
+            reportDate: new Date(),
+            inspectorName: ctx.user.name || '',
+            employerName: 'OilPro Consulting LLC',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+
+          // Initialize default checklist
+          await initializeDefaultChecklist(reportId);
+
+          // Generate default component calculations
+          await generateDefaultCalculationsForInspection(input.inspectionId, reportId);
+
           report = await getProfessionalReport(reportId);
         }
-      
+
         return report;
       } catch (error) {
         logger.error('[Professional Report] Error in getOrCreate:', error);
         throw error;
       }
     }),
-  
+
   // Update professional report
   update: protectedProcedure
     .input(z.object({
@@ -144,11 +151,11 @@ export const professionalReportRouter = router({
       if (updateData.nextExternalInspectionAPI) updateData.nextExternalInspectionAPI = new Date(updateData.nextExternalInspectionAPI);
       if (updateData.nextInternalInspection) updateData.nextInternalInspection = new Date(updateData.nextInternalInspection);
       if (updateData.nextUTInspection) updateData.nextUTInspection = new Date(updateData.nextUTInspection);
-      
+
       await updateProfessionalReport(input.reportId, updateData);
       return { success: true };
     }),
-  
+
   // Component calculations
   componentCalculations: router({
     list: protectedProcedure
@@ -156,7 +163,7 @@ export const professionalReportRouter = router({
       .query(async ({ input }) => {
         return await getComponentCalculations(input.reportId);
       }),
-    
+
     create: protectedProcedure
       .input(z.object({
         reportId: z.string(),
@@ -182,10 +189,10 @@ export const professionalReportRouter = router({
       }))
       .mutation(async ({ input }) => {
         const { reportId, componentType, ...data } = input;
-        
+
         // Calculate values based on component type
         let calculatedData: any = { ...data };
-        
+
         if (componentType === 'shell') {
           const inputs: ShellCalculationInputs = {
             P: parseFloat(data.designMAWP || '0'),
@@ -200,15 +207,15 @@ export const professionalReportRouter = router({
             SH: parseFloat(data.staticHead || '0'),
             SG: parseFloat(data.specificGravity || '1'),
           };
-          
+
           const results = evaluateShell(inputs);
-          
+
           // Helper to safely format numbers, returning undefined for invalid values
           const safeFormat = (value: number, decimals: number) => {
             if (!isFinite(value) || isNaN(value)) return undefined;
             return value.toFixed(decimals);
           };
-          
+
           calculatedData = {
             ...calculatedData,
             minimumThickness: safeFormat(results.t_min, 4),
@@ -224,7 +231,7 @@ export const professionalReportRouter = router({
           const R = D / 2;
           const L = parseFloat(data.crownRadius || R.toString());
           const r = parseFloat(data.knuckleRadius || (R * 0.06).toString());
-          
+
           const inputs: HeadCalculationInputs = {
             headType: (data.headType as any) || 'torispherical',
             P: parseFloat(data.designMAWP || '0'),
@@ -241,15 +248,15 @@ export const professionalReportRouter = router({
             L,
             r,
           };
-          
+
           const results = evaluateHead(inputs);
-          
+
           // Helper to safely format numbers, returning undefined for invalid values
           const safeFormat = (value: number, decimals: number) => {
             if (!isFinite(value) || isNaN(value)) return undefined;
             return value.toFixed(decimals);
           };
-          
+
           calculatedData = {
             ...calculatedData,
             headFactor: results.M && isFinite(results.M) ? results.M.toFixed(4) : undefined,
@@ -262,7 +269,7 @@ export const professionalReportRouter = router({
             mawpAtNextInspection: safeFormat(results.MAWP, 2),
           };
         }
-        
+
         const id = nanoid();
         await createComponentCalculation({
           id,
@@ -273,10 +280,10 @@ export const professionalReportRouter = router({
           createdAt: new Date(),
           updatedAt: new Date(),
         });
-        
+
         return { id };
       }),
-    
+
     update: protectedProcedure
       .input(z.object({
         calcId: z.string(),
@@ -286,7 +293,7 @@ export const professionalReportRouter = router({
         await updateComponentCalculation(input.calcId, input.data);
         return { success: true };
       }),
-    
+
     delete: protectedProcedure
       .input(z.object({ calcId: z.string() }))
       .mutation(async ({ input }) => {
@@ -294,7 +301,7 @@ export const professionalReportRouter = router({
         return { success: true };
       }),
   }),
-  
+
   // Inspection findings
   findings: router({
     list: protectedProcedure
@@ -302,7 +309,7 @@ export const professionalReportRouter = router({
       .query(async ({ input }) => {
         return await getInspectionFindings(input.reportId);
       }),
-    
+
     create: protectedProcedure
       .input(z.object({
         reportId: z.string(),
@@ -324,7 +331,7 @@ export const professionalReportRouter = router({
         });
         return { id };
       }),
-    
+
     update: protectedProcedure
       .input(z.object({
         findingId: z.string(),
@@ -341,7 +348,7 @@ export const professionalReportRouter = router({
         await updateInspectionFinding(findingId, data);
         return { success: true };
       }),
-    
+
     delete: protectedProcedure
       .input(z.object({ findingId: z.string() }))
       .mutation(async ({ input }) => {
@@ -349,7 +356,7 @@ export const professionalReportRouter = router({
         return { success: true };
       }),
   }),
-  
+
   // Recommendations
   recommendations: router({
     list: protectedProcedure
@@ -357,7 +364,7 @@ export const professionalReportRouter = router({
       .query(async ({ input }) => {
         return await getRecommendations(input.reportId);
       }),
-    
+
     create: protectedProcedure
       .input(z.object({
         reportId: z.string(),
@@ -376,7 +383,7 @@ export const professionalReportRouter = router({
         });
         return { id };
       }),
-    
+
     update: protectedProcedure
       .input(z.object({
         recommendationId: z.string(),
@@ -389,7 +396,7 @@ export const professionalReportRouter = router({
         await updateRecommendation(input.recommendationId, input.data);
         return { success: true };
       }),
-    
+
     delete: protectedProcedure
       .input(z.object({ recommendationId: z.string() }))
       .mutation(async ({ input }) => {
@@ -397,7 +404,7 @@ export const professionalReportRouter = router({
         return { success: true };
       }),
   }),
-  
+
   // Photos
   photos: router({
     list: protectedProcedure
@@ -405,7 +412,7 @@ export const professionalReportRouter = router({
       .query(async ({ input }) => {
         return await getInspectionPhotos(input.reportId);
       }),
-    
+
     upload: protectedProcedure
       .input(z.object({
         base64Data: z.string(),
@@ -419,7 +426,7 @@ export const professionalReportRouter = router({
         let buffer = Buffer.from(base64String, 'base64');
         let contentType = input.contentType;
         let ext = input.filename.split('.').pop()?.toLowerCase() || 'jpg';
-        
+
         // Convert HEIC to JPEG (PDFKit doesn't support HEIC)
         if (ext === 'heic' || ext === 'heif' || contentType.includes('heic') || contentType.includes('heif')) {
           try {
@@ -441,17 +448,17 @@ export const professionalReportRouter = router({
             // Don't throw error - let upload continue
           }
         }
-        
+
         // Generate unique filename
         const timestamp = Date.now();
         const key = `inspection-photos/${timestamp}-${nanoid()}.${ext}`;
-        
+
         // Upload to S3
         const { url } = await storagePut(key, buffer, contentType);
-        
+
         return { url };
       }),
-    
+
     create: protectedProcedure
       .input(z.object({
         reportId: z.string(),
@@ -469,7 +476,7 @@ export const professionalReportRouter = router({
         });
         return { id };
       }),
-    
+
     update: protectedProcedure
       .input(z.object({
         photoId: z.string(),
@@ -483,7 +490,7 @@ export const professionalReportRouter = router({
         await updateInspectionPhoto(photoId, data);
         return { success: true };
       }),
-    
+
     delete: protectedProcedure
       .input(z.object({ photoId: z.string() }))
       .mutation(async ({ input }) => {
@@ -491,7 +498,7 @@ export const professionalReportRouter = router({
         return { success: true };
       }),
   }),
-  
+
   // Checklist
   checklist: router({
     list: protectedProcedure
@@ -499,14 +506,14 @@ export const professionalReportRouter = router({
       .query(async ({ input }) => {
         return await getChecklistItems(input.reportId);
       }),
-    
+
     initialize: protectedProcedure
       .input(z.object({ reportId: z.string() }))
       .mutation(async ({ input }) => {
         await initializeDefaultChecklist(input.reportId);
         return { success: true };
       }),
-    
+
     update: protectedProcedure
       .input(z.object({
         itemId: z.string(),
@@ -523,7 +530,7 @@ export const professionalReportRouter = router({
         return { success: true };
       }),
   }),
-  
+
   // Generate PDF
   generatePDF: protectedProcedure
     .input(z.object({
@@ -547,20 +554,20 @@ export const professionalReportRouter = router({
     .mutation(async ({ input }) => {
       try {
         logger.info('[PDF Generation] Starting for inspection:', input.inspectionId);
-        
+
         const pdfBuffer = await generateProfessionalPDF({
           reportId: input.reportId,
           inspectionId: input.inspectionId,
           sectionConfig: input.sectionConfig,
         });
-        
+
         logger.info('[PDF Generation] PDF generated successfully, size:', pdfBuffer.length, 'bytes');
-        
+
         // Convert buffer to base64 for transmission
         const base64 = pdfBuffer.toString('base64');
-        
+
         logger.info('[PDF Generation] Base64 encoded, size:', base64.length, 'characters');
-        
+
         return {
           success: true,
           pdf: base64,
@@ -571,18 +578,18 @@ export const professionalReportRouter = router({
         throw new Error(`Failed to generate PDF: ${error.message}`);
       }
     }),
-  
+
   // ============================================================================
   // FFS Assessment
   // ============================================================================
-  
+
   ffsAssessment: router({
     list: protectedProcedure
       .input(z.object({ inspectionId: z.string() }))
       .query(async ({ input }) => {
         return await getFfsAssessmentsByInspection(input.inspectionId);
       }),
-    
+
     create: protectedProcedure
       .input(z.object({
         inspectionId: z.string(),
@@ -602,7 +609,7 @@ export const professionalReportRouter = router({
         await createFfsAssessment({ id, ...input });
         return { id };
       }),
-    
+
     update: protectedProcedure
       .input(z.object({
         id: z.string(),
@@ -622,7 +629,7 @@ export const professionalReportRouter = router({
         await updateFfsAssessment(id, data);
         return { success: true };
       }),
-    
+
     delete: protectedProcedure
       .input(z.object({ id: z.string() }))
       .mutation(async ({ input }) => {
@@ -630,18 +637,18 @@ export const professionalReportRouter = router({
         return { success: true };
       }),
   }),
-  
+
   // ============================================================================
   // In-Lieu-Of Assessment
   // ============================================================================
-  
+
   inLieuOfAssessment: router({
     list: protectedProcedure
       .input(z.object({ inspectionId: z.string() }))
       .query(async ({ input }) => {
         return await getInLieuOfAssessmentsByInspection(input.inspectionId);
       }),
-    
+
     create: protectedProcedure
       .input(z.object({
         inspectionId: z.string(),
@@ -659,14 +666,14 @@ export const professionalReportRouter = router({
       .mutation(async ({ input }) => {
         const id = nanoid();
         const { nextInternalDue, ...rest } = input;
-        await createInLieuOfAssessment({ 
-          id, 
+        await createInLieuOfAssessment({
+          id,
           ...rest,
           nextInternalDue: nextInternalDue ? new Date(nextInternalDue) : undefined,
         });
         return { id };
       }),
-    
+
     update: protectedProcedure
       .input(z.object({
         id: z.string(),
@@ -689,7 +696,7 @@ export const professionalReportRouter = router({
         });
         return { success: true };
       }),
-    
+
     delete: protectedProcedure
       .input(z.object({ id: z.string() }))
       .mutation(async ({ input }) => {
@@ -697,25 +704,77 @@ export const professionalReportRouter = router({
         return { success: true };
       }),
   }),
-  
-  // Recalculate component calculations from TML readings
+
+  // ============================================================================
+  // Bulk Delete Endpoints (Delete All in a section)
+  // ============================================================================
+
+  deleteAllCalculations: protectedProcedure
+    .input(z.object({ reportId: z.string() }))
+    .mutation(async ({ input }) => {
+      await deleteAllComponentCalculations(input.reportId);
+      return { success: true };
+    }),
+
+  deleteAllFindings: protectedProcedure
+    .input(z.object({ reportId: z.string() }))
+    .mutation(async ({ input }) => {
+      await deleteAllFindings(input.reportId);
+      return { success: true };
+    }),
+
+  deleteAllRecommendations: protectedProcedure
+    .input(z.object({ reportId: z.string() }))
+    .mutation(async ({ input }) => {
+      await deleteAllRecommendations(input.reportId);
+      return { success: true };
+    }),
+
+  deleteAllPhotos: protectedProcedure
+    .input(z.object({ reportId: z.string() }))
+    .mutation(async ({ input }) => {
+      await deleteAllPhotos(input.reportId);
+      return { success: true };
+    }),
+
+  deleteAllChecklistItems: protectedProcedure
+    .input(z.object({ reportId: z.string() }))
+    .mutation(async ({ input }) => {
+      await deleteAllChecklistItems(input.reportId);
+      return { success: true };
+    }),
+
+  deleteAllFfsAssessments: protectedProcedure
+    .input(z.object({ inspectionId: z.string() }))
+    .mutation(async ({ input }) => {
+      await deleteAllFfsAssessments(input.inspectionId);
+      return { success: true };
+    }),
+
+  deleteAllInLieuOfAssessments: protectedProcedure
+    .input(z.object({ inspectionId: z.string() }))
+    .mutation(async ({ input }) => {
+      await deleteAllInLieuOfAssessments(input.inspectionId);
+      return { success: true };
+    }),
+
   recalculate: protectedProcedure
     .input(z.object({ inspectionId: z.string() }))
     .mutation(async ({ input, ctx }) => {
       const db = await import('./db');
       const professionalReportDb = await import('./professionalReportDb');
-      
+
       // Get inspection data
       const inspection = await db.getInspection(input.inspectionId);
       if (!inspection) {
         throw new Error('Inspection not found');
       }
-      
+
       // Verify ownership - admin can access any inspection
       if (ctx.user.role !== 'admin' && inspection.userId !== ctx.user.id) {
         throw new Error('Unauthorized');
       }
-      
+
       // Get or create professional report
       let report = await professionalReportDb.getProfessionalReportByInspection(input.inspectionId);
       if (!report) {
@@ -729,35 +788,35 @@ export const professionalReportRouter = router({
           inspectorName: ctx.user.name || '',
           employerName: 'OilPro Consulting LLC',
         });
-        
+
         // Generate default component calculations
         await professionalReportDb.generateDefaultCalculationsForInspection(input.inspectionId, reportId);
-        
+
         report = await professionalReportDb.getProfessionalReport(reportId);
       }
-      
+
       if (!report) {
         throw new Error('Failed to create professional report');
       }
-      
+
       // Delete existing component calculations
       const existingCalcs = await professionalReportDb.getComponentCalculations(report.id);
       for (const calc of existingCalcs) {
         await professionalReportDb.deleteComponentCalculation(calc.id);
       }
-      
+
       // Get TML readings
       const tmlReadings = await db.getTmlReadings(input.inspectionId);
-      
+
       // Helper function to create component calculation
       const createComponentCalc = async (componentType: 'shell' | 'head', componentName: string, filter: (tml: any) => boolean) => {
         const componentTMLs = tmlReadings.filter(filter);
-        
+
         if (componentTMLs.length === 0) {
           logger.info(`[Recalculate] No TMLs found for ${componentName}`);
           return;
         }
-        
+
         // CRITICAL FIX: Read tActual first (new field), fall back to currentThickness (legacy field)
         // Data Migration writes to tActual, old imports wrote to currentThickness
         const currentThicknesses = componentTMLs
@@ -769,16 +828,16 @@ export const professionalReportRouter = router({
         const nominalThicknesses = componentTMLs
           .map((t: any) => parseFloat(t.nominalThickness))
           .filter((v: number) => !isNaN(v));
-        
+
         // API 510 COMPLIANCE: Use MINIMUM thickness (not average) for conservative calculations
         // This ensures the calculation reflects the worst-case (thinnest) location
-        const avgCurrent = currentThicknesses.length > 0 ? 
+        const avgCurrent = currentThicknesses.length > 0 ?
           Math.min(...currentThicknesses).toFixed(4) : undefined;
-        const avgPrevious = previousThicknesses.length > 0 ? 
+        const avgPrevious = previousThicknesses.length > 0 ?
           Math.min(...previousThicknesses).toFixed(4) : undefined;
-        let avgNominal = nominalThicknesses.length > 0 ? 
+        let avgNominal = nominalThicknesses.length > 0 ?
           Math.min(...nominalThicknesses).toFixed(4) : undefined;
-        
+
         // FALLBACK: If TML readings don't have nominalThickness, use inspection-level vessel data
         if (!avgNominal && inspection) {
           if (componentType === 'shell' && inspection.shellNominalThickness) {
@@ -787,7 +846,7 @@ export const professionalReportRouter = router({
             avgNominal = parseFloat(String(inspection.headNominalThickness)).toFixed(4);
           }
         }
-        
+
         // Calculate minimum thickness
         const P = parseFloat(inspection.designPressure || '0');
         const insideDiameter = parseFloat(inspection.insideDiameter || '0');
@@ -800,7 +859,7 @@ export const professionalReportRouter = router({
         // CRITICAL FIX: Heads often have different joint efficiency than shell (Spot RT vs Full RT)
         // Default to vessel-level E, but allow component-specific override
         let E = parseFloat(inspection.jointEfficiency || '1.0');
-        
+
         // Component-specific joint efficiency override
         // For heads: Check if inspection has headJointEfficiency field, otherwise use vessel-level E
         if (componentType === 'head') {
@@ -813,7 +872,7 @@ export const professionalReportRouter = router({
         }
         // CA is for reference only - NOT added to Tmin per API 510 formulas
         const CA = 0.125;
-        
+
         let minThickness;
         let calculatedMAWP;
         let headTypeUsed = 'Ellipsoidal';
@@ -838,7 +897,7 @@ export const professionalReportRouter = router({
             const headTypeStr = (inspection.headType || 'ellipsoidal').toLowerCase();
             const D = insideDiameter; // Full inside diameter
             const denominator = 2 * S * E - 0.2 * P;
-            
+
             if (denominator > 0) {
               if (headTypeStr.includes('torispherical')) {
                 // Torispherical: t = PLM / (2SE - 0.2P)
@@ -858,7 +917,7 @@ export const professionalReportRouter = router({
                 minThickness = ((P * D) / denominator).toFixed(4);
               }
             }
-            
+
             // Head MAWP calculation per head type
             if (avgCurrent) {
               const t = parseFloat(avgCurrent);
@@ -880,32 +939,32 @@ export const professionalReportRouter = router({
             }
           }
         }
-        
+
         // Calculate corrosion rate and remaining life using enhanced dual-rate system
         let corrosionRate, corrosionRateLT, corrosionRateST, remainingLife, corrosionAllowance;
         let governingRateType, governingRateReason, dataQualityStatus, dataQualityNotes;
-        
+
         if (avgCurrent && minThickness) {
           const currThick = parseFloat(avgCurrent);
           const minThick = parseFloat(minThickness);
           const prevThick = avgPrevious ? parseFloat(avgPrevious) : undefined;
           const nomThick = avgNominal ? parseFloat(avgNominal) : undefined;
-          
+
           // Import enhanced calculation engine
-          const { calculateDualCorrosionRates, calculateRemainingLife, calculateInspectionInterval } = 
+          const { calculateDualCorrosionRates, calculateRemainingLife, calculateInspectionInterval } =
             await import('./enhancedCalculations');
-          
+
           // Get dates from TML readings (more accurate than inspection-level dates)
           const tmlWithDates = componentTMLs.find((t: any) => t.previousInspectionDate && t.currentInspectionDate);
-          const previousDate = tmlWithDates?.previousInspectionDate ? new Date(tmlWithDates.previousInspectionDate) : 
+          const previousDate = tmlWithDates?.previousInspectionDate ? new Date(tmlWithDates.previousInspectionDate) :
             (inspection.inspectionDate ? new Date(inspection.inspectionDate) : undefined);
           const currentDate = tmlWithDates?.currentInspectionDate ? new Date(tmlWithDates.currentInspectionDate) : new Date();
-          
+
           // For initial date, use year built or a reasonable default
           const yearBuilt = inspection.yearBuilt;
-          const initialDate = yearBuilt ? new Date(`${yearBuilt}-01-01`) : 
+          const initialDate = yearBuilt ? new Date(`${yearBuilt}-01-01`) :
             (inspection.createdAt ? new Date(inspection.createdAt) : undefined);
-          
+
           // Prepare thickness data for dual corrosion rate calculation
           const thicknessData = {
             initialThickness: nomThick, // Use nominal as baseline if available
@@ -916,10 +975,10 @@ export const professionalReportRouter = router({
             previousDate: previousDate,
             currentDate: currentDate
           };
-          
+
           // Calculate dual corrosion rates with anomaly detection
           const rateResult = calculateDualCorrosionRates(thicknessData);
-          
+
           corrosionRateLT = rateResult.corrosionRateLongTerm.toFixed(6);
           corrosionRateST = rateResult.corrosionRateShortTerm.toFixed(6);
           corrosionRate = rateResult.governingRate.toFixed(6);
@@ -927,14 +986,14 @@ export const professionalReportRouter = router({
           governingRateReason = rateResult.governingRateReason;
           dataQualityStatus = rateResult.dataQualityStatus;
           dataQualityNotes = rateResult.dataQualityNotes;
-          
+
           // COMPLIANCE GUARD: Only compute CA and RL when minThickness is a real
           // calculated value from ASME VIII-1 formulas — NOT a placeholder.
           // If vessel parameters (P, R, S, E) are incomplete, minThick will be undefined
           // and we must leave RL null and flag the gap.
           if (minThick > 0 && P > 0 && R > 0 && S > 0 && E > 0) {
             corrosionAllowance = (currThick - minThick).toFixed(4);
-            
+
             // Calculate remaining life using governing rate
             if (rateResult.governingRate > 0) {
               const rl = calculateRemainingLife(currThick, minThick, rateResult.governingRate);
@@ -946,14 +1005,14 @@ export const professionalReportRouter = router({
           } else {
             // Missing vessel parameters — cannot compute tRequired
             // Leave RL null and flag in data quality notes
-            dataQualityNotes = (dataQualityNotes || '') + 
+            dataQualityNotes = (dataQualityNotes || '') +
               ' | WARNING: Remaining life not computed — missing vessel parameters for t_required calculation.' +
               ' Verify designPressure, insideDiameter, allowableStress, and jointEfficiency.';
             dataQualityStatus = 'incomplete';
             logger.warn(`[Recalculate] ${componentName}: Cannot compute RL — missing vessel parameters (P=${P}, R=${R}, S=${S}, E=${E})`);
           }
         }
-        
+
         await professionalReportDb.createComponentCalculation({
           id: nanoid(),
           reportId: report.id,
@@ -969,18 +1028,18 @@ export const professionalReportRouter = router({
           previousThickness: avgPrevious,
           actualThickness: avgCurrent,
           minimumThickness: minThickness,
-          
+
           // Enhanced dual corrosion rate system
           corrosionRateLongTerm: corrosionRateLT,
           corrosionRateShortTerm: corrosionRateST,
           corrosionRate,
           governingRateType,
           governingRateReason,
-          
+
           // Data quality indicators
           dataQualityStatus: dataQualityStatus as 'good' | 'anomaly' | 'growth_error' | 'below_minimum' | 'confirmed' | null | undefined,
           dataQualityNotes,
-          
+
           remainingLife,
           timeSpan: calculateTimeSpanYears(
             inspection.inspectionDate,
@@ -997,10 +1056,10 @@ export const professionalReportRouter = router({
           crownRadius: componentType === 'head' && inspection.crownRadius ? parseFloat(inspection.crownRadius as any).toFixed(3) : undefined,
           knuckleRadius: componentType === 'head' && inspection.knuckleRadius ? parseFloat(inspection.knuckleRadius as any).toFixed(3) : undefined,
         });
-        
+
         logger.info(`[Recalculate] Created ${componentName} calculation`);
       };
-      
+
       // Create Shell calculation
       // CRITICAL FIX: Check BOTH component (legacy) and componentType (new) fields
       await createComponentCalc(
@@ -1013,7 +1072,7 @@ export const professionalReportRouter = router({
           return combined.includes('shell') || combined.includes('cylinder') || combined.includes('body');
         }
       );
-      
+
       // Create South Head calculation
       // Matches: 'south head', 'south', 'head 1', 'head-1', 'east head', 'e head', 'left head', 'top head'
       // Also matches componentGroup 'SOUTHHEAD'
@@ -1026,10 +1085,10 @@ export const professionalReportRouter = router({
           const cg = (tml.componentGroup || '').toUpperCase();
           const loc = (tml.location || '').toLowerCase();
           const combined = `${comp} ${compType}`;
-          
+
           // componentGroup is the canonical source of truth
           if (cg === 'SOUTHHEAD') return true;
-          
+
           // Explicit south head matches
           if (combined.includes('south head') || loc.includes('south head')) return true;
           if (combined.includes('south') && combined.includes('head')) return true;
@@ -1037,21 +1096,21 @@ export const professionalReportRouter = router({
           if (combined.includes('east head') || combined.includes('e head')) return true;
           if (combined.includes('head 1') || combined.includes('head-1')) return true;
           if (combined.includes('left head') || combined.includes('top head')) return true;
-          
+
           // Generic head without north/west/right/bottom keywords → default to south (first head)
           if ((combined.includes('head') && !combined.includes('shell')) &&
-              !combined.includes('north') && !combined.includes('west') &&
-              !combined.includes('w head') && !combined.includes('head 2') &&
-              !combined.includes('head-2') && !combined.includes('right') &&
-              !combined.includes('bottom') && !combined.includes('bttm') && !combined.includes('btm') &&
-              !loc.includes('north') && !loc.includes('west') && !loc.includes('bottom') && !loc.includes('bttm') &&
-              cg !== 'NORTHHEAD') {
+            !combined.includes('north') && !combined.includes('west') &&
+            !combined.includes('w head') && !combined.includes('head 2') &&
+            !combined.includes('head-2') && !combined.includes('right') &&
+            !combined.includes('bottom') && !combined.includes('bttm') && !combined.includes('btm') &&
+            !loc.includes('north') && !loc.includes('west') && !loc.includes('bottom') && !loc.includes('bttm') &&
+            cg !== 'NORTHHEAD') {
             return true;
           }
           return false;
         }
       );
-      
+
       // Create North Head calculation
       // Matches: 'north head', 'north', 'head 2', 'head-2', 'west head', 'w head', 'right head', 'bottom head'
       // Also matches componentGroup 'NORTHHEAD'
@@ -1064,10 +1123,10 @@ export const professionalReportRouter = router({
           const cg = (tml.componentGroup || '').toUpperCase();
           const loc = (tml.location || '').toLowerCase();
           const combined = `${comp} ${compType}`;
-          
+
           // componentGroup is the canonical source of truth
           if (cg === 'NORTHHEAD') return true;
-          
+
           // Explicit north head matches
           if (combined.includes('north head') || loc.includes('north head')) return true;
           if (combined.includes('north') && combined.includes('head')) return true;
@@ -1078,37 +1137,37 @@ export const professionalReportRouter = router({
           if (combined.includes('bottom head') || combined.includes('bttm head') || combined.includes('btm head')) return true;
           // Check location field for north indicators
           if (loc.includes('north') || loc.includes('west') || loc.includes('bottom') || loc.includes('bttm')) return true;
-          
+
           return false;
         }
       );
-      
+
       return { success: true, message: 'Component calculations regenerated successfully' };
     }),
-  
+
   // Export inspection data as CSV
   exportCSV: protectedProcedure
-    .input(z.object({ 
+    .input(z.object({
       reportId: z.string(),
       inspectionId: z.string(),
     }))
     .query(async ({ input }) => {
       const { reportId, inspectionId } = input;
-      
+
       // Import CSV export helper
       const { generateInspectionCSV } = await import('./csvExport');
       const { getInspection, getTmlReadings } = await import('./db');
-      
+
       // Fetch all data
       const inspection = await getInspection(inspectionId);
       if (!inspection) throw new Error('Inspection not found');
-      
+
       const components = await getComponentCalculations(reportId);
       const tmlReadings = await getTmlReadings(inspectionId);
-      
+
       // TODO: Add nozzle evaluations when getNozzlesByInspection is implemented
       const nozzles: any[] = [];
-      
+
       // Generate CSV content
       const csvContent = generateInspectionCSV({
         inspection,
@@ -1116,7 +1175,7 @@ export const professionalReportRouter = router({
         tmlReadings,
         nozzles,
       });
-      
+
       return {
         csvContent,
         filename: `inspection-${inspection.vesselTagNumber || inspectionId}-${new Date().toISOString().split('T')[0]}.csv`,
@@ -1241,12 +1300,12 @@ export const drawingsRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       const { createVesselDrawing } = await import('./professionalReportDb');
-      
+
       // Decode base64 and upload to S3
       const buffer = Buffer.from(input.fileData, 'base64');
       const fileKey = `drawings/${input.reportId}/${nanoid()}-${input.fileName}`;
       const { url } = await storagePut(fileKey, buffer, input.fileType);
-      
+
       const id = nanoid();
       await createVesselDrawing({
         id,
@@ -1265,7 +1324,7 @@ export const drawingsRouter = router({
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      
+
       return { id, url };
     }),
 });

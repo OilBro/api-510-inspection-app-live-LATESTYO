@@ -75,6 +75,16 @@ export default function InLieuOfSection({ inspectionId }: InLieuOfSectionProps) 
     },
   });
 
+  const deleteAllIlo = trpc.professionalReport.deleteAllInLieuOfAssessments.useMutation({
+    onSuccess: () => {
+      utils.professionalReport.inLieuOfAssessment.list.invalidate();
+      toast.success("All In-Lieu-Of assessments deleted");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to delete: ${error.message}`);
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createAssessment.mutate({
@@ -106,7 +116,7 @@ export default function InLieuOfSection({ inspectionId }: InLieuOfSectionProps) 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <h4 className="font-medium">Qualification Criteria</h4>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="cleanService">Clean Service (Non-corrosive)</Label>
@@ -243,7 +253,22 @@ export default function InLieuOfSection({ inspectionId }: InLieuOfSectionProps) 
       {/* Existing Assessments */}
       {assessments && assessments.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Existing In-Lieu-Of Assessments</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Existing In-Lieu-Of Assessments</h3>
+            <Button
+              variant="outline"
+              className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => {
+                if (confirm("Delete ALL In-Lieu-Of assessments? This cannot be undone.")) {
+                  deleteAllIlo.mutate({ inspectionId });
+                }
+              }}
+              disabled={deleteAllIlo.isPending}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete All
+            </Button>
+          </div>
           {assessments.map((assessment: any) => (
             <Card key={assessment.id}>
               <CardHeader>
@@ -272,7 +297,7 @@ export default function InLieuOfSection({ inspectionId }: InLieuOfSectionProps) 
                   </Button>
                 </div>
                 <CardDescription>
-                  Status: {assessment.qualified ? "Qualified" : "Not Qualified"} | 
+                  Status: {assessment.qualified ? "Qualified" : "Not Qualified"} |
                   Max Interval: {assessment.maxInterval ? `${assessment.maxInterval} years` : "N/A"}
                 </CardDescription>
               </CardHeader>

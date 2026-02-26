@@ -31,7 +31,7 @@ import { nanoid } from "nanoid";
 export async function createProfessionalReport(data: InsertProfessionalReport) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db.insert(professionalReports).values(data);
   return data.id;
 }
@@ -39,26 +39,26 @@ export async function createProfessionalReport(data: InsertProfessionalReport) {
 export async function getProfessionalReport(reportId: string) {
   const db = await getDb();
   if (!db) return null;
-  
+
   const result = await db
     .select()
     .from(professionalReports)
     .where(eq(professionalReports.id, reportId))
     .limit(1);
-  
+
   return result[0] || null;
 }
 
 export async function getProfessionalReportByInspection(inspectionId: string) {
   const db = await getDb();
   if (!db) return null;
-  
+
   const result = await db
     .select()
     .from(professionalReports)
     .where(eq(professionalReports.inspectionId, inspectionId))
     .limit(1);
-  
+
   return result[0] || null;
 }
 
@@ -68,7 +68,7 @@ export async function updateProfessionalReport(
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(professionalReports)
     .set(data)
@@ -82,7 +82,7 @@ export async function updateProfessionalReport(
 export async function createComponentCalculation(data: InsertComponentCalculation) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db.insert(componentCalculations).values(data);
   return data.id;
 }
@@ -90,7 +90,7 @@ export async function createComponentCalculation(data: InsertComponentCalculatio
 export async function getComponentCalculations(reportId: string) {
   const db = await getDb();
   if (!db) return [];
-  
+
   return await db
     .select()
     .from(componentCalculations)
@@ -103,7 +103,7 @@ export async function updateComponentCalculation(
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(componentCalculations)
     .set(data)
@@ -113,7 +113,7 @@ export async function updateComponentCalculation(
 export async function deleteComponentCalculation(calcId: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .delete(componentCalculations)
     .where(eq(componentCalculations.id, calcId));
@@ -126,7 +126,7 @@ export async function deleteComponentCalculation(calcId: string) {
 export async function createInspectionFinding(data: InsertInspectionFinding) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db.insert(inspectionFindings).values(data);
   return data.id;
 }
@@ -138,7 +138,7 @@ export async function createInspectionFinding(data: InsertInspectionFinding) {
 export async function getInspectionFindings(reportId: string, inspectionId?: string) {
   const db = await getDb();
   if (!db) return [];
-  
+
   if (inspectionId) {
     return await db
       .select()
@@ -148,7 +148,7 @@ export async function getInspectionFindings(reportId: string, inspectionId?: str
         eq(inspectionFindings.reportId, inspectionId) // Check if saved under inspectionId
       ));
   }
-  
+
   return await db
     .select()
     .from(inspectionFindings)
@@ -161,7 +161,7 @@ export async function updateInspectionFinding(
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(inspectionFindings)
     .set(data)
@@ -175,7 +175,7 @@ export async function updateInspectionFinding(
 export async function createRecommendation(data: InsertRecommendation) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db.insert(recommendations).values(data);
   return data.id;
 }
@@ -186,7 +186,7 @@ export async function createRecommendation(data: InsertRecommendation) {
 export async function getRecommendations(reportId: string, inspectionId?: string) {
   const db = await getDb();
   if (!db) return [];
-  
+
   if (inspectionId) {
     return await db
       .select()
@@ -196,7 +196,7 @@ export async function getRecommendations(reportId: string, inspectionId?: string
         eq(recommendations.reportId, inspectionId)
       ));
   }
-  
+
   return await db
     .select()
     .from(recommendations)
@@ -209,7 +209,7 @@ export async function updateRecommendation(
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(recommendations)
     .set(data)
@@ -223,7 +223,7 @@ export async function updateRecommendation(
 export async function createInspectionPhoto(data: InsertInspectionPhoto) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db.insert(inspectionPhotos).values(data);
   return data.id;
 }
@@ -231,7 +231,7 @@ export async function createInspectionPhoto(data: InsertInspectionPhoto) {
 export async function getInspectionPhotos(reportId: string) {
   const db = await getDb();
   if (!db) return [];
-  
+
   return await db
     .select()
     .from(inspectionPhotos)
@@ -241,7 +241,7 @@ export async function getInspectionPhotos(reportId: string) {
 export async function updateInspectionPhoto(photoId: string, data: Partial<InsertInspectionPhoto>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(inspectionPhotos)
     .set(data)
@@ -251,7 +251,7 @@ export async function updateInspectionPhoto(photoId: string, data: Partial<Inser
 export async function deleteInspectionPhoto(photoId: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .delete(inspectionPhotos)
     .where(eq(inspectionPhotos.id, photoId));
@@ -264,7 +264,7 @@ export async function deleteInspectionPhoto(photoId: string) {
 export async function createAppendixDocument(data: InsertAppendixDocument) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db.insert(appendixDocuments).values(data);
   return data.id;
 }
@@ -272,7 +272,7 @@ export async function createAppendixDocument(data: InsertAppendixDocument) {
 export async function getAppendixDocuments(reportId: string) {
   const db = await getDb();
   if (!db) return [];
-  
+
   return await db
     .select()
     .from(appendixDocuments)
@@ -282,7 +282,7 @@ export async function getAppendixDocuments(reportId: string) {
 export async function deleteAppendixDocument(docId: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .delete(appendixDocuments)
     .where(eq(appendixDocuments.id, docId));
@@ -295,7 +295,7 @@ export async function deleteAppendixDocument(docId: string) {
 export async function createChecklistItem(data: InsertChecklistItem) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db.insert(checklistItems).values(data);
   return data.id;
 }
@@ -303,7 +303,7 @@ export async function createChecklistItem(data: InsertChecklistItem) {
 export async function getChecklistItems(reportId: string) {
   const db = await getDb();
   if (!db) return [];
-  
+
   return await db
     .select()
     .from(checklistItems)
@@ -316,7 +316,7 @@ export async function updateChecklistItem(
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(checklistItems)
     .set(data)
@@ -336,29 +336,29 @@ export async function initializeDefaultChecklist(reportId: string) {
     // Foundation
     { category: "foundation", itemNumber: "3.1.1", itemText: "Vessel foundation supports attached and in satisfactory condition", sequenceNumber: 1, checked: false, status: "not_checked", createdAt: new Date(), updatedAt: new Date() },
     { category: "foundation", itemNumber: "3.1.2", itemText: "Supports coating in satisfactory condition", sequenceNumber: 2, checked: false, status: "not_checked", createdAt: new Date(), updatedAt: new Date() },
-    
+
     // Shell
     { category: "shell", itemNumber: "3.2.1", itemText: "Shell material and coating condition", sequenceNumber: 3, checked: false, status: "not_checked", createdAt: new Date(), updatedAt: new Date() },
     { category: "shell", itemNumber: "3.2.2", itemText: "External surface profile smooth and clean", sequenceNumber: 4, checked: false, status: "not_checked", createdAt: new Date(), updatedAt: new Date() },
     { category: "shell", itemNumber: "3.2.3", itemText: "Exposed surface profile relatively smooth with no significant oxidation", sequenceNumber: 5, checked: false, status: "not_checked", createdAt: new Date(), updatedAt: new Date() },
     { category: "shell", itemNumber: "3.2.4", itemText: "Longitudinal and circumferential welds in satisfactory condition", sequenceNumber: 6, checked: false, status: "not_checked", createdAt: new Date(), updatedAt: new Date() },
     { category: "shell", itemNumber: "3.2.5", itemText: "Shell nozzle penetration welds in satisfactory condition", sequenceNumber: 7, checked: false, status: "not_checked", createdAt: new Date(), updatedAt: new Date() },
-    
+
     // Heads
     { category: "heads", itemNumber: "3.3.1", itemText: "Head material and condition", sequenceNumber: 8, checked: false, status: "not_checked", createdAt: new Date(), updatedAt: new Date() },
     { category: "heads", itemNumber: "3.3.2", itemText: "Head-to-shell welds in satisfactory condition", sequenceNumber: 9, checked: false, status: "not_checked", createdAt: new Date(), updatedAt: new Date() },
     { category: "heads", itemNumber: "3.3.3", itemText: "Head nozzle penetrations in satisfactory condition", sequenceNumber: 10, checked: false, status: "not_checked", createdAt: new Date(), updatedAt: new Date() },
-    
+
     // Appurtenances
     { category: "appurtenances", itemNumber: "3.4.1", itemText: "Nozzles and flanges in satisfactory condition", sequenceNumber: 11, checked: false, status: "not_checked", createdAt: new Date(), updatedAt: new Date() },
     { category: "appurtenances", itemNumber: "3.4.2", itemText: "Manways and access openings in satisfactory condition", sequenceNumber: 12, checked: false, status: "not_checked", createdAt: new Date(), updatedAt: new Date() },
     { category: "appurtenances", itemNumber: "3.4.3", itemText: "Support lugs and attachments in satisfactory condition", sequenceNumber: 13, checked: false, status: "not_checked", createdAt: new Date(), updatedAt: new Date() },
     { category: "appurtenances", itemNumber: "3.4.4", itemText: "Piping connections and valves in satisfactory condition", sequenceNumber: 14, checked: false, status: "not_checked", createdAt: new Date(), updatedAt: new Date() },
   ];
-  
+
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   for (const item of defaultItems) {
     await createChecklistItem({
       id: nanoid(),
@@ -373,7 +373,7 @@ export async function initializeDefaultChecklist(reportId: string) {
 export async function deleteInspectionFinding(findingId: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .delete(inspectionFindings)
     .where(eq(inspectionFindings.id, findingId));
@@ -382,7 +382,7 @@ export async function deleteInspectionFinding(findingId: string) {
 export async function deleteRecommendation(recommendationId: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .delete(recommendations)
     .where(eq(recommendations.id, recommendationId));
@@ -404,7 +404,7 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
 
   // Get TML readings
   const tmlResults = await db.select().from(tmlReadings).where(eq(tmlReadings.inspectionId, inspectionId));
-  
+
   // Clear existing calculations to prevent duplicates
   await db.delete(componentCalculations).where(eq(componentCalculations.reportId, reportId));
 
@@ -416,29 +416,29 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       const compType = (t.componentType || '').toLowerCase();
       const comp = (t.component || '').toLowerCase();
       const loc = (t.location || '').toLowerCase();
-      
+
       // Exclude nozzles from all calculations (they have their own requirements)
       if (compType.startsWith('n') || comp.startsWith('n') || loc.includes('nozzle')) {
         return false;
       }
-      
+
       if (keyword === 'shell') {
         // Shell readings are identified by:
         // 1. Component or componentType contains 'shell' or 'vessel shell'
         // 2. Location is a number >= 8 (locations 8, 9, 10, 11, 12 are shell positions)
         // 3. ComponentType is a degree value (0, 45, 90, 135, 180, 225, 270, 315)
         // 4. Exclude anything with 'head' in any field
-        
+
         // Direct shell match
         if (comp.includes('shell') || compType.includes('shell') || loc.includes('vessel shell')) {
           return true;
         }
-        
+
         const locNum = parseInt(loc.trim(), 10);
         const isShellLocation = !isNaN(locNum) && locNum >= 8; // Shell starts at location 8
         const isDegreeComponent = /^\d+$/.test(compType.trim());
         const isNotHead = !loc.includes('head') && !comp.includes('head') && !compType.includes('head');
-        
+
         // Shell readings have numeric location >= 8 and degree component type
         return isShellLocation && isDegreeComponent && isNotHead;
       } else if (keyword === 'east') {
@@ -454,12 +454,12 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
         if (compType.includes('head-1') || comp.includes('head-1')) return true;
         if (compType.includes('left head') || comp.includes('left head')) return true;
         // If only one head mentioned and it's the first occurrence (exclude west/north)
-        if ((compType.includes('head') || comp.includes('head') || loc.includes('head')) && 
-            !compType.includes('west') && !comp.includes('west') &&
-            !compType.includes('north') && !comp.includes('north') &&
-            !compType.includes('w head') && !comp.includes('w head') &&
-            !compType.includes('right') && !comp.includes('right') &&
-            !loc.includes('west') && !loc.includes('north')) return true;
+        if ((compType.includes('head') || comp.includes('head') || loc.includes('head')) &&
+          !compType.includes('west') && !comp.includes('west') &&
+          !compType.includes('north') && !comp.includes('north') &&
+          !compType.includes('w head') && !comp.includes('w head') &&
+          !compType.includes('right') && !comp.includes('right') &&
+          !loc.includes('west') && !loc.includes('north')) return true;
         return false;
       } else if (keyword === 'west') {
         // West/North Head: match 'west head', 'north head', 'w head', 'head 2', 'head-2', 'right head'
@@ -482,10 +482,10 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       }
       return compType.includes(keyword) || comp.includes(keyword);
     });
-    
+
     // Determine thicknesses (MINIMUM of relevant TMLs for conservative API 510 calculations)
     const validCurrent = relevantTMLs.map(t => parseFloat(t.tActual || t.currentThickness || '0')).filter(v => v > 0);
-    
+
     // CRITICAL FIX: Use CML correlation mapping for accurate baseline comparison
     let validPrev: number[] = [];
     if (inspection.previousInspectionId) {
@@ -496,12 +496,12 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
           inspection.previousInspectionId,
           name
         );
-        
+
         // Extract previous thickness from correlated baseline readings
         validPrev = correlatedPairs
           .map(pair => parseFloat(pair.baseline?.tActual || pair.baseline?.currentThickness || '0'))
           .filter(v => v > 0);
-        
+
         logger.info(`[CML Correlation] Found ${correlatedPairs.length} correlated pairs for ${name}, ${validPrev.length} with valid baseline thickness`);
       } catch (e) {
         logger.error('[CML Correlation] Error getting correlated readings:', e);
@@ -513,22 +513,22 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       validPrev = relevantTMLs.map(t => parseFloat(t.previousThickness || '0')).filter(v => v > 0);
     }
     const validNominal = relevantTMLs.map(t => parseFloat(t.nominalThickness || '0')).filter(v => v > 0);
-    
+
     // Use MINIMUM thickness (most conservative for safety calculations)
     const avgCurrent = validCurrent.length ? Math.min(...validCurrent) : (type === 'shell' ? 0.652 : 0.555);
     // For previous/nominal: prefer actual previous readings, then nominal, then defaults
     // CRITICAL: If no previousThickness, use nominalThickness as baseline
-    const avgPrev = validPrev.length ? Math.min(...validPrev) : 
-                    (validNominal.length ? Math.min(...validNominal) : (type === 'shell' ? 0.625 : 0.500));
+    const avgPrev = validPrev.length ? Math.min(...validPrev) :
+      (validNominal.length ? Math.min(...validNominal) : (type === 'shell' ? 0.625 : 0.500));
     const avgNominal = validNominal.length ? Math.min(...validNominal) : avgPrev;
-    
+
     // Default design params
     const P = parseFloat(inspection.designPressure || '250');
     const D = parseFloat(inspection.insideDiameter || '70.75');
     const R = D / 2;
     const S = parseFloat(inspection.allowableStress || '20000');
     const E = parseFloat(inspection.jointEfficiency || '0.85');
-    
+
     // Calculate static head pressure for horizontal vessels
     // P_static = (ρ × g × h) / 144 where ρ = specific gravity × 62.4 lb/ft³, g = 1, h = vessel height in inches
     let staticHead = 0;
@@ -542,36 +542,36 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       const density = specificGravity * 62.4; // lb/ft³
       staticHead = (density * heightFeet) / 144; // Convert to psi
     }
-    
+
     // Total design pressure including static head
     const totalP = P + staticHead;
-    
+
     // Calculate Min Thickness using total pressure (design + static head)
     let tMin = 0;
     let headTypeUsed = 'ellipsoidal'; // Default
     let headFactor = null;
-    
+
     if (type === 'shell') {
       tMin = (totalP * R) / (S * E - 0.6 * totalP);
     } else {
       // Head calculation - detect head type
       const headTypeStr = (inspection.headType || '').toLowerCase();
-      
+
       if (headTypeStr.includes('torispherical')) {
         // Torispherical Head: t = PLM / (2SE - 0.2P)
         headTypeUsed = 'torispherical';
-        
+
         // Get crown radius (L) and knuckle radius (r) from inspection
         // Common defaults: L = D (inside diameter), r = 0.06D (6% of diameter)
         const L = parseFloat(inspection.crownRadius as any) || D;
         const r = parseFloat(inspection.knuckleRadius as any) || (0.06 * D);
-        
+
         // Calculate M factor: M = 0.25 * (3 + sqrt(L/r))
         const M = 0.25 * (3 + Math.sqrt(L / r));
         headFactor = M;
-        
+
         tMin = (totalP * L * M) / (2 * S * E - 0.2 * totalP);
-        
+
         logger.info(`[Calc] Torispherical head: L=${L.toFixed(2)}, r=${r.toFixed(2)}, M=${M.toFixed(4)}, t_min=${tMin.toFixed(4)}`);
       } else if (headTypeStr.includes('hemispherical')) {
         // Hemispherical Head: t = PR / (2SE - 0.2P)
@@ -583,10 +583,10 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
         tMin = (totalP * D) / (2 * S * E - 0.2 * totalP);
       }
     }
-    
+
     const tMinStr = tMin.toFixed(4);
     const CA = (avgCurrent - tMin).toFixed(3);
-    
+
     // Calculate time between inspections from dates (if available)
     // CRITICAL FIX: Calculate actual time between inspections using inspection dates
     let yearsBetween = 10; // Default assumption
@@ -605,7 +605,7 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
         logger.error('[Calc] Error fetching previous inspection date:', e);
       }
     }
-    
+
     const CR = validPrev.length ? ((avgPrev - avgCurrent) / yearsBetween).toFixed(6) : '0.00000';
     let RL: string;
     if (parseFloat(CR) > 0) {
@@ -614,18 +614,18 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
     } else {
       RL = '20.00'; // Use 20.00 instead of >20 for database compatibility
     }
-    
+
     // Calculate MAWP at current thickness
     // Per ASME VIII-1 UG-27(c), evaluate BOTH stress cases and use minimum
     let calculatedMAWP = 0;
     if (type === 'shell') {
       // UG-27(c)(1): Circumferential (hoop) stress: P = S*E*t / (R + 0.6*t)
       const P_hoop = (S * E * avgCurrent) / (R + 0.6 * avgCurrent);
-      
+
       // UG-27(c)(2): Longitudinal stress: P = 2*S*E*t / (R - 0.4*t)
       const denom_long = R - 0.4 * avgCurrent;
       const P_long = denom_long > 0 ? (2 * S * E * avgCurrent) / denom_long : P_hoop;
-      
+
       // Use minimum (governing) MAWP, then subtract static head
       calculatedMAWP = Math.min(P_hoop, P_long) - staticHead;
     } else {
@@ -643,14 +643,14 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       }
     }
     const calculatedMAWPStr = calculatedMAWP.toFixed(2);
-    
+
     // Check if component is below minimum thickness
     const isBelowMinimum = avgCurrent < parseFloat(tMinStr);
     const dataQualityStatus = isBelowMinimum ? 'below_minimum' : 'good';
-    const dataQualityNotes = isBelowMinimum 
+    const dataQualityNotes = isBelowMinimum
       ? `Component thickness (${avgCurrent.toFixed(4)}") is below minimum required (${tMinStr}"). Immediate attention required.`
       : null;
-    
+
     // API 510 requirement: Next inspection at lesser of 10 years OR 1/2 remaining life
     let nextInspectionYears = '10.00';
     if (RL !== '>20') {
@@ -661,7 +661,7 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
 
     // CRITICAL FIX: Ensure material code is correctly set from inspection
     const materialCode = inspection.materialSpec || 'SA-516-70';
-    
+
     await createComponentCalculation({
       id: nanoid(),
       reportId,
@@ -698,7 +698,7 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
   await createCalc('shell', 'Vessel Shell', 'shell');
   await createCalc('head', 'East Head', 'east');
   await createCalc('head', 'West Head', 'west');
-  
+
   logger.info('[Calculations] Generated default calculations for report', reportId);
 }
 
@@ -709,7 +709,7 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
 export async function createFfsAssessment(data: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db.insert(ffsAssessments).values(data);
   return data.id;
 }
@@ -717,7 +717,7 @@ export async function createFfsAssessment(data: any) {
 export async function getFfsAssessmentsByInspection(inspectionId: string) {
   const db = await getDb();
   if (!db) return [];
-  
+
   return await db
     .select()
     .from(ffsAssessments)
@@ -727,7 +727,7 @@ export async function getFfsAssessmentsByInspection(inspectionId: string) {
 export async function updateFfsAssessment(id: string, data: Partial<any>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(ffsAssessments)
     .set({ ...data, updatedAt: new Date() })
@@ -737,7 +737,7 @@ export async function updateFfsAssessment(id: string, data: Partial<any>) {
 export async function deleteFfsAssessment(id: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db.delete(ffsAssessments).where(eq(ffsAssessments.id, id));
 }
 
@@ -748,7 +748,7 @@ export async function deleteFfsAssessment(id: string) {
 export async function createInLieuOfAssessment(data: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db.insert(inLieuOfAssessments).values(data);
   return data.id;
 }
@@ -756,7 +756,7 @@ export async function createInLieuOfAssessment(data: any) {
 export async function getInLieuOfAssessmentsByInspection(inspectionId: string) {
   const db = await getDb();
   if (!db) return [];
-  
+
   return await db
     .select()
     .from(inLieuOfAssessments)
@@ -766,7 +766,7 @@ export async function getInLieuOfAssessmentsByInspection(inspectionId: string) {
 export async function updateInLieuOfAssessment(id: string, data: Partial<any>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(inLieuOfAssessments)
     .set({ ...data, updatedAt: new Date() })
@@ -776,8 +776,62 @@ export async function updateInLieuOfAssessment(id: string, data: Partial<any>) {
 export async function deleteInLieuOfAssessment(id: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db.delete(inLieuOfAssessments).where(eq(inLieuOfAssessments.id, id));
+}
+
+
+// ============================================================================
+// Bulk Delete Functions (for "Delete All" in each section)
+// ============================================================================
+
+export async function deleteAllComponentCalculations(reportId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(componentCalculations).where(eq(componentCalculations.reportId, reportId));
+  logger.info(`[Bulk Delete] Deleted all component calculations for report ${reportId}`);
+}
+
+export async function deleteAllFindings(reportId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(inspectionFindings).where(eq(inspectionFindings.reportId, reportId));
+  logger.info(`[Bulk Delete] Deleted all findings for report ${reportId}`);
+}
+
+export async function deleteAllRecommendations(reportId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(recommendations).where(eq(recommendations.reportId, reportId));
+  logger.info(`[Bulk Delete] Deleted all recommendations for report ${reportId}`);
+}
+
+export async function deleteAllPhotos(reportId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(inspectionPhotos).where(eq(inspectionPhotos.reportId, reportId));
+  logger.info(`[Bulk Delete] Deleted all photos for report ${reportId}`);
+}
+
+export async function deleteAllChecklistItems(reportId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(checklistItems).where(eq(checklistItems.reportId, reportId));
+  logger.info(`[Bulk Delete] Deleted all checklist items for report ${reportId}`);
+}
+
+export async function deleteAllFfsAssessments(inspectionId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(ffsAssessments).where(eq(ffsAssessments.inspectionId, inspectionId));
+  logger.info(`[Bulk Delete] Deleted all FFS assessments for inspection ${inspectionId}`);
+}
+
+export async function deleteAllInLieuOfAssessments(inspectionId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(inLieuOfAssessments).where(eq(inLieuOfAssessments.inspectionId, inspectionId));
+  logger.info(`[Bulk Delete] Deleted all In-Lieu-Of assessments for inspection ${inspectionId}`);
 }
 
 
@@ -790,7 +844,7 @@ import { vesselDrawings, InsertVesselDrawing } from "../drizzle/schema";
 export async function createVesselDrawing(data: InsertVesselDrawing) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db.insert(vesselDrawings).values(data);
   return data.id;
 }
@@ -798,7 +852,7 @@ export async function createVesselDrawing(data: InsertVesselDrawing) {
 export async function getVesselDrawings(reportId: string) {
   const db = await getDb();
   if (!db) return [];
-  
+
   return await db
     .select()
     .from(vesselDrawings)
@@ -809,7 +863,7 @@ export async function getVesselDrawings(reportId: string) {
 export async function getVesselDrawingsByInspection(inspectionId: string) {
   const db = await getDb();
   if (!db) return [];
-  
+
   return await db
     .select()
     .from(vesselDrawings)
@@ -823,7 +877,7 @@ export async function updateVesselDrawing(
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(vesselDrawings)
     .set({ ...data, updatedAt: new Date() })
@@ -833,7 +887,7 @@ export async function updateVesselDrawing(
 export async function deleteVesselDrawing(drawingId: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .delete(vesselDrawings)
     .where(eq(vesselDrawings.id, drawingId));

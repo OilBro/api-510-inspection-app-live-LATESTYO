@@ -44,9 +44,9 @@ export default function PhotosSection({ reportId }: PhotosSectionProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [batchUploading, setBatchUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<{[key: string]: boolean}>({});
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: boolean }>({});
   const [annotationEditorOpen, setAnnotationEditorOpen] = useState(false);
-  const [currentPhotoForAnnotation, setCurrentPhotoForAnnotation] = useState<{id: string, url: string} | null>(null);
+  const [currentPhotoForAnnotation, setCurrentPhotoForAnnotation] = useState<{ id: string, url: string } | null>(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>(undefined);
   const [prefilledRequirement, setPrefilledRequirement] = useState<PhotoRequirement | null>(null);
   const utils = trpc.useUtils();
@@ -79,17 +79,27 @@ export default function PhotosSection({ reportId }: PhotosSectionProps) {
       toast.error(`Failed to delete photo: ${error.message}`);
     },
   });
-  
+
+  const deleteAllPhotos = trpc.professionalReport.deleteAllPhotos.useMutation({
+    onSuccess: () => {
+      utils.professionalReport.photos.list.invalidate();
+      toast.success("All photos deleted");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to delete: ${error.message}`);
+    },
+  });
+
   const uploadMutation = trpc.professionalReport.photos.upload.useMutation();
-  
+
   const handleAnnotate = (photoId: string, photoUrl: string) => {
     setCurrentPhotoForAnnotation({ id: photoId, url: photoUrl });
     setAnnotationEditorOpen(true);
   };
-  
+
   const handleSaveAnnotation = async (annotatedImageData: string) => {
     if (!currentPhotoForAnnotation) return;
-    
+
     try {
       // Upload annotated image
       const result = await uploadMutation.mutateAsync({
@@ -97,13 +107,13 @@ export default function PhotosSection({ reportId }: PhotosSectionProps) {
         filename: `annotated-${Date.now()}.jpg`,
         contentType: 'image/jpeg',
       });
-      
+
       // Update photo with new URL
       await updatePhoto.mutateAsync({
         photoId: currentPhotoForAnnotation.id,
         photoUrl: result.url,
       });
-      
+
       setAnnotationEditorOpen(false);
       setCurrentPhotoForAnnotation(null);
       toast.success('Annotated photo saved');
@@ -162,7 +172,7 @@ export default function PhotosSection({ reportId }: PhotosSectionProps) {
     setPrefilledRequirement(requirement);
     setDialogOpen(true);
   };
-  
+
   return (
     <div className="space-y-6">
       {/* Checklist Panel */}
@@ -172,7 +182,7 @@ export default function PhotosSection({ reportId }: PhotosSectionProps) {
         uploadedPhotos={(photos || []).map(p => ({ caption: p.caption || '', section: p.section || '' }))}
         onRequirementClick={handleRequirementClick}
       />
-      
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Inspection Photos</h2>
@@ -201,7 +211,7 @@ export default function PhotosSection({ reportId }: PhotosSectionProps) {
                 setPrefilledRequirement(null);
                 setBatchUploading(true);
                 let successCount = 0;
-                
+
                 for (const photoData of photoDataArray) {
                   try {
                     setUploadProgress(prev => ({ ...prev, [photoData.caption]: true }));
@@ -211,7 +221,7 @@ export default function PhotosSection({ reportId }: PhotosSectionProps) {
                     console.error('Failed to upload photo:', photoData.caption, error);
                   }
                 }
-                
+
                 setBatchUploading(false);
                 setUploadProgress({});
                 toast.success(`${successCount} of ${photoDataArray.length} photos uploaded successfully`);
@@ -223,6 +233,21 @@ export default function PhotosSection({ reportId }: PhotosSectionProps) {
             />
           </DialogContent>
         </Dialog>
+        {sortedPhotos && sortedPhotos.length > 0 && (
+          <Button
+            variant="outline"
+            className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={() => {
+              if (confirm("Delete ALL photos? This cannot be undone.")) {
+                deleteAllPhotos.mutate({ reportId });
+              }
+            }}
+            disabled={deleteAllPhotos.isPending}
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete All
+          </Button>
+        )}
       </div>
 
       {sortedPhotos && sortedPhotos.length > 0 ? (
@@ -262,7 +287,7 @@ export default function PhotosSection({ reportId }: PhotosSectionProps) {
           </CardContent>
         </Card>
       )}
-      
+
       {/* Annotation Editor */}
       {currentPhotoForAnnotation && (
         <PhotoAnnotationEditor
@@ -312,7 +337,7 @@ function SortablePhotoCard({ photo, onDelete, onAnnotate }: SortablePhotoCardPro
           >
             <GripVertical className="h-5 w-5" />
           </div>
-          
+
           <img
             src={photo.photoUrl}
             alt={photo.caption || 'Photo'}
@@ -323,14 +348,14 @@ function SortablePhotoCard({ photo, onDelete, onAnnotate }: SortablePhotoCardPro
               target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect fill="%23f3f4f6" width="96" height="96"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-size="10">No Image</text></svg>';
             }}
           />
-          
+
           <div className="flex-1">
             <h4 className="font-medium">{photo.caption || 'Untitled'}</h4>
             {photo.section && (
               <p className="text-sm text-muted-foreground">Section: {photo.section}</p>
             )}
           </div>
-          
+
           <div className="flex gap-2">
             <Button
               variant="ghost"
@@ -361,34 +386,34 @@ interface BatchPhotoUploadFormProps {
   onSubmit: (photoDataArray: any[]) => void;
   onCancel: () => void;
   uploading: boolean;
-  uploadProgress: {[key: string]: boolean};
+  uploadProgress: { [key: string]: boolean };
 }
 
 function BatchPhotoUploadForm({ reportId, prefilledRequirement, onSubmit, onCancel, uploading, uploadProgress }: BatchPhotoUploadFormProps) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<{file: File, preview: string, caption: string, section: string}[]>([]);
+  const [previews, setPreviews] = useState<{ file: File, preview: string, caption: string, section: string }[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const uploadMutation = trpc.professionalReport.photos.upload.useMutation();
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    
+
     const fileArray = Array.from(files);
-    const newPreviews: {file: File, preview: string, caption: string, section: string}[] = [];
-    
+    const newPreviews: { file: File, preview: string, caption: string, section: string }[] = [];
+
     for (const file of fileArray) {
       // Check for HEIC format
-      const isHeic = file.name.toLowerCase().endsWith('.heic') || 
-                     file.name.toLowerCase().endsWith('.heif') ||
-                     file.type.includes('heic') || 
-                     file.type.includes('heif');
-      
+      const isHeic = file.name.toLowerCase().endsWith('.heic') ||
+        file.name.toLowerCase().endsWith('.heif') ||
+        file.type.includes('heic') ||
+        file.type.includes('heif');
+
       if (isHeic) {
         toast.info(`${file.name}: HEIC will be converted to JPEG`, { duration: 3000 });
       }
-      
+
       // Compress image
       try {
         const compressedFile = await compressImage(file);
@@ -400,7 +425,7 @@ function BatchPhotoUploadForm({ reportId, prefilledRequirement, onSubmit, onCanc
             caption: prefilledRequirement?.caption || file.name.replace(/\.[^/.]+$/, ""),
             section: prefilledRequirement?.section.toLowerCase() || 'general',
           });
-          
+
           if (newPreviews.length === fileArray.length) {
             setPreviews(prev => [...prev, ...newPreviews]);
             setSelectedFiles(prev => [...prev, ...newPreviews.map(p => p.file)]);
@@ -425,32 +450,32 @@ function BatchPhotoUploadForm({ reportId, prefilledRequirement, onSubmit, onCanc
             reject(new Error('Canvas context not available'));
             return;
           }
-          
+
           const maxWidth = 1920;
           let width = img.width;
           let height = img.height;
-          
+
           if (width > maxWidth) {
             height = (height * maxWidth) / width;
             width = maxWidth;
           }
-          
+
           canvas.width = width;
           canvas.height = height;
           ctx.drawImage(img, 0, 0, width, height);
-          
+
           canvas.toBlob(
             (blob) => {
               if (!blob) {
                 reject(new Error('Failed to compress image'));
                 return;
               }
-              
+
               const compressedFile = new File([blob], file.name, {
                 type: 'image/jpeg',
                 lastModified: Date.now(),
               });
-              
+
               resolve(compressedFile);
             },
             'image/jpeg',
@@ -488,7 +513,7 @@ function BatchPhotoUploadForm({ reportId, prefilledRequirement, onSubmit, onCanc
       return newPreviews;
     });
   };
-  
+
   const updateSection = (index: number, section: string) => {
     setPreviews(prev => {
       const newPreviews = [...prev];
@@ -504,14 +529,14 @@ function BatchPhotoUploadForm({ reportId, prefilledRequirement, onSubmit, onCanc
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (previews.length === 0) {
       toast.error('Please select at least one photo');
       return;
     }
-    
+
     const photoDataArray = [];
-    
+
     for (const preview of previews) {
       try {
         const result = await uploadMutation.mutateAsync({
@@ -519,7 +544,7 @@ function BatchPhotoUploadForm({ reportId, prefilledRequirement, onSubmit, onCanc
           filename: preview.file.name,
           contentType: preview.file.type,
         });
-        
+
         photoDataArray.push({
           reportId,
           photoUrl: result.url,
@@ -531,16 +556,15 @@ function BatchPhotoUploadForm({ reportId, prefilledRequirement, onSubmit, onCanc
         console.error('Upload failed for', preview.caption, error);
       }
     }
-    
+
     onSubmit(photoDataArray);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div
-        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-          isDragging ? 'border-primary bg-primary/5' : 'border-gray-300'
-        }`}
+        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${isDragging ? 'border-primary bg-primary/5' : 'border-gray-300'
+          }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -553,7 +577,7 @@ function BatchPhotoUploadForm({ reportId, prefilledRequirement, onSubmit, onCanc
           onChange={(e) => handleFileSelect(e.target.files)}
           className="hidden"
         />
-        
+
         <ImageIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
         <p className="text-lg font-medium mb-2">
           Drag and drop photos here

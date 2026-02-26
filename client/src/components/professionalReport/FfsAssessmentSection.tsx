@@ -82,6 +82,16 @@ export default function FfsAssessmentSection({ inspectionId }: FfsAssessmentSect
     },
   });
 
+  const deleteAllFfs = trpc.professionalReport.deleteAllFfsAssessments.useMutation({
+    onSuccess: () => {
+      utils.professionalReport.ffsAssessment.list.invalidate();
+      toast.success("All FFS assessments deleted");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to delete: ${error.message}`);
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createAssessment.mutate({
@@ -271,7 +281,22 @@ export default function FfsAssessmentSection({ inspectionId }: FfsAssessmentSect
       {/* Existing Assessments */}
       {assessments && assessments.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Existing FFS Assessments</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Existing FFS Assessments</h3>
+            <Button
+              variant="outline"
+              className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => {
+                if (confirm("Delete ALL FFS assessments? This cannot be undone.")) {
+                  deleteAllFfs.mutate({ inspectionId });
+                }
+              }}
+              disabled={deleteAllFfs.isPending}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete All
+            </Button>
+          </div>
           {assessments.map((assessment: any) => (
             <Card key={assessment.id}>
               <CardHeader>
@@ -300,7 +325,7 @@ export default function FfsAssessmentSection({ inspectionId }: FfsAssessmentSect
                   </Button>
                 </div>
                 <CardDescription>
-                  Level: {assessment.assessmentLevel?.replace("level", "Level ")} | 
+                  Level: {assessment.assessmentLevel?.replace("level", "Level ")} |
                   Remaining Life: {assessment.remainingLife ? `${assessment.remainingLife} years` : "N/A"}
                 </CardDescription>
               </CardHeader>

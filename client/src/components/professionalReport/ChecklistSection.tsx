@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
-import { Loader2, CheckSquare, RotateCcw } from "lucide-react";
+import { Loader2, CheckSquare, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface ChecklistSectionProps {
@@ -36,6 +36,16 @@ export default function ChecklistSection({ reportId }: ChecklistSectionProps) {
     },
     onError: (error: any) => {
       toast.error(`Failed to update checklist: ${error.message}`);
+    },
+  });
+
+  const deleteAllChecklist = trpc.professionalReport.deleteAllChecklistItems.useMutation({
+    onSuccess: () => {
+      utils.professionalReport.checklist.list.invalidate();
+      toast.success("All checklist items deleted");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to delete: ${error.message}`);
     },
   });
 
@@ -93,18 +103,35 @@ export default function ChecklistSection({ reportId }: ChecklistSectionProps) {
             API 510 compliance checklist - {completedCount} of {totalCount} items completed ({completionPercentage}%)
           </p>
         </div>
-        <Button
-          variant="outline"
-          className="gap-2"
-          onClick={() => {
-            if (confirm("Reset all checklist items? This will clear all checks and notes.")) {
-              initializeChecklist.mutate({ reportId });
-            }
-          }}
-        >
-          <RotateCcw className="h-4 w-4" />
-          Reset Checklist
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => {
+              if (confirm("Reset all checklist items? This will clear all checks and notes.")) {
+                initializeChecklist.mutate({ reportId });
+              }
+            }}
+          >
+            <RotateCcw className="h-4 w-4" />
+            Reset Checklist
+          </Button>
+          {checklistItems && checklistItems.length > 0 && (
+            <Button
+              variant="outline"
+              className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => {
+                if (confirm("Delete ALL checklist items? This cannot be undone.")) {
+                  deleteAllChecklist.mutate({ reportId });
+                }
+              }}
+              disabled={deleteAllChecklist.isPending}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete All
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Progress bar */}
@@ -132,7 +159,7 @@ export default function ChecklistSection({ reportId }: ChecklistSectionProps) {
                       <Checkbox
                         id={`check-${item.id}`}
                         checked={item.checked || false}
-                        onCheckedChange={(checked) => 
+                        onCheckedChange={(checked) =>
                           handleCheckboxChange(item.id, checked as boolean)
                         }
                         className="mt-1"
@@ -140,9 +167,8 @@ export default function ChecklistSection({ reportId }: ChecklistSectionProps) {
                       <div className="flex-1">
                         <Label
                           htmlFor={`check-${item.id}`}
-                          className={`text-sm font-medium cursor-pointer ${
-                            item.checked ? "line-through text-muted-foreground" : ""
-                          }`}
+                          className={`text-sm font-medium cursor-pointer ${item.checked ? "line-through text-muted-foreground" : ""
+                            }`}
                         >
                           {item.itemText}
                         </Label>

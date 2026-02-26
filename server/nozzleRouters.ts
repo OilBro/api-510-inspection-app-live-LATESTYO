@@ -11,6 +11,7 @@ import {
   createNozzle,
   updateNozzle,
   deleteNozzle,
+  deleteAllNozzles,
   getPipeSchedule,
   getPipeSchedulesBySize,
   getAllNominalSizes,
@@ -59,11 +60,11 @@ export const nozzleRouter = router({
     .mutation(async ({ input }) => {
       // Get pipe schedule data
       const pipeScheduleData = await getPipeSchedule(input.nominalSize, input.schedule);
-      
+
       if (!pipeScheduleData) {
         throw new Error(`Pipe schedule not found for ${input.nominalSize}" ${input.schedule}`);
       }
-      
+
       // Calculate minimum required thickness
       const calculation = calculateNozzleWithSchedule({
         nozzleNumber: input.nozzleNumber,
@@ -76,11 +77,11 @@ export const nozzleRouter = router({
           wallThickness: parseFloat(pipeScheduleData.wallThickness),
         },
       });
-      
+
       if (!calculation) {
         throw new Error('Failed to calculate nozzle minimum thickness');
       }
-      
+
       // Create nozzle record
       const nozzle = await createNozzle({
         id: nanoid(),
@@ -97,7 +98,7 @@ export const nozzleRouter = router({
         minimumRequired: calculation.minimumRequired.toString(),
         acceptable: calculation.acceptable,
       });
-      
+
       return nozzle;
     }),
 
@@ -120,38 +121,38 @@ export const nozzleRouter = router({
     )
     .mutation(async ({ input }) => {
       const { nozzleId, ...updates } = input;
-      
+
       // Get existing nozzle
       const existing = await getNozzleById(nozzleId);
       if (!existing) {
         throw new Error('Nozzle not found');
       }
-      
+
       // If size/schedule/thickness changed, recalculate
       const needsRecalc =
         updates.nominalSize ||
         updates.schedule ||
         updates.actualThickness !== undefined ||
         updates.shellHeadRequiredThickness !== undefined;
-      
+
       if (needsRecalc) {
         const nominalSize = updates.nominalSize || existing.nominalSize;
         const schedule = updates.schedule || existing.schedule;
         const shellRequired = updates.shellHeadRequiredThickness !== undefined
           ? updates.shellHeadRequiredThickness
           : parseFloat(existing.shellHeadRequiredThickness || '0');
-        
+
         if (!schedule) {
           throw new Error('Schedule is required for nozzle calculations');
         }
-        
+
         // Get pipe schedule data
         const pipeScheduleData = await getPipeSchedule(nominalSize, schedule);
-        
+
         if (!pipeScheduleData) {
           throw new Error(`Pipe schedule not found for ${nominalSize}" ${schedule}`);
         }
-        
+
         // Calculate minimum required thickness
         const calculation = calculateNozzleWithSchedule({
           nozzleNumber: updates.nozzleNumber || existing.nozzleNumber,
@@ -164,7 +165,7 @@ export const nozzleRouter = router({
             wallThickness: parseFloat(pipeScheduleData.wallThickness),
           },
         });
-        
+
         if (calculation) {
           // Update with calculated values
           return await updateNozzle(nozzleId, {
@@ -178,7 +179,7 @@ export const nozzleRouter = router({
           });
         }
       }
-      
+
       // Simple update without recalculation
       return await updateNozzle(nozzleId, {
         ...updates,
@@ -194,6 +195,16 @@ export const nozzleRouter = router({
     .input(z.object({ nozzleId: z.string() }))
     .mutation(async ({ input }) => {
       await deleteNozzle(input.nozzleId);
+      return { success: true };
+    }),
+
+  /**
+   * Delete ALL nozzles for an inspection (bulk delete)
+   */
+  deleteAll: protectedProcedure
+    .input(z.object({ inspectionId: z.string() }))
+    .mutation(async ({ input }) => {
+      await deleteAllNozzles(input.inspectionId);
       return { success: true };
     }),
 
@@ -261,35 +272,35 @@ export const nozzleRouter = router({
       if (!inspection) {
         throw new Error('Inspection not found');
       }
-      
+
       const designPressure = parseFloat(inspection.designPressure || '0');
       const designTemp = parseFloat(inspection.designTemperature || '650');
-      
+
       if (designPressure <= 0) {
         throw new Error('Design pressure is required for nozzle calculations. Please set it in vessel data.');
       }
       // Decode base64 to buffer
       const buffer = Buffer.from(input.fileData, 'base64');
-      
+
       // Parse Excel file
       const excelRows = parseNozzleExcel(buffer);
-      
+
       // Create nozzles from Excel data
       const createdNozzles = [];
       const errors = [];
-      
+
       for (let i = 0; i < excelRows.length; i++) {
         const row = excelRows[i];
-        
+
         try {
           // Get pipe schedule data
           const pipeScheduleData = await getPipeSchedule(row.size, row.schedule);
-          
+
           if (!pipeScheduleData) {
             errors.push(`Row ${i + 2}: Pipe schedule not found for ${row.size}" ${row.schedule}`);
             continue;
           }
-          
+
           // Calculate minimum required thickness using pressure design
           const pressureCalc = calculateNozzlePressureThickness({
             nominalSize: row.size,
@@ -299,11 +310,11 @@ export const nozzleRouter = router({
             designTemperature: designTemp,
             materialSpec: inspection.materialSpec || undefined,
           });
-          
+
           const minimumRequired = pressureCalc.minimumRequired;
           const actualThickness = row.actualThickness;
           const acceptable = actualThickness >= minimumRequired;
-          
+
           const calculation = {
             pipeNominalThickness: pressureCalc.pipeNominalThickness,
             pipeMinusManufacturingTolerance: pressureCalc.pipeMinusTolerance,
@@ -311,7 +322,7 @@ export const nozzleRouter = router({
             minimumRequired,
             acceptable,
           };
-          
+
           // Create nozzle record
           const nozzle = await createNozzle({
             id: nanoid(),
@@ -328,14 +339,14 @@ export const nozzleRouter = router({
             minimumRequired: calculation.minimumRequired.toString(),
             acceptable: calculation.acceptable,
           });
-          
+
           createdNozzles.push(nozzle);
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : 'Unknown error';
           errors.push(`Row ${i + 2} (${row.nozzleNumber}): ${errorMsg}`);
         }
       }
-      
+
       return {
         success: createdNozzles.length,
         failed: errors.length,
@@ -352,17 +363,17 @@ export const nozzleRouter = router({
     .query(async ({ input }) => {
       // Get all nozzles for the inspection
       const nozzles = await getNozzlesByInspection(input.inspectionId);
-      
+
       if (nozzles.length === 0) {
         throw new Error('No nozzles found for this inspection');
       }
-      
+
       // Map to export format
       const exportData: NozzleExportRow[] = nozzles.map(n => {
         const actual = parseFloat(n.actualThickness || '0');
         const minRequired = parseFloat(n.minimumRequired || '0');
         const margin = actual - minRequired;
-        
+
         return {
           nozzleNumber: n.nozzleNumber,
           size: n.nominalSize,
@@ -377,10 +388,10 @@ export const nozzleRouter = router({
           notes: n.nozzleDescription || '',
         };
       });
-      
+
       // Generate Excel file
       const buffer = generateNozzleExcel(exportData);
-      
+
       return {
         data: buffer.toString('base64'),
         filename: `Nozzle_Evaluation_${input.inspectionId}.xlsx`,

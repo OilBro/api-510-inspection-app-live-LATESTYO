@@ -104,6 +104,16 @@ export default function NozzleEvaluationSection({
     },
   });
 
+  const deleteAllMutation = trpc.nozzles.deleteAll.useMutation({
+    onSuccess: () => {
+      refetch();
+      toast.success("All nozzles deleted");
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete: ${error.message}`);
+    },
+  });
+
   const handleAdd = (formData: FormData) => {
     const nozzleNumber = formData.get("nozzleNumber") as string;
     const nozzleDescription = formData.get("nozzleDescription") as string;
@@ -236,6 +246,21 @@ export default function NozzleEvaluationSection({
             <Plus className="w-4 h-4 mr-2" />
             Add Nozzle
           </Button>
+          {nozzles && nozzles.length > 0 && (
+            <Button
+              variant="outline"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => {
+                if (confirm("Delete ALL nozzles? This cannot be undone.")) {
+                  deleteAllMutation.mutate({ inspectionId });
+                }
+              }}
+              disabled={deleteAllMutation.isPending}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete All
+            </Button>
+          )}
         </div>
       </div>
 

@@ -12,12 +12,12 @@ import { nozzleEvaluations, pipeSchedules, type InsertNozzleEvaluation, type Noz
 export async function getNozzlesByInspection(inspectionId: string): Promise<NozzleEvaluation[]> {
   const db = await getDb();
   if (!db) return [];
-  
+
   const results = await db
     .select()
     .from(nozzleEvaluations)
     .where(eq(nozzleEvaluations.inspectionId, inspectionId));
-  
+
   return results;
 }
 
@@ -27,13 +27,13 @@ export async function getNozzlesByInspection(inspectionId: string): Promise<Nozz
 export async function getNozzleById(nozzleId: string): Promise<NozzleEvaluation | undefined> {
   const db = await getDb();
   if (!db) return undefined;
-  
+
   const results = await db
     .select()
     .from(nozzleEvaluations)
     .where(eq(nozzleEvaluations.id, nozzleId))
     .limit(1);
-  
+
   return results[0];
 }
 
@@ -43,12 +43,12 @@ export async function getNozzleById(nozzleId: string): Promise<NozzleEvaluation 
 export async function createNozzle(nozzle: InsertNozzleEvaluation): Promise<NozzleEvaluation> {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
-  
+
   await db.insert(nozzleEvaluations).values(nozzle);
-  
+
   const created = await getNozzleById(nozzle.id);
   if (!created) throw new Error('Failed to create nozzle');
-  
+
   return created;
 }
 
@@ -61,15 +61,15 @@ export async function updateNozzle(
 ): Promise<NozzleEvaluation> {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
-  
+
   await db
     .update(nozzleEvaluations)
     .set(updates)
     .where(eq(nozzleEvaluations.id, nozzleId));
-  
+
   const updated = await getNozzleById(nozzleId);
   if (!updated) throw new Error('Failed to update nozzle');
-  
+
   return updated;
 }
 
@@ -79,10 +79,22 @@ export async function updateNozzle(
 export async function deleteNozzle(nozzleId: string): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
-  
+
   await db
     .delete(nozzleEvaluations)
     .where(eq(nozzleEvaluations.id, nozzleId));
+}
+
+/**
+ * Delete ALL nozzle evaluations for an inspection (bulk delete)
+ */
+export async function deleteAllNozzles(inspectionId: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+
+  await db
+    .delete(nozzleEvaluations)
+    .where(eq(nozzleEvaluations.inspectionId, inspectionId));
 }
 
 /**
@@ -94,7 +106,7 @@ export async function getPipeSchedule(
 ): Promise<PipeSchedule | undefined> {
   const db = await getDb();
   if (!db) return undefined;
-  
+
   const results = await db
     .select()
     .from(pipeSchedules)
@@ -105,7 +117,7 @@ export async function getPipeSchedule(
       )
     )
     .limit(1);
-  
+
   return results[0];
 }
 
@@ -115,12 +127,12 @@ export async function getPipeSchedule(
 export async function getPipeSchedulesBySize(nominalSize: string): Promise<PipeSchedule[]> {
   const db = await getDb();
   if (!db) return [];
-  
+
   const results = await db
     .select()
     .from(pipeSchedules)
     .where(eq(pipeSchedules.nominalSize, nominalSize));
-  
+
   return results;
 }
 
@@ -130,11 +142,11 @@ export async function getPipeSchedulesBySize(nominalSize: string): Promise<PipeS
 export async function getAllNominalSizes(): Promise<string[]> {
   const db = await getDb();
   if (!db) return [];
-  
+
   const results = await db
     .selectDistinct({ nominalSize: pipeSchedules.nominalSize })
     .from(pipeSchedules);
-  
+
   return results.map(r => r.nominalSize).sort((a, b) => {
     // Sort numerically where possible
     const aNum = parseFloat(a.replace(/[^\d.]/g, ''));
@@ -149,14 +161,14 @@ export async function getAllNominalSizes(): Promise<string[]> {
 export async function getAllSchedules(): Promise<string[]> {
   const db = await getDb();
   if (!db) return [];
-  
+
   const results = await db
     .selectDistinct({ schedule: pipeSchedules.schedule })
     .from(pipeSchedules);
-  
+
   // Sort schedules in logical order
   const scheduleOrder = ['10', '20', '30', 'STD', '40', 'XS', '60', '80', '100', '120', '140', 'XXS', '160'];
-  
+
   return results
     .map(r => r.schedule)
     .sort((a, b) => {

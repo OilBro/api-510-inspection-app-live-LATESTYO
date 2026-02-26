@@ -71,6 +71,16 @@ export default function FindingsSection({ reportId }: FindingsSectionProps) {
     },
   });
 
+  const deleteAllFindings = trpc.professionalReport.deleteAllFindings.useMutation({
+    onSuccess: () => {
+      utils.professionalReport.findings.list.invalidate();
+      toast.success("All findings deleted");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to delete: ${error.message}`);
+    },
+  });
+
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case "critical":
@@ -126,45 +136,62 @@ export default function FindingsSection({ reportId }: FindingsSectionProps) {
             Document observations, defects, and recommendations by component section
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
+        <div className="flex items-center gap-2">
+          {findings && findings.length > 0 && (
             <Button
-              className="gap-2"
+              variant="outline"
+              className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
               onClick={() => {
-                setEditingFinding(null);
-                setDialogOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4" />
-              Add Finding
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingFinding ? "Edit Finding" : "Add Inspection Finding"}
-              </DialogTitle>
-              <DialogDescription>
-                Record inspection observations, defects, or recommendations
-              </DialogDescription>
-            </DialogHeader>
-            <FindingForm
-              reportId={reportId}
-              finding={editingFinding}
-              onSubmit={(data) => {
-                if (editingFinding) {
-                  updateFinding.mutate({ findingId: editingFinding.id, ...data });
-                } else {
-                  createFinding.mutate({ reportId, ...data });
+                if (confirm("Delete ALL findings? This cannot be undone.")) {
+                  deleteAllFindings.mutate({ reportId });
                 }
               }}
-              onCancel={() => {
-                setDialogOpen(false);
-                setEditingFinding(null);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
+              disabled={deleteAllFindings.isPending}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete All
+            </Button>
+          )}
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                className="gap-2"
+                onClick={() => {
+                  setEditingFinding(null);
+                  setDialogOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                Add Finding
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingFinding ? "Edit Finding" : "Add Inspection Finding"}
+                </DialogTitle>
+                <DialogDescription>
+                  Record inspection observations, defects, or recommendations
+                </DialogDescription>
+              </DialogHeader>
+              <FindingForm
+                reportId={reportId}
+                finding={editingFinding}
+                onSubmit={(data) => {
+                  if (editingFinding) {
+                    updateFinding.mutate({ findingId: editingFinding.id, ...data });
+                  } else {
+                    createFinding.mutate({ reportId, ...data });
+                  }
+                }}
+                onCancel={() => {
+                  setDialogOpen(false);
+                  setEditingFinding(null);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {findings && findings.length > 0 ? (

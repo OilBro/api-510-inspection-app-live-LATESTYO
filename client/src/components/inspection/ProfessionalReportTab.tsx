@@ -773,9 +773,25 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
     },
   });
 
+  const deleteAllCalcs = trpc.professionalReport.deleteAllCalculations.useMutation({
+    onSuccess: () => {
+      utils.professionalReport.componentCalculations.list.invalidate();
+      toast.success("All component calculations deleted");
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete: ${error.message}`);
+    },
+  });
+
   const handleRecalculate = () => {
     setRecalculating(true);
     recalculate.mutate({ inspectionId });
+  };
+
+  const handleDeleteAllCalcs = () => {
+    if (confirm("Delete ALL component calculations? This cannot be undone.")) {
+      deleteAllCalcs.mutate({ reportId });
+    }
   };
 
   const handleExportTemplate = () => {
@@ -1144,6 +1160,17 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
             )}
             Recalculate
           </Button>
+          {calculations && calculations.length > 0 && (
+            <Button
+              variant="outline"
+              className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={handleDeleteAllCalcs}
+              disabled={deleteAllCalcs.isPending}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete All
+            </Button>
+          )}
           <input
             id="component-import-input"
             type="file"

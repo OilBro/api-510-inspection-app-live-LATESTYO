@@ -71,6 +71,16 @@ export default function RecommendationsSection({ reportId }: RecommendationsSect
     },
   });
 
+  const deleteAllRecs = trpc.professionalReport.deleteAllRecommendations.useMutation({
+    onSuccess: () => {
+      utils.professionalReport.recommendations.list.invalidate();
+      toast.success("All recommendations deleted");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to delete: ${error.message}`);
+    },
+  });
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "critical":
@@ -113,45 +123,62 @@ export default function RecommendationsSection({ reportId }: RecommendationsSect
             Document recommended actions and repairs
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
+        <div className="flex items-center gap-2">
+          {recommendations && recommendations.length > 0 && (
             <Button
-              className="gap-2"
+              variant="outline"
+              className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
               onClick={() => {
-                setEditingRecommendation(null);
-                setDialogOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4" />
-              Add Recommendation
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingRecommendation ? "Edit Recommendation" : "Add Recommendation"}
-              </DialogTitle>
-              <DialogDescription>
-                Document recommended actions, repairs, or improvements
-              </DialogDescription>
-            </DialogHeader>
-            <RecommendationForm
-              reportId={reportId}
-              recommendation={editingRecommendation}
-              onSubmit={(data) => {
-                if (editingRecommendation) {
-                  updateRecommendation.mutate({ recommendationId: editingRecommendation.id, ...data });
-                } else {
-                  createRecommendation.mutate({ reportId, ...data });
+                if (confirm("Delete ALL recommendations? This cannot be undone.")) {
+                  deleteAllRecs.mutate({ reportId });
                 }
               }}
-              onCancel={() => {
-                setDialogOpen(false);
-                setEditingRecommendation(null);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
+              disabled={deleteAllRecs.isPending}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete All
+            </Button>
+          )}
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                className="gap-2"
+                onClick={() => {
+                  setEditingRecommendation(null);
+                  setDialogOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                Add Recommendation
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingRecommendation ? "Edit Recommendation" : "Add Recommendation"}
+                </DialogTitle>
+                <DialogDescription>
+                  Document recommended actions, repairs, or improvements
+                </DialogDescription>
+              </DialogHeader>
+              <RecommendationForm
+                reportId={reportId}
+                recommendation={editingRecommendation}
+                onSubmit={(data) => {
+                  if (editingRecommendation) {
+                    updateRecommendation.mutate({ recommendationId: editingRecommendation.id, ...data });
+                  } else {
+                    createRecommendation.mutate({ reportId, ...data });
+                  }
+                }}
+                onCancel={() => {
+                  setDialogOpen(false);
+                  setEditingRecommendation(null);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {recommendations && recommendations.length > 0 ? (
