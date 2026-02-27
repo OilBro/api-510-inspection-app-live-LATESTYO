@@ -25,6 +25,7 @@ import { batchReprocessRouter } from "./routers/batchReprocessRouter";
 import { calculationEngineRouter } from "./routers/calculationEngineRouter";
 import { locationMappingRouter } from "./locationMappingRouter";
 import { cohereRouter } from "./routers/cohereRouter";
+import { pineconeRouter } from "./routers/pineconeRouter";
 import { convertToJpeg } from "./_core/freeconvert";
 import * as fieldMappingDb from "./fieldMappingDb";
 import * as professionalReportDb from "./professionalReportDb";
@@ -75,6 +76,7 @@ export const appRouter = router({
   drawings: drawingsRouter,
   locationMappings: locationMappingRouter,
   cohere: cohereRouter,
+  pinecone: pineconeRouter,
 
   images: router({
     convertToJpeg: protectedProcedure
