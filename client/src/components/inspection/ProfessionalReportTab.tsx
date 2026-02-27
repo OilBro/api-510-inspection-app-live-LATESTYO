@@ -518,6 +518,7 @@ export default function ProfessionalReportTab({ inspectionId }: ProfessionalRepo
                   <input
                     type="checkbox"
                     id="api510Compliant"
+                    title="API 510 Compliant"
                     checked={report.api510Compliant ?? true}
                     onChange={(e) => handleUpdateField("api510Compliant", e.target.checked.toString())}
                     className="h-4 w-4 rounded border-gray-300"
@@ -530,6 +531,7 @@ export default function ProfessionalReportTab({ inspectionId }: ProfessionalRepo
                   <input
                     type="checkbox"
                     id="asmeCompliant"
+                    title="ASME Compliant"
                     checked={report.asmeCompliant ?? true}
                     onChange={(e) => handleUpdateField("asmeCompliant", e.target.checked.toString())}
                     className="h-4 w-4 rounded border-gray-300"
@@ -1175,6 +1177,7 @@ function ComponentCalculationsSection({ reportId, inspectionId }: { reportId: st
             id="component-import-input"
             type="file"
             accept=".csv"
+            title="Import component calculations CSV"
             className="hidden"
             onChange={handleImportFile}
           />
@@ -1976,6 +1979,7 @@ function ComponentCalculationForm({
             <input
               type="checkbox"
               id="externalPressure"
+              title="External Pressure"
               checked={formData.externalPressure || false}
               onChange={(e) => handleChange("externalPressure", e.target.checked ? "true" : "")}
               className="h-4 w-4 rounded border-gray-300"

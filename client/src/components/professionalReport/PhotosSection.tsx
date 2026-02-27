@@ -574,6 +574,7 @@ function BatchPhotoUploadForm({ reportId, prefilledRequirement, onSubmit, onCanc
           type="file"
           multiple
           accept="image/*"
+          title="Select photos to upload"
           onChange={(e) => handleFileSelect(e.target.files)}
           className="hidden"
         />
