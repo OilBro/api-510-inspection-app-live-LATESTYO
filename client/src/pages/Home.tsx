@@ -6,6 +6,7 @@ import { Link, useLocation } from "wouter";
 import { Settings, FileText, Upload, Calculator, BarChart3, GitCompare, AlertTriangle, Smartphone, Cog, RefreshCw, Database, Brain } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { AnomalyStats } from "@/components/AnomalyStats";
+import { PineconeSearch } from "@/components/PineconeSearch";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -89,6 +90,11 @@ export default function Home() {
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h2>
           <p className="text-gray-600">Manage your pressure vessel inspections and generate reports</p>
+        </div>
+
+        {/* AI Knowledge Search */}
+        <div className="mb-8">
+          <PineconeSearch />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
