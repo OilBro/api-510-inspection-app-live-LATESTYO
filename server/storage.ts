@@ -232,7 +232,7 @@ async function r2Put(
   const publicUrl = getR2PublicUrl();
   // Remove trailing slash from publicUrl to prevent double slashes
   const cleanPublicUrl = publicUrl?.replace(/\/+$/, '');
-  const url = cleanPublicUrl 
+  const url = cleanPublicUrl
     ? `${cleanPublicUrl}/${key}`
     : await getR2PresignedUrl(client, bucketName, key);
 
@@ -285,7 +285,7 @@ export async function storagePut(
   contentType = "application/octet-stream"
 ): Promise<{ key: string; url: string }> {
   const provider = getStorageProvider();
-  
+
   if (provider === 'r2') {
     return r2Put(relKey, data, contentType);
   } else {
@@ -298,7 +298,7 @@ export async function storageGet(
   expiresIn = 300
 ): Promise<{ key: string; url: string }> {
   const provider = getStorageProvider();
-  
+
   if (provider === 'r2') {
     return r2Get(relKey, expiresIn);
   } else {

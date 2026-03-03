@@ -19,7 +19,7 @@ export type FileContent = {
   type: "file_url";
   file_url: {
     url: string;
-    mime_type?: "audio/mpeg" | "audio/wav" | "application/pdf" | "audio/mp4" | "video/mp4" ;
+    mime_type?: "audio/mpeg" | "audio/wav" | "application/pdf" | "audio/mp4" | "video/mp4";
   };
 };
 
@@ -322,7 +322,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
+    const errorText = await response.text().catch(() => response.statusText);
     // Check if we received HTML instead of JSON (common error page response)
     if (errorText.trim().startsWith('<') || errorText.includes('<html')) {
       throw new Error(
@@ -336,14 +336,14 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
 
   // Parse response and check for HTML error pages
   const responseText = await response.text();
-  
+
   // Check if response is HTML instead of JSON
   if (responseText.trim().startsWith('<') || responseText.includes('<html')) {
     throw new Error(
       'LLM service returned an HTML error page instead of JSON. The service may be experiencing issues. Please try again.'
     );
   }
-  
+
   try {
     return JSON.parse(responseText) as InvokeResult;
   } catch (parseError) {

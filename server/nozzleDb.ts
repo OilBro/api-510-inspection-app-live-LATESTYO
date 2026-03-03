@@ -4,7 +4,13 @@
 
 import { eq, and } from 'drizzle-orm';
 import { getDb } from './db.js';
-import { nozzleEvaluations, pipeSchedules, type InsertNozzleEvaluation, type NozzleEvaluation, type PipeSchedule } from '../drizzle/schema.js';
+import { nozzleEvaluations, type InsertNozzleEvaluation, type NozzleEvaluation } from '../drizzle/schema.js';
+import {
+  PIPE_SCHEDULE_DATABASE,
+  getPipeSchedule as getPipeScheduleFromMemory,
+  getAvailableSizes,
+  type PipeScheduleEntry
+} from './pipeScheduleDatabase.js';
 
 /**
  * Get all nozzles for an inspection
@@ -99,55 +105,45 @@ export async function deleteAllNozzles(inspectionId: string): Promise<void> {
 
 /**
  * Get pipe schedule by nominal size and schedule
+ * Uses in-memory PIPE_SCHEDULE_DATABASE (ASME B36.10M/B36.19M)
  */
 export async function getPipeSchedule(
   nominalSize: string,
   schedule: string
-): Promise<PipeSchedule | undefined> {
-  const db = await getDb();
-  if (!db) return undefined;
+): Promise<{ nominalSize: string; schedule: string; outsideDiameter: string; wallThickness: string } | undefined> {
+  const entry = getPipeScheduleFromMemory(nominalSize, schedule);
+  if (!entry) return undefined;
 
-  const results = await db
-    .select()
-    .from(pipeSchedules)
-    .where(
-      and(
-        eq(pipeSchedules.nominalSize, nominalSize),
-        eq(pipeSchedules.schedule, schedule)
-      )
-    )
-    .limit(1);
-
-  return results[0];
+  return {
+    nominalSize: entry.nominalSize,
+    schedule: entry.schedule,
+    outsideDiameter: entry.outsideDiameter.toString(),
+    wallThickness: entry.wallThickness.toString(),
+  };
 }
 
 /**
  * Get all available pipe schedules for a nominal size
+ * Uses in-memory PIPE_SCHEDULE_DATABASE
  */
-export async function getPipeSchedulesBySize(nominalSize: string): Promise<PipeSchedule[]> {
-  const db = await getDb();
-  if (!db) return [];
-
-  const results = await db
-    .select()
-    .from(pipeSchedules)
-    .where(eq(pipeSchedules.nominalSize, nominalSize));
-
-  return results;
+export async function getPipeSchedulesBySize(nominalSize: string): Promise<{ nominalSize: string; schedule: string; outsideDiameter: string; wallThickness: string }[]> {
+  const normalizedSize = nominalSize.replace(/\s+/g, '').replace(/"/g, '').trim();
+  return PIPE_SCHEDULE_DATABASE
+    .filter(p => p.nominalSize === normalizedSize || p.nominalSizeInches === parseFloat(normalizedSize))
+    .map(p => ({
+      nominalSize: p.nominalSize,
+      schedule: p.schedule,
+      outsideDiameter: p.outsideDiameter.toString(),
+      wallThickness: p.wallThickness.toString(),
+    }));
 }
 
 /**
  * Get all unique nominal sizes from pipe schedule database
+ * Uses in-memory PIPE_SCHEDULE_DATABASE
  */
 export async function getAllNominalSizes(): Promise<string[]> {
-  const db = await getDb();
-  if (!db) return [];
-
-  const results = await db
-    .selectDistinct({ nominalSize: pipeSchedules.nominalSize })
-    .from(pipeSchedules);
-
-  return results.map(r => r.nominalSize).sort((a, b) => {
+  return getAvailableSizes().sort((a, b) => {
     // Sort numerically where possible
     const aNum = parseFloat(a.replace(/[^\d.]/g, ''));
     const bNum = parseFloat(b.replace(/[^\d.]/g, ''));
@@ -157,20 +153,16 @@ export async function getAllNominalSizes(): Promise<string[]> {
 
 /**
  * Get all unique schedules from pipe schedule database
+ * Uses in-memory PIPE_SCHEDULE_DATABASE
  */
 export async function getAllSchedules(): Promise<string[]> {
-  const db = await getDb();
-  if (!db) return [];
-
-  const results = await db
-    .selectDistinct({ schedule: pipeSchedules.schedule })
-    .from(pipeSchedules);
+  const schedules = new Set<string>();
+  PIPE_SCHEDULE_DATABASE.forEach(p => schedules.add(p.schedule));
 
   // Sort schedules in logical order
-  const scheduleOrder = ['10', '20', '30', 'STD', '40', 'XS', '60', '80', '100', '120', '140', 'XXS', '160'];
+  const scheduleOrder = ['5S', '10S', '10', '20', '30', 'STD', '40', 'XS', '60', '80', '100', '120', '140', 'XXS', '160'];
 
-  return results
-    .map(r => r.schedule)
+  return Array.from(schedules)
     .sort((a, b) => {
       const aIndex = scheduleOrder.indexOf(a);
       const bIndex = scheduleOrder.indexOf(b);
