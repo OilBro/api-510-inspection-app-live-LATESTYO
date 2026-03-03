@@ -3344,3 +3344,10 @@ Test PDF: 54-11-067 2017.pdf
 - [x] Fix default value in import parser
 - [x] Test component calculation updates in production
 - [x] Save checkpoint (version: ae2e534b)
+
+## Configure Pinecone API Credentials (Feb 2026)
+- [x] Request PINECONE_API_KEY secret from user
+- [x] Add PINECONE_INDEX_NAME to environment (hardcoded in pineconeService.ts)
+- [x] Add Pinecone env vars to server/_core/env.ts
+- [x] Test Pinecone connection (2 tests passed, 127 vectors across 15 namespaces confirmed)
+- [ ] Save checkpoint

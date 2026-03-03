@@ -8,4 +8,5 @@ export const ENV = {
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
   grokApiKey: process.env.GROK_API_KEY ?? "",
+  pineconeApiKey: process.env.PINECONE_API_KEY ?? "",
 };
