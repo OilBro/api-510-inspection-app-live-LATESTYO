@@ -54,6 +54,10 @@ async function startServer() {
     res.sendFile(manifestPath);
   });
 
+  // Serve local storage files (for offline/local development without cloud storage)
+  const localStorageDir = path.resolve(process.cwd(), 'local-storage');
+  app.use('/local-storage', express.static(localStorageDir));
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);

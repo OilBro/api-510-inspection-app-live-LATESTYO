@@ -95,7 +95,7 @@ export const professionalReportRouter = router({
           await createProfessionalReport({
             id: reportId,
             inspectionId: input.inspectionId,
-            userId: ctx.user.id,
+            userId: typeof ctx.user.id === 'number' ? ctx.user.id : 0,
             reportNumber: `RPT-${Date.now()}`,
             reportDate: new Date(),
             inspectorName: ctx.user.name || '',
@@ -782,7 +782,7 @@ export const professionalReportRouter = router({
         await professionalReportDb.createProfessionalReport({
           id: reportId,
           inspectionId: input.inspectionId,
-          userId: ctx.user.id,
+          userId: typeof ctx.user.id === 'number' ? ctx.user.id : 0,
           reportNumber: `RPT-${Date.now()}`,
           reportDate: new Date(),
           inspectorName: ctx.user.name || '',

@@ -121,13 +121,23 @@ export default function ProfessionalReportTab({ inspectionId }: ProfessionalRepo
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Inspection-Report-${report?.reportNumber || Date.now()}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const filename = `Inspection-Report-${report?.reportNumber || Date.now()}.pdf`;
+
+      // Try opening in new tab first (most reliable, lets user view/save)
+      const newWindow = window.open(url, '_blank');
+
+      if (!newWindow) {
+        // Fallback: trigger file download via <a> element
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
+      // Delay URL cleanup to ensure browser has time to load/download
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
 
       toast.success("Professional report generated successfully!");
       setGenerating(false);

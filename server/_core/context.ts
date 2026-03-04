@@ -22,8 +22,11 @@ export async function createContext(
 
   // DEV MODE: Inject a dev user when running locally without OAuth
   if (!user && process.env.NODE_ENV === 'development') {
+    // IMPORTANT: id must be numeric (int) because DB schema uses int("userId")
+    const ownerId = process.env.OWNER_OPEN_ID;
+    const numericId = ownerId && !isNaN(Number(ownerId)) ? Number(ownerId) : 0;
     user = {
-      id: process.env.OWNER_OPEN_ID || 'dev-user',
+      id: numericId,
       name: process.env.OWNER_NAME || 'Dev User',
       email: 'dev@localhost',
       role: 'admin',

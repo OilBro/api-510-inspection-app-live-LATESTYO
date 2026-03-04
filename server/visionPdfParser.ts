@@ -18,14 +18,14 @@ interface VisionParsedData {
     inspectorName?: string;
     inspectorCert?: string;
   };
-  
+
   // Client Information
   clientInfo?: {
     clientName?: string;
     clientLocation?: string;
     product?: string;
   };
-  
+
   // Vessel Information (comprehensive)
   vesselInfo?: {
     vesselTag?: string;
@@ -56,16 +56,16 @@ interface VisionParsedData {
     crownRadius?: string;
     knuckleRadius?: string;
   };
-  
+
   // Executive Summary
   executiveSummary?: string;
-  
+
   // Inspection Results (Section 3.0)
   inspectionResults?: string;
-  
+
   // Recommendations (Section 4.0)
   recommendations?: string;
-  
+
   // Thickness Measurements
   thicknessMeasurements?: Array<{
     legacyLocationId?: string;
@@ -87,7 +87,7 @@ interface VisionParsedData {
     tml3?: string | number;
     tml4?: string | number;
   }>;
-  
+
   // Checklist Items
   checklistItems?: Array<{
     category?: string;
@@ -97,7 +97,7 @@ interface VisionParsedData {
     status?: string;
     notes?: string;
   }>;
-  
+
   // Inspection Info (alternative structure)
   inspectionInfo?: {
     reportNumber?: string;
@@ -109,7 +109,7 @@ interface VisionParsedData {
     clientName?: string;
     clientLocation?: string;
   };
-  
+
   // Table A - Component Calculations
   tableA?: {
     components?: Array<{
@@ -122,7 +122,7 @@ interface VisionParsedData {
       remainingLife?: number;
     }>;
   };
-  
+
   // Nozzle Evaluations
   nozzles?: Array<{
     nozzleNumber?: string;
@@ -145,14 +145,14 @@ interface VisionParsedData {
 export async function parseWithVision(pdfBuffer: Buffer): Promise<VisionParsedData> {
   try {
     logger.info('[Vision Parser] Starting PDF upload to S3');
-    
+
     // Upload PDF directly to S3
     const timestamp = Date.now();
     const pdfKey = `vision-parser/${timestamp}-inspection.pdf`;
-    
+
     const { url: pdfUrl } = await storagePut(pdfKey, pdfBuffer, 'application/pdf');
     logger.info(`[Vision Parser] PDF uploaded to S3: ${pdfUrl}`);
-    
+
     // Comprehensive extraction prompt matching Manus parser capabilities
     const extractionPrompt = `You are an expert at extracting vessel inspection data from API 510 pressure vessel inspection reports.
 Extract ALL available information and return it as structured JSON.
@@ -355,7 +355,7 @@ IMPORTANT:
 - For grid tables, create one TML reading per cell (rows x columns = total readings)`;
 
     logger.info('[Vision Parser] Sending PDF to LLM for comprehensive analysis...');
-    
+
     // Call LLM with PDF file URL and structured JSON schema
     const response = await invokeLLM({
       messages: [
@@ -363,12 +363,12 @@ IMPORTANT:
           role: 'user',
           content: [
             { type: 'text', text: extractionPrompt },
-            { 
-              type: 'file_url', 
-              file_url: { 
+            {
+              type: 'file_url',
+              file_url: {
                 url: pdfUrl,
                 mime_type: 'application/pdf' as const
-              } 
+              }
             }
           ]
         }
@@ -377,7 +377,7 @@ IMPORTANT:
         type: 'json_schema',
         json_schema: {
           name: 'vision_inspection_data',
-          strict: true,
+          // strict: true removed for OpenAI compatibility
           schema: {
             type: 'object',
             properties: {
@@ -510,22 +510,22 @@ IMPORTANT:
         },
       },
     });
-    
+
     // Check if response is valid
     if (!response || !response.choices || response.choices.length === 0) {
       logger.error('[Vision Parser] Invalid LLM response:', JSON.stringify(response));
       throw new Error('LLM returned empty or invalid response');
     }
-    
+
     const content = response.choices[0].message.content;
     if (typeof content !== 'string') {
       logger.error('[Vision Parser] Content is not a string:', typeof content);
       throw new Error('Unexpected response format from LLM');
     }
-    
+
     logger.info('[Vision Parser] Raw LLM response length:', content.length);
     logger.info('[Vision Parser] Raw LLM response preview:', content.substring(0, 500));
-    
+
     // Clean the response - remove markdown code blocks if present
     let cleanedContent = content.trim();
     if (cleanedContent.startsWith('```json')) {
@@ -537,42 +537,42 @@ IMPORTANT:
       cleanedContent = cleanedContent.slice(0, -3);
     }
     cleanedContent = cleanedContent.trim();
-    
+
     // Parse the JSON response with robust error recovery
     let parsedData: VisionParsedData;
     try {
       parsedData = JSON.parse(cleanedContent);
     } catch (parseError: any) {
       logger.warn('[Vision Parser] Initial JSON parse failed, attempting recovery...', parseError.message);
-      
+
       // Try to repair truncated JSON
       let repairedJson = cleanedContent;
-      
+
       // Find the last valid closing bracket/brace
       let lastValidEnd = -1;
       let braceCount = 0;
       let bracketCount = 0;
       let inString = false;
       let escapeNext = false;
-      
+
       for (let i = 0; i < repairedJson.length; i++) {
         const char = repairedJson[i];
-        
+
         if (escapeNext) {
           escapeNext = false;
           continue;
         }
-        
+
         if (char === '\\' && inString) {
           escapeNext = true;
           continue;
         }
-        
+
         if (char === '"' && !escapeNext) {
           inString = !inString;
           continue;
         }
-        
+
         if (!inString) {
           if (char === '{') braceCount++;
           else if (char === '}') {
@@ -590,7 +590,7 @@ IMPORTANT:
           }
         }
       }
-      
+
       // If we found a valid end point, truncate there
       if (lastValidEnd > 0 && lastValidEnd < repairedJson.length - 1) {
         repairedJson = repairedJson.substring(0, lastValidEnd + 1);
@@ -610,7 +610,7 @@ IMPORTANT:
         }
         logger.info('[Vision Parser] Attempted to close open JSON structures');
       }
-      
+
       try {
         parsedData = JSON.parse(repairedJson);
         logger.info('[Vision Parser] JSON recovery successful');
@@ -631,7 +631,7 @@ IMPORTANT:
         };
       }
     }
-    
+
     // Log extraction results
     logger.info('[Vision Parser] Successfully extracted data from PDF');
     logger.info('[Vision Parser] Report info:', JSON.stringify(parsedData.reportInfo));
@@ -643,13 +643,13 @@ IMPORTANT:
     logger.info('[Vision Parser] Has executive summary:', !!parsedData.executiveSummary);
     logger.info('[Vision Parser] Has inspection results:', !!parsedData.inspectionResults);
     logger.info('[Vision Parser] Has recommendations:', !!parsedData.recommendations);
-    
+
     return parsedData;
-    
+
   } catch (error: any) {
     logger.error('[Vision Parser] Error:', error.message);
     logger.error('[Vision Parser] Stack:', error.stack);
-    
+
     // Provide more specific error messages
     if (error.message.includes('Service Unavailable')) {
       throw new Error('Vision parser service is temporarily unavailable. Please try the Manus AI Parser instead.');
@@ -657,7 +657,7 @@ IMPORTANT:
     if (error.message.includes('fetch')) {
       throw new Error('Network error while processing PDF. Please check your connection and try again.');
     }
-    
+
     throw new Error(`Failed to parse PDF file: ${error.message}`);
   }
 }

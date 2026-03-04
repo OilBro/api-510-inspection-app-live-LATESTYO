@@ -1,25 +1,85 @@
-// Storage helpers supporting both Manus S3 proxy and Cloudflare R2
-// Set STORAGE_PROVIDER=r2 to use Cloudflare R2, defaults to Manus S3
+// Storage helpers supporting Manus S3 proxy, Cloudflare R2, and local filesystem
+// Set STORAGE_PROVIDER=r2 to use Cloudflare R2, STORAGE_PROVIDER=local for local filesystem
+// Defaults to Manus S3 if credentials exist, otherwise falls back to local filesystem
 
 import { ENV } from './_core/env';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const isTestEnv = process.env.NODE_ENV === 'test';
 // Deterministic mock URL used in tests; no real network calls are performed
 const MOCK_R2_BASE_URL = 'https://pub-00403c9b844b4ab5a932e46119e654c8.r2.dev';
 const mockR2Store = new Map<string, Buffer>();
 
-type StorageProvider = 's3' | 'r2';
+type StorageProvider = 's3' | 'r2' | 'local';
 type StorageConfig = { baseUrl: string; apiKey: string };
 
-// Get storage provider from environment (defaults to s3)
+// Local storage directory (relative to project root)
+const LOCAL_STORAGE_DIR = path.resolve(process.cwd(), 'local-storage');
+
+// Get storage provider from environment (auto-detects best available)
 function getStorageProvider(): StorageProvider {
   const provider = process.env.STORAGE_PROVIDER?.toLowerCase();
   if (!provider && isTestEnv) {
     return 'r2';
   }
-  return provider === 'r2' ? 'r2' : 's3';
+  if (provider === 'r2') return 'r2';
+  if (provider === 'local') return 'local';
+  if (provider === 's3') return 's3';
+
+  // Auto-detect: use s3 only if Manus Forge credentials exist (not OpenAI or other LLM providers)
+  const isManusForgUrl = ENV.forgeApiUrl && ENV.forgeApiUrl.includes('forge.manus');
+  if (isManusForgUrl && ENV.forgeApiKey) return 's3';
+  if (hasR2Config()) return 'r2';
+
+  // No cloud storage credentials available - fall back to local filesystem
+  return 'local';
+}
+
+// ============================================================================
+// LOCAL FILESYSTEM STORAGE (Fallback for offline/local development)
+// ============================================================================
+
+function ensureLocalStorageDir(subDir?: string): string {
+  const dir = subDir ? path.join(LOCAL_STORAGE_DIR, subDir) : LOCAL_STORAGE_DIR;
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  return dir;
+}
+
+async function localPut(
+  relKey: string,
+  data: Buffer | Uint8Array | string,
+  _contentType = "application/octet-stream"
+): Promise<{ key: string; url: string }> {
+  const key = normalizeKey(relKey);
+  const filePath = path.join(LOCAL_STORAGE_DIR, key);
+  const fileDir = path.dirname(filePath);
+
+  ensureLocalStorageDir();
+  if (!fs.existsSync(fileDir)) {
+    fs.mkdirSync(fileDir, { recursive: true });
+  }
+
+  const buffer = typeof data === 'string' ? Buffer.from(data) : Buffer.from(data);
+  fs.writeFileSync(filePath, buffer);
+
+  // Return a URL that can be served by the Express app
+  const url = `/local-storage/${key}`;
+  console.log(`[Storage:Local] Saved file: ${key} (${buffer.length} bytes)`);
+  return { key, url };
+}
+
+async function localGet(
+  relKey: string,
+  _expiresIn = 300
+): Promise<{ key: string; url: string }> {
+  const key = normalizeKey(relKey);
+  const url = `/local-storage/${key}`;
+  return { key, url };
 }
 
 // ============================================================================
@@ -286,7 +346,9 @@ export async function storagePut(
 ): Promise<{ key: string; url: string }> {
   const provider = getStorageProvider();
 
-  if (provider === 'r2') {
+  if (provider === 'local') {
+    return localPut(relKey, data, contentType);
+  } else if (provider === 'r2') {
     return r2Put(relKey, data, contentType);
   } else {
     return s3Put(relKey, data, contentType);
@@ -299,7 +361,9 @@ export async function storageGet(
 ): Promise<{ key: string; url: string }> {
   const provider = getStorageProvider();
 
-  if (provider === 'r2') {
+  if (provider === 'local') {
+    return localGet(relKey, expiresIn);
+  } else if (provider === 'r2') {
     return r2Get(relKey, expiresIn);
   } else {
     return s3Get(relKey, expiresIn);
@@ -312,7 +376,10 @@ export function getStorageInfo(): { provider: StorageProvider; configured: boole
   let configured = false;
 
   try {
-    if (provider === 'r2') {
+    if (provider === 'local') {
+      ensureLocalStorageDir();
+      configured = true;
+    } else if (provider === 'r2') {
       if (useMockR2()) {
         configured = true;
       } else {
@@ -330,3 +397,6 @@ export function getStorageInfo(): { provider: StorageProvider; configured: boole
 
   return { provider, configured };
 }
+
+// Export local storage directory for Express static serving
+export { LOCAL_STORAGE_DIR };

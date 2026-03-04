@@ -152,7 +152,16 @@ const normalizeMessage = (message: Message) => {
     };
   }
 
-  const contentParts = ensureArray(message.content).map(normalizeContentPart);
+  let contentParts = ensureArray(message.content).map(normalizeContentPart);
+
+  // OpenAI doesn't support file_url content type - strip those parts
+  if (isOpenAI()) {
+    contentParts = contentParts.filter(part => part.type !== 'file_url');
+    // If all parts were stripped, add a placeholder
+    if (contentParts.length === 0) {
+      contentParts = [{ type: 'text', text: '[PDF content was provided but cannot be processed in this mode]' }];
+    }
+  }
 
   // If there's only text content, collapse to a single string for compatibility
   if (contentParts.length === 1 && contentParts[0].type === "text") {
@@ -209,14 +218,25 @@ const normalizeToolChoice = (
   return toolChoice;
 };
 
+const isOpenAI = () => {
+  const url = ENV.forgeApiUrl || '';
+  return url.includes('api.openai.com');
+};
+
 const resolveApiUrl = () =>
   ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
     ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
     : "https://forge.manus.im/v1/chat/completions";
 
+const resolveModel = () => {
+  // Use environment variable if set, otherwise auto-detect
+  if (process.env.LLM_MODEL) return process.env.LLM_MODEL;
+  return isOpenAI() ? 'gpt-4o' : 'gemini-2.5-flash';
+};
+
 const assertApiKey = () => {
   if (!ENV.forgeApiKey) {
-    throw new Error("OPENAI_API_KEY is not configured");
+    throw new Error("AI API key is not configured. Set BUILT_IN_FORGE_API_KEY in your .env file.");
   }
 };
 
@@ -279,8 +299,9 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     response_format,
   } = params;
 
+  const model = resolveModel();
   const payload: Record<string, unknown> = {
-    model: "gemini-2.5-flash",
+    model,
     messages: messages.map(normalizeMessage),
   };
 
@@ -296,9 +317,13 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     payload.tool_choice = normalizedToolChoice;
   }
 
-  payload.max_tokens = 32768
-  payload.thinking = {
-    "budget_tokens": 128
+  payload.max_tokens = isOpenAI() ? 16384 : 32768;
+
+  // Only add Gemini-specific thinking parameter for non-OpenAI providers
+  if (!isOpenAI()) {
+    payload.thinking = {
+      "budget_tokens": 128
+    };
   }
 
   const normalizedResponseFormat = normalizeResponseFormat({

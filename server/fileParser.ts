@@ -19,7 +19,7 @@ export interface ParsedVesselData {
   serialNumber?: string;
   yearBuilt?: number;
   nbNumber?: string;
-  
+
   // Design specifications
   designPressure?: string;
   designTemperature?: string;
@@ -31,7 +31,7 @@ export interface ParsedVesselData {
   jointEfficiency?: string;
   radiographyType?: string;
   specificGravity?: string;
-  
+
   // Vessel geometry
   vesselType?: string;
   vesselConfiguration?: string;
@@ -40,13 +40,13 @@ export interface ParsedVesselData {
   headType?: string;
   crownRadius?: string;
   knuckleRadius?: string;
-  
+
   // Service and construction
   product?: string;
   constructionCode?: string;
   insulationType?: string;
   corrosionAllowance?: string;
-  
+
   // Report information
   reportNumber?: string;
   reportDate?: string;
@@ -55,16 +55,16 @@ export interface ParsedVesselData {
   inspectionCompany?: string;
   inspectorName?: string;
   inspectorCert?: string;
-  
+
   // Client information
   clientName?: string;
   clientLocation?: string;
-  
+
   // Report sections
   executiveSummary?: string;
   inspectionResults?: string;
   recommendations?: string;
-  
+
   // Thickness measurement locations
   tmlReadings?: Array<{
     legacyLocationId?: string;
@@ -87,7 +87,7 @@ export interface ParsedVesselData {
     tml3?: string | number;
     tml4?: string | number;
   }>;
-  
+
   // Checklist items
   checklistItems?: Array<{
     category?: string;
@@ -100,7 +100,7 @@ export interface ParsedVesselData {
     checkedBy?: string;
     checkedDate?: string;
   }>;
-  
+
   // Nozzle evaluations
   nozzles?: Array<{
     nozzleNumber: string;
@@ -115,7 +115,7 @@ export interface ParsedVesselData {
     acceptable?: boolean;
     notes?: string;
   }>;
-  
+
   // TABLE A component calculations
   tableA?: {
     description?: string;
@@ -148,7 +148,7 @@ export async function parseExcelFile(buffer: Buffer): Promise<ParsedVesselData> 
       const sheetNameLower = sheetName.toLowerCase();
       const worksheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-      
+
       // Skip instruction sheets
       if (sheetNameLower.includes('instruction') || sheetNameLower.includes('readme')) {
         continue;
@@ -158,17 +158,17 @@ export async function parseExcelFile(buffer: Buffer): Promise<ParsedVesselData> 
       if (sheetNameLower.includes('vessel') || sheetNameLower.includes('equipment')) {
         parseFieldValueSheet(data, result);
       }
-      
+
       // Parse Inspection Details sheet (Field/Value format)
       if (sheetNameLower.includes('inspection') && sheetNameLower.includes('detail')) {
         parseInspectionDetailsSheet(data, result);
       }
-      
+
       // Parse TML Readings sheet (tabular format)
       if (sheetNameLower.includes('tml') || sheetNameLower.includes('thickness') || sheetNameLower.includes('reading')) {
         parseTmlReadingsSheet(data, result);
       }
-      
+
       // Parse Nozzles sheet (tabular format)
       if (sheetNameLower.includes('nozzle')) {
         parseNozzlesSheet(data, result);
@@ -192,7 +192,7 @@ function parseFieldValueSheet(data: any[][], result: ParsedVesselData): void {
 
     const key = String(row[0] || "").toLowerCase().trim();
     const value = row[1];
-    
+
     if (value === undefined || value === null || value === '') continue;
     const valueStr = String(value).trim();
 
@@ -203,7 +203,7 @@ function parseFieldValueSheet(data: any[][], result: ParsedVesselData): void {
     else if (key.includes("serial") && key.includes("number")) result.serialNumber = valueStr;
     else if (key.includes("year") && key.includes("built")) result.yearBuilt = typeof value === 'number' ? value : parseInt(valueStr);
     else if (key.includes("nb number") || key.includes("national board")) result.nbNumber = valueStr;
-    
+
     // Design specifications
     else if (key.includes("design pressure")) result.designPressure = valueStr;
     else if (key.includes("design temp")) result.designTemperature = valueStr;
@@ -228,7 +228,7 @@ function parseInspectionDetailsSheet(data: any[][], result: ParsedVesselData): v
 
     const key = String(row[0] || "").toLowerCase().trim();
     const value = row[1];
-    
+
     if (value === undefined || value === null || value === '') continue;
     const valueStr = String(value).trim();
 
@@ -252,44 +252,44 @@ function parseInspectionDetailsSheet(data: any[][], result: ParsedVesselData): v
  */
 function parseTmlReadingsSheet(data: any[][], result: ParsedVesselData): void {
   if (!data || data.length < 2) return;
-  
+
   const headers = data[0]?.map((h: any) => String(h || "").toLowerCase()) || [];
-  
+
   // Find column indices
   const cmlCol = headers.findIndex(h => h.includes('cml') && h.includes('number'));
   const tmlIdCol = headers.findIndex(h => h === 'tml id' || h.includes('tml id'));
   const locationCol = headers.findIndex(h => h === 'location' || h.includes('location'));
   const componentCol = headers.findIndex(h => h.includes('component'));
-  
+
   // Support both "TML 1/2/3/4" format and "0°/90°/180°/270°" angle format
   let tml1Col = headers.findIndex(h => h.includes('tml 1') || h === 'tml1');
   let tml2Col = headers.findIndex(h => h.includes('tml 2') || h === 'tml2');
   let tml3Col = headers.findIndex(h => h.includes('tml 3') || h === 'tml3');
   let tml4Col = headers.findIndex(h => h.includes('tml 4') || h === 'tml4');
-  
+
   // If TML 1-4 columns not found, look for angle columns (0°, 90°, 180°, 270°)
   if (tml1Col < 0) tml1Col = headers.findIndex(h => h.includes('0°') || h === '0' || h.includes('0 deg'));
   if (tml2Col < 0) tml2Col = headers.findIndex(h => h.includes('90°') || h === '90' || h.includes('90 deg'));
   if (tml3Col < 0) tml3Col = headers.findIndex(h => h.includes('180°') || h === '180' || h.includes('180 deg'));
   if (tml4Col < 0) tml4Col = headers.findIndex(h => h.includes('270°') || h === '270' || h.includes('270 deg'));
-  
+
   const tActualCol = headers.findIndex(h => h.includes('t actual') || h.includes('actual') || h.includes('t-actual') || h.includes('min'));
   const nominalCol = headers.findIndex(h => h.includes('nominal') || h.includes('t-nom') || h.includes('t nom'));
   const previousCol = headers.findIndex(h => h.includes('previous') || h.includes('t-prev') || h.includes('t prev'));
   const corrosionRateCol = headers.findIndex(h => h.includes('corrosion rate') || h.includes('cr') || h.includes('rate'));
   const statusCol = headers.findIndex(h => h === 'status' || h.includes('status'));
-  
+
   // Parse data rows
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (!row) continue;
-    
+
     // Skip empty rows
     const hasData = row.some(cell => cell !== undefined && cell !== null && cell !== '');
     if (!hasData) continue;
-    
+
     const reading: any = {};
-    
+
     if (cmlCol >= 0 && row[cmlCol] !== undefined) reading.legacyLocationId = String(row[cmlCol]);
     if (tmlIdCol >= 0 && row[tmlIdCol] !== undefined) reading.tmlId = String(row[tmlIdCol]);
     if (locationCol >= 0 && row[locationCol] !== undefined) reading.location = String(row[locationCol]);
@@ -303,7 +303,7 @@ function parseTmlReadingsSheet(data: any[][], result: ParsedVesselData): void {
     if (previousCol >= 0 && row[previousCol] !== undefined) reading.previousThickness = row[previousCol];
     if (corrosionRateCol >= 0 && row[corrosionRateCol] !== undefined) reading.corrosionRate = row[corrosionRateCol];
     if (statusCol >= 0 && row[statusCol] !== undefined) reading.status = String(row[statusCol]).toLowerCase();
-    
+
     // Only add if we have at least a CML number or TML ID
     if (reading.legacyLocationId || reading.tmlId) {
       result.tmlReadings?.push(reading);
@@ -316,9 +316,9 @@ function parseTmlReadingsSheet(data: any[][], result: ParsedVesselData): void {
  */
 function parseNozzlesSheet(data: any[][], result: ParsedVesselData): void {
   if (!data || data.length < 2) return;
-  
+
   const headers = data[0]?.map((h: any) => String(h || "").toLowerCase()) || [];
-  
+
   // Find column indices
   const nozzleNumCol = headers.findIndex(h => h.includes('nozzle') && h.includes('number'));
   const descCol = headers.findIndex(h => h === 'description' || h.includes('description'));
@@ -330,18 +330,18 @@ function parseNozzlesSheet(data: any[][], result: ParsedVesselData): void {
   const minRequiredCol = headers.findIndex(h => h.includes('minimum') && h.includes('required'));
   const acceptableCol = headers.findIndex(h => h === 'acceptable' || h.includes('acceptable'));
   const notesCol = headers.findIndex(h => h === 'notes' || h.includes('notes'));
-  
+
   // Parse data rows
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (!row) continue;
-    
+
     // Skip empty rows
     const hasData = row.some(cell => cell !== undefined && cell !== null && cell !== '');
     if (!hasData) continue;
-    
+
     const nozzle: any = {};
-    
+
     if (nozzleNumCol >= 0 && row[nozzleNumCol] !== undefined) nozzle.nozzleNumber = String(row[nozzleNumCol]);
     if (descCol >= 0 && row[descCol] !== undefined) nozzle.nozzleDescription = String(row[descCol]);
     if (locationCol >= 0 && row[locationCol] !== undefined) nozzle.location = String(row[locationCol]);
@@ -355,7 +355,7 @@ function parseNozzlesSheet(data: any[][], result: ParsedVesselData): void {
       nozzle.acceptable = acceptVal === 'yes' || acceptVal === 'true' || acceptVal === '1';
     }
     if (notesCol >= 0 && row[notesCol] !== undefined) nozzle.notes = String(row[notesCol]);
-    
+
     // Only add if we have a nozzle number
     if (nozzle.nozzleNumber) {
       result.nozzles?.push(nozzle);
@@ -479,16 +479,16 @@ CRITICAL RULES:
 export async function parsePDFFile(buffer: Buffer, parserType?: "docupipe" | "manus" | "vision" | "hybrid" | "grok"): Promise<ParsedVesselData> {
   const selectedParser = parserType || "manus";
   logger.info(`[PDF Parser] Using parser: ${selectedParser}`);
-  
+
   try {
     // If vision parser is requested, use vision-based extraction
-    
+
     // If Grok parser is requested, use Grok 5.2 vision-based extraction
     if (selectedParser === "grok") {
       logger.info("[PDF Parser] Using Grok 5.2 parser for comprehensive extraction...");
       const { parseWithGrok } = await import('./grokPdfParser');
       const grokData = await parseWithGrok(buffer);
-      
+
       // Convert Grok data to ParsedVesselData format
       return {
         vesselTagNumber: grokData.vesselInfo?.vesselTag || '',
@@ -540,13 +540,13 @@ export async function parsePDFFile(buffer: Buffer, parserType?: "docupipe" | "ma
         tableA: grokData.tableA,
       };
     }
-    
+
     // If hybrid parser is requested, use hybrid mixed-content parsing
     if (selectedParser === "hybrid") {
       logger.info("[PDF Parser] Using hybrid parser for mixed text/scanned documents...");
       const { parseWithHybrid } = await import('./hybridPdfParser');
       const hybridData = await parseWithHybrid(buffer, "inspection-report.pdf");
-      
+
       // Normalize the hybrid data to ParsedVesselData format
       // Hybrid parser can return nested (vesselData/vesselInfo) OR flat structure
       logger.info('[PDF Parser] Normalizing hybrid data:', {
@@ -555,7 +555,7 @@ export async function parsePDFFile(buffer: Buffer, parserType?: "docupipe" | "ma
         hasTopLevelVesselTag: !!hybridData.vesselTagNumber,
         tmlCount: (hybridData.tmlReadings || hybridData.thicknessMeasurements || []).length,
       });
-      
+
       return {
         vesselTagNumber: hybridData.vesselTagNumber || hybridData.vesselData?.vesselTagNumber || hybridData.vesselInfo?.vesselTag || '',
         vesselName: hybridData.vesselName || hybridData.vesselData?.vesselName || hybridData.vesselInfo?.vesselDescription || '',
@@ -596,11 +596,11 @@ export async function parsePDFFile(buffer: Buffer, parserType?: "docupipe" | "ma
         tableA: hybridData.tableA,
       };
     }
-if (selectedParser === "vision") {
+    if (selectedParser === "vision") {
       logger.info("[PDF Parser] Using vision LLM parser for scanned documents...");
       const { parseWithVision } = await import('./visionPdfParser');
       const visionData = await parseWithVision(buffer);
-      
+
       // Convert vision data to ParsedVesselData format
       return {
         vesselTagNumber: visionData.vesselInfo?.vesselTag || '',
@@ -652,7 +652,7 @@ if (selectedParser === "vision") {
         tableA: visionData.tableA,
       };
     }
-    
+
     // For manus parser, use the standardized parser which has a better prompt
     if (selectedParser === "manus") {
       logger.info("[PDF Parser] Using Manus standardized parser for structured extraction...");
@@ -675,165 +675,165 @@ if (selectedParser === "vision") {
 
     // Fallback: Use basic parsing + LLM extraction
     logger.info("[PDF Parser] Using basic parsing + LLM extraction...");
-    
-    const docResult = selectedParser === "manus" 
+
+    const docResult = selectedParser === "manus"
       ? await parseDocumentWithManus(buffer, "inspection-report.pdf")
       : await parseDocument(buffer, "inspection-report.pdf");
-    
+
     const fullText = docResult.result.text;
     logger.info(`[PDF Parser] Text extracted (${fullText.length} chars), using LLM for structured extraction...`);
 
     // Use LLM to extract structured data from text
     const llmResponse = await invokeLLM({
-        messages: [
-          {
-            role: "system",
-            content: COMPREHENSIVE_EXTRACTION_PROMPT,
-          },
-          {
-            role: "user",
-            content: `Extract vessel inspection data from this API 510 report:\n\n${fullText.substring(0, 120000)}`,
-          },
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "vessel_data",
-            strict: true,
-            schema: {
-              type: "object",
-              properties: {
-                vesselTagNumber: { type: "string" },
-                vesselName: { type: "string" },
-                manufacturer: { type: "string" },
-                serialNumber: { type: "string" },
-                yearBuilt: { type: "number" },
-                nbNumber: { type: "string" },
-                designPressure: { type: "string" },
-                designTemperature: { type: "string" },
-                operatingPressure: { type: "string" },
-                operatingTemperature: { type: "string" },
-                mdmt: { type: "string" },
-                materialSpec: { type: "string" },
-                allowableStress: { type: "string" },
-                jointEfficiency: { type: "string" },
-                radiographyType: { type: "string" },
-                specificGravity: { type: "string" },
-                vesselType: { type: "string" },
-                vesselConfiguration: { type: "string" },
-                insideDiameter: { type: "string" },
-                overallLength: { type: "string" },
-                headType: { type: "string" },
-                crownRadius: { type: "string" },
-                knuckleRadius: { type: "string" },
-                product: { type: "string" },
-                constructionCode: { type: "string" },
-                insulationType: { type: "string" },
-                reportNumber: { type: "string" },
-                reportDate: { type: "string" },
-                inspectionDate: { type: "string" },
-                inspectionType: { type: "string" },
-                inspectorName: { type: "string" },
-                inspectorCert: { type: "string" },
-                clientName: { type: "string" },
-                clientLocation: { type: "string" },
-                executiveSummary: { type: "string" },
-                inspectionResults: { type: "string" },
-                recommendations: { type: "string" },
-                tmlReadings: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      legacyLocationId: { type: "string" },
-                      tmlId: { type: "string" },
-                      location: { type: "string" },
-                      component: { type: "string" },
-                      componentType: { type: "string" },
-                      readingType: { type: "string" },
-                      nozzleSize: { type: "string" },
-                      angle: { type: "string" },
-                      currentThickness: { type: "string" },
-                      previousThickness: { type: "string" },
-                      nominalThickness: { type: "string" },
-                      minimumRequired: { type: "number" },
-                      tActual: { type: "string" },
-                      tml1: { type: "string" },
-                      tml2: { type: "string" },
-                      tml3: { type: "string" },
-                      tml4: { type: "string" },
-                    },
-                    required: [],
-                    additionalProperties: false,
-                  },
-                },
-                checklistItems: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      category: { type: "string" },
-                      itemNumber: { type: "string" },
-                      itemText: { type: "string" },
-                      status: { type: "string" },
-                      notes: { type: "string" },
-                    },
-                    required: [],
-                    additionalProperties: false,
-                  },
-                },
-                nozzles: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      nozzleNumber: { type: "string" },
-                      nozzleDescription: { type: "string" },
-                      location: { type: "string" },
-                      nominalSize: { type: "string" },
-                      schedule: { type: "string" },
-                      actualThickness: { type: "string" },
-                      pipeNominalThickness: { type: "string" },
-                      minimumRequired: { type: "string" },
-                      acceptable: { type: "boolean" },
-                      notes: { type: "string" },
-                    },
-                    required: [],
-                    additionalProperties: false,
-                  },
-                },
-                tableA: {
+      messages: [
+        {
+          role: "system",
+          content: COMPREHENSIVE_EXTRACTION_PROMPT,
+        },
+        {
+          role: "user",
+          content: `Extract vessel inspection data from this API 510 report:\n\n${fullText.substring(0, 120000)}`,
+        },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "vessel_data",
+          // strict: true removed for OpenAI compatibility
+          schema: {
+            type: "object",
+            properties: {
+              vesselTagNumber: { type: "string" },
+              vesselName: { type: "string" },
+              manufacturer: { type: "string" },
+              serialNumber: { type: "string" },
+              yearBuilt: { type: "number" },
+              nbNumber: { type: "string" },
+              designPressure: { type: "string" },
+              designTemperature: { type: "string" },
+              operatingPressure: { type: "string" },
+              operatingTemperature: { type: "string" },
+              mdmt: { type: "string" },
+              materialSpec: { type: "string" },
+              allowableStress: { type: "string" },
+              jointEfficiency: { type: "string" },
+              radiographyType: { type: "string" },
+              specificGravity: { type: "string" },
+              vesselType: { type: "string" },
+              vesselConfiguration: { type: "string" },
+              insideDiameter: { type: "string" },
+              overallLength: { type: "string" },
+              headType: { type: "string" },
+              crownRadius: { type: "string" },
+              knuckleRadius: { type: "string" },
+              product: { type: "string" },
+              constructionCode: { type: "string" },
+              insulationType: { type: "string" },
+              reportNumber: { type: "string" },
+              reportDate: { type: "string" },
+              inspectionDate: { type: "string" },
+              inspectionType: { type: "string" },
+              inspectorName: { type: "string" },
+              inspectorCert: { type: "string" },
+              clientName: { type: "string" },
+              clientLocation: { type: "string" },
+              executiveSummary: { type: "string" },
+              inspectionResults: { type: "string" },
+              recommendations: { type: "string" },
+              tmlReadings: {
+                type: "array",
+                items: {
                   type: "object",
                   properties: {
-                    description: { type: "string" },
-                    components: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: {
-                          componentName: { type: "string" },
-                          nominalThickness: { type: "number" },
-                          actualThickness: { type: "number" },
-                          minimumRequiredThickness: { type: "number" },
-                          designMAWP: { type: "number" },
-                          calculatedMAWP: { type: "number" },
-                          corrosionRate: { type: "number" },
-                          remainingLife: { type: "number" },
-                        },
-                        required: [],
-                        additionalProperties: false,
-                      },
-                    },
+                    legacyLocationId: { type: "string" },
+                    tmlId: { type: "string" },
+                    location: { type: "string" },
+                    component: { type: "string" },
+                    componentType: { type: "string" },
+                    readingType: { type: "string" },
+                    nozzleSize: { type: "string" },
+                    angle: { type: "string" },
+                    currentThickness: { type: "string" },
+                    previousThickness: { type: "string" },
+                    nominalThickness: { type: "string" },
+                    minimumRequired: { type: "number" },
+                    tActual: { type: "string" },
+                    tml1: { type: "string" },
+                    tml2: { type: "string" },
+                    tml3: { type: "string" },
+                    tml4: { type: "string" },
                   },
                   required: [],
                   additionalProperties: false,
                 },
               },
-              required: ["vesselTagNumber"],
-              additionalProperties: false,
+              checklistItems: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    category: { type: "string" },
+                    itemNumber: { type: "string" },
+                    itemText: { type: "string" },
+                    status: { type: "string" },
+                    notes: { type: "string" },
+                  },
+                  required: [],
+                  additionalProperties: false,
+                },
+              },
+              nozzles: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    nozzleNumber: { type: "string" },
+                    nozzleDescription: { type: "string" },
+                    location: { type: "string" },
+                    nominalSize: { type: "string" },
+                    schedule: { type: "string" },
+                    actualThickness: { type: "string" },
+                    pipeNominalThickness: { type: "string" },
+                    minimumRequired: { type: "string" },
+                    acceptable: { type: "boolean" },
+                    notes: { type: "string" },
+                  },
+                  required: [],
+                  additionalProperties: false,
+                },
+              },
+              tableA: {
+                type: "object",
+                properties: {
+                  description: { type: "string" },
+                  components: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        componentName: { type: "string" },
+                        nominalThickness: { type: "number" },
+                        actualThickness: { type: "number" },
+                        minimumRequiredThickness: { type: "number" },
+                        designMAWP: { type: "number" },
+                        calculatedMAWP: { type: "number" },
+                        corrosionRate: { type: "number" },
+                        remainingLife: { type: "number" },
+                      },
+                      required: [],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: [],
+                additionalProperties: false,
+              },
             },
+            required: ["vesselTagNumber"],
+            additionalProperties: false,
           },
         },
+      },
     });
 
     // Validate LLM response
@@ -841,16 +841,16 @@ if (selectedParser === "vision") {
       logger.error("[PDF Parser] Invalid LLM response:", JSON.stringify(llmResponse, null, 2));
       throw new Error("LLM returned empty or invalid response");
     }
-    
+
     const messageContent = llmResponse.choices[0].message.content;
     if (!messageContent) {
       logger.error("[PDF Parser] Empty message content in LLM response");
       throw new Error("LLM returned empty message content");
     }
-    
+
     const contentStr = typeof messageContent === 'string' ? messageContent : JSON.stringify(messageContent);
     const extracted = JSON.parse(contentStr || "{}");
-    
+
     logger.info("[PDF Parser] LLM extraction completed:", {
       vesselTag: extracted.vesselTagNumber,
       tmlReadings: extracted.tmlReadings?.length || 0,
@@ -858,7 +858,7 @@ if (selectedParser === "vision") {
       nozzles: extracted.nozzles?.length || 0,
       tableAComponents: extracted.tableA?.components?.length || 0,
     });
-    
+
     return extracted;
   } catch (error) {
     logger.error("[PDF Parser] Error:", error);

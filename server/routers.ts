@@ -352,7 +352,7 @@ Return JSON in this exact format:
               type: "json_schema",
               json_schema: {
                 name: "extracted_sections",
-                strict: true,
+                // strict: true removed for OpenAI compatibility
                 schema: {
                   type: "object",
                   properties: {
@@ -1012,12 +1012,12 @@ Return JSON in this exact format:
         // Create job record
         await drizzleDb.insert(extractionJobs).values({
           id: jobId,
-          userId: ctx.user.id,
+          userId: typeof ctx.user.id === 'number' ? ctx.user.id : 0,
           status: "pending",
           progress: 0,
           progressMessage: "Job queued",
           filename: input.fileName,
-          fileUrl: "", // Not storing file URL for now
+          fileUrl: `local://${input.fileName}`, // Placeholder for local extraction
           parserType: input.parserType || "manus",
         });
 
@@ -1059,8 +1059,9 @@ Return JSON in this exact format:
           throw new Error("Job not found");
         }
 
-        // Verify user owns this job
-        if (job.userId !== ctx.user.id) {
+        // Verify user owns this job (use same numeric conversion as job creation)
+        const numericUserId = typeof ctx.user.id === 'number' ? ctx.user.id : 0;
+        if (job.userId !== numericUserId) {
           throw new Error("Unauthorized");
         }
 

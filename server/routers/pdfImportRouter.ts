@@ -352,7 +352,7 @@ CRITICAL RULES:
           type: "json_schema",
           json_schema: {
             name: "ut_readings",
-            strict: true,
+            // strict: true removed for OpenAI compatibility
             schema: {
               type: "object",
               properties: {
@@ -406,7 +406,7 @@ CRITICAL RULES:
         reportNo?: string | null;
         readings: RawExtractedReading[];
       };
-      
+
       try {
         extractedData = JSON.parse(typeof messageContent === 'string' ? messageContent : "{}");
       } catch (parseError) {
@@ -448,13 +448,13 @@ CRITICAL RULES:
         const compIdUpper = (row.compId || '').trim().toUpperCase();
         const locationStr = (row.location || '').trim();
         const cml = (row.cml || '').trim();
-        
+
         // Determine the actual thickness: prefer tAct, fallback to min of tml readings
         const tmlValues = [row.tml1, row.tml2, row.tml3, row.tml4].filter(
           (v): v is number => v !== null && v !== undefined && v > 0
         );
         const thickness = row.tAct ?? (tmlValues.length > 0 ? Math.min(...tmlValues) : null);
-        
+
         // Skip rows with no thickness data at all
         if (thickness === null || thickness === undefined) {
           logger.info(`[UT Upload] Skipping CML ${cml} - no thickness data`);
@@ -472,14 +472,14 @@ CRITICAL RULES:
           const axialStation = locationStr;
           const component = 'Shell';
           const componentGroup = 'SHELL';
-          
+
           // stationKey: SHELL-SLICE-{station}-A{angle}
           const skResult = generateStationKey({
             component: 'Shell',
             sliceNumber: parseInt(axialStation, 10) || null,
             angleDeg,
           });
-          
+
           expandedNewReadings.push({
             legacyLocationId: cml,
             location: `Station ${axialStation}, ${angleDeg}°`,
@@ -490,20 +490,20 @@ CRITICAL RULES:
             stationKey: skResult.stationKey,
             tmlReadings: { tml1: row.tml1, tml2: row.tml2, tml3: row.tml3, tml4: row.tml4 },
           });
-          
+
         } else if (isHead) {
           // HEAD reading: CompID is "South Head" or "North Head", Location is position number
-          const headName = compIdUpper.includes('SOUTH') ? 'South Head' : 
-                          compIdUpper.includes('NORTH') ? 'North Head' :
-                          compIdUpper.includes('EAST') ? 'East Head' :
-                          compIdUpper.includes('WEST') ? 'West Head' : row.compId;
+          const headName = compIdUpper.includes('SOUTH') ? 'South Head' :
+            compIdUpper.includes('NORTH') ? 'North Head' :
+              compIdUpper.includes('EAST') ? 'East Head' :
+                compIdUpper.includes('WEST') ? 'West Head' : row.compId;
           const componentGroup = normalizeComponentGroup(headName);
           const position = locationStr;
-          
+
           // stationKey: {HEADGROUP}-POS-{position}
           const headPrefix = componentGroup || 'HEAD';
           const stationKey = `${headPrefix}-POS-${position}`;
-          
+
           expandedNewReadings.push({
             legacyLocationId: cml,
             location: `${headName} Position ${position}`,
@@ -514,7 +514,7 @@ CRITICAL RULES:
             stationKey,
             tmlReadings: { tml1: row.tml1, tml2: row.tml2, tml3: row.tml3, tml4: row.tml4 },
           });
-          
+
         } else if (isNozzle) {
           // NOZZLE reading: CompID is nozzle type, Location is N1/N2/etc.
           // Nozzles have 4 tml readings (tml-1 through tml-4) representing 4 angular positions
@@ -522,7 +522,7 @@ CRITICAL RULES:
           const nozzleType = row.compId; // "18\" MW", "2\" Nozzle", etc.
           const service = row.service || '';
           const componentGroup = 'NOZZLE';
-          
+
           // For nozzles, each tml column represents a different angular position
           // tml-1 = 0° (or Top/N), tml-2 = 90° (or E), tml-3 = 180° (or S/Bottom), tml-4 = 270° (or W)
           const nozzleAngles: Array<{ angle: number; value: number | null | undefined }> = [
@@ -531,7 +531,7 @@ CRITICAL RULES:
             { angle: 180, value: row.tml3 },
             { angle: 270, value: row.tml4 },
           ];
-          
+
           for (const na of nozzleAngles) {
             if (na.value !== null && na.value !== undefined && na.value > 0) {
               const stationKey = `NOZZLE-${nozzleId}-A${na.angle}`;
@@ -547,7 +547,7 @@ CRITICAL RULES:
               });
             }
           }
-          
+
           // Also create a t_act summary record for the nozzle (minimum reading)
           const stationKey = `NOZZLE-${nozzleId}-TACT`;
           expandedNewReadings.push({
@@ -561,7 +561,7 @@ CRITICAL RULES:
             stationKey,
             tmlReadings: { tml1: row.tml1, tml2: row.tml2, tml3: row.tml3, tml4: row.tml4 },
           });
-          
+
         } else {
           // UNKNOWN/OTHER: Use fallback stationKey generation
           const componentGroup = normalizeComponentGroup(row.compId);
@@ -570,7 +570,7 @@ CRITICAL RULES:
             location: locationStr,
             legacyLocationId: cml,
           });
-          
+
           expandedNewReadings.push({
             legacyLocationId: cml,
             location: `${row.compId} ${locationStr}`.trim(),
@@ -756,7 +756,7 @@ CRITICAL RULES:
     .mutation(async ({ input, ctx }) => {
       try {
         logger.info("[PDF Import] Starting extraction from:", input.fileName);
-        
+
         // Use LLM with vision to extract data from PDF
         const response = await invokeLLM({
           messages: [
@@ -781,7 +781,7 @@ CRITICAL RULES:
             type: "json_schema",
             json_schema: {
               name: "inspection_data",
-              strict: true,
+              // strict: true removed for OpenAI compatibility
               schema: {
                 type: "object",
                 properties: {
@@ -960,10 +960,10 @@ CRITICAL RULES:
           logger.warn("[PDF Import] JSON parse failed, attempting repair with jsonrepair...");
           try {
             let content = typeof messageContent === 'string' ? messageContent : "{}";
-            
+
             // Remove any markdown code blocks first
             content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-            
+
             // Use jsonrepair to fix malformed JSON
             const repaired = jsonrepair(content);
             extractedData = JSON.parse(repaired);
@@ -1148,7 +1148,7 @@ CRITICAL RULES:
       logger.info("[PDF Import] Nozzles to save:", input.nozzles?.length || 0);
       logger.info("[PDF Import] Recommendations:", input.recommendations ? `HAS DATA (${input.recommendations.length} chars)` : "NULL/EMPTY");
       logger.info("[PDF Import] Inspection Results:", input.inspectionResults ? `HAS DATA (${input.inspectionResults.length} chars)` : "NULL/EMPTY");
-      
+
       // Debug: Log first 200 chars of each if present
       if (input.recommendations) {
         logger.info("[PDF Import] Recommendations preview:", input.recommendations.substring(0, 200));
@@ -1170,20 +1170,20 @@ CRITICAL RULES:
 
       for (const existing of existingInspections) {
         logger.info("[PDF Import] Deleting existing inspection:", existing.id);
-        
+
         // Delete all related data
         await db.delete(tmlReadings).where(eq(tmlReadings.inspectionId, existing.id));
         await db.delete(nozzleEvaluations).where(eq(nozzleEvaluations.inspectionId, existing.id));
         await db.delete(inspectionFindings).where(eq(inspectionFindings.reportId, existing.id));
         await db.delete(checklistItems).where(eq(checklistItems.reportId, existing.id));
-        
+
         // Delete professional reports and component calculations
         const reports = await db.select().from(professionalReports).where(eq(professionalReports.inspectionId, existing.id));
         for (const report of reports) {
           await db.delete(componentCalculations).where(eq(componentCalculations.reportId, report.id));
           await db.delete(professionalReports).where(eq(professionalReports.id, report.id));
         }
-        
+
         await db.delete(inspections).where(eq(inspections.id, existing.id));
       }
 
@@ -1243,13 +1243,13 @@ CRITICAL RULES:
       if (input.thicknessMeasurements && input.thicknessMeasurements.length > 0) {
         for (const measurement of input.thicknessMeasurements) {
           const readings = measurement.readings || [];
-          
+
           // Use explicit angle fields if available, otherwise fall back to readings array
           const tml1 = measurement.angle0?.toString() || readings[0]?.toString() || null;
           const tml2 = measurement.angle90?.toString() || readings[1]?.toString() || null;
           const tml3 = measurement.angle180?.toString() || readings[2]?.toString() || null;
           const tml4 = measurement.angle270?.toString() || readings[3]?.toString() || null;
-          
+
           const record = {
             id: nanoid(),
             inspectionId: inspectionId,
@@ -1295,7 +1295,7 @@ CRITICAL RULES:
       // Import nozzle evaluations - CRITICAL SECTION
       if (input.nozzles && input.nozzles.length > 0) {
         logger.info("[PDF Import] Processing", input.nozzles.length, "nozzles");
-        
+
         for (const nozzle of input.nozzles) {
           // Calculate minimum required thickness if not provided
           let minimumRequired = nozzle.minimumRequired;
@@ -1306,7 +1306,7 @@ CRITICAL RULES:
               minimumRequired = tmin;
             }
           }
-          
+
           // Get pipe schedule data for nominal thickness
           let pipeNominalThickness = nozzle.previousThickness;
           if (!pipeNominalThickness && nozzle.size) {
@@ -1315,7 +1315,7 @@ CRITICAL RULES:
               pipeNominalThickness = pipeData.wallThickness;
             }
           }
-          
+
           const nozzleRecord = {
             id: nanoid(),
             inspectionId: inspectionId,
@@ -1391,7 +1391,7 @@ CRITICAL RULES:
           const isChecked = ['satisfactory', 'completed', 'yes', 'pass', 'ok', 'good', 'acceptable'].includes(
             (item.status || '').toLowerCase().trim()
           );
-          
+
           await db.insert(checklistItems).values({
             id: nanoid(),
             reportId: reportId,
@@ -1400,8 +1400,8 @@ CRITICAL RULES:
             itemText: item.itemText,
             checked: isChecked,
             status: item.status?.toLowerCase().includes('satisfactory') ? 'satisfactory' :
-                    item.status?.toLowerCase().includes('unsatisfactory') ? 'unsatisfactory' :
-                    item.status?.toLowerCase().includes('n/a') ? 'not_applicable' : 'not_checked',
+              item.status?.toLowerCase().includes('unsatisfactory') ? 'unsatisfactory' :
+                item.status?.toLowerCase().includes('n/a') ? 'not_applicable' : 'not_checked',
             notes: item.notes || null,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -1501,7 +1501,7 @@ CRITICAL RULES:
     }))
     .mutation(async ({ input, ctx }) => {
       logger.info("[Photo Extract] Starting photo extraction from PDF", { url: input.pdfUrl });
-      
+
       try {
         // Use LLM to analyze the PDF and identify photos with their descriptions
         const response = await invokeLLM({
@@ -1547,7 +1547,7 @@ IMPORTANT: Only include actual photographs, not:
             type: "json_schema",
             json_schema: {
               name: "photo_extraction",
-              strict: true,
+              // strict: true removed for OpenAI compatibility
               schema: {
                 type: "object",
                 properties: {
@@ -1578,7 +1578,7 @@ IMPORTANT: Only include actual photographs, not:
 
         const messageContent = response.choices[0].message.content;
         let extractedData;
-        
+
         try {
           extractedData = JSON.parse(typeof messageContent === 'string' ? messageContent : "{}");
         } catch (parseError) {
@@ -1593,7 +1593,7 @@ IMPORTANT: Only include actual photographs, not:
         }
 
         logger.info("[Photo Extract] Found photos:", extractedData.totalPhotosFound);
-        
+
         return {
           success: true,
           photos: extractedData.photos || [],

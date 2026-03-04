@@ -39,16 +39,16 @@ export async function parseWithManusAPI(
   filename: string
 ): Promise<ManusParseResponse> {
   logger.info("[Manus Parser] Starting independent PDF text extraction...");
-  
+
   try {
     // Use pdfjs-dist directly for PDF parsing
     const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
-    
+
     // Convert Buffer to Uint8Array (required by pdfjs-dist)
     const uint8Array = new Uint8Array(fileBuffer);
-    
+
     // Load PDF document with memory-efficient options
-    const loadingTask = pdfjsLib.getDocument({ 
+    const loadingTask = pdfjsLib.getDocument({
       data: uint8Array,
       // Disable features that consume extra memory
       disableFontFace: true,
@@ -56,39 +56,39 @@ export async function parseWithManusAPI(
       disableStream: true,
     });
     const pdfDocument = await loadingTask.promise;
-    
+
     // Extract text from pages with limits to prevent memory issues
     const numPages = pdfDocument.numPages;
     const MAX_PAGES = 100; // Limit to 100 pages for memory safety
     const pagesToProcess = Math.min(numPages, MAX_PAGES);
-    
+
     if (numPages > MAX_PAGES) {
       logger.warn(`[Manus Parser] PDF has ${numPages} pages, limiting to first ${MAX_PAGES} pages for memory safety`);
     }
-    
+
     let fullText = '';
     const pages: Array<{ pageNumber: number; text: string }> = [];
     const MAX_TEXT_LENGTH = 1000000; // 1MB text limit
-    
+
     for (let i = 1; i <= pagesToProcess; i++) {
       // Check if we've exceeded text limit
       if (fullText.length > MAX_TEXT_LENGTH) {
         logger.warn(`[Manus Parser] Text limit reached at page ${i}, stopping extraction`);
         break;
       }
-      
+
       try {
         const page = await pdfDocument.getPage(i);
         const textContent = await page.getTextContent();
         const pageText = textContent.items.map((item: any) => item.str).join(' ');
         fullText += pageText + '\n';
-        
+
         // Store per-page text for hybrid parser analysis
         pages.push({
           pageNumber: i,
           text: pageText,
         });
-        
+
         // Clean up page resources
         page.cleanup();
       } catch (pageError) {
@@ -96,10 +96,10 @@ export async function parseWithManusAPI(
         continue;
       }
     }
-    
+
     // Clean up document resources
     pdfDocument.cleanup();
-    
+
     logger.info("[Manus Parser] Text extraction successful, pages:", pagesToProcess, "length:", fullText.length);
 
     return {
@@ -356,7 +356,6 @@ CRITICAL INSTRUCTIONS:
       type: "json_schema",
       json_schema: {
         name: "api510_inspection_data",
-        strict: true,
         schema: {
           type: "object",
           properties: {
@@ -487,17 +486,17 @@ CRITICAL INSTRUCTIONS:
 
   const messageContent = llmResponse.choices[0].message.content;
   const contentText = typeof messageContent === 'string' ? messageContent : JSON.stringify(messageContent);
-  
+
   // Robust JSON parsing with truncation recovery
   let extractedData;
   try {
     extractedData = JSON.parse(contentText || "{}");
   } catch (parseError) {
     logger.warn("[Manus Parser] Initial JSON parse failed, attempting recovery...", parseError);
-    
+
     // Try to repair truncated JSON
     let repairedJson = contentText || "{}";
-    
+
     // Remove any trailing incomplete content after last complete structure
     // Find the last valid closing bracket/brace
     let lastValidEnd = -1;
@@ -505,25 +504,25 @@ CRITICAL INSTRUCTIONS:
     let bracketCount = 0;
     let inString = false;
     let escapeNext = false;
-    
+
     for (let i = 0; i < repairedJson.length; i++) {
       const char = repairedJson[i];
-      
+
       if (escapeNext) {
         escapeNext = false;
         continue;
       }
-      
+
       if (char === '\\' && inString) {
         escapeNext = true;
         continue;
       }
-      
+
       if (char === '"' && !escapeNext) {
         inString = !inString;
         continue;
       }
-      
+
       if (!inString) {
         if (char === '{') braceCount++;
         else if (char === '}') {
@@ -541,7 +540,7 @@ CRITICAL INSTRUCTIONS:
         }
       }
     }
-    
+
     // If we found a valid end point, truncate there
     if (lastValidEnd > 0 && lastValidEnd < repairedJson.length - 1) {
       repairedJson = repairedJson.substring(0, lastValidEnd + 1);
@@ -563,7 +562,7 @@ CRITICAL INSTRUCTIONS:
       }
       logger.info("[Manus Parser] Attempted to close open JSON structures");
     }
-    
+
     // Additional recovery: If still invalid, try to find the last complete object in tmlReadings array
     // This handles the common case where LLM response is truncated mid-array
     // Expected JSON structure: { ..., "tmlReadings": [{...}, {...}, {...}], ... }
@@ -583,14 +582,14 @@ CRITICAL INSTRUCTIONS:
             const closingBraces = (repairedJson.substring(truncatePoint).match(/}/g)?.length || 0);
             const needsArrayClose = ']';
             const needsObjectClose = '}'; // For top-level object
-            
+
             repairedJson = repairedJson.substring(0, truncatePoint) + needsArrayClose + needsObjectClose;
             logger.info("[Manus Parser] Recovered by truncating to last complete TML reading");
           }
         }
       }
     }
-    
+
     try {
       extractedData = JSON.parse(repairedJson);
       logger.info("[Manus Parser] JSON recovery successful");
@@ -610,7 +609,7 @@ CRITICAL INSTRUCTIONS:
       };
     }
   }
-  
+
   // Log extraction metrics for quality assurance
   logger.info("[Manus Parser] Extraction metrics:", {
     tmlReadings: extractedData.tmlReadings?.length || 0,
@@ -620,17 +619,17 @@ CRITICAL INSTRUCTIONS:
     hasInspectionResults: !!(extractedData.inspectionResults && extractedData.inspectionResults.length > 10),
     hasRecommendations: !!(extractedData.recommendations && extractedData.recommendations.length > 10),
   });
-  
+
   // Validate critical data extraction
   if (extractedData.tmlReadings && extractedData.tmlReadings.length > 0) {
-    const withPreviousThickness = extractedData.tmlReadings.filter((t: any) => 
+    const withPreviousThickness = extractedData.tmlReadings.filter((t: any) =>
       t.previousThickness !== null && t.previousThickness !== undefined && t.previousThickness !== 0
     ).length;
-    const withNozzleSize = extractedData.tmlReadings.filter((t: any) => 
+    const withNozzleSize = extractedData.tmlReadings.filter((t: any) =>
       t.component === 'Nozzle' && t.nozzleSize
     ).length;
     const nozzleReadings = extractedData.tmlReadings.filter((t: any) => t.component === 'Nozzle').length;
-    
+
     logger.info("[Manus Parser] TML data quality:", {
       totalReadings: extractedData.tmlReadings.length,
       withPreviousThickness: withPreviousThickness,
@@ -638,12 +637,12 @@ CRITICAL INSTRUCTIONS:
       nozzleReadingsWithSize: withNozzleSize,
       previousThicknessPercentage: `${((withPreviousThickness / extractedData.tmlReadings.length) * 100).toFixed(1)}%`,
     });
-    
+
     if (withPreviousThickness === 0 && extractedData.tmlReadings.length > 0) {
       logger.warn("[Manus Parser] WARNING: No previous thickness data extracted - corrosion rate calculations will be affected");
     }
   }
-  
+
   logger.info("[Manus Parser] Structured data extracted successfully");
 
   return extractedData;
@@ -658,9 +657,9 @@ export async function parseDocumentWithManus(
   filename: string
 ): Promise<{ result: { text: string; pages: any[] } }> {
   logger.info("[Manus Parser] Simple text extraction...");
-  
+
   const parseResult = await parseWithManusAPI(fileBuffer, filename);
-  
+
   return {
     result: {
       text: parseResult.text,
