@@ -1316,6 +1316,16 @@ CRITICAL RULES:
             }
           }
 
+          // Helper to sanitize values for decimal columns - non-numeric values become null
+          const toDecimal = (val: any): string | null => {
+            if (val === null || val === undefined || val === '') return null;
+            const str = String(val).trim();
+            const num = parseFloat(str);
+            return isNaN(num) ? null : num.toString();
+          };
+
+          const pipeNomThk = toDecimal(pipeNominalThickness);
+
           const nozzleRecord = {
             id: nanoid(),
             inspectionId: inspectionId,
@@ -1324,11 +1334,11 @@ CRITICAL RULES:
             location: null as string | null,
             nominalSize: nozzle.size?.toString() || '1',
             schedule: nozzle.schedule || null,
-            actualThickness: nozzle.actualThickness?.toString() || null,
-            pipeNominalThickness: pipeNominalThickness?.toString() || null,
-            pipeMinusManufacturingTolerance: pipeNominalThickness ? (pipeNominalThickness * 0.875).toString() : null,
+            actualThickness: toDecimal(nozzle.actualThickness),
+            pipeNominalThickness: pipeNomThk,
+            pipeMinusManufacturingTolerance: pipeNomThk ? (parseFloat(pipeNomThk) * 0.875).toString() : null,
             shellHeadRequiredThickness: null as string | null,
-            minimumRequired: minimumRequired?.toString() || null,
+            minimumRequired: toDecimal(minimumRequired),
             acceptable: nozzle.acceptable !== false,
             notes: nozzle.material ? `Material: ${nozzle.material}, Age: ${nozzle.age || 'N/A'} yrs, Ca: ${nozzle.corrosionAllowance || 'N/A'}", Cr: ${nozzle.corrosionRate || 'N/A'} in/yr, RL: ${nozzle.remainingLife || 'N/A'} yrs` : null,
             createdAt: new Date(),
