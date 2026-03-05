@@ -33,13 +33,13 @@ export default function DataMigration() {
   const [angleData, setAngleData] = useState<AngleDataRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [csvContent, setCsvContent] = useState("");
-  
+
   // Bulk edit state
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [bulkEditField, setBulkEditField] = useState<keyof AngleDataRow>("angle0");
   const [bulkEditValue, setBulkEditValue] = useState("");
-  
+
   // Dirty state tracking - stores original values to detect modifications
   const [originalData, setOriginalData] = useState<AngleDataRow[]>([]);
   const [modifiedRows, setModifiedRows] = useState<Set<number>>(new Set());
@@ -50,7 +50,7 @@ export default function DataMigration() {
 
   // Get list of inspections
   const { data: inspections, isLoading: loadingInspections } = trpc.inspections.list.useQuery();
-  
+
   // Get TML readings for selected inspection
   const { data: tmlReadings, refetch: refetchTml } = trpc.tmlReadings.list.useQuery(
     { inspectionId: selectedInspection },
@@ -65,8 +65,8 @@ export default function DataMigration() {
       // Without this, the Thickness tab and Calculations tab show stale values
       await Promise.all([
         utils.tmlReadings.list.invalidate({ inspectionId: selectedInspection }),
-        utils.inspections.get.invalidate({ id: selectedInspection }).catch(() => {}),
-        utils.inspections.list.invalidate().catch(() => {}),
+        utils.inspections.get.invalidate({ id: selectedInspection }).catch(() => { }),
+        utils.inspections.list.invalidate().catch(() => { }),
       ]);
       // Also refetch the local query
       refetchTml();
@@ -86,8 +86,8 @@ export default function DataMigration() {
       // Invalidate all caches so Thickness/Calculations tabs show fresh data
       await Promise.all([
         utils.tmlReadings.list.invalidate({ inspectionId: selectedInspection }),
-        utils.inspections.get.invalidate({ id: selectedInspection }).catch(() => {}),
-        utils.inspections.list.invalidate().catch(() => {}),
+        utils.inspections.get.invalidate({ id: selectedInspection }).catch(() => { }),
+        utils.inspections.list.invalidate().catch(() => { }),
       ]);
       refetchTml();
       setIsRecalculating(false);
@@ -102,10 +102,10 @@ export default function DataMigration() {
   const parseCSV = (content: string) => {
     const lines = content.trim().split("\n");
     const rows: AngleDataRow[] = [];
-    
+
     // Skip header row if present
     const startIndex = lines[0]?.toLowerCase().includes("cml") ? 1 : 0;
-    
+
     for (let i = startIndex; i < lines.length; i++) {
       const cells = lines[i].split(",").map(c => c.trim());
       if (cells.length >= 2) {
@@ -125,7 +125,7 @@ export default function DataMigration() {
         });
       }
     }
-    
+
     setAngleData(rows);
     setSelectedRows(new Set()); // Clear selection when new data is loaded
   };
@@ -149,12 +149,12 @@ export default function DataMigration() {
     const newData = [...angleData];
     newData[index] = { ...newData[index], [field]: value };
     setAngleData(newData);
-    
+
     // Track this row as modified if it differs from original
     if (originalData.length > index) {
       const original = originalData[index];
       const current = newData[index];
-      const isModified = 
+      const isModified =
         original.compId !== current.compId ||
         original.location !== current.location ||
         original.size !== current.size ||
@@ -163,7 +163,7 @@ export default function DataMigration() {
         original.angle90 !== current.angle90 ||
         original.angle180 !== current.angle180 ||
         original.angle270 !== current.angle270;
-      
+
       const newModified = new Set(modifiedRows);
       if (isModified) {
         newModified.add(index);
@@ -183,19 +183,19 @@ export default function DataMigration() {
   const addRow = () => {
     setAngleData([
       ...angleData,
-      { 
-        legacyLocationId: "", 
-        compId: "", 
-        location: "", 
-        type: "", 
-        size: "", 
-        service: "", 
-        tPrevious: "", 
-        angle0: "", 
-        angle90: "", 
-        angle180: "", 
-        angle270: "", 
-        tActual: "" 
+      {
+        legacyLocationId: "",
+        compId: "",
+        location: "",
+        type: "",
+        size: "",
+        service: "",
+        tPrevious: "",
+        angle0: "",
+        angle90: "",
+        angle180: "",
+        angle270: "",
+        tActual: ""
       },
     ]);
   };
@@ -249,13 +249,13 @@ export default function DataMigration() {
 
     const newData = [...angleData];
     const newModified = new Set(modifiedRows);
-    
+
     selectedRows.forEach(index => {
       newData[index] = { ...newData[index], [bulkEditField]: bulkEditValue };
       // Mark all bulk-edited rows as modified
       newModified.add(index);
     });
-    
+
     setAngleData(newData);
     setModifiedRows(newModified);
     setBulkEditOpen(false);
@@ -333,14 +333,14 @@ export default function DataMigration() {
         // This handles data imported from PDFs where readings are stored in currentThickness
         const hasAngleData = tml.tml1 || tml.tml2 || tml.tml3 || tml.tml4;
         const fallbackThickness = tml.currentThickness || tml.tActual || "";
-        
+
         // Calculate tActual as minimum of all available readings
         const readings = [tml.tml1, tml.tml2, tml.tml3, tml.tml4, tml.currentThickness, tml.tActual]
           .filter(v => v !== null && v !== undefined && v !== "")
           .map(v => parseFloat(String(v)))
           .filter(v => !isNaN(v));
         const calculatedTActual = readings.length > 0 ? Math.min(...readings) : null;
-        
+
         return {
           legacyLocationId: tml.legacyLocationId || "",
           compId: tml.componentType || tml.component || "",
@@ -378,15 +378,15 @@ export default function DataMigration() {
   // Count missing data
   const getMissingDataCount = () => {
     if (!tmlReadings) return { total: 0, missingAngles: 0, missingPrevious: 0 };
-    
+
     let missingAngles = 0;
     let missingPrevious = 0;
-    
+
     tmlReadings.forEach((tml: any) => {
       if (!tml.tml1 && !tml.tml2 && !tml.tml3 && !tml.tml4) missingAngles++;
       if (!tml.previousThickness) missingPrevious++;
     });
-    
+
     return { total: tmlReadings.length, missingAngles, missingPrevious };
   };
 
@@ -409,8 +409,8 @@ export default function DataMigration() {
     "Vessel Shell",
     "East Head",
     "West Head",
-    "North Head",
-    "South Head",
+    "East Head",
+    "West Head",
     "Nozzle",
   ];
 
@@ -593,13 +593,13 @@ export default function DataMigration() {
                 </TableHeader>
                 <TableBody>
                   {angleData.map((row, index) => (
-                    <TableRow 
+                    <TableRow
                       key={index}
                       className={
-                        modifiedRows.has(index) 
-                          ? "bg-amber-50 dark:bg-amber-950 border-l-4 border-l-amber-500" 
-                          : selectedRows.has(index) 
-                            ? "bg-blue-50 dark:bg-blue-950" 
+                        modifiedRows.has(index)
+                          ? "bg-amber-50 dark:bg-amber-950 border-l-4 border-l-amber-500"
+                          : selectedRows.has(index)
+                            ? "bg-blue-50 dark:bg-blue-950"
                             : ""
                       }
                     >
@@ -624,8 +624,8 @@ export default function DataMigration() {
                             <SelectItem value="Vessel Shell">Shell</SelectItem>
                             <SelectItem value="East Head">East Head</SelectItem>
                             <SelectItem value="West Head">West Head</SelectItem>
-                            <SelectItem value="North Head">North Head</SelectItem>
-                            <SelectItem value="South Head">South Head</SelectItem>
+                            <SelectItem value="East Head">East Head</SelectItem>
+                            <SelectItem value="West Head">West Head</SelectItem>
                             <SelectItem value="Nozzle">Nozzle</SelectItem>
                           </SelectContent>
                         </Select>

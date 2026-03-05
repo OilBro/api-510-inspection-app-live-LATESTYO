@@ -38,7 +38,7 @@ export default function LocationMappingSettings() {
 
   // Get list of vessels for vessel-specific mappings
   const { data: inspections } = trpc.inspections.list.useQuery();
-  
+
   // Load existing mappings
   const { data: existingMappings, isLoading, refetch } = trpc.locationMappings.list.useQuery(
     vesselFilter === "default" ? undefined : { vesselTagNumber: vesselFilter }
@@ -74,8 +74,8 @@ export default function LocationMappingSettings() {
 
   const componentTypes = [
     { value: "shell", label: "Shell" },
-    { value: "north_head", label: "North Head" },
-    { value: "south_head", label: "South Head" },
+    { value: "north_head", label: "West Head" },
+    { value: "south_head", label: "East Head" },
     { value: "east_head", label: "East Head" },
     { value: "west_head", label: "West Head" },
     { value: "nozzle", label: "Nozzle" },
@@ -96,11 +96,11 @@ export default function LocationMappingSettings() {
       toast.error("Please enter a location pattern");
       return;
     }
-    
+
     // Auto-detect pattern type based on input
     let detectedType = newMapping.patternType;
     const pattern = newMapping.locationPattern;
-    
+
     if (/^\d+-\d+$/.test(pattern) && !SHELL_ANGLES.includes(parseInt(pattern.split('-')[1]))) {
       detectedType = "range";
     } else if (/^[A-Za-z]+\d*-\d+$/.test(pattern) && SHELL_ANGLES.includes(parseInt(pattern.split('-').pop() || ''))) {
@@ -114,13 +114,13 @@ export default function LocationMappingSettings() {
     } else if (pattern.includes(' ')) {
       detectedType = "text";
     }
-    
+
     const mappingToAdd: LocationMapping = {
       ...newMapping,
       patternType: detectedType,
       priority: mappings.length + 1,
     };
-    
+
     // Add angular positions for shell/nozzle if slice_angle type
     if (detectedType === "slice_angle") {
       if (newMapping.componentType === "nozzle") {
@@ -129,7 +129,7 @@ export default function LocationMappingSettings() {
         mappingToAdd.angularPositions = SHELL_ANGLES;
       }
     }
-    
+
     setMappings([...mappings, mappingToAdd]);
     setNewMapping({ locationPattern: "", patternType: "single", componentType: "shell", description: "" });
     setHasChanges(true);
@@ -191,7 +191,7 @@ export default function LocationMappingSettings() {
           <CardHeader>
             <CardTitle>About CML/TML Location Mappings</CardTitle>
             <CardDescription>
-              Configure how CML (Condition Monitoring Location) and TML (Thickness Measurement Location) 
+              Configure how CML (Condition Monitoring Location) and TML (Thickness Measurement Location)
               readings are categorized into components (Shell, Head, Nozzle) for calculations.
             </CardDescription>
           </CardHeader>
@@ -205,7 +205,7 @@ export default function LocationMappingSettings() {
                 <li><strong>Nozzle Angles:</strong> N1-0, N1-90, N1-180, N1-270 (4 positions around nozzle)</li>
               </ul>
               <p className="mt-2">
-                <strong>Angular Positions:</strong> Shell readings use 8 positions (0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°). 
+                <strong>Angular Positions:</strong> Shell readings use 8 positions (0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°).
                 Nozzle readings use 4 positions (0°, 90°, 180°, 270°).
               </p>
             </div>
@@ -364,8 +364,8 @@ export default function LocationMappingSettings() {
           <Button variant="outline" onClick={() => setLocation("/")}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSaveMappings} 
+          <Button
+            onClick={handleSaveMappings}
             disabled={saveMutation.isPending || !hasChanges}
           >
             {saveMutation.isPending ? (

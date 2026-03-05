@@ -606,10 +606,48 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       }
     }
 
-    const CR = validPrev.length ? ((avgPrev - avgCurrent) / yearsBetween).toFixed(6) : '0.00000';
+    // ============================================================================
+    // DUAL CORROSION RATE CALCULATION
+    // ============================================================================
+
+    // SHORT-TERM corrosion rate (between last two inspections) - for flagging sudden shifts
+    let CR_ST = 0;
+    if (validPrev.length && yearsBetween > 0) {
+      CR_ST = (avgPrev - avgCurrent) / yearsBetween;
+      if (CR_ST < 0) CR_ST = 0; // Negative means growth, not corrosion
+    }
+
+    // LONG-TERM corrosion rate (from manufacture/in-service date to current inspection)
+    // Uses: (nominalThickness - actualThickness) / yearsInService
+    let CR_LT = 0;
+    let yearsInService = 0;
+    const yearBuilt = inspection.yearBuilt;
+    const inspectionDate = inspection.inspectionDate ? new Date(inspection.inspectionDate) : new Date();
+
+    if (yearBuilt && yearBuilt > 0) {
+      // Calculate years from manufacture to current inspection
+      const builtDate = new Date(yearBuilt, 0, 1); // January 1st of yearBuilt
+      yearsInService = (inspectionDate.getTime() - builtDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+
+      if (yearsInService > 0 && avgNominal > 0) {
+        CR_LT = (avgNominal - avgCurrent) / yearsInService;
+        if (CR_LT < 0) CR_LT = 0; // Negative means growth, not corrosion
+      }
+
+      logger.info(`[Calc] Long-term rate for ${name}: yearBuilt=${yearBuilt}, yearsInService=${yearsInService.toFixed(2)}, nominal=${avgNominal.toFixed(4)}, actual=${avgCurrent.toFixed(4)}, CR_LT=${CR_LT.toFixed(6)} in/yr`);
+    } else {
+      // No yearBuilt available - fall back to short-term rate
+      CR_LT = CR_ST;
+      logger.warn(`[Calc] No yearBuilt for ${name}, falling back to short-term rate`);
+    }
+
+    logger.info(`[Calc] ${name}: CR_LT=${CR_LT.toFixed(6)}, CR_ST=${CR_ST.toFixed(6)} in/yr`);
+
+    // Use LONG-TERM rate for remaining life calculation (per user requirement)
+    const CR = CR_LT.toFixed(6);
     let RL: string;
-    if (parseFloat(CR) > 0) {
-      const calculatedRL = parseFloat(CA) / parseFloat(CR);
+    if (CR_LT > 0) {
+      const calculatedRL = parseFloat(CA) / CR_LT;
       RL = calculatedRL > 20 ? '20.00' : calculatedRL.toFixed(2);
     } else {
       RL = '20.00'; // Use 20.00 instead of >20 for database compatibility
@@ -682,8 +720,16 @@ export async function generateDefaultCalculationsForInspection(inspectionId: str
       previousThickness: avgPrev.toFixed(3),
       actualThickness: avgCurrent.toFixed(3),
       minimumThickness: tMinStr,
+      timeSpan: yearsInService > 0 ? yearsInService.toFixed(2) : yearsBetween.toFixed(2),
       corrosionAllowance: CA,
-      corrosionRate: CR,
+      // Dual corrosion rate system
+      corrosionRateLongTerm: CR_LT.toFixed(6),
+      corrosionRateShortTerm: CR_ST.toFixed(6),
+      corrosionRate: CR, // Long-term rate used for remaining life
+      governingRateType: 'long_term' as any,
+      governingRateReason: yearBuilt && yearBuilt > 0
+        ? `Long-term rate from ${yearBuilt} (${yearsInService.toFixed(1)} years in service)`
+        : 'Short-term rate (no yearBuilt data available)',
       remainingLife: RL,
       calculatedMAWP: calculatedMAWPStr,
       nextInspectionYears: nextInspectionYears,

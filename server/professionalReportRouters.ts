@@ -807,6 +807,7 @@ export const professionalReportRouter = router({
 
       // Get TML readings
       const tmlReadings = await db.getTmlReadings(input.inspectionId);
+      logger.info(`[Recalculate] Found ${tmlReadings.length} TML readings for inspection ${input.inspectionId}`);
 
       // Helper function to create component calculation
       const createComponentCalc = async (componentType: 'shell' | 'head', componentName: string, filter: (tml: any) => boolean) => {
@@ -816,6 +817,12 @@ export const professionalReportRouter = router({
           logger.info(`[Recalculate] No TMLs found for ${componentName}`);
           return;
         }
+
+        // Log what we're reading from TML readings
+        logger.info(`[Recalculate] ${componentName}: ${componentTMLs.length} TMLs found`);
+        componentTMLs.forEach((t: any, i: number) => {
+          logger.info(`[Recalculate]   TML #${i}: CML=${t.legacyLocationId} tActual=${t.tActual} currentThickness=${t.currentThickness} prevThick=${t.previousThickness} nomThick=${t.nominalThickness} componentGroup=${t.componentGroup}`);
+        });
 
         // CRITICAL FIX: Read tActual first (new field), fall back to currentThickness (legacy field)
         // Data Migration writes to tActual, old imports wrote to currentThickness
@@ -1041,12 +1048,19 @@ export const professionalReportRouter = router({
           dataQualityNotes,
 
           remainingLife,
-          timeSpan: calculateTimeSpanYears(
-            inspection.inspectionDate,
-            new Date(),
-            10
-          ).toFixed(2),
-          nextInspectionYears: remainingLife ? (parseFloat(remainingLife) * 0.5).toFixed(2) : '5',
+          // Use years in service from yearBuilt (long-term), NOT inspectionDate
+          timeSpan: (() => {
+            const yb = inspection.yearBuilt;
+            const inspDateStr = inspection.inspectionDate;
+            if (yb && yb > 0) {
+              const builtDate = new Date(yb, 0, 1);
+              const inspDt = inspDateStr ? new Date(inspDateStr) : new Date();
+              const yis = (inspDt.getTime() - builtDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+              return yis > 0 ? yis.toFixed(2) : '10.00';
+            }
+            return calculateTimeSpanYears(inspection.inspectionDate, new Date(), 10).toFixed(2);
+          })(),
+          nextInspectionYears: remainingLife ? Math.min(parseFloat(remainingLife) * 0.5, 10).toFixed(2) : '5',
           allowableStress: inspection.allowableStress || '20000',
           jointEfficiency: inspection.jointEfficiency || '0.85',
           corrosionAllowance: CA.toString(),
@@ -1061,43 +1075,72 @@ export const professionalReportRouter = router({
       };
 
       // Create Shell calculation
-      // CRITICAL FIX: Check BOTH component (legacy) and componentType (new) fields
+      // CRITICAL FIX: Check componentGroup FIRST (canonical), then fall back to text matching
       await createComponentCalc(
         'shell',
         'Shell',
         (tml: any) => {
+          const cg = (tml.componentGroup || '').toUpperCase();
+
+          // componentGroup is the canonical source of truth - if set, use it exclusively
+          if (cg === 'SHELL') return true;
+          if (cg === 'NOZZLE' || cg === 'SOUTHHEAD' || cg === 'NORTHHEAD') return false;
+
+          // Fallback: text-based matching only if componentGroup is not set
           const comp = (tml.component || '').toLowerCase();
           const compType = (tml.componentType || '').toLowerCase();
           const combined = `${comp} ${compType}`;
+
+          // Exclude if text clearly indicates nozzle or head
+          if (combined.includes('nozzle') || combined.includes('manway') || combined.includes('relief') ||
+            combined.includes('inlet') || combined.includes('outlet') || combined.includes('drain') ||
+            combined.includes('vent')) return false;
+          if (combined.includes('head') && !combined.includes('shell')) return false;
+
           return combined.includes('shell') || combined.includes('cylinder') || combined.includes('body');
         }
       );
+      // Detect head naming convention from actual TML data
+      // Some vessels use North/South heads, others use East/West
+      const allTmlText = tmlReadings.map((t: any) =>
+        `${t.component || ''} ${t.componentType || ''} ${t.location || ''}`.toLowerCase()
+      ).join(' ');
+      const usesNorthSouth = allTmlText.includes('north') || allTmlText.includes('south');
+      const usesEastWest = allTmlText.includes('east head') || allTmlText.includes('west head');
+      // Default: If data says "north/south", use that. If "east/west", use that. Otherwise default to East/West.
+      const head1Name = usesNorthSouth && !usesEastWest ? 'South Head' : 'East Head';
+      const head2Name = usesNorthSouth && !usesEastWest ? 'North Head' : 'West Head';
+      logger.info(`[Recalculate] Head naming convention: ${head1Name} / ${head2Name} (northSouth=${usesNorthSouth}, eastWest=${usesEastWest})`);
 
-      // Create South Head calculation
-      // Matches: 'south head', 'south', 'head 1', 'head-1', 'east head', 'e head', 'left head', 'top head'
-      // Also matches componentGroup 'SOUTHHEAD'
+      // Create Head 1 calculation (East or South depending on vessel data)
+      // Matches: componentGroup 'SOUTHHEAD', 'south head', 'east head', 'head 1', 'e head', 'left head', 'top head'
       await createComponentCalc(
         'head',
-        'South Head',
+        head1Name,
         (tml: any) => {
-          const comp = (tml.component || '').toLowerCase();
-          const compType = (tml.componentType || '').toLowerCase();
           const cg = (tml.componentGroup || '').toUpperCase();
-          const loc = (tml.location || '').toLowerCase();
-          const combined = `${comp} ${compType}`;
 
           // componentGroup is the canonical source of truth
           if (cg === 'SOUTHHEAD') return true;
+          if (cg === 'SHELL' || cg === 'NOZZLE' || cg === 'NORTHHEAD') return false;
 
-          // Explicit south head matches
+          const comp = (tml.component || '').toLowerCase();
+          const compType = (tml.componentType || '').toLowerCase();
+          const loc = (tml.location || '').toLowerCase();
+          const combined = `${comp} ${compType}`;
+
+          // Exclude nozzles
+          if (combined.includes('nozzle') || combined.includes('manway') || combined.includes('relief') ||
+            combined.includes('inlet') || combined.includes('outlet')) return false;
+
+          // Explicit south/east head matches
           if (combined.includes('south head') || loc.includes('south head')) return true;
           if (combined.includes('south') && combined.includes('head')) return true;
-          // Legacy east head naming (mapped to south)
           if (combined.includes('east head') || combined.includes('e head')) return true;
           if (combined.includes('head 1') || combined.includes('head-1')) return true;
           if (combined.includes('left head') || combined.includes('top head')) return true;
 
-          // Generic head without north/west/right/bottom keywords → default to south (first head)
+          // Generic head without north/west/right/bottom → default to east (first head)
           if ((combined.includes('head') && !combined.includes('shell')) &&
             !combined.includes('north') && !combined.includes('west') &&
             !combined.includes('w head') && !combined.includes('head 2') &&
@@ -1111,31 +1154,34 @@ export const professionalReportRouter = router({
         }
       );
 
-      // Create North Head calculation
-      // Matches: 'north head', 'north', 'head 2', 'head-2', 'west head', 'w head', 'right head', 'bottom head'
-      // Also matches componentGroup 'NORTHHEAD'
+      // Create Head 2 calculation (West or North depending on vessel data)
+      // Matches: componentGroup 'NORTHHEAD', 'north head', 'west head', 'head 2', 'w head', 'right head', 'bottom head'
       await createComponentCalc(
         'head',
-        'North Head',
+        head2Name,
         (tml: any) => {
-          const comp = (tml.component || '').toLowerCase();
-          const compType = (tml.componentType || '').toLowerCase();
           const cg = (tml.componentGroup || '').toUpperCase();
-          const loc = (tml.location || '').toLowerCase();
-          const combined = `${comp} ${compType}`;
 
           // componentGroup is the canonical source of truth
           if (cg === 'NORTHHEAD') return true;
+          if (cg === 'SHELL' || cg === 'NOZZLE' || cg === 'SOUTHHEAD') return false;
 
-          // Explicit north head matches
+          const comp = (tml.component || '').toLowerCase();
+          const compType = (tml.componentType || '').toLowerCase();
+          const loc = (tml.location || '').toLowerCase();
+          const combined = `${comp} ${compType}`;
+
+          // Exclude nozzles
+          if (combined.includes('nozzle') || combined.includes('manway') || combined.includes('relief') ||
+            combined.includes('inlet') || combined.includes('outlet')) return false;
+
+          // Explicit north/west head matches
           if (combined.includes('north head') || loc.includes('north head')) return true;
           if (combined.includes('north') && combined.includes('head')) return true;
-          // Legacy west head naming (mapped to north)
           if (combined.includes('west head') || combined.includes('w head')) return true;
           if (combined.includes('head 2') || combined.includes('head-2')) return true;
           if (combined.includes('right head')) return true;
           if (combined.includes('bottom head') || combined.includes('bttm head') || combined.includes('btm head')) return true;
-          // Check location field for north indicators
           if (loc.includes('north') || loc.includes('west') || loc.includes('bottom') || loc.includes('bttm')) return true;
 
           return false;

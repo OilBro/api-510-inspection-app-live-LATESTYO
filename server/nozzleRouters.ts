@@ -397,5 +397,215 @@ export const nozzleRouter = router({
         filename: `Nozzle_Evaluation_${input.inspectionId}.xlsx`,
       };
     }),
+
+  /**
+   * Recalculate nozzles with U-1 data enrichment
+   * SEPARATE from the component calculations recalculate
+   * 
+   * 1. Finds U-1 form attachments for this inspection
+   * 2. Parses them to extract nozzle schedule data (size, material, nominal thickness)
+   * 3. Cross-references with existing nozzle evaluations
+   * 4. Updates missing/incorrect fields
+   */
+  recalculateNozzles: protectedProcedure
+    .input(z.object({ inspectionId: z.string() }))
+    .mutation(async ({ input }) => {
+      const { logger } = await import('./_core/logger');
+      logger.info(`[Nozzle Recalc] Starting for inspection: ${input.inspectionId}`);
+
+      // Get inspection data
+      const inspection = await getInspection(input.inspectionId);
+      if (!inspection) {
+        throw new Error('Inspection not found');
+      }
+
+      const designPressure = parseFloat(inspection.designPressure || '0');
+      const designTemp = parseFloat(inspection.designTemperature || '650');
+
+      // Get existing nozzles
+      const existingNozzles = await getNozzlesByInspection(input.inspectionId);
+      logger.info(`[Nozzle Recalc] Found ${existingNozzles.length} existing nozzles`);
+
+      // Try to find and parse U-1 form attachments
+      let u1NozzleData: any[] = [];
+      try {
+        const { getVesselDrawingsByInspection } = await import('./professionalReportDb');
+        const drawings = await getVesselDrawingsByInspection(input.inspectionId);
+        const u1Forms = drawings.filter((d: any) =>
+          d.category === 'u1_form' || d.category === 'u1a_form' || d.category === 'mdr'
+        );
+
+        logger.info(`[Nozzle Recalc] Found ${u1Forms.length} U-1/MDR attachments`);
+
+        if (u1Forms.length > 0) {
+          const { parseU1ForNozzleData } = await import('./u1NozzleParser');
+
+          for (const u1Form of u1Forms) {
+            try {
+              const fileUrl = u1Form.fileUrl;
+              logger.info(`[Nozzle Recalc] Fetching U-1 form: ${u1Form.title} (${fileUrl})`);
+
+              let buffer: Buffer;
+
+              // Handle local storage paths (read from disk)
+              if (fileUrl.startsWith('/local-storage/')) {
+                const path = await import('path');
+                const fs = await import('fs');
+                const relativePath = fileUrl.replace('/local-storage/', '');
+                const filePath = path.default.resolve(process.cwd(), 'local-storage', relativePath);
+                if (!fs.default.existsSync(filePath)) {
+                  logger.warn(`[Nozzle Recalc] Local file not found: ${filePath}`);
+                  continue;
+                }
+                buffer = fs.default.readFileSync(filePath);
+                logger.info(`[Nozzle Recalc] Read local file: ${filePath} (${buffer.length} bytes)`);
+              } else if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+                // Handle full HTTP(S) URLs
+                const response = await fetch(fileUrl);
+                if (!response.ok) {
+                  logger.warn(`[Nozzle Recalc] Failed to fetch U-1 form: ${response.status}`);
+                  continue;
+                }
+                const arrayBuffer = await response.arrayBuffer();
+                buffer = Buffer.from(arrayBuffer);
+              } else {
+                // Fallback: try reading as relative path from cwd
+                const path = await import('path');
+                const fs = await import('fs');
+                const localPath = path.default.resolve(process.cwd(), fileUrl.replace(/^\//, ''));
+                if (!fs.default.existsSync(localPath)) {
+                  logger.warn(`[Nozzle Recalc] File not found at: ${localPath}`);
+                  continue;
+                }
+                buffer = fs.default.readFileSync(localPath);
+              }
+
+              const fileName = u1Form.fileName || 'u1-form';
+              const ext = fileName.split('.').pop()?.toLowerCase() || '';
+              const mimeType = ext === 'pdf' ? 'application/pdf' :
+                ['jpg', 'jpeg'].includes(ext) ? 'image/jpeg' :
+                  ext === 'png' ? 'image/png' :
+                    ext === 'tiff' || ext === 'tif' ? 'image/tiff' :
+                      'application/pdf';
+
+              const result = await parseU1ForNozzleData(buffer, u1Form.fileName || 'u1-form', mimeType);
+
+              if (result.nozzles.length > 0) {
+                logger.info(`[Nozzle Recalc] Extracted ${result.nozzles.length} nozzles from U-1 form "${u1Form.title}" (confidence: ${result.confidence})`);
+                u1NozzleData = [...u1NozzleData, ...result.nozzles];
+              }
+            } catch (err: any) {
+              logger.warn(`[Nozzle Recalc] Error parsing U-1 form "${u1Form.title}": ${err.message}`);
+            }
+          }
+        }
+      } catch (err: any) {
+        logger.warn(`[Nozzle Recalc] Error fetching U-1 forms: ${err.message}`);
+      }
+
+      logger.info(`[Nozzle Recalc] Total U-1 nozzle data extracted: ${u1NozzleData.length}`);
+
+      // Cross-reference and update existing nozzles
+      let updated = 0;
+      let enriched = 0;
+
+      for (const nozzle of existingNozzles) {
+        const normalizedNum = nozzle.nozzleNumber.replace(/[-\s]/g, '').toUpperCase();
+
+        const u1Match = u1NozzleData.find((u1: any) => {
+          const u1Num = (u1.nozzleNumber || '').replace(/[-\s]/g, '').toUpperCase();
+          return u1Num === normalizedNum;
+        });
+
+        const updateFields: any = {};
+
+        if (u1Match) {
+          logger.info(`[Nozzle Recalc] U-1 match for ${nozzle.nozzleNumber}: size=${u1Match.size} mat=${u1Match.material} nomThick=${u1Match.nominalThickness} sch=${u1Match.schedule}`);
+
+          if (u1Match.material && !nozzle.materialSpec) {
+            updateFields.materialSpec = u1Match.material;
+            enriched++;
+          }
+
+          if (u1Match.nominalThickness > 0 && (!nozzle.nominalThickness || parseFloat(nozzle.nominalThickness) === 0)) {
+            updateFields.nominalThickness = u1Match.nominalThickness.toString();
+          }
+
+          if (u1Match.size && u1Match.size !== nozzle.nominalSize) {
+            logger.info(`[Nozzle Recalc] Size mismatch for ${nozzle.nozzleNumber}: DB=${nozzle.nominalSize} U1=${u1Match.size}`);
+            updateFields.nominalSize = u1Match.size;
+          }
+
+          if (u1Match.schedule && u1Match.schedule !== nozzle.schedule) {
+            updateFields.schedule = u1Match.schedule;
+          }
+
+          if (u1Match.service && !nozzle.nozzleDescription) {
+            updateFields.nozzleDescription = u1Match.service;
+          }
+          if (u1Match.service && !nozzle.service) {
+            updateFields.service = u1Match.service;
+          }
+        }
+
+        // Recalculate pipe schedule data and min required thickness
+        const nominalSize = updateFields.nominalSize || nozzle.nominalSize;
+        const schedule = updateFields.schedule || nozzle.schedule || 'STD';
+
+        try {
+          const pipeScheduleData = await getPipeSchedule(nominalSize, schedule);
+
+          if (pipeScheduleData) {
+            if (!updateFields.nominalThickness && (!nozzle.nominalThickness || parseFloat(nozzle.nominalThickness) === 0)) {
+              updateFields.nominalThickness = pipeScheduleData.wallThickness;
+            }
+
+            if (designPressure > 0) {
+              const pressureCalc = calculateNozzlePressureThickness({
+                nominalSize,
+                outsideDiameter: parseFloat(pipeScheduleData.outsideDiameter),
+                wallThickness: parseFloat(pipeScheduleData.wallThickness),
+                designPressure,
+                designTemperature: designTemp,
+                materialSpec: u1Match?.material || inspection.materialSpec || undefined,
+              });
+
+              updateFields.pipeOutsideDiameter = pipeScheduleData.outsideDiameter;
+              updateFields.pipeNominalThickness = pressureCalc.pipeNominalThickness.toString();
+              updateFields.pipeMinusManufacturingTolerance = pressureCalc.pipeMinusTolerance.toString();
+              updateFields.shellHeadRequiredThickness = pressureCalc.requiredThickness.toString();
+              updateFields.minimumRequired = pressureCalc.minimumRequired.toString();
+
+              const actual = parseFloat(nozzle.actualThickness || '0');
+              if (actual > 0) {
+                updateFields.acceptable = actual >= pressureCalc.minimumRequired;
+              }
+            }
+          }
+        } catch (err: any) {
+          logger.warn(`[Nozzle Recalc] Pipe schedule lookup failed for ${nozzle.nozzleNumber}: ${err.message}`);
+        }
+
+        if (Object.keys(updateFields).length > 0) {
+          logger.info(`[Nozzle Recalc] Updating ${nozzle.nozzleNumber}: ${JSON.stringify(updateFields)}`);
+          await updateNozzle(nozzle.id, updateFields);
+          updated++;
+        }
+      }
+
+      logger.info(`[Nozzle Recalc] Complete: ${updated} nozzles updated, ${enriched} enriched with U-1 data`);
+
+      return {
+        success: true,
+        totalNozzles: existingNozzles.length,
+        updated,
+        enrichedFromU1: enriched,
+        u1NozzlesFound: u1NozzleData.length,
+        message: u1NozzleData.length > 0
+          ? `Updated ${updated} nozzles, enriched ${enriched} with U-1 data`
+          : `Updated ${updated} nozzles (no U-1 forms found - used pipe schedule database)`
+      };
+    }),
 });
+
 

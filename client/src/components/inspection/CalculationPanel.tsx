@@ -58,7 +58,7 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
     { enabled: !!materialSpec }
   );
 
-  // Group TML readings by component name (normalized: "Vessel Shell", "South Head", "North Head")
+  // Group TML readings by component name (normalized: "Vessel Shell", "East Head", "West Head")
   // PRIORITY: componentGroup (canonical) > componentType (new) > component (legacy)
   const componentGroups = useMemo(() => {
     if (!tmlReadings) return {};
@@ -69,9 +69,9 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
       // componentGroup is the canonical source of truth
       const cg = ((reading as any).componentGroup || '').toUpperCase();
       if (cg === 'SOUTHHEAD') {
-        groupKey = 'South Head';
+        groupKey = 'East Head';
       } else if (cg === 'NORTHHEAD') {
-        groupKey = 'North Head';
+        groupKey = 'West Head';
       } else if (cg === 'SHELL') {
         groupKey = 'Vessel Shell';
       } else if (cg === 'NOZZLE') {
@@ -82,13 +82,13 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
         const loc = (reading.location || '').toLowerCase();
 
         if (comp.includes('south head') || (comp.includes('south') && comp.includes('head'))) {
-          groupKey = 'South Head';
+          groupKey = 'East Head';
         } else if (comp.includes('north head') || (comp.includes('north') && comp.includes('head'))) {
-          groupKey = 'North Head';
+          groupKey = 'West Head';
         } else if (comp.includes('east') || comp.includes('head 1') || comp.includes('e head') || comp.includes('top head') || comp.includes('left head')) {
-          groupKey = 'South Head'; // Legacy east → south
+          groupKey = 'East Head'; // Legacy east → east
         } else if (comp.includes('west') || comp.includes('head 2') || comp.includes('w head') || comp.includes('bottom head') || comp.includes('bttm head') || comp.includes('right head')) {
-          groupKey = 'North Head'; // Legacy west → north
+          groupKey = 'West Head'; // Legacy west → west
         } else if (comp.includes('shell') || comp.includes('cylinder') || comp.includes('body')) {
           groupKey = 'Vessel Shell';
         } else if (comp.includes('nozzle') || comp.includes('manway') || comp.includes('relief') || comp.includes('inlet') || comp.includes('outlet')) {
@@ -96,9 +96,9 @@ export default function CalculationPanel({ inspectionId }: CalculationPanelProps
         } else if (comp.includes('head') && !comp.includes('shell')) {
           // Generic head — check location for hints
           if (loc.includes('north') || loc.includes('west') || loc.includes('bottom') || loc.includes('bttm')) {
-            groupKey = 'North Head';
+            groupKey = 'West Head';
           } else {
-            groupKey = 'South Head'; // Default first head
+            groupKey = 'East Head'; // Default first head
           }
         } else {
           groupKey = 'Vessel Shell'; // Default

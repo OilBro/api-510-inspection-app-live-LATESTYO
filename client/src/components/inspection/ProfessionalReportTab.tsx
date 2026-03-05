@@ -467,7 +467,7 @@ export default function ProfessionalReportTab({ inspectionId }: ProfessionalRepo
                   id="governingComponent"
                   value={report.governingComponent || ""}
                   onChange={(e) => handleUpdateField("governingComponent", e.target.value)}
-                  placeholder="Shell 1, North Head, etc."
+                  placeholder="Shell 1, East Head, etc."
                 />
               </div>
 

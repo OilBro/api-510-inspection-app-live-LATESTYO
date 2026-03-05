@@ -21,6 +21,43 @@ import { ffsAssessments, inLieuOfAssessments } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { calculateComponent } from "./componentCalculations";
 import { getCodeReference, CODE_CLAUSE_KNOWLEDGE_BASE, type CodeClause, type FormulaSelectionResult } from "./cohereService";
+import * as path from "path";
+import * as fs from "fs";
+
+/**
+ * Resolve a file URL to a Buffer.
+ * Handles local storage paths (/local-storage/...) by reading directly from disk,
+ * and remote URLs via fetch().
+ */
+async function fetchFileBuffer(url: string): Promise<Buffer> {
+  if (!url) throw new Error("No URL provided");
+
+  // Handle local storage relative paths
+  if (url.startsWith('/local-storage/')) {
+    const relativePath = url.replace('/local-storage/', '');
+    const filePath = path.resolve(process.cwd(), 'local-storage', relativePath);
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`Local file not found: ${filePath}`);
+    }
+    return fs.readFileSync(filePath);
+  }
+
+  // Handle full HTTP(S) URLs
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch: ${response.statusText}`);
+    return Buffer.from(await response.arrayBuffer());
+  }
+
+  // Handle relative paths that might be served by express
+  // Try reading from local filesystem as fallback
+  const localPath = path.resolve(process.cwd(), url.replace(/^\//, ''));
+  if (fs.existsSync(localPath)) {
+    return fs.readFileSync(localPath);
+  }
+
+  throw new Error(`Cannot resolve URL: ${url}`);
+}
 
 // ============================================================================
 // CODE CLAUSE REFERENCE CACHE (populated during PDF generation)
@@ -660,6 +697,13 @@ export async function generateProfessionalPDF(data: ProfessionalReportData): Pro
     logger.info('[PDF DEBUG] Page count after checklist:', doc.bufferedPageRange().count);
   }
 
+  // 9.0 Photos - render BEFORE FFS to maintain sequential numbering
+  if (config.photos !== false) {
+    logger.info('[PDF DEBUG] Generating photos...');
+    await generatePhotos(doc, photos, logoBuffer);
+    logger.info('[PDF DEBUG] Page count after photos:', doc.bufferedPageRange().count);
+  }
+
   if (config.ffsAssessment !== false) {
     logger.info('[PDF DEBUG] Generating FFS assessment...');
     await generateFfsAssessment(doc, inspectionId, logoBuffer);
@@ -672,35 +716,26 @@ export async function generateProfessionalPDF(data: ProfessionalReportData): Pro
     logger.info('[PDF DEBUG] Page count after In-Lieu-Of:', doc.bufferedPageRange().count);
   }
 
-  // Generate drawings section (collect PDF drawings for later merging)
+  // 12.0 Attachments - drawings, certs, MDS, P&IDs etc.
   const drawings = await getVesselDrawings(reportId);
   const pdfDrawings: { url: string; title: string }[] = [];
 
   if (drawings && drawings.length > 0) {
-    logger.info('[PDF DEBUG] Generating drawings...');
-    // Separate PDF drawings from image drawings
+    logger.info('[PDF DEBUG] Generating attachments...');
     const imageDrawings = drawings.filter((d: any) =>
       !d.fileType?.includes('pdf') &&
       (d.fileType?.includes('image') || d.fileName?.match(/\.(png|jpg|jpeg|gif)$/i))
     );
 
-    // Collect PDF drawings for merging later
     drawings.forEach((d: any) => {
       if (d.fileType?.includes('pdf') && d.fileUrl) {
         pdfDrawings.push({ url: d.fileUrl, title: d.title || d.fileName || 'Drawing' });
       }
     });
 
-    // Generate section with image drawings and references to PDF drawings
     await generateDrawings(doc, drawings, logoBuffer, pdfDrawings.length > 0);
-    logger.info('[PDF DEBUG] Page count after drawings:', doc.bufferedPageRange().count);
+    logger.info('[PDF DEBUG] Page count after attachments:', doc.bufferedPageRange().count);
     logger.info('[PDF DEBUG] PDF drawings to merge:', pdfDrawings.length);
-  }
-
-  if (config.photos !== false) {
-    logger.info('[PDF DEBUG] Generating photos...');
-    await generatePhotos(doc, photos, logoBuffer);
-    logger.info('[PDF DEBUG] Final page count:', doc.bufferedPageRange().count);
   }
 
   // Finalize the main PDF
@@ -821,15 +856,15 @@ async function generateTableOfContents(doc: PDFKit.PDFDocument, logoBuffer?: Buf
     '9.0 PHOTOGRAPHS',
     '10.0 FITNESS-FOR-SERVICE ASSESSMENT',
     '11.0 IN-LIEU-OF INTERNAL INSPECTION QUALIFICATION',
+    '12.0 ATTACHMENTS',
     '',
     'APPENDICES',
-    'Appendix A - Vessel Drawings',
-    'Appendix B - Manufacturer Data Sheet',
-    'Appendix C - Thickness Trend Analysis',
-    'Appendix D - Previous Inspection Reports',
-    'Appendix E - NDE Reports',
-    'Appendix F - Repair Documentation',
-    'Appendix G - Supporting Documentation',
+    'Appendix A - Manufacturer Data Sheet',
+    'Appendix B - Thickness Trend Analysis',
+    'Appendix C - Previous Inspection Reports',
+    'Appendix D - NDE Reports',
+    'Appendix E - Repair Documentation',
+    'Appendix F - Supporting Documentation',
   ];
 
   doc.font('Helvetica-Bold').fontSize(11).fillColor(COLORS.text);
@@ -1312,14 +1347,24 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   doc.text('Remaining Life Calculations', MARGIN, doc.y);
   doc.moveDown(0.5);
 
+  // Calculate years in service from yearBuilt for display
+  const yearBuilt = inspection?.yearBuilt;
+  const inspDate = inspection?.inspectionDate ? new Date(inspection.inspectionDate) : new Date();
+  let yearsInServiceDisplay = shellComp?.timeSpan || '12.0';
+  if (yearBuilt && yearBuilt > 0) {
+    const builtDate = new Date(yearBuilt, 0, 1);
+    const yis = (inspDate.getTime() - builtDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+    yearsInServiceDisplay = yis > 0 ? yis.toFixed(1) : yearsInServiceDisplay;
+  }
+
   const rlData = [
-    ['Vessel Shell', 't prev', 't act', 't min', 'y'],
+    ['Vessel Shell', 't prev', 't act', 't min', 'y (svc)'],
     [
       'Values',
       shellComp?.previousThickness || shellComp?.tPrevious || shellComp?.nominalThickness || (inspection as any)?.shellNominalThickness || '0.625',
       shellComp?.actualThickness || shellComp?.tActual || '0.652',
       shellComp?.minimumThickness || shellComp?.minimumRequired || shellComp?.tMin || '0.530',
-      shellComp?.timeSpan || '12.0'
+      yearsInServiceDisplay
     ]
   ];
 
@@ -1328,29 +1373,42 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
 
   // Formulas
   doc.font('Helvetica').fontSize(10);
-  // Calculate corrosion allowance (Ca), corrosion rate (Cr), and remaining life (RL)
-  // Per API 510: Ca = t_act - t_min, Cr = (t_prev - t_act) / Y, RL = Ca / Cr
-  const shellTAct = shellComp?.tActual || shellComp?.actualThickness;
-  const shellTMin = shellComp?.tMin || shellComp?.minimumThickness || shellComp?.minimumRequired;
-  const shellTPrev = shellComp?.tPrevious || shellComp?.previousThickness || shellComp?.nominalThickness || (inspection as any)?.shellNominalThickness;
-  const shellTimeSpan = parseFloat(shellComp?.timeSpan || shellComp?.age || '0');
+  // Use stored values from database to ensure consistency with app
+  const shellTAct = shellComp?.actualThickness || '0';
+  const shellTMin = shellComp?.minimumThickness || '0';
 
-  const ca = shellTAct && shellTMin ? (parseFloat(shellTAct) - parseFloat(shellTMin)).toFixed(3) : '0.000';
-  // FIXED: Use actual timeSpan (Y) instead of hardcoded 12.0
-  const cr = shellTPrev && shellTAct && shellTimeSpan > 0
-    ? ((parseFloat(shellTPrev) - parseFloat(shellTAct)) / shellTimeSpan).toFixed(5)
-    : shellComp?.corrosionRate || '0.00000';
-  const rl = parseFloat(cr) > 0 ? (parseFloat(ca) / parseFloat(cr)).toFixed(0) : '>20';
+  const ca = shellComp?.corrosionAllowance || (parseFloat(shellTAct) - parseFloat(shellTMin)).toFixed(3);
+
+  // Use stored dual corrosion rates from database
+  const crLT = parseFloat(shellComp?.corrosionRateLongTerm || shellComp?.corrosionRate || '0');
+  const crST = parseFloat(shellComp?.corrosionRateShortTerm || '0');
+  // Use the STORED remaining life from DB - do NOT recalculate
+  const rl = shellComp?.remainingLife || '>20';
 
   doc.text(`Ca = t act - t min = ${ca} (inch)`, MARGIN, doc.y);
-  doc.text(`Cr = t prev - t act / Y = ${cr} (in/year)`, MARGIN, doc.y);
-  doc.text(`RL = Ca / Cr = ${rl} (year)`, MARGIN, doc.y);
+  doc.moveDown(0.3);
+
+  // Long-term corrosion rate (drives remaining life)
+  doc.font('Helvetica-Bold').fillColor(COLORS.text);
+  doc.text(`Cr (LT) = (t nom - t act) / Years In Service = ${crLT.toFixed(5)} (in/year)`, MARGIN, doc.y);
+  doc.moveDown(0.3);
+
+  // Short-term corrosion rate with red/green flagging
+  const stIsHigher = crST > crLT * 2; // Flag if short-term is more than 2x long-term
+  doc.font('Helvetica-Bold').fillColor(stIsHigher ? '#CC0000' : '#006600');
+  doc.text(`Cr (ST) = (t prev - t act) / Y = ${crST.toFixed(5)} (in/year) ${stIsHigher ? '⚠ ELEVATED' : '✓ NORMAL'}`, MARGIN, doc.y);
+  doc.fillColor(COLORS.text); // Reset color
+  doc.moveDown(0.3);
+
+  doc.font('Helvetica').fillColor(COLORS.text);
+  doc.text(`RL = Ca / Cr (LT) = ${rl} (year)`, MARGIN, doc.y);
   doc.moveDown(1);
 
-  // Calculate next inspection interval per API 510: MIN(RL/2, 10 years)
+  // Use stored next inspection years from DB
   const shellRLNum = parseFloat(rl) || 0;
   const Yn = shellRLNum > 0 && shellRLNum !== Infinity ? Math.min(shellRLNum / 2, 10) : 10;
-  const YnDisplay = Yn.toFixed(1);
+  const storedYn = shellComp?.nextInspectionYears ? parseFloat(shellComp.nextInspectionYears) : Yn;
+  const YnDisplay = storedYn.toFixed(1);
 
   doc.font('Helvetica-Bold').fontSize(10);
   doc.text(`Next Inspection (Yn) = ${YnDisplay} (years)`, MARGIN, doc.y);
@@ -1366,9 +1424,9 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
 
   // FIXED: Calculate t_next using actual Yn, and recalculate MAWP from t_next
   // Per API 510: t_next = t_act - 2 * Yn * Cr (projected thickness at next inspection)
-  const crNum = parseFloat(cr) || 0;
+  const crNum = crLT || 0;
   const tActNum = shellTAct ? parseFloat(shellTAct) : 0;
-  const tNext = tActNum > 0 ? (tActNum - 2 * Yn * crNum).toFixed(3) : (shellComp?.actualThickness || '0.000');
+  const tNext = tActNum > 0 ? (tActNum - 2 * storedYn * crNum).toFixed(3) : (shellComp?.actualThickness || '0.000');
 
   // Recalculate MAWP from t_next using ASME UG-27: P = S*E*t / (R + 0.6*t)
   const shellS = parseFloat(shellComp?.allowableStress || inspection?.allowableStress || '20000');
@@ -1529,13 +1587,13 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   doc.moveDown(0.5);
 
   const eastRLData = [
-    [head1DisplayName, 't prev', 't act', 't min', 'y'],
+    [head1DisplayName, 't prev', 't act', 't min', 'y (svc)'],
     [
       '',
       eastHead?.previousThickness || eastHead?.nominalThickness || (inspection as any)?.headNominalThickness || '0.500',
       eastHead?.actualThickness || '0.555',
       eastHead?.minimumThickness || eastHead?.minimumRequired || '0.526',
-      eastHead?.timeSpan || '10.0'
+      yearsInServiceDisplay
     ]
   ];
 
@@ -1545,23 +1603,33 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   const eastCa = eastHead?.actualThickness && eastHead?.minimumThickness
     ? (parseFloat(eastHead.actualThickness) - parseFloat(eastHead.minimumThickness)).toFixed(3)
     : '0.029';
-  const eastCr = eastHead?.corrosionRate || '0';
+  const eastCrLT = parseFloat(eastHead?.corrosionRateLongTerm || eastHead?.corrosionRate || '0');
+  const eastCrST = parseFloat(eastHead?.corrosionRateShortTerm || '0');
   const eastRL = eastHead?.remainingLife || '>20';
 
   doc.font('Helvetica').fontSize(10);
   doc.text(`Ca = t act - t min = ${eastCa} (inch)`, MARGIN, doc.y);
-  doc.text(`Cr = t prev - t act / Y = ${eastCr} (in/year)`, MARGIN, doc.y);
-  doc.text(`RL = Ca / Cr = ${eastRL} (years)`, MARGIN, doc.y);
+  doc.moveDown(0.3);
+  doc.font('Helvetica-Bold').fillColor(COLORS.text);
+  doc.text(`Cr (LT) = ${eastCrLT.toFixed(5)} (in/year)`, MARGIN, doc.y);
+  doc.moveDown(0.3);
+  const eastSTHigh = eastCrST > eastCrLT * 2;
+  doc.font('Helvetica-Bold').fillColor(eastSTHigh ? '#CC0000' : '#006600');
+  doc.text(`Cr (ST) = ${eastCrST.toFixed(5)} (in/year) ${eastSTHigh ? '⚠ ELEVATED' : '✓ NORMAL'}`, MARGIN, doc.y);
+  doc.fillColor(COLORS.text);
+  doc.moveDown(0.3);
+  doc.font('Helvetica').fillColor(COLORS.text);
+  doc.text(`RL = Ca / Cr (LT) = ${eastRL} (years)`, MARGIN, doc.y);
   doc.moveDown(1);
 
   const westRLData = [
-    [head2DisplayName, 't prev', 't act', 't min', 'y'],
+    [head2DisplayName, 't prev', 't act', 't min', 'y (svc)'],
     [
       '',
       westHead?.previousThickness || westHead?.nominalThickness || (inspection as any)?.headNominalThickness || '0.500',
       westHead?.actualThickness || '0.552',
       westHead?.minimumThickness || westHead?.minimumRequired || '0.526',
-      westHead?.timeSpan || '10.0'
+      yearsInServiceDisplay
     ]
   ];
 
@@ -1571,12 +1639,23 @@ async function generateComponentCalculations(doc: PDFKit.PDFDocument, components
   const westCa = westHead?.actualThickness && westHead?.minimumThickness
     ? (parseFloat(westHead.actualThickness) - parseFloat(westHead.minimumThickness)).toFixed(3)
     : '0.026';
-  const westCr = westHead?.corrosionRate || '0';
+  const westCrLT = parseFloat(westHead?.corrosionRateLongTerm || westHead?.corrosionRate || '0');
+  const westCrST = parseFloat(westHead?.corrosionRateShortTerm || '0');
   const westRL = westHead?.remainingLife || '>20';
 
+  doc.font('Helvetica').fontSize(10);
   doc.text(`Ca = t act - t min = ${westCa} (inch)`, MARGIN, doc.y);
-  doc.text(`Cr = t prev - t act / Y = ${westCr} (in/year)`, MARGIN, doc.y);
-  doc.text(`RL = Ca / Cr = ${westRL} (years)`, MARGIN, doc.y);
+  doc.moveDown(0.3);
+  doc.font('Helvetica-Bold').fillColor(COLORS.text);
+  doc.text(`Cr (LT) = ${westCrLT.toFixed(5)} (in/year)`, MARGIN, doc.y);
+  doc.moveDown(0.3);
+  const westSTHigh = westCrST > westCrLT * 2;
+  doc.font('Helvetica-Bold').fillColor(westSTHigh ? '#CC0000' : '#006600');
+  doc.text(`Cr (ST) = ${westCrST.toFixed(5)} (in/year) ${westSTHigh ? '⚠ ELEVATED' : '✓ NORMAL'}`, MARGIN, doc.y);
+  doc.fillColor(COLORS.text);
+  doc.moveDown(0.3);
+  doc.font('Helvetica').fillColor(COLORS.text);
+  doc.text(`RL = Ca / Cr (LT) = ${westRL} (years)`, MARGIN, doc.y);
   doc.moveDown(1);
 
   doc.font('Helvetica-Bold').fontSize(10);
@@ -1909,7 +1988,7 @@ async function generateThicknessReadings(doc: PDFKit.PDFDocument, readings: any[
 
   if (!sortedReadings || sortedReadings.length === 0) {
     await conditionalPageBreak(doc, 'THICKNESS MEASUREMENTS', logoBuffer, 150);
-    addSectionTitle(doc, '8.0 ULTRASONIC THICKNESS MEASUREMENTS');
+    addSectionTitle(doc, '6.0 ULTRASONIC THICKNESS MEASUREMENTS (cont.)');
     addText(doc, 'No thickness readings recorded.');
     return;
   }
@@ -1958,7 +2037,7 @@ async function generateThicknessReadings(doc: PDFKit.PDFDocument, readings: any[
 async function generateChecklist(doc: PDFKit.PDFDocument, items: any[], logoBuffer?: Buffer) {
   await conditionalPageBreak(doc, 'INSPECTION CHECKLIST', logoBuffer, 300);
 
-  addSectionTitle(doc, '9.0 API 510 INSPECTION CHECKLIST');
+  addSectionTitle(doc, '8.0 API 510 INSPECTION CHECKLIST');
 
   if (!items || items.length === 0) {
     addText(doc, 'Checklist not completed.');
@@ -1981,7 +2060,7 @@ async function generateChecklist(doc: PDFKit.PDFDocument, items: any[], logoBuff
 
 async function generatePhotos(doc: PDFKit.PDFDocument, photos: any[], logoBuffer?: Buffer) {
   await conditionalPageBreak(doc, 'PHOTOGRAPHS', logoBuffer, 300);
-  addSectionTitle(doc, '6.0 INSPECTION PHOTOGRAPHS');
+  addSectionTitle(doc, '9.0 INSPECTION PHOTOGRAPHS');
 
   if (!photos || photos.length === 0) {
     addText(doc, 'No photographs attached.');
@@ -2014,7 +2093,7 @@ async function generatePhotos(doc: PDFKit.PDFDocument, photos: any[], logoBuffer
     if (!photosBySection[sectionKey] || photosBySection[sectionKey].length === 0) continue;
 
     // Add section header
-    addSubsectionTitle(doc, `6.${sectionOrder.indexOf(sectionKey) + 1} ${sectionNames[sectionKey]}`);
+    addSubsectionTitle(doc, `9.${sectionOrder.indexOf(sectionKey) + 1} ${sectionNames[sectionKey]}`);
     doc.moveDown(0.5);
 
     // 2-column layout configuration
@@ -2057,11 +2136,8 @@ async function generatePhotos(doc: PDFKit.PDFDocument, photos: any[], logoBuffer
       const imgY = captionY + captionHeight;
       if (photo.photoUrl) {
         try {
-          // Fetch image from URL
-          const response = await fetch(photo.photoUrl);
-          if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
-
-          const imageBuffer = Buffer.from(await response.arrayBuffer());
+          // Fetch image from URL or local storage
+          const imageBuffer = await fetchFileBuffer(photo.photoUrl);
 
           // Add image to PDF in the correct column
           doc.image(imageBuffer, imgX, imgY, {
@@ -2225,7 +2301,7 @@ const DRAWING_CATEGORY_NAMES: { [key: string]: string } = {
 
 async function generateDrawings(doc: PDFKit.PDFDocument, drawings: any[], logoBuffer?: Buffer, hasPdfDrawings: boolean = false) {
   await conditionalPageBreak(doc, 'VESSEL DRAWINGS', logoBuffer, 300);
-  addSectionTitle(doc, '5.0 VESSEL DRAWINGS');
+  addSectionTitle(doc, '12.0 ATTACHMENTS');
 
   if (!drawings || drawings.length === 0) {
     addText(doc, 'No drawings attached.');
@@ -2252,7 +2328,7 @@ async function generateDrawings(doc: PDFKit.PDFDocument, drawings: any[], logoBu
     if (!drawingsByCategory[categoryKey] || drawingsByCategory[categoryKey].length === 0) continue;
 
     // Add category header
-    addSubsectionTitle(doc, `5.${subsectionCounter} ${DRAWING_CATEGORY_NAMES[categoryKey] || categoryKey}`);
+    addSubsectionTitle(doc, `12.${subsectionCounter} ${DRAWING_CATEGORY_NAMES[categoryKey] || categoryKey}`);
     doc.moveDown(0.5);
     subsectionCounter++;
 
@@ -2288,27 +2364,20 @@ async function generateDrawings(doc: PDFKit.PDFDocument, drawings: any[], logoBu
       if (drawing.fileUrl && (drawing.fileType?.includes('image') ||
         drawing.fileName?.match(/\.(png|jpg|jpeg|gif)$/i))) {
         try {
-          const response = await fetch(drawing.fileUrl);
-          if (response.ok) {
-            const arrayBuffer = await response.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
+          const buffer = await fetchFileBuffer(drawing.fileUrl);
 
-            // Calculate dimensions to fit on page
-            const maxWidth = CONTENT_WIDTH;
-            const maxHeight = 400;
+          // Calculate dimensions to fit on page
+          const maxWidth = CONTENT_WIDTH;
+          const maxHeight = 400;
 
-            // Add image
-            doc.image(buffer, MARGIN, doc.y, {
-              fit: [maxWidth, maxHeight],
-              align: 'center',
-            });
+          // Add image
+          doc.image(buffer, MARGIN, doc.y, {
+            fit: [maxWidth, maxHeight],
+            align: 'center',
+          });
 
-            // Move down after image
-            doc.y += maxHeight + 20;
-          } else {
-            doc.font('Helvetica').fontSize(9).fillColor(COLORS.secondary);
-            doc.text(`[Drawing file: ${drawing.fileName || 'See attached'}]`, MARGIN, doc.y);
-          }
+          // Move down after image
+          doc.y += maxHeight + 20;
         } catch (err) {
           logger.error('[PDF] Error loading drawing:', err);
           doc.font('Helvetica').fontSize(9).fillColor(COLORS.secondary);
@@ -2356,15 +2425,9 @@ async function mergePdfDrawings(
     try {
       logger.info('[PDF Merge] Fetching drawing:', drawing.title, 'from', drawing.url);
 
-      // Fetch the PDF drawing
-      const response = await fetch(drawing.url);
-      if (!response.ok) {
-        logger.error('[PDF Merge] Failed to fetch drawing:', drawing.title, response.status);
-        continue;
-      }
-
-      const arrayBuffer = await response.arrayBuffer();
-      const drawingPdfBytes = new Uint8Array(arrayBuffer);
+      // Fetch the PDF drawing from URL or local storage
+      const drawingBuffer = await fetchFileBuffer(drawing.url);
+      const drawingPdfBytes = new Uint8Array(drawingBuffer);
 
       // Load the drawing PDF
       const drawingPdf = await PDFLib.load(drawingPdfBytes, { ignoreEncryption: true });

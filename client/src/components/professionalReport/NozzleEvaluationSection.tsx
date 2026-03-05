@@ -28,7 +28,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2, CheckCircle, XCircle, Upload, Download, FileSpreadsheet } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckCircle, XCircle, Upload, Download, FileSpreadsheet, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { downloadBase64File, readFileAsBase64 } from "@/lib/excelUtils";
 
@@ -111,6 +111,16 @@ export default function NozzleEvaluationSection({
     },
     onError: (error) => {
       toast.error(`Failed to delete: ${error.message}`);
+    },
+  });
+
+  const recalculateMutation = trpc.nozzles.recalculateNozzles.useMutation({
+    onSuccess: (result) => {
+      refetch();
+      toast.success(result.message);
+    },
+    onError: (error) => {
+      toast.error(`Recalculate failed: ${error.message}`);
     },
   });
 
@@ -242,6 +252,15 @@ export default function NozzleEvaluationSection({
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => recalculateMutation.mutate({ inspectionId })}
+            disabled={recalculateMutation.isPending || !nozzles || nozzles.length === 0}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${recalculateMutation.isPending ? 'animate-spin' : ''}`} />
+            {recalculateMutation.isPending ? 'Recalculating...' : 'Recalculate Nozzles'}
+          </Button>
           <Button onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add Nozzle
@@ -273,7 +292,10 @@ export default function NozzleEvaluationSection({
                 <TableHead>Description</TableHead>
                 <TableHead>Size</TableHead>
                 <TableHead>Schedule</TableHead>
+                <TableHead>Material</TableHead>
                 <TableHead>Location</TableHead>
+                <TableHead>Nom (in)</TableHead>
+                <TableHead>Prev (in)</TableHead>
                 <TableHead>Actual (in)</TableHead>
                 <TableHead>Min Req (in)</TableHead>
                 <TableHead>Status</TableHead>
@@ -297,7 +319,18 @@ export default function NozzleEvaluationSection({
                     <TableCell>{nozzle.nozzleDescription || "-"}</TableCell>
                     <TableCell>{nozzle.nominalSize}"</TableCell>
                     <TableCell>{nozzle.schedule}</TableCell>
+                    <TableCell>{nozzle.materialSpec || "-"}</TableCell>
                     <TableCell>{nozzle.location || "-"}</TableCell>
+                    <TableCell>
+                      {nozzle.nominalThickness
+                        ? parseFloat(nozzle.nominalThickness).toFixed(4)
+                        : "-"}
+                    </TableCell>
+                    <TableCell>
+                      {nozzle.previousThickness
+                        ? parseFloat(nozzle.previousThickness).toFixed(4)
+                        : "-"}
+                    </TableCell>
                     <TableCell>
                       {actual !== null ? actual.toFixed(4) : "-"}
                     </TableCell>

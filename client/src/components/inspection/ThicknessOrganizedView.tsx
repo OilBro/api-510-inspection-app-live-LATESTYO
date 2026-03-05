@@ -37,7 +37,7 @@ interface ThicknessOrganizedViewProps {
   inspectionId?: string;
 }
 
-type ComponentFilter = "all" | "Shell" | "East Head" | "West Head" | "South Head" | "North Head" | "Nozzle";
+type ComponentFilter = "all" | "Shell" | "East Head" | "West Head" | "Nozzle";
 
 export default function ThicknessOrganizedView({ readings, inspectionId }: ThicknessOrganizedViewProps) {
   const [filter, setFilter] = useState<ComponentFilter>("all");
@@ -48,8 +48,8 @@ export default function ThicknessOrganizedView({ readings, inspectionId }: Thick
   const getComponentType = (reading: TMLReading): string => {
     // componentGroup is the canonical source of truth (set by import and updateBatch)
     const cg = (reading.componentGroup || '').toUpperCase();
-    if (cg === 'SOUTHHEAD') return 'South Head';
-    if (cg === 'NORTHHEAD') return 'North Head';
+    if (cg === 'SOUTHHEAD') return 'East Head';
+    if (cg === 'NORTHHEAD') return 'West Head';
     if (cg === 'SHELL') return 'Shell';
     if (cg === 'NOZZLE') return 'Nozzle';
 
@@ -57,19 +57,19 @@ export default function ThicknessOrganizedView({ readings, inspectionId }: Thick
     const component = reading.componentType || reading.component || reading.location || "";
     const normalized = component.toLowerCase();
 
-    // Check specific head types first (South/North take priority)
-    if (normalized.includes("south head") || normalized.includes("south") && normalized.includes("head")) return "South Head";
-    if (normalized.includes("north head") || normalized.includes("north") && normalized.includes("head")) return "North Head";
-    // Legacy east/west mapping → south/north
+    // Check specific head types first (East/West naming convention)
+    if (normalized.includes("south head") || normalized.includes("south") && normalized.includes("head")) return "East Head";
+    if (normalized.includes("north head") || normalized.includes("north") && normalized.includes("head")) return "West Head";
+    // Legacy east/west mapping
     if (normalized.includes("east") || normalized.includes("head 1") || normalized.includes("left head") || normalized.includes("top head")) {
-      return "South Head";
+      return "East Head";
     }
     if (normalized.includes("west") || normalized.includes("head 2") || normalized.includes("right head") || normalized.includes("bottom head")) {
-      return "North Head";
+      return "West Head";
     }
     // Generic "head" without direction
     if (normalized.includes("head") && !normalized.includes("shell")) {
-      return "South Head"; // Default to South Head (first head)
+      return "East Head"; // Default to East Head (first head)
     }
     if (normalized.includes("nozzle") || normalized.includes("manway") || normalized.includes("relief") ||
       normalized.includes("inlet") || normalized.includes("outlet") || normalized.includes("drain") ||
@@ -123,10 +123,10 @@ export default function ThicknessOrganizedView({ readings, inspectionId }: Thick
   const getComponentColor = (type: string) => {
     switch (type) {
       case "Shell": return "bg-blue-100 text-blue-800";
-      case "South Head": return "bg-purple-100 text-purple-800";
-      case "North Head": return "bg-indigo-100 text-indigo-800";
-      case "East Head": return "bg-purple-100 text-purple-800"; // Legacy
-      case "West Head": return "bg-indigo-100 text-indigo-800"; // Legacy
+      case "East Head": return "bg-purple-100 text-purple-800";
+      case "West Head": return "bg-indigo-100 text-indigo-800";
+      case "South Head": return "bg-purple-100 text-purple-800"; // Legacy fallback
+      case "North Head": return "bg-indigo-100 text-indigo-800"; // Legacy fallback
       case "Nozzle": return "bg-orange-100 text-orange-800";
       default: return "bg-gray-100 text-gray-800";
     }
@@ -167,8 +167,8 @@ export default function ThicknessOrganizedView({ readings, inspectionId }: Thick
               key={type}
               onClick={() => setFilter(type as ComponentFilter)}
               className={`p-4 rounded-lg border transition-all ${filter === type
-                  ? "ring-2 ring-blue-500 border-blue-500"
-                  : "hover:border-gray-400"
+                ? "ring-2 ring-blue-500 border-blue-500"
+                : "hover:border-gray-400"
                 }`}
             >
               <div className="text-2xl font-bold">{count}</div>
