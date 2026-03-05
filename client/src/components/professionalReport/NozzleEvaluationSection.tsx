@@ -130,6 +130,7 @@ export default function NozzleEvaluationSection({
     const location = formData.get("location") as string;
     const nominalSize = formData.get("nominalSize") as string;
     const schedule = formData.get("schedule") as string;
+    const materialSpec = formData.get("materialSpec") as string;
     const actualThickness = formData.get("actualThickness") as string;
     const shellHeadRequired = formData.get("shellHeadRequired") as string;
 
@@ -140,6 +141,7 @@ export default function NozzleEvaluationSection({
       location,
       nominalSize,
       schedule,
+      materialSpec: materialSpec || undefined,
       actualThickness: actualThickness ? parseFloat(actualThickness) : undefined,
       shellHeadRequiredThickness: parseFloat(shellHeadRequired),
     });
@@ -153,6 +155,7 @@ export default function NozzleEvaluationSection({
     const location = formData.get("location") as string;
     const nominalSize = formData.get("nominalSize") as string;
     const schedule = formData.get("schedule") as string;
+    const materialSpec = formData.get("materialSpec") as string;
     const actualThickness = formData.get("actualThickness") as string;
     const shellHeadRequired = formData.get("shellHeadRequired") as string;
     const notes = formData.get("notes") as string;
@@ -164,6 +167,7 @@ export default function NozzleEvaluationSection({
       location,
       nominalSize,
       schedule,
+      materialSpec: materialSpec || undefined,
       actualThickness: actualThickness ? parseFloat(actualThickness) : undefined,
       shellHeadRequiredThickness: parseFloat(shellHeadRequired),
       notes,
@@ -479,7 +483,7 @@ export default function NozzleEvaluationSection({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="nominalSize">Nominal Size *</Label>
                   <Select name="nominalSize" required>
@@ -509,6 +513,14 @@ export default function NozzleEvaluationSection({
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="materialSpec">Material</Label>
+                  <Input
+                    id="materialSpec"
+                    name="materialSpec"
+                    placeholder="SA-106 Gr B"
+                  />
                 </div>
               </div>
 
@@ -603,7 +615,7 @@ export default function NozzleEvaluationSection({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-nominalSize">Nominal Size *</Label>
                   <Select
@@ -641,6 +653,15 @@ export default function NozzleEvaluationSection({
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-materialSpec">Material</Label>
+                  <Input
+                    id="edit-materialSpec"
+                    name="materialSpec"
+                    defaultValue={editingNozzle?.materialSpec || ""}
+                    placeholder="SA-106 Gr B"
+                  />
                 </div>
               </div>
 

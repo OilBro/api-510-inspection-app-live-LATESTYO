@@ -53,6 +53,7 @@ export const nozzleRouter = router({
         location: z.string().optional(),
         nominalSize: z.string(),
         schedule: z.string(),
+        materialSpec: z.string().optional(),
         actualThickness: z.number().optional(),
         shellHeadRequiredThickness: z.number(),
       })
@@ -65,7 +66,7 @@ export const nozzleRouter = router({
         throw new Error(`Pipe schedule not found for ${input.nominalSize}" ${input.schedule}`);
       }
 
-      // Calculate minimum required thickness
+      // Calculate minimum required thickness (UG-45 basic)
       const calculation = calculateNozzleWithSchedule({
         nozzleNumber: input.nozzleNumber,
         nominalSize: input.nominalSize,
@@ -82,6 +83,36 @@ export const nozzleRouter = router({
         throw new Error('Failed to calculate nozzle minimum thickness');
       }
 
+      // Also run pressure calc with material-specific allowable stress
+      let pressureMinRequired = calculation.minimumRequired;
+      let allowableStress: number | undefined;
+      if (input.materialSpec) {
+        try {
+          const inspection = await getInspection(input.inspectionId);
+          const designPressure = parseFloat(inspection?.designPressure || '0');
+          const designTemp = parseFloat(inspection?.designTemperature || '650');
+          if (designPressure > 0) {
+            const pressureCalc = calculateNozzlePressureThickness({
+              nominalSize: input.nominalSize,
+              outsideDiameter: parseFloat(pipeScheduleData.outsideDiameter),
+              wallThickness: parseFloat(pipeScheduleData.wallThickness),
+              designPressure,
+              designTemperature: designTemp,
+              materialSpec: input.materialSpec,
+            });
+            pressureMinRequired = pressureCalc.minimumRequired;
+            allowableStress = pressureCalc.allowableStress;
+          }
+        } catch (e) {
+          // fallback to existing calculation
+        }
+      }
+
+      const finalMinRequired = Math.max(calculation.minimumRequired, pressureMinRequired);
+      const acceptable = input.actualThickness !== undefined
+        ? input.actualThickness >= finalMinRequired
+        : calculation.acceptable;
+
       // Create nozzle record
       const nozzle = await createNozzle({
         id: nanoid(),
@@ -91,12 +122,14 @@ export const nozzleRouter = router({
         location: input.location,
         nominalSize: input.nominalSize,
         schedule: input.schedule,
+        materialSpec: input.materialSpec,
         actualThickness: input.actualThickness?.toString(),
         pipeNominalThickness: calculation.pipeNominalThickness.toString(),
+        pipeOutsideDiameter: pipeScheduleData.outsideDiameter,
         pipeMinusManufacturingTolerance: calculation.pipeMinusManufacturingTolerance.toString(),
         shellHeadRequiredThickness: calculation.shellHeadRequiredThickness.toString(),
-        minimumRequired: calculation.minimumRequired.toString(),
-        acceptable: calculation.acceptable,
+        minimumRequired: finalMinRequired.toString(),
+        acceptable,
       });
 
       return nozzle;
@@ -114,6 +147,7 @@ export const nozzleRouter = router({
         location: z.string().optional(),
         nominalSize: z.string().optional(),
         schedule: z.string().optional(),
+        materialSpec: z.string().optional(),
         actualThickness: z.number().optional(),
         shellHeadRequiredThickness: z.number().optional(),
         notes: z.string().optional(),
@@ -128,16 +162,20 @@ export const nozzleRouter = router({
         throw new Error('Nozzle not found');
       }
 
-      // If size/schedule/thickness changed, recalculate
+      // If size/schedule/thickness/material changed, recalculate
       const needsRecalc =
         updates.nominalSize ||
         updates.schedule ||
+        updates.materialSpec !== undefined ||
         updates.actualThickness !== undefined ||
         updates.shellHeadRequiredThickness !== undefined;
 
       if (needsRecalc) {
         const nominalSize = updates.nominalSize || existing.nominalSize;
         const schedule = updates.schedule || existing.schedule;
+        const materialSpec = updates.materialSpec !== undefined
+          ? updates.materialSpec
+          : existing.materialSpec;
         const shellRequired = updates.shellHeadRequiredThickness !== undefined
           ? updates.shellHeadRequiredThickness
           : parseFloat(existing.shellHeadRequiredThickness || '0');
@@ -153,7 +191,7 @@ export const nozzleRouter = router({
           throw new Error(`Pipe schedule not found for ${nominalSize}" ${schedule}`);
         }
 
-        // Calculate minimum required thickness
+        // Calculate minimum required thickness (UG-45 basic)
         const calculation = calculateNozzleWithSchedule({
           nozzleNumber: updates.nozzleNumber || existing.nozzleNumber,
           nominalSize,
@@ -167,15 +205,45 @@ export const nozzleRouter = router({
         });
 
         if (calculation) {
+          // Also run pressure calc with material-specific allowable stress
+          let pressureMinRequired = calculation.minimumRequired;
+          if (materialSpec) {
+            try {
+              const inspection = await getInspection(existing.inspectionId);
+              const designPressure = parseFloat(inspection?.designPressure || '0');
+              const designTemp = parseFloat(inspection?.designTemperature || '650');
+              if (designPressure > 0) {
+                const pressureCalc = calculateNozzlePressureThickness({
+                  nominalSize,
+                  outsideDiameter: parseFloat(pipeScheduleData.outsideDiameter),
+                  wallThickness: parseFloat(pipeScheduleData.wallThickness),
+                  designPressure,
+                  designTemperature: designTemp,
+                  materialSpec,
+                });
+                pressureMinRequired = pressureCalc.minimumRequired;
+              }
+            } catch (e) {
+              // fallback to existing calculation
+            }
+          }
+
+          const finalMinRequired = Math.max(calculation.minimumRequired, pressureMinRequired);
+          const actual = updates.actualThickness !== undefined
+            ? updates.actualThickness
+            : parseFloat(existing.actualThickness || '0');
+          const acceptable = actual > 0 ? actual >= finalMinRequired : calculation.acceptable;
+
           // Update with calculated values
           return await updateNozzle(nozzleId, {
             ...updates,
+            materialSpec: materialSpec || undefined,
             actualThickness: updates.actualThickness?.toString(),
             shellHeadRequiredThickness: shellRequired.toString(),
             pipeNominalThickness: calculation.pipeNominalThickness.toString(),
             pipeMinusManufacturingTolerance: calculation.pipeMinusManufacturingTolerance.toString(),
-            minimumRequired: calculation.minimumRequired.toString(),
-            acceptable: calculation.acceptable,
+            minimumRequired: finalMinRequired.toString(),
+            acceptable,
           });
         }
       }
