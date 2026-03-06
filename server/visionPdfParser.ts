@@ -617,7 +617,7 @@ IMPORTANT:
       } catch (secondError) {
         logger.error('[Vision Parser] JSON recovery failed, returning empty object');
         logger.error('[Vision Parser] Content that failed to parse:', cleanedContent.substring(0, 1000));
-        // Return a minimal valid structure
+        // P1 fix: mark as parse failure so callers can distinguish from a legitimately empty document
         parsedData = {
           reportInfo: {},
           clientInfo: {},
@@ -627,8 +627,9 @@ IMPORTANT:
           recommendations: '',
           thicknessMeasurements: [],
           checklistItems: [],
-          nozzles: []
-        };
+          nozzles: [],
+          _parseFailure: true,
+        } as any;
       }
     }
 

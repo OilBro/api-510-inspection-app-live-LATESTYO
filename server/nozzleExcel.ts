@@ -9,6 +9,7 @@ export interface NozzleExcelRow {
   nozzleNumber: string;
   size: string; // e.g., "6", "12"
   schedule: string; // e.g., "STD", "40", "XS"
+  service?: string; // e.g., "Inlet", "Outlet", "Manway"
   location: string;
   actualThickness: number; // inches
   notes?: string;
@@ -29,25 +30,25 @@ export interface NozzleExportRow extends NozzleExcelRow {
 export function parseNozzleExcel(fileBuffer: Buffer): NozzleExcelRow[] {
   try {
     const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
-    
+
     // Get first worksheet
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    
+
     // Convert to JSON
     const rawData: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-    
+
     // Map to NozzleExcelRow format
     const nozzles: NozzleExcelRow[] = [];
-    
+
     for (let i = 0; i < rawData.length; i++) {
       const row = rawData[i];
-      
+
       // Skip empty rows
       if (!row['Nozzle Number'] && !row['Size']) {
         continue;
       }
-      
+
       // Validate required fields
       if (!row['Nozzle Number']) {
         throw new Error(`Row ${i + 2}: Nozzle Number is required`);
@@ -61,27 +62,29 @@ export function parseNozzleExcel(fileBuffer: Buffer): NozzleExcelRow[] {
       if (!row['Actual Thickness']) {
         throw new Error(`Row ${i + 2}: Actual Thickness is required`);
       }
-      
+
       // Parse actual thickness
       const actualThickness = parseFloat(row['Actual Thickness']);
       if (isNaN(actualThickness) || actualThickness <= 0) {
         throw new Error(`Row ${i + 2}: Actual Thickness must be a positive number`);
       }
-      
+
       nozzles.push({
         nozzleNumber: String(row['Nozzle Number']).trim(),
         size: String(row['Size']).trim(),
         schedule: String(row['Schedule']).trim().toUpperCase(),
+        // N1 fix: capture service description from new column
+        service: row['Service / Description'] ? String(row['Service / Description']).trim() : undefined,
         location: String(row['Location'] || '').trim(),
         actualThickness,
         notes: row['Notes'] ? String(row['Notes']).trim() : undefined,
       });
     }
-    
+
     if (nozzles.length === 0) {
       throw new Error('No valid nozzle data found in Excel file');
     }
-    
+
     return nozzles;
   } catch (error) {
     if (error instanceof Error) {
@@ -113,7 +116,7 @@ export function generateNozzleExcel(nozzles: NozzleExportRow[]): Buffer {
       'Notes',
     ],
   ];
-  
+
   // Data rows
   for (const nozzle of nozzles) {
     wsData.push([
@@ -130,10 +133,10 @@ export function generateNozzleExcel(nozzles: NozzleExportRow[]): Buffer {
       nozzle.notes || '',
     ]);
   }
-  
+
   // Create worksheet
   const ws = XLSX.utils.aoa_to_sheet(wsData);
-  
+
   // Set column widths
   ws['!cols'] = [
     { wch: 15 }, // Nozzle Number
@@ -148,14 +151,14 @@ export function generateNozzleExcel(nozzles: NozzleExportRow[]): Buffer {
     { wch: 15 }, // Status
     { wch: 30 }, // Notes
   ];
-  
+
   // Create workbook
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Nozzle Evaluation');
-  
+
   // Generate buffer
   const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-  
+
   return buffer;
 }
 
@@ -170,6 +173,7 @@ export function generateNozzleTemplate(): Buffer {
       'Nozzle Number',
       'Size',
       'Schedule',
+      'Service / Description',
       'Location',
       'Actual Thickness',
       'Notes',
@@ -179,29 +183,31 @@ export function generateNozzleTemplate(): Buffer {
       'N1',
       '6',
       'STD',
+      'Inlet',
       'Shell - North',
       '0.2800',
       'Optional notes',
     ],
     // Empty rows for data entry
-    ['', '', '', '', '', ''],
-    ['', '', '', '', '', ''],
-    ['', '', '', '', '', ''],
+    ['', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', ''],
   ];
-  
+
   // Create worksheet
   const ws = XLSX.utils.aoa_to_sheet(wsData);
-  
+
   // Set column widths
   ws['!cols'] = [
     { wch: 15 }, // Nozzle Number
     { wch: 10 }, // Size
     { wch: 12 }, // Schedule
+    { wch: 25 }, // Service / Description
     { wch: 25 }, // Location
     { wch: 18 }, // Actual Thickness
     { wch: 30 }, // Notes
   ];
-  
+
   // Add instructions as a comment/note
   const instructions = `
 NOZZLE IMPORT TEMPLATE INSTRUCTIONS:
@@ -223,11 +229,11 @@ Notes:
 - Actual thickness must be a positive decimal number
 - All measurements in inches
   `.trim();
-  
+
   // Create workbook
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Nozzle Data');
-  
+
   // Add instructions sheet
   const instructionsWs = XLSX.utils.aoa_to_sheet([
     ['NOZZLE IMPORT TEMPLATE'],
@@ -236,10 +242,10 @@ Notes:
   ]);
   instructionsWs['!cols'] = [{ wch: 80 }];
   XLSX.utils.book_append_sheet(wb, instructionsWs, 'Instructions');
-  
+
   // Generate buffer
   const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-  
+
   return buffer;
 }
 

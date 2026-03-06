@@ -210,7 +210,10 @@ function parseFieldValueSheet(data: any[][], result: ParsedVesselData): void {
     else if (key.includes("operating pressure")) result.operatingPressure = valueStr;
     else if (key.includes("operating temp")) result.operatingTemperature = valueStr;
     else if (key.includes("material") && key.includes("spec")) result.materialSpec = valueStr;
+    else if (key.includes("allowable") && key.includes("stress")) result.allowableStress = valueStr;
     else if (key.includes("joint") && key.includes("efficiency")) result.jointEfficiency = valueStr;
+    else if (key.includes("corrosion") && key.includes("allowance")) result.corrosionAllowance = valueStr;
+    else if (key === "mdmt" || key.includes("design metal temp") || key.includes("min design metal")) result.mdmt = valueStr;
     else if (key.includes("inside") && key.includes("diameter")) result.insideDiameter = valueStr;
     else if (key.includes("overall") && key.includes("length")) result.overallLength = valueStr;
     else if (key.includes("head") && key.includes("type")) result.headType = valueStr;
@@ -273,7 +276,8 @@ function parseTmlReadingsSheet(data: any[][], result: ParsedVesselData): void {
   if (tml3Col < 0) tml3Col = headers.findIndex(h => h.includes('180°') || h === '180' || h.includes('180 deg'));
   if (tml4Col < 0) tml4Col = headers.findIndex(h => h.includes('270°') || h === '270' || h.includes('270 deg'));
 
-  const tActualCol = headers.findIndex(h => h.includes('t actual') || h.includes('actual') || h.includes('t-actual') || h.includes('min'));
+  // NOTE: Do NOT match 'min' here — it collides with 'minimum required' column (E2 fix)
+  const tActualCol = headers.findIndex(h => h.includes('t actual') || h.includes('actual') || h.includes('t-actual'));
   const nominalCol = headers.findIndex(h => h.includes('nominal') || h.includes('t-nom') || h.includes('t nom'));
   const previousCol = headers.findIndex(h => h.includes('previous') || h.includes('t-prev') || h.includes('t prev'));
   const corrosionRateCol = headers.findIndex(h => h.includes('corrosion rate') || h.includes('cr') || h.includes('rate'));
@@ -378,10 +382,10 @@ Extract ALL available information and return it as JSON matching this schema:
   "yearBuilt": "number - year vessel was built",
   "nbNumber": "string - National Board Number",
   "designPressure": "string - design pressure in psig",
-  "designTemperature": "string - design temperature in Â°F",
+  "designTemperature": "string - design temperature in °F",
   "operatingPressure": "string - operating pressure in psig",
-  "operatingTemperature": "string - operating temperature in Â°F",
-  "mdmt": "string - Minimum Design Metal Temperature in Â°F",
+  "operatingTemperature": "string - operating temperature in °F",
+  "mdmt": "string - Minimum Design Metal Temperature in °F",
   "materialSpec": "string - material specification (e.g., SA-516 Gr 70)",
   "allowableStress": "string - allowable stress in psi",
   "jointEfficiency": "string - joint efficiency factor (E value)",
@@ -590,7 +594,29 @@ export async function parsePDFFile(buffer: Buffer, parserType?: "docupipe" | "ma
         executiveSummary: hybridData.executiveSummary || '',
         inspectionResults: hybridData.inspectionResults || '',
         recommendations: hybridData.recommendations || '',
-        tmlReadings: hybridData.tmlReadings || hybridData.thicknessMeasurements || [],
+        // H1 fix: normalize TML shape — vision sub-parsers return 'thicknessMeasurements'
+        // with numeric tml1-4; manus returns 'tmlReadings' with string currentThickness.
+        // Normalize to ParsedVesselData shape so downstream corrosion rate calcs never get NaN.
+        tmlReadings: (hybridData.tmlReadings || hybridData.thicknessMeasurements || []).map((t: any) => ({
+          legacyLocationId: t.legacyLocationId,
+          tmlId: t.tmlId,
+          location: t.location,
+          component: t.component,
+          componentType: t.componentType,
+          readingType: t.readingType,
+          nozzleSize: t.nozzleSize,
+          angle: t.angle,
+          currentThickness: t.currentThickness ?? t.tActual,
+          previousThickness: t.previousThickness,
+          nominalThickness: t.nominalThickness,
+          minimumRequired: t.minimumRequired,
+          calculatedMAWP: t.calculatedMAWP,
+          tActual: t.tActual ?? t.currentThickness,
+          tml1: t.tml1,
+          tml2: t.tml2,
+          tml3: t.tml3,
+          tml4: t.tml4,
+        })),
         checklistItems: hybridData.checklistItems || hybridData.inspectionChecklist || [],
         nozzles: hybridData.nozzles || [],
         tableA: hybridData.tableA,
