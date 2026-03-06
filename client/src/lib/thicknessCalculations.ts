@@ -69,11 +69,13 @@ export function calculateHeadMinimumThickness(data: HeadData): number {
  * P = (S * E * t) / (R + 0.6 * t)
  */
 export function calculateShellMAWP(actualThickness: number, data: Omit<ComponentData, 'designPressure'>): number {
-  const { insideRadius: R, allowableStress: S, jointEfficiency: E, corrosionAllowance: CA = 0 } = data;
+  const { insideRadius: R, allowableStress: S, jointEfficiency: E } = data;
 
   if (!actualThickness || !R || !S || !E) return 0;
 
-  const t = actualThickness - CA; // Subtract corrosion allowance
+  // FIX-2: MAWP is computed at ACTUAL measured thickness per API 510.
+  // Do NOT subtract corrosion allowance — that double-penalizes.
+  const t = actualThickness;
   const P = (S * E * t) / (R + 0.6 * t);
 
   return P;

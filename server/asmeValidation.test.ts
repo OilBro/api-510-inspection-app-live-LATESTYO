@@ -65,12 +65,13 @@ describe("ASME Section VIII Validation Tests", () => {
 
       const result = calculateComponent(data);
 
-      // Net thickness: t = 0.625 - 0.125 = 0.500
+      // MAWP uses actual thickness directly (FIX-1: do NOT subtract CA)
+      // t = 0.625
       // SA-516 Gr 70 at 200°F: S = 20,000 psi
-      // Circumferential: P = SEt / (R + 0.6t) = (20000 × 0.85 × 0.5) / (36 + 0.3) = 8500 / 36.3 = 234.2 psi
-      // Longitudinal: P = 2SEt / (R - 0.4t) = (2 × 20000 × 0.85 × 0.5) / (36 - 0.2) = 17000 / 35.8 = 474.9 psi
-      // Governing (minimum): 234.2 psi
-      expect(result.mawp).toBeCloseTo(234.2, 0);
+      // Circumferential: P = SEt / (R + 0.6t) = (20000 × 0.85 × 0.625) / (36 + 0.375) = 10625 / 36.375 = 292.1 psi
+      // Longitudinal: P = 2SEt / (R - 0.4t) = (2 × 20000 × 0.85 × 0.625) / (36 - 0.25) = 21250 / 35.75 = 594.4 psi
+      // Governing (minimum): 292.1 psi
+      expect(result.mawp).toBeCloseTo(292.1, 0);
     });
 
     it("should use correct allowable stress for SA-516-70 at 200°F", () => {
@@ -121,12 +122,13 @@ describe("ASME Section VIII Validation Tests", () => {
 
       const mawp = calculateHeadMAWP(t, R, S, E, CA, "hemispherical");
 
-      // Net thickness: t_net = 0.500 - 0.125 = 0.375
+      // MAWP uses actual thickness directly (FIX-1: do NOT subtract CA)
+      // t = 0.500
       // Formula: P = 2SEt / (R + 0.2t)
-      // P = (2 × 20000 × 1.0 × 0.375) / (36 + 0.2 × 0.375)
-      // P = 15000 / 36.075
-      // P = 415.8 psi
-      expect(mawp).toBeCloseTo(415.8, 1);
+      // P = (2 × 20000 × 1.0 × 0.500) / (36 + 0.2 × 0.500)
+      // P = 20000 / 36.1
+      // P = 554.0 psi
+      expect(mawp).toBeCloseTo(554.0, 0);
     });
   });
 
@@ -158,12 +160,13 @@ describe("ASME Section VIII Validation Tests", () => {
 
       const mawp = calculateHeadMAWP(t, R, S, E, CA, "ellipsoidal");
 
-      // Net thickness: t_net = 0.536 - 0.125 = 0.411
+      // MAWP uses actual thickness directly (FIX-1: do NOT subtract CA)
+      // t = 0.536
       // Formula: P = 2SEt / (D + 0.2t) where D = 2R = 70.75
-      // P = (2 × 20000 × 1.0 × 0.411) / (70.75 + 0.2 × 0.411)
-      // P = 16440 / 70.8322
-      // P = 232.1 psi
-      expect(mawp).toBeCloseTo(232.1, 1);
+      // P = (2 × 20000 × 1.0 × 0.536) / (70.75 + 0.2 × 0.536)
+      // P = 21440 / 70.8572
+      // P = 302.6 psi
+      expect(mawp).toBeCloseTo(302.6, 0);
     });
   });
 
@@ -225,14 +228,15 @@ describe("ASME Section VIII Validation Tests", () => {
 
       const mawp = calculateHeadMAWP(t, R, S, E, CA, "torispherical", r, L);
 
-      // Net thickness: t_net = 0.528 - 0.125 = 0.403
+      // MAWP uses actual thickness directly (FIX-1: do NOT subtract CA)
+      // t = 0.528
       // M = 1.7705
       // Formula: P = 2SEt / (LM + 0.2t)
-      // P = (2 × 20000 × 1.0 × 0.403) / (70.75 × 1.7705 + 0.2 × 0.403)
-      // P = 16120 / (125.26 + 0.0806)
-      // P = 16120 / 125.34
-      // P = 128.6 psi
-      expect(mawp).toBeCloseTo(128.6, 1);
+      // P = (2 × 20000 × 1.0 × 0.528) / (70.75 × 1.7705 + 0.2 × 0.528)
+      // P = 21120 / (125.26 + 0.1056)
+      // P = 21120 / 125.37
+      // P = 168.5 psi
+      expect(mawp).toBeCloseTo(168.5, 0);
     });
   });
 

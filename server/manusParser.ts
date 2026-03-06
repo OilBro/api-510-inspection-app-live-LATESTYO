@@ -244,12 +244,16 @@ CRITICAL INSTRUCTIONS:
 6. INSPECTION RESULTS (Section 3.0): Extract ALL findings from the inspection results section.
    Include: foundation condition, shell condition, head condition, appurtenances, corrosion findings, etc.
    This is typically a narrative section describing what was found during inspection.
-   Extract the COMPLETE text, preserving all details
+      Extract the COMPLETE text, preserving all details
 
 7. RECOMMENDATIONS (Section 4.0): Extract ALL recommendations from the recommendations section.
    Include: repair recommendations, replacement needs, next inspection date, continued service approval, etc.
    This is typically a narrative section with action items and future planning.
-   Extract the COMPLETE text, preserving all details
+    Extract the COMPLETE text, preserving all details
+
+10. ALLOWABLE STRESS & JOINT EFFICIENCY FALLBACK: If the PDF does not contain a dedicated calculation section,
+    extract allowableStress (S) and jointEfficiency (E) from any available source—nameplate data, design data sheets,
+    material specifications, or vessel summary tables. Do NOT leave S or E blank if values appear anywhere in the document.
 
 {
   "reportInfo": {
@@ -595,7 +599,7 @@ CRITICAL INSTRUCTIONS:
       logger.info("[Manus Parser] JSON recovery successful");
     } catch (secondError) {
       logger.error("[Manus Parser] JSON recovery failed, returning empty object");
-      // Return a minimal valid structure
+      // FIX-5: mark as parse failure so callers can distinguish from a legitimately empty document
       extractedData = {
         reportInfo: {},
         clientInfo: {},
@@ -605,8 +609,9 @@ CRITICAL INSTRUCTIONS:
         recommendations: "",
         tmlReadings: [],
         inspectionChecklist: [],
-        nozzles: []
-      };
+        nozzles: [],
+        _parseFailure: true,
+      } as any;
     }
   }
 

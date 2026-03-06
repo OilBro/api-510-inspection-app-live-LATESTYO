@@ -43,7 +43,7 @@ export interface CalculationInputs {
   P: number; // Design pressure (psi)
   S: number; // Maximum allowable stress at design temperature (psi) - can be auto-looked up if materialSpec and designTemperature provided
   E: number; // Joint efficiency (0.0 - 1.0)
-  
+
   // Material specification for automatic stress lookup (optional)
   materialSpec?: string; // ASME material specification (e.g., "SA-516 Gr 70")
   designTemperature?: number; // Design temperature (°F) for stress lookup
@@ -115,7 +115,7 @@ export interface CalculationResults {
   // Validation metadata (Track 001)
   warnings: ValidationWarning[]; // Validation warnings for edge cases
   defaultsUsed: string[]; // Parameters that used default values
-  
+
   // Material database lookup info (if used)
   materialLookup?: {
     materialSpec: string; // Material specification used
@@ -272,11 +272,11 @@ export function calculateShellThickness(
 ): CalculationResults {
   const { P, S, E, D } = inputs;
   const R = inputs.R ?? D / 2;
-  
+
   // Initialize validation tracking
   const warnings: ValidationWarning[] = [];
   const defaultsUsed: string[] = [];
-  
+
   // Track default values
   if (inputs.R === undefined) {
     defaultsUsed.push('R (radius)');
@@ -286,12 +286,12 @@ export function calculateShellThickness(
   if (P <= 0 || S <= 0 || E <= 0 || E > 1 || R <= 0) {
     throw new Error(`Invalid inputs: P=${P}, S=${S}, E=${E}, R=${R}`);
   }
-  
+
   // Validate P/(SE) ratio per UG-27 applicability limits
   // UG-27(c)(1) circumferential: P ≤ 0.385SE
   // UG-27(c)(2) longitudinal: P ≤ 1.25SE
   const P_SE_ratio = P / (S * E);
-  
+
   // Check circumferential stress applicability limit (stricter)
   if (P_SE_ratio > 0.385) {
     warnings.push({
@@ -302,7 +302,7 @@ export function calculateShellThickness(
       expectedRange: '≤ 0.385 for thin-wall formula applicability'
     });
   }
-  
+
   // Check longitudinal stress applicability limit
   if (P_SE_ratio > 1.25) {
     throw new Error(`P/(SE) = ${P_SE_ratio.toFixed(4)} exceeds UG-27(c)(2) limit of 1.25. Thick-wall analysis required per ASME.`);
@@ -310,11 +310,11 @@ export function calculateShellThickness(
 
   // Circumferential stress (longitudinal joints) - UG-27(c)(1)
   const denom_circ = S * E - 0.6 * P;
-  
+
   // Denominator safety validation
   const denomWarnings = validateDenominator(denom_circ, 'SE-0.6P');
   warnings.push(...denomWarnings);
-  
+
   const t_min_circ = (P * R) / denom_circ;
 
   // Longitudinal stress (circumferential joints) - UG-27(c)(2)
@@ -323,7 +323,7 @@ export function calculateShellThickness(
 
   // Governing thickness is the larger value
   const t_min = Math.max(t_min_circ, t_min_long);
-  
+
   // UG-27 thin-wall applicability check: t ≤ 0.5R
   // This check uses the calculated t_min as a proxy
   if (t_min > 0.5 * R) {
@@ -359,7 +359,7 @@ export function calculateShellThickness(
 
     // MAWP from longitudinal stress: P = 2SEt / (R - 0.4t)
     const denom_mawp_long = R - 0.4 * t;
-    
+
     // C2 Fix: Validate R - 0.4t denominator per verification report
     if (denom_mawp_long <= 0) {
       warnings.push({
@@ -385,12 +385,12 @@ export function calculateShellThickness(
 
     // Corrosion allowance
     Ca = inputs.t_act - t_min;
-    
+
     if (Ca < 0) {
       // Non-compliant: actual thickness below minimum
       Ca = 0;
       isCompliant = false;
-      
+
       if (inputs.t_act < 0.9 * t_min) {
         warnings.push({
           field: 't_act',
@@ -410,7 +410,7 @@ export function calculateShellThickness(
       }
     } else {
       isCompliant = true;
-      
+
       // Warn if thickness is very close to minimum (within 2%)
       if (inputs.t_act < 1.02 * t_min) {
         warnings.push({
@@ -429,14 +429,18 @@ export function calculateShellThickness(
     }
 
     if (inputs.t_nom !== undefined && inputs.Y !== undefined) {
-      // Long-term rate based on vessel age (estimated from nominal)
-      const age = inputs.Y; // Simplified - should use actual vessel age
-      Cr_long = age > 0 ? (inputs.t_nom - inputs.t_act) / age : 0;
+      // FIX-3: Long-term rate requires total vessel age, NOT inspection interval (Y).
+      // The lockedCalculationEngine.ts and tmlCalculations.ts use originalInstallDate correctly.
+      // Here, Y is the inspection interval. We cannot derive vessel age from it alone.
+      // Only compute LT rate if t_nom is provided alongside a meaningfully large Y
+      // that could plausibly represent vessel age (e.g., yearBuilt data is absent).
+      // For safety, skip LT rate here — it is properly computed in the locked engine.
+      Cr_long = undefined;
     }
 
     // Use higher (conservative) corrosion rate
     Cr = Math.max(Cr_short ?? 0, Cr_long ?? 0);
-    
+
     // Corrosion rate validation
     if (Cr !== undefined && Cr !== 0) {
       if (Cr > 0.5) {
@@ -472,7 +476,7 @@ export function calculateShellThickness(
     // Remaining life
     if (Cr !== undefined && Cr > 0 && Ca !== undefined) {
       RL = Ca / Cr;
-      
+
       // Remaining life validation per API 510
       if (RL < 1) {
         warnings.push({
@@ -509,18 +513,18 @@ export function calculateShellThickness(
       t_next = inputs.t_act - inputs.Yn * Cr;
       P_next = t_next > 0 ? (S * E * t_next) / (R + 0.6 * t_next) : 0;
     }
-    
+
     // MAWP validation
     if (MAWP <= 0) {
       throw new Error(`Calculated MAWP is non-positive: ${MAWP.toFixed(2)} psi`);
     }
-    
+
     const MAWP_ratio = MAWP / P;
-    
+
     if (MAWP_ratio > 10) {
       throw new Error(`Calculated MAWP is unrealistically high: ${MAWP.toFixed(2)} psi (${MAWP_ratio.toFixed(1)}x design pressure)`);
     }
-    
+
     if (MAWP_ratio > 2) {
       warnings.push({
         field: 'MAWP',
@@ -530,7 +534,7 @@ export function calculateShellThickness(
         expectedRange: `${(0.5 * P).toFixed(0)} to ${(2 * P).toFixed(0)} psi`
       });
     }
-    
+
     if (MAWP_ratio < 0.5) {
       warnings.push({
         field: 'MAWP',
@@ -540,7 +544,7 @@ export function calculateShellThickness(
         expectedRange: `${(0.5 * P).toFixed(0)} to ${(2 * P).toFixed(0)} psi`
       });
     }
-    
+
     // Static head correction validation
     if (inputs.SH && inputs.SG) {
       const SH_correction = inputs.SH * 0.433 * inputs.SG;
@@ -875,7 +879,7 @@ export function calculateEllipsoidalHead(
   // Default to 2:1 ratio (h = D/4) giving K = 1.0
   const h = D / 4; // 2:1 ellipsoidal: major axis = D, minor axis = D/2, h = D/4
   const K = (1 / 6) * (2 + Math.pow(D / (2 * h), 2)); // K = 1.0 for 2:1
-  
+
   // Note: For non-standard ellipsoidal heads, user should provide head height (h)
   // and use K = (1/6) × [2 + (D/2h)²] per Appendix 1-4(c)
   defaultsUsed.push('K-factor = 1.0 (standard 2:1 ellipsoidal)');

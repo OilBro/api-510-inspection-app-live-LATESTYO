@@ -1,10 +1,26 @@
 /**
  * API 510 Component Calculations Module
  * Implements ASME Section VIII calculations for pressure vessels
+ * 
+ * CONSOLIDATION: All ASME formulas delegate to lockedCalculationEngine.ts,
+ * the single authoritative source. This module provides the simplified
+ * ComponentData → CalculationResults interface used by the professional
+ * PDF generator and TML status calculator.
  */
 
 import { calculateExternalPressureMAWP } from './xChartData';
 import { getAllowableStressNormalized } from './asmeMaterialDatabase';
+import {
+  calculateTRequiredShell,
+  calculateMAWPShell,
+  calculateTRequiredEllipsoidalHead,
+  calculateTRequiredTorisphericalHead,
+  calculateTRequiredHemisphericalHead,
+  calculateMAWPEllipsoidalHead,
+  calculateMAWPTorisphericalHead,
+  calculateMAWPHemisphericalHead,
+  type CalculationInput,
+} from './lockedCalculationEngine';
 
 interface ComponentData {
   // Design parameters
@@ -29,6 +45,7 @@ interface ComponentData {
   unsupportedLength?: number; // L (inches) - for external pressure calculations
   headType?: "hemispherical" | "ellipsoidal" | "torispherical";
   knuckleRadius?: number; // r (inches) - for torispherical heads
+  crownRadius?: number; // L (inches) - crown radius for torispherical heads
 
   // Static head (for liquid-filled vessels)
   liquidService?: boolean; // Is vessel in liquid service?
@@ -100,7 +117,7 @@ function calculateStaticHeadPressure(
  * Falls back to conservative default (SA-516 Gr 70 at room temp) if material
  * not found in database, with a warning logged.
  */
-function getAllowableStress(materialSpec: string, temperature: number): number {
+function getAllowableStressFn(materialSpec: string, temperature: number): number {
   const result = getAllowableStressNormalized(materialSpec, temperature);
 
   if (result.stress !== null) {
@@ -115,207 +132,176 @@ function getAllowableStress(materialSpec: string, temperature: number): number {
   );
 }
 
+// ─── DELEGATED FORMULAS ──────────────────────────────────────────────
+// All ASME formulas delegate to lockedCalculationEngine.ts (the single
+// authoritative source). This eliminates formula duplication and prevents
+// drift bugs like the MAWP CA-deduction issue (FIX-1).
+
+/**
+ * Build a CalculationInput for the locked engine from ComponentData + derived values
+ */
+function buildLockedInput(
+  data: ComponentData,
+  allowableStress: number,
+  effectivePressure: number
+): CalculationInput {
+  return {
+    insideDiameter: data.insideDiameter,
+    designPressure: effectivePressure,
+    designTemperature: data.designTemperature,
+    materialSpec: data.materialSpec,
+    allowableStress, // pre-resolved
+    jointEfficiency: data.jointEfficiency,
+    nominalThickness: data.nominalThickness,
+    currentThickness: data.actualThickness,
+    corrosionAllowance: data.corrosionAllowance,
+    headType: data.headType === "hemispherical" ? "Hemispherical"
+      : data.headType === "torispherical" ? "Torispherical"
+        : "2:1 Ellipsoidal",
+    crownRadius: data.crownRadius,
+    knuckleRadius: data.knuckleRadius,
+  };
+}
+
 /**
  * Calculate minimum required thickness for cylindrical shell
- * Per ASME Section VIII Div 1, UG-27
+ * DELEGATES to lockedCalculationEngine.calculateTRequiredShell
  */
 function calculateShellMinThickness(
   pressure: number,
   radius: number,
   allowableStress: number,
   jointEfficiency: number,
-  corrosionAllowance: number
+  _corrosionAllowance: number
 ): number {
-  // t = (P × R) / (S × E - 0.6 × P)
-  // NOTE: Per API 510, CA is NOT added to Tmin - it's used separately for remaining life calculations
-  const denominator = allowableStress * jointEfficiency - 0.6 * pressure;
-  if (denominator <= 0) return 0;
-  const t = (pressure * radius) / denominator;
-  return t; // DO NOT add CA here
+  const input: CalculationInput = {
+    insideDiameter: radius * 2,
+    designPressure: pressure,
+    designTemperature: 100, // Not used for formula, only for stress lookup
+    materialSpec: "",
+    allowableStress, // pre-resolved, skips DB lookup
+    jointEfficiency,
+    nominalThickness: 0,
+    currentThickness: 0,
+  };
+  const result = calculateTRequiredShell(input);
+  return result.resultValue ?? 0;
 }
 
 /**
  * Calculate minimum required thickness for head
- * Per ASME Section VIII Div 1, UG-32
- * 
- * Geometry definitions:
- * - Hemispherical: L = inside crown radius (sphere radius)
- * - 2:1 Ellipsoidal: D = inside diameter (K=1 for 2:1)
- * - Torispherical/F&D: L = inside crown radius, r = inside knuckle radius
- *   Standard F&D: L = D (inside diameter), r = 0.06D
- * 
- * @param crownRadius - Inside crown radius L (inches) for torispherical heads
- *                      If not provided, defaults to inside diameter (D)
- * @param knuckleRadius - Inside knuckle radius r (inches) for torispherical heads
- *                        If not provided, defaults to 0.06 * D (6% of diameter)
+ * DELEGATES to lockedCalculationEngine head functions
  */
 export function calculateHeadMinThickness(
   pressure: number,
   radius: number,
   allowableStress: number,
   jointEfficiency: number,
-  corrosionAllowance: number,
+  _corrosionAllowance: number,
   headType: string = "ellipsoidal",
   knuckleRadius?: number,
   crownRadius?: number
 ): number {
-  const D = radius * 2; // Inside diameter
-
-  // Safety checks
-  if (pressure <= 0 || radius <= 0 || allowableStress <= 0) return 0;
-
-  let t: number;
+  const D = radius * 2;
+  const input: CalculationInput = {
+    insideDiameter: D,
+    designPressure: pressure,
+    designTemperature: 100,
+    materialSpec: "",
+    allowableStress,
+    jointEfficiency,
+    nominalThickness: 0,
+    currentThickness: 0,
+    crownRadius: crownRadius && crownRadius > 0 ? crownRadius : undefined,
+    knuckleRadius: knuckleRadius && knuckleRadius > 0 ? knuckleRadius : undefined,
+  };
 
   switch (headType.toLowerCase()) {
-    case "hemispherical":
-      // UG-32(d): t = PL / (2SE - 0.2P) where L = R (inside crown radius)
-      const R_hemi = radius;
-      const denom_hemi = 2 * allowableStress * jointEfficiency - 0.2 * pressure;
-      if (denom_hemi <= 0) return 0;
-      t = (pressure * R_hemi) / denom_hemi;
-      break;
-
+    case "hemispherical": {
+      const r = calculateTRequiredHemisphericalHead(input);
+      return r.resultValue ?? 0;
+    }
+    case "torispherical": {
+      const r = calculateTRequiredTorisphericalHead(input);
+      return r.resultValue ?? 0;
+    }
     case "ellipsoidal":
-      // UG-32(e) for 2:1 ellipsoidal: t = PD / (2SE - 0.2P)
-      const denom_ellip = 2 * allowableStress * jointEfficiency - 0.2 * pressure;
-      if (denom_ellip <= 0) return 0;
-      t = (pressure * D) / denom_ellip;
-      break;
-
-    case "torispherical":
-      // Appendix 1-4(d) M-factor formula:
-      // t = PLM / (2SE - 0.2P)
-      // L = inside crown radius (typically = D for standard F&D heads)
-      // r = inside knuckle radius (typically = 0.06D for standard F&D heads)
-      // M = 0.25 * (3 + sqrt(L/r))
-      const L = crownRadius && crownRadius > 0 ? crownRadius : D;
-      const r = knuckleRadius && knuckleRadius > 0 ? knuckleRadius : 0.06 * D;
-
-      const M = 0.25 * (3 + Math.sqrt(L / r));
-      const denom_tori = 2 * allowableStress * jointEfficiency - 0.2 * pressure;
-      if (denom_tori <= 0) return 0;
-      t = (pressure * L * M) / denom_tori;
-      break;
-
-    default:
-      // Default to 2:1 ellipsoidal
-      const denom_def = 2 * allowableStress * jointEfficiency - 0.2 * pressure;
-      if (denom_def <= 0) return 0;
-      t = (pressure * D) / denom_def;
+    default: {
+      const r = calculateTRequiredEllipsoidalHead(input);
+      return r.resultValue ?? 0;
+    }
   }
-
-  return t; // DO NOT add CA here - per API 510, CA is used separately for remaining life
 }
 
 /**
  * Calculate MAWP for cylindrical shell
- * Per ASME Section VIII Div 1, UG-27(c)
- * 
- * Evaluates BOTH stress cases and returns the MINIMUM (governing) MAWP:
- * - UG-27(c)(1): Circumferential (hoop) stress: P = S*E*t / (R + 0.6*t)
- * - UG-27(c)(2): Longitudinal stress: P = 2*S*E*t / (R - 0.4*t)
- * 
- * @param El - Longitudinal joint efficiency (for hoop stress case)
- * @param Ec - Circumferential joint efficiency (for longitudinal stress case)
- *             If not provided, defaults to El (same efficiency for both)
+ * DELEGATES to lockedCalculationEngine.calculateMAWPShell
  */
 function calculateShellMAWP(
   thickness: number,
   radius: number,
   allowableStress: number,
   jointEfficiency: number,
-  corrosionAllowance: number,
-  Ec?: number // Circumferential joint efficiency (optional, defaults to jointEfficiency)
+  _corrosionAllowance: number,
+  _Ec?: number
 ): number {
-  const t = thickness - corrosionAllowance;
-  const El = jointEfficiency; // Longitudinal joint efficiency
-  const Ec_eff = Ec ?? jointEfficiency; // Default to same efficiency if not specified
-
-  // Safety check: net thickness must be positive
-  if (t <= 0 || radius <= 0) return 0;
-
-  // UG-27(c)(1): Circumferential (hoop) stress case
-  // P_hoop = (S × El × t) / (R + 0.6 × t)
-  const P_hoop = (allowableStress * El * t) / (radius + 0.6 * t);
-
-  // UG-27(c)(2): Longitudinal stress case
-  // P_long = (2 × S × Ec × t) / (R - 0.4 × t)
-  const denom_long = radius - 0.4 * t;
-  const P_long = denom_long > 0 ? (2 * allowableStress * Ec_eff * t) / denom_long : 0;
-
-  // Return the MINIMUM (governing) MAWP
-  return Math.min(P_hoop, P_long > 0 ? P_long : P_hoop);
+  const input: CalculationInput = {
+    insideDiameter: radius * 2,
+    designPressure: 0,
+    designTemperature: 100,
+    materialSpec: "",
+    allowableStress,
+    jointEfficiency,
+    nominalThickness: thickness,
+    currentThickness: thickness,
+  };
+  const result = calculateMAWPShell(input);
+  return result.resultValue ?? 0;
 }
 
 /**
  * Calculate MAWP for head
- * Per ASME Section VIII Div 1, UG-32
- * 
- * Supports three head types:
- * - Hemispherical: UG-32(d) - P = 2SEt / (R + 0.2t)
- * - Ellipsoidal (2:1): UG-32(e) - P = 2SEt / (D + 0.2t)  
- * - Torispherical: UG-32(e) standard form - P = SEt / (0.885L + 0.1t)
- *   OR Appendix 1-4(d) M-factor form - P = 2SEt / (LM + 0.2t)
- * 
- * @param crownRadius - Inside crown radius L (inches) for torispherical heads
- *                      If not provided, defaults to inside diameter (D)
- * @param knuckleRadius - Inside knuckle radius r (inches) for torispherical heads
- *                        If not provided, defaults to 0.06 * D (6% of diameter)
- * @param useUG32eStandard - If true, use UG-32(e) standard formula (0.885/0.1)
- *                          If false (default), use Appendix 1-4(d) M-factor formula
+ * DELEGATES to lockedCalculationEngine head MAWP functions
  */
 export function calculateHeadMAWP(
   thickness: number,
   radius: number,
   allowableStress: number,
   jointEfficiency: number,
-  corrosionAllowance: number,
+  _corrosionAllowance: number,
   headType: string = "ellipsoidal",
   knuckleRadius?: number,
   crownRadius?: number,
-  useUG32eStandard: boolean = false
+  _useUG32eStandard: boolean = false
 ): number {
-  const t = thickness - corrosionAllowance;
-  const D = radius * 2; // Inside diameter
-
-  // Safety check: net thickness must be positive
-  if (t <= 0 || radius <= 0) return 0;
+  const D = radius * 2;
+  const input: CalculationInput = {
+    insideDiameter: D,
+    designPressure: 0,
+    designTemperature: 100,
+    materialSpec: "",
+    allowableStress,
+    jointEfficiency,
+    nominalThickness: thickness,
+    currentThickness: thickness,
+    crownRadius: crownRadius && crownRadius > 0 ? crownRadius : undefined,
+    knuckleRadius: knuckleRadius && knuckleRadius > 0 ? knuckleRadius : undefined,
+  };
 
   switch (headType.toLowerCase()) {
-    case "hemispherical":
-      // UG-32(d): P = 2SEt / (R + 0.2t)
-      // R = inside spherical radius
-      return (2 * allowableStress * jointEfficiency * t) / (radius + 0.2 * t);
-
+    case "hemispherical": {
+      const r = calculateMAWPHemisphericalHead(input);
+      return r.resultValue ?? 0;
+    }
+    case "torispherical": {
+      const r = calculateMAWPTorisphericalHead(input);
+      return r.resultValue ?? 0;
+    }
     case "ellipsoidal":
-      // UG-32(e) for 2:1 ellipsoidal: P = 2SEt / (D + 0.2t)
-      // D = inside diameter
-      return (2 * allowableStress * jointEfficiency * t) / (D + 0.2 * t);
-
-    case "torispherical":
-      // L = inside crown radius (typically = D for standard F&D heads)
-      const L = crownRadius && crownRadius > 0 ? crownRadius : D;
-
-      // r = inside knuckle radius (typically = 0.06D for standard F&D heads)
-      const r = knuckleRadius && knuckleRadius > 0 ? knuckleRadius : 0.06 * D;
-
-      if (useUG32eStandard) {
-        // UG-32(e) standard torispherical formula:
-        // P = SEt / (0.885L + 0.1t)
-        const denom = 0.885 * L + 0.1 * t;
-        return denom > 0 ? (allowableStress * jointEfficiency * t) / denom : 0;
-      } else {
-        // Appendix 1-4(d) M-factor formula:
-        // M = 0.25 * (3 + sqrt(L/r))
-        // P = 2SEt / (LM + 0.2t)
-        const M = 0.25 * (3 + Math.sqrt(L / r));
-        const denom = L * M + 0.2 * t;
-        return denom > 0 ? (2 * allowableStress * jointEfficiency * t) / denom : 0;
-      }
-
-    default:
-      // Default to 2:1 ellipsoidal
-      return (2 * allowableStress * jointEfficiency * t) / (D + 0.2 * t);
+    default: {
+      const r = calculateMAWPEllipsoidalHead(input);
+      return r.resultValue ?? 0;
+    }
   }
 }
 
@@ -363,7 +349,7 @@ function calculateRemainingLife(
  */
 export function calculateComponent(data: ComponentData): CalculationResults {
   const radius = data.insideDiameter / 2;
-  const allowableStress = getAllowableStress(data.materialSpec, data.designTemperature);
+  const allowableStress = getAllowableStressFn(data.materialSpec, data.designTemperature);
 
   // Calculate static head pressure if applicable
   let staticHeadPressure = 0;
