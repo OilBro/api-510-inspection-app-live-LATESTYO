@@ -143,7 +143,12 @@ Extract all available information and return it as structured JSON matching this
 
 CRITICAL INSTRUCTIONS:
 
-1. MULTI-PAGE TABLES: Thickness measurement tables often span MULTIPLE PAGES.
+00. ANTI-HALLUCINATION GUARDRAIL - ABSOLUTELY CRITICAL:
+    - NEVER invent, guess, or default to examples for ANY field.
+    - If a value is missing or illegible in the report, you MUST return null or an empty string.
+    - DO NOT use your training data to fill in blanks.
+
+0. MULTI-PAGE TABLES - VERY IMPORTANT: Thickness measurement tables often span MULTIPLE PAGES.
    - Continue reading ALL pages of the document from start to finish
    - Look for table continuations ("continued", "cont'd", page breaks in tables)
    - Extract EVERY row from thickness tables, even if they span 5+ pages
@@ -271,10 +276,10 @@ CRITICAL INSTRUCTIONS:
        - Look for: nameplate section, vessel data sheet, or equipment list for yearBuilt
     
     c) MATERIAL SPECIFICATION:
-       - materialSpec = the ASME material specification (e.g., "SA-516 Gr 70", "SA-285 Gr C", "SA-240 Type 304")
+       - materialSpec = the ASME material specification.
        - Look in: nameplate data, vessel data sheet, material column in calculation tables, or "Material of Construction"
-       - Do NOT use generic descriptions like "Carbon Steel" — use the SPECIFIC SA/ASME specification
-       - Common format: "SA-XXX Gr YY" or "SA-XXX Type YY"
+       - DO NOT hallucinate examples. Extract EXACTLY what is written, even if it is a generic string like "Carbon Steel".
+       - Common format if specific: "SA-XXX Gr YY" or "SA-XXX Type YY"
     
     d) ALLOWABLE STRESS (S value):
        - FIRST look in the MINIMUM THICKNESS CALCULATION section/table — it will show "S = XXXXX psi"
@@ -427,7 +432,7 @@ CRITICAL INSTRUCTIONS:
                 vesselName: { type: "string" },
                 manufacturer: { type: "string" },
                 serialNumber: { type: "string" },
-                yearBuilt: { type: "number", description: "Year vessel was originally fabricated/manufactured (NOT the inspection date). Typically 1960s-2010s." },
+                yearBuilt: { type: "number", description: "Year vessel was originally fabricated/manufactured (NOT the inspection date)." },
                 nbNumber: { type: "string" },
                 constructionCode: { type: "string" },
                 vesselType: { type: "string" },
@@ -438,7 +443,7 @@ CRITICAL INSTRUCTIONS:
                 operatingTemperature: { type: "string", description: "NORMAL operating temperature during service (from operating conditions), NOT design temperature" },
                 mdmt: { type: "string" },
                 product: { type: "string" },
-                materialSpec: { type: "string", description: "ASME material specification (e.g. SA-516 Gr 70, SA-285 Gr C). Use the specific SA-XXX designation, not generic 'Carbon Steel'" },
+                materialSpec: { type: "string", description: "ASME material specification. Extract exactly as written. DO NOT GUESS OR INVENT." },
                 insideDiameter: { type: "string" },
                 overallLength: { type: "string" },
                 headType: { type: "string" },

@@ -159,6 +159,11 @@ Extract ALL available information and return it as structured JSON.
 
 CRITICAL INSTRUCTIONS:
 
+00. ANTI-HALLUCINATION GUARDRAIL - ABSOLUTELY CRITICAL:
+    - NEVER invent, guess, or default to examples for ANY field.
+    - If a value is missing or illegible in the report, you MUST return null or an empty string.
+    - DO NOT use your training data to fill in blanks (e.g. do not guess a material's allowable stress if not stated).
+
 0. MULTI-PAGE TABLES - VERY IMPORTANT:
    - Thickness measurement tables often span MULTIPLE PAGES
    - Continue reading ALL pages of the document
@@ -181,7 +186,7 @@ CRITICAL INSTRUCTIONS:
    - Product/service (e.g., METHYLCHLORIDE, TRIETHYLAMINE, etc.)
    - Corrosion allowance (inches)
    - Inside diameter (inches), overall length (inches)
-   - Material specification (e.g., SA-516 Grade 70, SA-612, SA-240)
+   - Material specification: Extract EXACTLY as written (DO NOT GUESS OR HALLUCINATE)
    - Head type (2:1 Ellipsoidal, Hemispherical, Torispherical, Flanged & Dished)
    - Insulation type
 
