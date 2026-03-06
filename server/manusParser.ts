@@ -255,6 +255,39 @@ CRITICAL INSTRUCTIONS:
     extract allowableStress (S) and jointEfficiency (E) from any available source—nameplate data, design data sheets,
     material specifications, or vessel summary tables. Do NOT leave S or E blank if values appear anywhere in the document.
 
+11. VESSEL DATA FIELD DISAMBIGUATION - CRITICAL: Many API 510 reports contain multiple similar values that MUST NOT be confused:
+    
+    a) DESIGN TEMPERATURE vs OPERATING TEMPERATURE:
+       - designTemperature = the MAXIMUM temperature the vessel was DESIGNED for (from nameplate, data sheet, or "Design Conditions")
+       - operatingTemperature = the NORMAL temperature during operation (from "Operating Conditions")
+       - Common labels: "Design Temp", "Max. Allowable Temp" → designTemperature
+       - Common labels: "Operating Temp", "Normal Temp", "Service Temp" → operatingTemperature
+       - If only ONE temperature is listed, it is usually the DESIGN temperature
+    
+    b) YEAR BUILT vs INSPECTION DATE:
+       - yearBuilt = the ORIGINAL year the vessel was FABRICATED/MANUFACTURED (from nameplate: "Year Built", "Date of Manufacture", "Fabrication Date")
+       - This is typically a year in the 1960s-2010s range, NOT the current inspection year
+       - The inspection report date or "Date of Inspection" is NOT yearBuilt
+       - Look for: nameplate section, vessel data sheet, or equipment list for yearBuilt
+    
+    c) MATERIAL SPECIFICATION:
+       - materialSpec = the ASME material specification (e.g., "SA-516 Gr 70", "SA-285 Gr C", "SA-240 Type 304")
+       - Look in: nameplate data, vessel data sheet, material column in calculation tables, or "Material of Construction"
+       - Do NOT use generic descriptions like "Carbon Steel" — use the SPECIFIC SA/ASME specification
+       - Common format: "SA-XXX Gr YY" or "SA-XXX Type YY"
+    
+    d) ALLOWABLE STRESS (S value):
+       - FIRST look in the MINIMUM THICKNESS CALCULATION section/table — it will show "S = XXXXX psi"
+       - FALLBACK: Look in nameplate data, design data summary, or material properties section
+       - Typical values: 13,800 / 15,000 / 17,500 / 20,000 psi for carbon steels
+       - This is NOT the yield strength or tensile strength — it is the ASME allowable stress
+    
+    e) NOMINAL THICKNESS:
+       - In TML readings: nominalThickness = the ORIGINAL as-built thickness BEFORE any corrosion
+       - Look for columns labeled: "Nominal", "t_nom", "Original Thickness", "As-Built"
+       - This is typically LARGER than currentThickness
+       - Do NOT confuse with minimumRequired (t_min) which is SMALLER than nominal
+
 {
   "reportInfo": {
     "reportNumber": "string",
@@ -394,18 +427,18 @@ CRITICAL INSTRUCTIONS:
                 vesselName: { type: "string" },
                 manufacturer: { type: "string" },
                 serialNumber: { type: "string" },
-                yearBuilt: { type: "number" },
+                yearBuilt: { type: "number", description: "Year vessel was originally fabricated/manufactured (NOT the inspection date). Typically 1960s-2010s." },
                 nbNumber: { type: "string" },
                 constructionCode: { type: "string" },
                 vesselType: { type: "string" },
                 vesselConfiguration: { type: "string" },
                 designPressure: { type: "string" },
-                designTemperature: { type: "string" },
+                designTemperature: { type: "string", description: "MAXIMUM temperature vessel was DESIGNED for (from nameplate/design conditions), NOT operating temperature" },
                 operatingPressure: { type: "string" },
-                operatingTemperature: { type: "string" },
+                operatingTemperature: { type: "string", description: "NORMAL operating temperature during service (from operating conditions), NOT design temperature" },
                 mdmt: { type: "string" },
                 product: { type: "string" },
-                materialSpec: { type: "string" },
+                materialSpec: { type: "string", description: "ASME material specification (e.g. SA-516 Gr 70, SA-285 Gr C). Use the specific SA-XXX designation, not generic 'Carbon Steel'" },
                 insideDiameter: { type: "string" },
                 overallLength: { type: "string" },
                 headType: { type: "string" },
