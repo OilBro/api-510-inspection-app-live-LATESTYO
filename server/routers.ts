@@ -660,7 +660,7 @@ Return JSON in this exact format:
           const inspection = await db.getInspection(existing?.inspectionId || '');
           if (inspection && inspection.designPressure && inspection.insideDiameter &&
             inspection.materialSpec && inspection.designTemperature) {
-            const { calculateTMLStatus } = require('./tmlStatusCalculator');
+            const { calculateTMLStatus } = await import('./tmlStatusCalculator');
             try {
               calculatedStatus = calculateTMLStatus({
                 currentThickness: current,
@@ -1268,7 +1268,7 @@ Return JSON in this exact format:
           actualThickness: z.string().optional(),
           pipeNominalThickness: z.string().optional(),
           minimumRequired: z.string().optional(),
-          acceptable: z.boolean().optional(),
+          acceptable: z.coerce.boolean().optional(),
           notes: z.string().optional(),
         })),
         narratives: z.object({

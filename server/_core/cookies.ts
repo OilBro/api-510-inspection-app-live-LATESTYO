@@ -39,10 +39,21 @@ export function getSessionCookieOptions(
   //       ? hostname
   //       : undefined;
 
+  // Determine if this is a cross-origin request (OAuth callback flow)
+  const origin = req.headers.origin || req.headers.referer;
+  const isCrossOrigin = origin
+    ? new URL(origin).hostname !== req.hostname
+    : false;
+
+  // Use 'lax' by default for CSRF protection.
+  // Switch to 'none' only for genuine cross-origin flows (OAuth callbacks).
+  const sameSite: "lax" | "none" = isCrossOrigin ? "none" : "lax";
+  const secure = sameSite === "none" ? true : isSecureRequest(req);
+
   return {
     httpOnly: true,
     path: "/",
-    sameSite: "none",
-    secure: isSecureRequest(req),
+    sameSite,
+    secure,
   };
 }

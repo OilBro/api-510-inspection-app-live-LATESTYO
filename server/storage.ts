@@ -127,7 +127,15 @@ function ensureTrailingSlash(value: string): string {
 }
 
 function normalizeKey(relKey: string): string {
-  return relKey.replace(/^\/+/, "");
+  // Normalize path separators to forward slashes
+  let key = relKey.replace(/\\/g, '/');
+  // Strip leading slashes
+  key = key.replace(/^\/+/, '');
+  // SECURITY: Reject directory traversal sequences
+  if (key.includes('..')) {
+    throw new Error(`Invalid storage key: directory traversal detected in "${relKey}"`);
+  }
+  return key;
 }
 
 function toFormData(

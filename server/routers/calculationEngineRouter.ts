@@ -41,6 +41,7 @@ import {
   hashReportContent,
   APP_VERSION,
 } from "../validationService";
+import { validateCalculationInputs, type ValidationResult } from "../inputValidationGuards";
 
 // Input schema for calculation requests
 const calculationInputSchema = z.object({
@@ -463,6 +464,36 @@ export const calculationEngineRouter = router({
         previousInspectionDate: calcParams.previousInspectionDate ? new Date(calcParams.previousInspectionDate) : undefined,
         currentInspectionDate: calcParams.currentInspectionDate ? new Date(calcParams.currentInspectionDate) : undefined,
       };
+
+      // ENGINEERING VALIDATION GUARDS: Reject physically impossible inputs
+      const validation = validateCalculationInputs({
+        designPressure: calcInput.designPressure,
+        designTemperature: calcInput.designTemperature,
+        insideDiameter: calcInput.insideDiameter,
+        nominalThickness: calcInput.nominalThickness,
+        currentThickness: calcInput.currentThickness,
+        previousThickness: calcInput.previousThickness,
+        jointEfficiency: calcInput.jointEfficiency,
+        corrosionAllowance: calcInput.corrosionAllowance,
+        specificGravity: calcInput.specificGravity,
+        materialSpec: calcInput.materialSpec,
+      });
+
+      if (!validation.valid) {
+        return {
+          success: false,
+          componentType,
+          tRequired: { success: false, calculationType: 'validation', resultValue: null, resultUnit: 'inches', codeReference: 'N/A', formulaUsed: 'N/A', intermediateValues: {}, assumptions: [], warnings: validation.errors.map(e => e.message), calculationEngineVersion: 'N/A', materialDatabaseVersion: 'N/A', calculatedAt: new Date().toISOString(), validationStatus: 'error' as const, errorMessage: validation.errors.map(e => e.message).join('; ') },
+          mawp: { success: false, calculationType: 'validation', resultValue: null, resultUnit: 'psi', codeReference: 'N/A', formulaUsed: 'N/A', intermediateValues: {}, assumptions: [], warnings: [], calculationEngineVersion: 'N/A', materialDatabaseVersion: 'N/A', calculatedAt: new Date().toISOString(), validationStatus: 'error' as const },
+          summary: { tRequired: null, mawp: null, corrosionRate: null, corrosionRateType: 'LT' as const, remainingLife: null, nextInspectionYears: null, mapAtNextInspection: null, projectedThicknessAtNextInspection: null, status: 'unacceptable' as const, statusReason: 'Input validation failed: ' + validation.errors.map(e => e.message).join('; ') },
+          warnings: validation.errors.map(e => e.message),
+          calculatedAt: new Date().toISOString(),
+          calculationEngineVersion: 'VALIDATION-GUARD',
+          materialDatabaseVersion: 'N/A',
+          validationErrors: validation.errors,
+          validationWarnings: validation.warnings,
+        };
+      }
 
       const result = performFullCalculation(calcInput, componentType);
 

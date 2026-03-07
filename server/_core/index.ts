@@ -1,4 +1,6 @@
 import "dotenv/config";
+import { validateEnvironment } from "./env";
+validateEnvironment();
 import express from "express";
 import { createServer } from "http";
 import net from "net";
@@ -8,6 +10,42 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { getStorageInfo } from "../storage";
+import { getDb } from "../db";
+
+// ============================================================================
+// SIMPLE IN-MEMORY RATE LIMITER (no npm dependency needed)
+// ============================================================================
+const RATE_WINDOW_MS = 60_000; // 1 minute window
+const RATE_MAX_REQUESTS = 120;  // max requests per window per IP
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+// Cleanup stale entries every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of rateLimitMap) {
+    if (now > val.resetAt) rateLimitMap.delete(key);
+  }
+}, 5 * 60_000);
+
+function rateLimiter(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const ip = req.ip || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return next();
+  }
+
+  entry.count++;
+  if (entry.count > RATE_MAX_REQUESTS) {
+    res.set('Retry-After', String(Math.ceil((entry.resetAt - now) / 1000)));
+    return res.status(429).json({ error: 'Too many requests. Please slow down.' });
+  }
+
+  return next();
+}
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -36,9 +74,29 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
-  // tRPC API
+  // Health check endpoint (for monitoring / load balancers)
+  app.get('/health', async (_req, res) => {
+    try {
+      const db = await getDb();
+      const dbOk = !!db;
+      const storage = getStorageInfo();
+      res.json({
+        status: 'ok',
+        uptime: process.uptime(),
+        database: dbOk ? 'connected' : 'disconnected',
+        storage: storage.provider,
+        storageConfigured: storage.configured,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      res.status(503).json({ status: 'error', message: 'Health check failed' });
+    }
+  });
+
+  // tRPC API (with rate limiting)
   app.use(
     "/api/trpc",
+    rateLimiter,
     createExpressMiddleware({
       router: appRouter,
       createContext,
