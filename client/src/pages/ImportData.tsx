@@ -521,9 +521,8 @@ export default function ImportData() {
                         Hybrid automatically detects and handles mixed text/scanned documents.
                       </p>
                       <p>
-                        Standard AI Parser uses the model configured in <code className="font-mono">LLM_MODEL</code>,
-                        so local OpenAI/ChatGPT model selection is set in <code className="font-mono">.env</code>
-                        rather than as a separate parser option.
+                        Standard AI Parser uses the <code className="font-mono">LLM_MODEL</code> configured in{" "}
+                        <code className="font-mono">.env</code> for local OpenAI/ChatGPT models.
                       </p>
                     </div>
                   </div>

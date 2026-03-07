@@ -79,7 +79,13 @@ A comprehensive web application for managing API 510 pressure vessel inspections
 
 2. **Install dependencies**
    ```bash
-   corepack pnpm install
+   pnpm install
+   ```
+
+   If `pnpm` is not already installed locally, enable the Node.js bundled package manager first:
+
+   ```bash
+   corepack enable
    ```
 
 3. **Configure environment variables**

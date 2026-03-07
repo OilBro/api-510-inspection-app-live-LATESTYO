@@ -218,8 +218,15 @@ const normalizeToolChoice = (
   return toolChoice;
 };
 
-export const isOpenAIUrl = (url: string | undefined) =>
-  (url || "").includes("api.openai.com");
+export const isOpenAIUrl = (url: string | undefined) => {
+  if (!url) return false;
+
+  try {
+    return new URL(url).hostname === "api.openai.com";
+  } catch {
+    return false;
+  }
+};
 
 const isOpenAI = (url = ENV.forgeApiUrl) => isOpenAIUrl(url);
 
