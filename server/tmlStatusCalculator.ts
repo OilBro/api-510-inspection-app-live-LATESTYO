@@ -1,4 +1,6 @@
 import { logger } from "./_core/logger";
+import { calculateComponent } from "./componentCalculations";
+
 /**
  * TML Status Calculator
  * Determines status based on actual thickness vs minimum required
@@ -21,8 +23,6 @@ interface StatusInput {
 export function calculateTMLStatus(
   input: StatusInput
 ): "good" | "monitor" | "critical" {
-  const { calculateComponent } = require("./componentCalculations");
-
   try {
     const calc = calculateComponent({
       designPressure: input.designPressure,
