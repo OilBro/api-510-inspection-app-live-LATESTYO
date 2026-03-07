@@ -218,21 +218,33 @@ const normalizeToolChoice = (
   return toolChoice;
 };
 
-const isOpenAI = () => {
-  const url = ENV.forgeApiUrl || '';
-  return url.includes('api.openai.com');
-};
+export const isOpenAIUrl = (url: string | undefined) =>
+  (url || "").includes("api.openai.com");
+
+const isOpenAI = (url = ENV.forgeApiUrl) => isOpenAIUrl(url);
 
 const resolveApiUrl = () =>
   ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
     ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
     : "https://forge.manus.im/v1/chat/completions";
 
-const resolveModel = () => {
-  // Use environment variable if set, otherwise auto-detect
-  if (process.env.LLM_MODEL) return process.env.LLM_MODEL;
-  return isOpenAI() ? 'gpt-4o' : 'gemini-2.5-flash';
+export const resolveModelName = ({
+  forgeApiUrl,
+  llmModel,
+}: {
+  forgeApiUrl?: string;
+  llmModel?: string;
+}) => {
+  const normalizedModel = llmModel?.trim();
+  if (normalizedModel) return normalizedModel;
+  return isOpenAI(forgeApiUrl) ? "gpt-4o" : "gemini-2.5-flash";
 };
+
+const resolveModel = () =>
+  resolveModelName({
+    forgeApiUrl: ENV.forgeApiUrl,
+    llmModel: process.env.LLM_MODEL,
+  });
 
 const assertApiKey = () => {
   if (!ENV.forgeApiKey) {

@@ -79,12 +79,20 @@ A comprehensive web application for managing API 510 pressure vessel inspections
 
 2. **Install dependencies**
    ```bash
-   pnpm install
+   corepack pnpm install
    ```
 
 3. **Configure environment variables**
    
-   Environment variables are managed by the Manus platform. All required secrets are automatically injected at runtime. For local development outside Manus, contact the platform administrator for credentials.
+   For local development, copy `.env.example` to `.env` and adjust the values for your environment.
+   
+   ```bash
+   cp .env.example .env
+   ```
+
+   To use an OpenAI/ChatGPT-compatible model locally, point `BUILT_IN_FORGE_API_URL` at `https://api.openai.com`,
+   set `BUILT_IN_FORGE_API_KEY`, and set `LLM_MODEL` to the exact model ID exposed by your provider. The
+   "Standard AI Parser" in the import UI uses that configured `LLM_MODEL`; there is not a separate GPT parser entry.
 
 4. **Set up database**
    ```bash
@@ -126,6 +134,7 @@ All environment variables are managed by the Manus platform and automatically in
 ### APIs
 - `BUILT_IN_FORGE_API_KEY` - Manus Forge API key (server-side)
 - `BUILT_IN_FORGE_API_URL` - Forge API URL
+- `LLM_MODEL` - Optional explicit LLM model name for the standard AI parser (for example, a local Ollama model or an OpenAI-compatible GPT model ID)
 - `VITE_FRONTEND_FORGE_API_KEY` - Forge API key (client-side)
 - `VITE_FRONTEND_FORGE_API_URL` - Forge API URL (client-side)
 - `DOCUPIPE_API_KEY` - Docupipe API key (optional)
