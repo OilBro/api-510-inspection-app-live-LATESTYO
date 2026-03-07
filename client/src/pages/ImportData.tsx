@@ -511,14 +511,20 @@ export default function ImportData() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="hybrid">Hybrid (Recommended)</SelectItem>
-                        <SelectItem value="manus">Manus AI Parser</SelectItem>
+                        <SelectItem value="manus">Standard AI Parser</SelectItem>
                         <SelectItem value="vision">Vision Parser (for scanned)</SelectItem>
                         <SelectItem value="grok">Grok 5.2</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">
-                      Hybrid automatically detects and handles mixed text/scanned documents
-                    </p>
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                      <p>
+                        Hybrid automatically detects and handles mixed text/scanned documents.
+                      </p>
+                      <p>
+                        Standard AI Parser uses the <code className="font-mono">LLM_MODEL</code> configured in{" "}
+                        <code className="font-mono">.env</code> for local OpenAI/ChatGPT models.
+                      </p>
+                    </div>
                   </div>
                 )}
 

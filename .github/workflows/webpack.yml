@@ -1,4 +1,4 @@
-name: NodeJS with Webpack
+name: NodeJS with Vite
 
 on:
   push:
@@ -17,12 +17,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10.4.1
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
+        cache: pnpm
 
     - name: Build
       run: |
-        npm install
-        npx webpack
+        pnpm install --frozen-lockfile
+        pnpm check
+        pnpm build
